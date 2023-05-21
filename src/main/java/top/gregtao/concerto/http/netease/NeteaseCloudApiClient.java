@@ -1,0 +1,269 @@
+package top.gregtao.concerto.http.netease;
+
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
+import com.mojang.datafixers.util.Pair;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.text.Text;
+import top.gregtao.concerto.ConcertoClient;
+import top.gregtao.concerto.enums.SearchType;
+import top.gregtao.concerto.enums.Sources;
+import top.gregtao.concerto.http.HttpApiClient;
+import top.gregtao.concerto.http.qrcode.QRCode;
+import top.gregtao.concerto.music.Music;
+import top.gregtao.concerto.music.NeteaseCloudMusic;
+import top.gregtao.concerto.music.list.NeteaseCloudPlaylist;
+import top.gregtao.concerto.music.lyric.LRCFormatLyric;
+import top.gregtao.concerto.music.lyric.Lyric;
+import top.gregtao.concerto.music.meta.music.list.PlaylistMeta;
+import top.gregtao.concerto.player.MusicPlayer;
+import top.gregtao.concerto.player.MusicPlayerStatus;
+import top.gregtao.concerto.util.HashUtil;
+import top.gregtao.concerto.util.HttpUtil;
+import top.gregtao.concerto.util.JsonUtil;
+import top.gregtao.concerto.util.MathUtil;
+
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
+public class NeteaseCloudApiClient extends HttpApiClient {
+    public static URL DEFAULT_API = HttpUtil.createCorrectURL("http://music.163.com");
+
+    public static String APP_VERSION = "2.10.6.200601";
+
+    public static Map<String, String> HEADERS = Map.of(
+            "Referer", "https://music.163.com",
+            "Host", "music.163.com",
+            "User-Agent", "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Safari/537.36 Chrome/91.0.4472.164 NeteaseMusicDesktop/" + APP_VERSION
+    );
+
+    public static List<String> INIT_COOKIES = List.of("appver=" + APP_VERSION, "os=pc");
+
+    public static NeteaseCloudApiClient INSTANCE = new NeteaseCloudApiClient();
+
+    public static NeteaseCloudUser LOCAL_USER = new NeteaseCloudUser(INSTANCE);
+
+    public NeteaseCloudApiClient() {
+        super(Sources.NETEASE_CLOUD.asString(), DEFAULT_API, HEADERS, INIT_COOKIES);
+    }
+
+    public JsonObject getMusicLink(String id, NeteaseCloudMusic.Level level) throws Exception {
+        return JsonUtil.from(this.get("/api/song/enhance/player/url/v1?encodeType=flac&ids=[" + id + "]&level=" + level.asString()));
+    }
+
+    public JsonObject getMusicDetail(String id) throws Exception {
+        return JsonUtil.from(this.get("/api/v3/song/detail?c=%5B%7B%22id%22%3A%20" + id + "%7D%5D"));
+    }
+
+    public Lyric getLyric(String id) throws Exception {
+        return new LRCFormatLyric().load(JsonUtil.from(this.get("/api/song/lyric?id=" + id + "&lv=0&tv=0"))
+                .getAsJsonObject("lrc").get("lyric").getAsString());
+    }
+
+    public Pair<Integer, String> sendPhoneCaptcha(String countryCode, String phoneNumber) throws Exception {
+        JsonObject body = JsonUtil.from(this.get("/api/sms/captcha/sent?cellphone=" + phoneNumber + "&ctcode=" + countryCode));
+        return getCodeAndMessage(body);
+    }
+
+    public Pair<Integer, String> sendPhoneCaptcha(String phoneNumber) throws Exception {
+        return this.sendPhoneCaptcha("86", phoneNumber);
+    }
+
+    public Pair<Integer, String> cellphoneLogin(String countryCode, String phoneNumber, boolean captcha, String code) throws Exception {
+        JsonObject body = JsonUtil.from(this.get("/api/login/cellphone", Map.of(
+                "phone", phoneNumber, "countrycode", countryCode, "rememberLogin", true,
+                captcha ? "captcha" : "password", captcha ? code : HashUtil.md5(code)
+        ), Map.of()));
+
+        Pair<Integer, String> result = getCodeAndMessage(body);
+        if (result.getFirst() == 200) LOCAL_USER.updateLoginStatus();
+        return result;
+    }
+
+    public Pair<Integer, String> cellphoneLogin(String phoneNumber, boolean captcha, String code) throws Exception {
+        return cellphoneLogin("86", phoneNumber, captcha, code);
+    }
+
+    public Pair<Integer, String> emailPasswordLogin(String email, String password) throws Exception {
+        JsonObject body = JsonUtil.from(this.get("/api/login", Map.of(
+                "username", email, "password", HashUtil.md5(password), "rememberLogin", true
+        ), Map.of()));
+        Pair<Integer, String> result = getCodeAndMessage(body);
+        if (result.getFirst() == 200) LOCAL_USER.updateLoginStatus();
+        return result;
+    }
+
+    public String generateQRCodeKey() throws Exception {
+        return JsonUtil.from(this.get("/api/login/qrcode/unikey?type=1")).get("unikey").getAsString();
+    }
+
+    public String getQRCodeLoginLink(String uniKey) throws MalformedURLException {
+        return HttpUtil.getSonOfURL(this.baseApi, "/login?codekey=" + uniKey).toString();
+    }
+
+    public Pair<Integer, String> getQRCodeStatus(String uniKey) throws Exception {
+        return getCodeAndMessage(JsonUtil.from(this.get("/api/login/qrcode/client/login?type=1&key=" + uniKey)));
+    }
+
+    public Pair<ArrayList<Music>, PlaylistMeta> parsePlayListJson(JsonObject object, NeteaseCloudMusic.Level level, boolean simply) {
+        ArrayList<Music> music = new ArrayList<>();
+        String createTime = "";
+        if (!simply) {
+            JsonArray array = object.getAsJsonArray("tracks");
+            array.forEach(element -> music.add(new NeteaseCloudMusic(element.getAsJsonObject(), level)));
+            createTime = MathUtil.formattedTime(object.get("createTime").getAsString());
+        }
+        String name = object.get("name").getAsString();
+        JsonObject creator = object.getAsJsonObject("creator");
+        String creatorName = creator.get("nickname").getAsString();
+        String description;
+        try {
+            description = object.get("description").getAsString();
+        } catch (UnsupportedOperationException e) {
+            description = "";
+        }
+        return Pair.of(music, new PlaylistMeta(creatorName, name, createTime, description));
+    }
+
+    public Pair<ArrayList<Music>, PlaylistMeta> parseAlbumJson(JsonObject object, NeteaseCloudMusic.Level level, boolean simply) {
+        ArrayList<Music> music = new ArrayList<>();
+        String createTime = "", name, description;
+        JsonObject creator;
+        if (!simply) {
+            JsonArray array = object.getAsJsonArray("songs");
+            array.forEach(element -> music.add(new NeteaseCloudMusic(element.getAsJsonObject(), level)));
+            JsonObject album = object.getAsJsonObject("album");
+            createTime = MathUtil.formattedTime(album.get("publishTime").getAsString());
+            name = album.get("name").getAsString();
+            creator = album.getAsJsonObject("artist");
+            try {
+                description = album.get("description").getAsString();
+            } catch (UnsupportedOperationException e) {
+                description = "";
+            }
+        } else {
+            name = object.get("name").getAsString();
+            creator = object.getAsJsonObject("artist");
+            try {
+                description = object.get("description").getAsString();
+            } catch (UnsupportedOperationException e) {
+                description = "";
+            }
+        }
+        String creatorName = creator.get("name").getAsString();
+        return Pair.of(music, new PlaylistMeta(creatorName, name, createTime, description));
+    }
+
+    public Pair<ArrayList<Music>, PlaylistMeta> getPlayList(String id, NeteaseCloudMusic.Level level) {
+        try {
+            JsonObject object = JsonUtil.from(this.get("/api/v6/playlist/detail?id=" + id + "&n=" + MusicPlayerStatus.MAX_SIZE))
+                    .getAsJsonObject("playlist");
+            return this.parsePlayListJson(object, level, false);
+        } catch (Exception e) {
+            return Pair.of(new ArrayList<>(), PlaylistMeta.EMPTY);
+        }
+    }
+
+    public Pair<ArrayList<Music>, PlaylistMeta> getAlbum(String id, NeteaseCloudMusic.Level level) {
+        try {
+            JsonObject object = JsonUtil.from(this.get("/api/v1/album/" + id));
+            return this.parseAlbumJson(object, level, false);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return Pair.of(new ArrayList<>(), PlaylistMeta.EMPTY);
+        }
+    }
+
+    private JsonObject search(String keyword, int page, SearchType type) throws Exception {
+        return JsonUtil.from(this.post("/api/cloudsearch/pc/", Map.of(
+                "s", keyword, "offset", 30 * page, "limit", 30, "type", type.searchKey, "total", true), ContentType.FORM));
+    }
+
+    public List<Music> searchMusic(String keyword, int page) {
+        try {
+            JsonObject object = this.search(keyword, page, SearchType.MUSIC);
+            List<Music> musics = new ArrayList<>();
+            JsonArray array = object.getAsJsonObject("result").getAsJsonArray("songs");
+            array.forEach(element -> musics.add(new NeteaseCloudMusic(element.getAsJsonObject(), NeteaseCloudMusic.Level.STANDARD)));
+            MusicPlayerStatus.loadInThreadPool(musics);
+            return musics;
+        } catch (Exception e) {
+            return new ArrayList<>();
+        }
+    }
+
+    public List<NeteaseCloudPlaylist> searchPlaylist(String keyword, int page) {
+        try {
+            JsonObject object = this.search(keyword, page, SearchType.PLAYLIST);
+            List<NeteaseCloudPlaylist> playlists = new ArrayList<>();
+            JsonArray array = object.getAsJsonObject("result").getAsJsonArray("playlists");
+            array.forEach(element -> playlists.add(new NeteaseCloudPlaylist(element.getAsJsonObject(), false, true)));
+            return playlists;
+        } catch (Exception e) {
+            return new ArrayList<>();
+        }
+    }
+
+    public List<NeteaseCloudPlaylist> searchAlbum(String keyword, int page) {
+        try {
+            JsonObject object = this.search(keyword, page, SearchType.ALBUM);
+            List<NeteaseCloudPlaylist> playlists = new ArrayList<>();
+            JsonArray array = object.getAsJsonObject("result").getAsJsonArray("albums");
+            array.forEach(element -> playlists.add(new NeteaseCloudPlaylist(element.getAsJsonObject(), true, true)));
+            return playlists;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new ArrayList<>();
+        }
+    }
+
+    public static Thread CURRENT_THREAD = null;
+
+    public static void checkQRCodeStatusProgress(PlayerEntity player, String uniKey) {
+        if (CURRENT_THREAD != null) {
+            CURRENT_THREAD.stop();
+            return;
+        }
+        CURRENT_THREAD = MusicPlayer.executeThread(() -> {
+            try {
+                long wait = 120000;
+                while (wait > 0) {
+                    Pair<Integer, String> pair = INSTANCE.getQRCodeStatus(uniKey);
+                    int code = pair.getFirst();
+                    if (code == 801 || code == 802) {
+                        Thread.sleep(1000L);
+                        wait -= 1000;
+                    } else if (code == 800) {
+                        wait = -1;
+                        break;
+                    } else if (code == 803) {
+                        player.sendMessage(Text.translatable("concerto.login.163.qrcode.success"));
+                        LOCAL_USER.updateLoginStatus();
+                        break;
+                    } else {
+                        ConcertoClient.LOGGER.error("Unknown code " + code + ", it may caused by networking problems.");
+                        break;
+                    }
+                }
+                if (wait <= 0) player.sendMessage(Text.translatable("concerto.login.163.qrcode.expired"));
+                QRCode.clear();
+            } catch (Exception e) {
+                player.sendMessage(Text.translatable("concerto.login.163.qrcode.error"));
+                ConcertoClient.LOGGER.error("Error occurs while checking QR code scanning status.");
+                e.printStackTrace();
+                QRCode.clear();
+            }
+        });
+    }
+
+    public static int getCode(JsonObject body) {
+        return JsonUtil.getIntOrElse(body, "code", 200);
+    }
+
+    public static Pair<Integer, String> getCodeAndMessage(JsonObject body) {
+        return Pair.of(JsonUtil.getIntOrElse(body, "code", 200), JsonUtil.getStringOrElse(body, "message", "?"));
+    }
+}

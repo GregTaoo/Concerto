@@ -33,7 +33,7 @@ public class QQMusicApiClient extends HttpApiClient {
     }
 
     public String generateGuid() {
-        return String.valueOf((new Random().nextLong(1000000000, 9999999999L)));
+        return String.valueOf((new Random().nextLong(1000000000L, 9999999999L)));
     }
 
     public String getMP3Filename(String mid, String mediaMid) {
@@ -68,14 +68,5 @@ public class QQMusicApiClient extends HttpApiClient {
         JsonObject object = JsonUtil.from(result);
         String raw = new String(Base64.getDecoder().decode(object.get("lyric").getAsString()));
         return new LRCFormatLyric().load(raw);
-    }
-
-    private String extractVKey(String str) {
-        Pattern pattern = Pattern.compile("vkey=([0-9A-Z]+)\\u0026");
-        Matcher matcher = pattern.matcher(str);
-        if (matcher.find()) {
-            return matcher.group(1);
-        }
-        return "";
     }
 }

@@ -1,7 +1,6 @@
 package top.gregtao.concerto.music;
 
 import top.gregtao.concerto.api.*;
-import top.gregtao.concerto.music.lyric.BrokenLyricException;
 import top.gregtao.concerto.music.lyric.Lyric;
 import top.gregtao.concerto.music.meta.music.MusicMeta;
 
@@ -9,6 +8,7 @@ import java.io.IOException;
 import java.io.InputStream;
 
 public abstract class Music implements JsonParsable<Music>, LazyLoadable, WithMetaData {
+
     private boolean isMetaLoaded = false;
     private MusicMeta musicMeta = null;
 
@@ -21,7 +21,7 @@ public abstract class Music implements JsonParsable<Music>, LazyLoadable, WithMe
         }
     }
 
-    public Lyric getLyric() throws IOException, BrokenLyricException {
+    public Lyric getLyric() throws IOException {
         return null;
     }
 

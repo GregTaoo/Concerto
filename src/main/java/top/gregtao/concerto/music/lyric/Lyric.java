@@ -37,9 +37,9 @@ public abstract class Lyric {
         Collections.addAll(this.lyricBody, new Pair<>(timestamp, line));
     }
 
-    public abstract void parse(String raw) throws BrokenLyricException;
+    public abstract void parse(String raw);
 
-    public Lyric load(String raw) throws BrokenLyricException {
+    public Lyric load(String raw) {
         this.parse(raw);
         this.sortLines();
         return this;

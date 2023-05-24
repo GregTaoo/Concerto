@@ -9,8 +9,8 @@ public class SilentLogger extends Logger {
         super(name, null);
     }
 
-//    @Override
-//    public void info(Supplier<String> msgSupplier) {
-//        // Block any common messages
-//    }
+    @Override
+    public void info(Supplier<String> msgSupplier) {
+        // Block any common messages
+    }
 }

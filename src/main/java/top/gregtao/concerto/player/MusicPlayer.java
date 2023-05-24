@@ -201,7 +201,7 @@ public class MusicPlayer extends StreamPlayer implements StreamPlayerListener {
                     this.play();
                     callback.run();
                 }
-                this.playNextLock = false;
+                this.playNextLock = this.isPlayingTemp = false;
             } catch (StreamPlayerException e) {
                 this.started = this.isPlayingTemp = this.forcePaused = false;
                 throw new RuntimeException(e);
@@ -218,6 +218,7 @@ public class MusicPlayer extends StreamPlayer implements StreamPlayerListener {
 
     public void start() {
         this.started = true;
+        this.forcePaused = false;
         this.playNextLock = false;
         this.playNext(0);
     }
@@ -254,8 +255,8 @@ public class MusicPlayer extends StreamPlayer implements StreamPlayerListener {
         else {
             executeThread(() -> {
                 MusicPlayerStatus.INSTANCE.remove(index);
-                if (MusicPlayerStatus.INSTANCE.isEmpty()) this.stop();
-                callback.run();
+                if (MusicPlayerStatus.INSTANCE.isEmpty()) this.cut(callback);
+                else callback.run();
             });
         }
     }

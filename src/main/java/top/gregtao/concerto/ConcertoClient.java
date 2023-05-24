@@ -5,6 +5,7 @@ import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallba
 import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
 import net.fabricmc.fabric.api.resource.ResourceManagerHelper;
 import net.fabricmc.fabric.api.resource.SimpleSynchronousResourceReloadListener;
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.resource.ResourceManager;
 import net.minecraft.resource.ResourceType;
 import net.minecraft.util.Identifier;
@@ -28,6 +29,13 @@ public class ConcertoClient implements ClientModInitializer {
 	public static final Logger LOGGER = LoggerFactory.getLogger("ConcertoClient");
 
 	public static final ConfigFile MUSIC_CONFIG = new ConfigFile("Concerto/musics.json");
+
+	public static boolean serverAvailable = false;
+
+	public static boolean isServerAvailable() {
+		return serverAvailable || MinecraftClient.getInstance().isInSingleplayer();
+//		return serverAvailable; // DEBUG
+	}
 
 	@Override
 	public void onInitializeClient() {

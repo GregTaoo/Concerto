@@ -4,7 +4,7 @@ import org.jetbrains.annotations.NotNull;
 
 public class MusicTimestamp implements Comparable<MusicTimestamp> {
 
-    public static String CHECKER_REGEX = "\\[[\\d]+(:)?[\\d]+(.)?[\\d]+][\\s\\S]+";
+    public static String FORMAT_REGEX = "\\[[\\d]+(:)?[\\d]+(.)?[\\d]+][\\s\\S]+";
 
     private final int minute;
     private final int second;

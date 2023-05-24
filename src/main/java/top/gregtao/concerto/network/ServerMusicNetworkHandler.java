@@ -1,5 +1,6 @@
 package top.gregtao.concerto.network;
 
+import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.fabricmc.fabric.api.networking.v1.PacketSender;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.entity.player.PlayerEntity;
@@ -11,9 +12,9 @@ import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
 import org.jetbrains.annotations.Nullable;
 import top.gregtao.concerto.ConcertoServer;
-import top.gregtao.concerto.music.meta.music.MusicMeta;
 import top.gregtao.concerto.command.AuditCommand;
 import top.gregtao.concerto.config.ServerConfig;
+import top.gregtao.concerto.music.meta.music.MusicMeta;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -135,10 +136,16 @@ public class ServerMusicNetworkHandler {
                 player.sendMessage(Text.translatable("concerto.share.error"));
                 ConcertoServer.LOGGER.warn("Received an unknown music data packet from " + player.getEntityName());
             }
-        } catch (Exception ignored) {
+        } catch (Exception e) {
             ConcertoServer.LOGGER.warn("Received an unsafe music data packet from " + player.getEntityName());
             // Ignore unsafe music
         }
+    }
+
+    public static void playerJoinHandshake(ServerPlayerEntity player) {
+        PacketByteBuf packetByteBuf = PacketByteBufs.create();
+        packetByteBuf.writeString(MusicNetworkChannels.HANDSHAKE_STRING + player.getEntityName());
+        ServerPlayNetworking.send(player, MusicNetworkChannels.CHANNEL_HANDSHAKE, packetByteBuf);
     }
 
     public static boolean playerExist(PlayerManager manager, String name) {

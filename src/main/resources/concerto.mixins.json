@@ -6,9 +6,14 @@
   "mixins": [
   ],
   "client": [
+    "ChatHudMixin",
+    "ClientLoginNetworkHandlerMixin",
     "GameMenuScreenMixin",
     "MusicTrackerMixin",
     "SoundManagerMixin"
+  ],
+  "server": [
+    "PlayerManagerMixin"
   ],
   "injectors": {
     "defaultRequire": 1

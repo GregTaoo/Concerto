@@ -82,6 +82,7 @@
   "concerto.screen.add.netease_cloud": "NeteaseCloud Music:",
   "concerto.screen.add.netease_cloud.playlist": "NeteaseCloud Playlist:",
   "concerto.screen.add.netease_cloud.album": "NeteaseCloud Album:",
+  "concerto.screen.add.qq": "QQ Music(MID):",
 
   "concerto.screen.login": "Login: ",
   "concerto.screen.login.username": "Username/Phone/Email:",

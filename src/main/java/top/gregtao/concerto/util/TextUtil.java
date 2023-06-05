@@ -9,11 +9,14 @@ import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.*;
 import net.minecraft.util.Formatting;
-import top.gregtao.concerto.enums.TextAlign;
+import top.gregtao.concerto.enums.TextAlignment;
+
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 
 public class TextUtil {
 
-    public static Text PAGE_SPLIT = Text.literal("==============================================");
+    public static Text PAGE_SPLIT = Text.literal("==============================================").formatted(Formatting.DARK_AQUA);
 
     public static String getTranslatable(String key) {
         return Text.translatable(key).getString();
@@ -29,12 +32,12 @@ public class TextUtil {
         if (player != null) player.sendMessage(text);
     }
 
-    public static void renderText(Text text, TextAlign align, int x, int y, MatrixStack matrices, TextRenderer renderer, int color) {
+    public static void renderText(Text text, TextAlignment align, int x, int y, MatrixStack matrices, TextRenderer renderer, int color) {
         OrderedText orderedText = text.asOrderedText();
         int realX = x, textWidth = renderer.getWidth(orderedText);
-        if (align == TextAlign.CENTER) {
+        if (align == TextAlignment.CENTER) {
             realX -= textWidth / 2;
-        } else if (align == TextAlign.RIGHT) {
+        } else if (align == TextAlignment.RIGHT) {
             realX -= textWidth;
         }
         renderer.drawWithShadow(matrices, orderedText, (float) realX, (float) y, color);
@@ -54,5 +57,13 @@ public class TextUtil {
 
     public static String getCurrentTime() {
         return String.valueOf(System.currentTimeMillis());
+    }
+
+    public static String toBase64(String str) {
+        return Base64.getEncoder().encodeToString(str.getBytes(StandardCharsets.UTF_8));
+    }
+
+    public static String fromBase64(String str) {
+        return new String(Base64.getDecoder().decode(str), StandardCharsets.UTF_8);
     }
 }

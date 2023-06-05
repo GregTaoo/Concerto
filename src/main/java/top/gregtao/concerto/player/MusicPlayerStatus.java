@@ -59,7 +59,7 @@ public class MusicPlayerStatus {
     public static <T extends LazyLoadable> void loadInThreadPool(List<T> objects) {
         ExecutorService service = Executors.newFixedThreadPool(64);
         objects.forEach(object -> {
-            if (!object.isLoaded()) service.submit(object::load);
+            if (!object.isLoaded()) service.submit(() -> object.load());
         });
         service.shutdown();
         try {
@@ -180,6 +180,7 @@ public class MusicPlayerStatus {
     }
 
     public void remove(int index) {
+        if (index <= this.currentIndex) this.currentIndex--;
         if (index < this.musicList.size()) {
             this.musicList.remove(index);
         }

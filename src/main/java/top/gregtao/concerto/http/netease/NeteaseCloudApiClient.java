@@ -15,6 +15,7 @@ import top.gregtao.concerto.music.NeteaseCloudMusic;
 import top.gregtao.concerto.music.list.NeteaseCloudPlaylist;
 import top.gregtao.concerto.music.lyric.LRCFormatLyric;
 import top.gregtao.concerto.music.lyric.Lyric;
+import top.gregtao.concerto.music.meta.music.TimelessMusicMeta;
 import top.gregtao.concerto.music.meta.music.list.PlaylistMeta;
 import top.gregtao.concerto.player.MusicPlayer;
 import top.gregtao.concerto.player.MusicPlayerStatus;
@@ -134,8 +135,13 @@ public class NeteaseCloudApiClient extends HttpApiClient {
         JsonObject creator;
         if (!simply) {
             JsonArray array = object.getAsJsonArray("songs");
-            array.forEach(element -> music.add(new NeteaseCloudMusic(element.getAsJsonObject(), level)));
             JsonObject album = object.getAsJsonObject("album");
+            String picUrl = album.get("picUrl").getAsString();
+            array.forEach(element -> {
+                NeteaseCloudMusic music1 = new NeteaseCloudMusic(element.getAsJsonObject(), level);
+                ((TimelessMusicMeta) music1.getMeta()).setHeadPictureUrl(picUrl);
+                music.add(music1);
+            });
             createTime = MathUtil.formattedTime(album.get("publishTime").getAsString());
             name = album.get("name").getAsString();
             creator = album.getAsJsonObject("artist");

@@ -24,7 +24,7 @@ public class PasswordLoginScreen extends ConcertoScreen {
     private Text message = Text.empty();
 
     public PasswordLoginScreen(Supplier<Boolean> loginChecker, BiFunction<String, String, Text> loginHandler, Text title, Screen parent) {
-        super(Text.translatable("concerto.screen.login").append(title), parent);
+        super(Text.literal(Text.translatable("concerto.screen.login").getString() + title.getString()), parent);
         this.loginChecker = loginChecker;
         this.loginHandler = loginHandler;
     }

@@ -11,7 +11,8 @@ public class TimelessMusicMetaJsonParser implements JsonParser<TimelessMusicMeta
         return new TimelessMusicMeta(
                 object.get("author").getAsString(),
                 object.get("title").getAsString(),
-                object.get("src").getAsString()
+                object.get("src").getAsString(),
+                object.get("pic").getAsString()
         );
     }
 
@@ -20,6 +21,7 @@ public class TimelessMusicMetaJsonParser implements JsonParser<TimelessMusicMeta
         object.addProperty("title", meta.title());
         object.addProperty("src", meta.getSource());
         object.addProperty("author", meta.author());
+        object.addProperty("pic", meta.headPictureUrl());
         return object;
     }
 

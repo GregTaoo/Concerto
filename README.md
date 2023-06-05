@@ -1,21 +1,13 @@
 # Concerto
+
+[简体中文](README_zh.md) [English](README.md)
+
 A Fabric-based (Currently) music playing mod for Minecraft.
-It supports local files, online musics, and the most important: NeteaseCloudMusic.
+It supports local files, online musics, and the most important: NeteaseCloud Music.
+QQ Music haven't been fully supported due to technical reasons.
 
 More music platforms and more client behaviours will be supported in the future.
 
-Player controller command:
-```
-/concerto | /music
-- start
-- stop
-- pause
-- reload
-- skip <optional: index>
-- mode [mode]
-- cut
-- list [page]
-- clear
-- add [type] <detailed things>
-- insert [type] <detailed things>
-```
+### Q & A
+- Q: Why some NeteaseCloud musics stopped playing at 00:30?
+- -- A: You don't have the privilege of NeteaseCloud VIP, or it requires extra payments.

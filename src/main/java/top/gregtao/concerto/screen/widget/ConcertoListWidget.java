@@ -5,25 +5,25 @@ import net.minecraft.client.gui.screen.narration.NarrationMessageBuilder;
 import net.minecraft.client.gui.widget.AlwaysSelectedEntryListWidget;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.Text;
-import top.gregtao.concerto.api.WithMetaData;
-import top.gregtao.concerto.music.Music;
-import top.gregtao.concerto.music.meta.MetaData;
 
 import java.util.List;
+import java.util.function.BiFunction;
 
-public class ConcertoListWidget<T extends WithMetaData> extends AlwaysSelectedEntryListWidget<ConcertoListWidget<T>.Entry> {
+public class ConcertoListWidget<T> extends AlwaysSelectedEntryListWidget<ConcertoListWidget<T>.Entry> {
     private int color = 0xffffffff;
+    private final BiFunction<T, Integer, Text> narrationSupplier;
 
-    public ConcertoListWidget(int width, int height, int top, int bottom, int itemHeight) {
+    public ConcertoListWidget(int width, int height, int top, int bottom, int itemHeight, BiFunction<T, Integer, Text> narrationSupplier) {
         super(MinecraftClient.getInstance(), width, height, top, bottom, itemHeight);
+        this.narrationSupplier = narrationSupplier;
     }
 
-    public ConcertoListWidget(int width, int height, int top, int bottom, int itemHeight, int color) {
-        this(width, height, top, bottom, itemHeight);
+    public ConcertoListWidget(int width, int height, int top, int bottom, int itemHeight, BiFunction<T, Integer, Text> narrationSupplier, int color) {
+        this(width, height, top, bottom, itemHeight, narrationSupplier);
         this.color = color;
     }
 
-    public void reset(List<T> list, Music selected) {
+    public void reset(List<T> list, T selected) {
         this.clearEntries();
         for (int i = 0; i < list.size(); ++i) {
             T music = list.get(i);
@@ -34,6 +34,15 @@ public class ConcertoListWidget<T extends WithMetaData> extends AlwaysSelectedEn
                 this.centerScrollOn(entry);
             }
         }
+    }
+
+    public void clear() {
+        super.clearEntries();
+    }
+
+    @Override
+    public boolean removeEntryWithoutScrolling(Entry entry) {
+        return super.removeEntryWithoutScrolling(entry);
     }
 
     @Override
@@ -82,8 +91,7 @@ public class ConcertoListWidget<T extends WithMetaData> extends AlwaysSelectedEn
 
         @Override
         public Text getNarration() {
-            MetaData meta = this.item.getMeta();
-            return Text.literal(meta.title() + " - " + meta.author());
+            return ConcertoListWidget.this.narrationSupplier.apply(this.item, this.index);
         }
     }
 }

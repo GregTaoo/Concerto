@@ -28,14 +28,11 @@ dependencies {
 	modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
 	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
 
-	my("com.github.goxr3plus:java-stream-player:10.0.2") {
-//		exclude module: 'commons-io'
+	my("com.github.gregtaoo:java-stream-player-forked:4e5218164d") {
 		exclude module: 'junit'
 	}
 	my 'com.google.zxing:core:3.3.0'
-//	my 'com.github.trilarion:vorbis-support:1.1.0'
-//	my 'com.github.oshi:oshi-core:6.2.2'
-//	my 'com.github.goxr3plus:jaudiotagger:2.2.7'
+
 }
 
 processResources {

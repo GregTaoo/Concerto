@@ -8,6 +8,9 @@ import net.minecraft.text.Text;
 import top.gregtao.concerto.music.Music;
 import top.gregtao.concerto.player.MusicPlayer;
 
+import java.util.List;
+import java.util.function.Supplier;
+
 public class MusicAdderBuilder {
 
     public static int execute(CommandContext<FabricClientCommandSource> context,
@@ -23,7 +26,7 @@ public class MusicAdderBuilder {
     }
 
     public static int executePlayList(CommandContext<FabricClientCommandSource> context,
-                                      Pair<MusicPlayer.MusicListAdder, Text> pair) {
+                                      Pair<Supplier<List<Music>>, Text> pair) {
         ClientPlayerEntity player = context.getSource().getPlayer();
         MusicPlayer.INSTANCE.addMusic(pair.getFirst(), () -> player.sendMessage(pair.getSecond()));
         return 0;

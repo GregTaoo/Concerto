@@ -1,13 +1,17 @@
 package top.gregtao.concerto.screen;
 
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.gui.widget.TextFieldWidget;
 import net.minecraft.client.gui.widget.TextWidget;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.Text;
-import top.gregtao.concerto.http.netease.NeteaseCloudApiClient;
-import top.gregtao.concerto.music.*;
+import top.gregtao.concerto.music.HttpFileMusic;
+import top.gregtao.concerto.music.LocalFileMusic;
+import top.gregtao.concerto.music.Music;
+import top.gregtao.concerto.music.NeteaseCloudMusic;
+import top.gregtao.concerto.music.list.NeteaseCloudPlaylist;
 import top.gregtao.concerto.player.MusicPlayer;
 import top.gregtao.concerto.player.MusicPlayerStatus;
 
@@ -20,7 +24,7 @@ public class AddMusicScreen extends ConcertoScreen {
     private final List<TextFieldWidget> textFields = new ArrayList<>();
 
     public AddMusicScreen(Screen parent) {
-        super(Text.translatable("concerto.screen.add"), parent);
+        super(Text.translatable("concerto.screen.manual_add"), parent);
     }
 
     private void addLabel(Text text, int centerX, int y, Consumer<String> onClick) {
@@ -57,24 +61,18 @@ public class AddMusicScreen extends ConcertoScreen {
                 str -> MusicPlayer.INSTANCE.addMusicHere(new NeteaseCloudMusic(str, NeteaseCloudMusic.Level.STANDARD), true, () -> {
                     if (!MusicPlayer.INSTANCE.started) MusicPlayer.INSTANCE.start();
                 }));
-        this.addLabel(Text.translatable("concerto.screen.add.netease_cloud.playlist"), this.width / 2, 120, str -> MusicPlayer.executeThread(() -> {
-            ArrayList<Music> list = NeteaseCloudApiClient.INSTANCE.getPlayList(str, NeteaseCloudMusic.Level.STANDARD).getFirst();
-            MusicPlayer.INSTANCE.addMusic(list, () -> {
-                MusicPlayer.INSTANCE.skipTo(MusicPlayerStatus.INSTANCE.getMusicList().size() - list.size());
-                if (!MusicPlayer.INSTANCE.started) MusicPlayer.INSTANCE.start();
-            });
-        }));
-        this.addLabel(Text.translatable("concerto.screen.add.netease_cloud.album"), this.width / 2, 145, str -> MusicPlayer.executeThread(() -> {
-            ArrayList<Music> list = NeteaseCloudApiClient.INSTANCE.getAlbum(str, NeteaseCloudMusic.Level.STANDARD).getFirst();
-            MusicPlayer.INSTANCE.addMusic(list, () -> {
-                MusicPlayer.INSTANCE.skipTo(MusicPlayerStatus.INSTANCE.getMusicList().size() - list.size());
-                if (!MusicPlayer.INSTANCE.started) MusicPlayer.INSTANCE.start();
-            });
-        }));
-        this.addLabel(Text.translatable("concerto.screen.add.qq"), this.width / 2, 170,
-                str -> MusicPlayer.INSTANCE.addMusicHere(new QQMusic(str), true, () -> {
-                    if (!MusicPlayer.INSTANCE.started) MusicPlayer.INSTANCE.start();
-                }));
+        this.addLabel(Text.translatable("concerto.screen.add.netease_cloud.playlist"), this.width / 2, 120, str -> {
+            NeteaseCloudPlaylist playlist = new NeteaseCloudPlaylist(str, false);
+            playlist.load(() -> MinecraftClient.getInstance().setScreen(new PlaylistPreviewScreen(playlist, this)));
+        });
+        this.addLabel(Text.translatable("concerto.screen.add.netease_cloud.album"), this.width / 2, 145, str -> {
+            NeteaseCloudPlaylist playlist = new NeteaseCloudPlaylist(str, false);
+            playlist.load(() -> MinecraftClient.getInstance().setScreen(new PlaylistPreviewScreen(playlist, this)));
+        });
+//        this.addLabel(Text.translatable("concerto.screen.add.qq"), this.width / 2, 170,
+//                str -> MusicPlayer.INSTANCE.addMusicHere(new QQMusic(str), true, () -> {
+//                    if (!MusicPlayer.INSTANCE.started) MusicPlayer.INSTANCE.start();
+//                }));
     }
 
     @Override

@@ -29,7 +29,7 @@ public class LocalFileMusic extends PathFileMusic {
 
     @Override
     public InputStream getInputStream() throws FileNotFoundException {
-        return FileUtil.createBuffered(new FileInputStream(this.getRawPath()));
+        return FileUtil.bufferedFileInputStream(new File(this.getRawPath()));
     }
 
     @Override

@@ -26,7 +26,7 @@ public class CaptchaLoginScreen extends ConcertoScreen {
 
     public CaptchaLoginScreen(Consumer<String> callForCaptcha, Supplier<Boolean> loginChecker,
                               BiFunction<String, String, Text> loginHandler, Text title, Screen parent) {
-        super(Text.translatable("concerto.screen.login").append(title), parent);
+        super(Text.literal(Text.translatable("concerto.screen.login").getString() + title.getString()), parent);
         this.callForCaptcha = callForCaptcha;
         this.loginChecker = loginChecker;
         this.loginHandler = loginHandler;

@@ -19,7 +19,7 @@ public class NeteaseCloudLoginScreens extends ConcertoScreen {
     public static Text SOURCE_TEXT = Text.translatable("concerto.source.netease_cloud");
 
     public NeteaseCloudLoginScreens(Screen parent) {
-        super(Text.translatable("concerto.screen.login").append(SOURCE_TEXT), parent);
+        super(Text.literal(Text.translatable("concerto.screen.login").getString() + SOURCE_TEXT.getString()), parent);
     }
 
     @Override
@@ -105,6 +105,7 @@ public class NeteaseCloudLoginScreens extends ConcertoScreen {
                         throw new RuntimeException(e);
                     }
                 },
+                null,
                 key -> {
                     try {
                         Pair<Integer, String> pair = NeteaseCloudApiClient.INSTANCE.getQRCodeStatus(key);
@@ -123,6 +124,7 @@ public class NeteaseCloudLoginScreens extends ConcertoScreen {
                         throw new RuntimeException(e);
                     }
                 },
+                false, 110, 110,
                 SOURCE_TEXT,
                 this
         );

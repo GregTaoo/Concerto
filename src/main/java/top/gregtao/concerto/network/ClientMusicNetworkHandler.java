@@ -14,23 +14,30 @@ import top.gregtao.concerto.ConcertoClient;
 import top.gregtao.concerto.api.MusicJsonParsers;
 import top.gregtao.concerto.command.ShareMusicCommand;
 import top.gregtao.concerto.config.ClientConfig;
+import top.gregtao.concerto.music.Music;
 import top.gregtao.concerto.player.MusicPlayer;
+import top.gregtao.concerto.screen.MusicAuditionScreen;
+import top.gregtao.concerto.util.JsonUtil;
 import top.gregtao.concerto.util.TextUtil;
 
 import java.nio.charset.StandardCharsets;
-import java.util.Base64;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 public class ClientMusicNetworkHandler {
 
     public static void register() {
         ClientPlayNetworking.registerGlobalReceiver(MusicNetworkChannels.CHANNEL_MUSIC_DATA, ClientMusicNetworkHandler::musicDataReceiver);
         ClientPlayNetworking.registerGlobalReceiver(MusicNetworkChannels.CHANNEL_HANDSHAKE, ClientMusicNetworkHandler::playerJoinHandshake);
+        ClientPlayNetworking.registerGlobalReceiver(MusicNetworkChannels.CHANNEL_AUDITION_SYNC, ClientMusicNetworkHandler::auditionDataSyncReceiver);
     }
 
     public static Map<UUID, MusicDataPacket> WAIT_CONFIRMATION = new HashMap<>();
+    public static void removeFirst() {
+        Iterator<Map.Entry<UUID, MusicDataPacket>> iterator = WAIT_CONFIRMATION.entrySet().iterator();
+        if (!iterator.hasNext()) return;
+        iterator.next();
+        iterator.remove();
+    }
 
     public static void sendC2SMusicData(MusicDataPacket packet) {
         if (!ConcertoClient.isServerAvailable()) {
@@ -78,6 +85,18 @@ public class ClientMusicNetworkHandler {
         }
     }
 
+    public static void rejectAll(PlayerEntity player, MinecraftClient client) {
+        MinecraftServer server = client.getServer();
+        WAIT_CONFIRMATION.forEach((uuid, packet) -> {
+            if (server != null) {
+                PlayerEntity from = server.getPlayerManager().getPlayer(packet.from);
+                if (from != null) from.sendMessage(Text.translatable("concerto.confirm.reject_response", player.getEntityName()));
+            }
+        });
+        WAIT_CONFIRMATION.clear();
+        player.sendMessage(Text.translatable("concerto.confirm.reject"));
+    }
+
     public static void reject(PlayerEntity player, UUID uuid, MinecraftClient client) {
         if (!WAIT_CONFIRMATION.containsKey(uuid)) {
             player.sendMessage(Text.translatable("concerto.confirm.not_found"));
@@ -96,6 +115,9 @@ public class ClientMusicNetworkHandler {
     public static void addToWaitList(MinecraftClient client, MusicDataPacket packet, PlayerEntity self) {
         UUID uuid = UUID.randomUUID();
         WAIT_CONFIRMATION.put(uuid, packet);
+        if (WAIT_CONFIRMATION.size() > MusicNetworkChannels.WAIT_LIST_MAX_SIZE) {
+            removeFirst();
+        }
         if (ClientConfig.INSTANCE.options.confirmAfterReceived) {
             self.sendMessage(TextUtil.PAGE_SPLIT);
             self.sendMessage(ShareMusicCommand.chatMessageBuilder(uuid, packet.from, packet.music.getMeta().title()));
@@ -123,12 +145,34 @@ public class ClientMusicNetworkHandler {
 
     public static void playerJoinHandshake(MinecraftClient client, ClientPlayNetworkHandler handler,
                                            PacketByteBuf buf, PacketSender packetSender) {
-        String str = buf.readString(Short.MAX_VALUE);
+        String str = buf.readString(Short.MAX_VALUE << 4);
         if (!str.startsWith(MusicNetworkChannels.HANDSHAKE_STRING)) return;
-        String playerName = str.substring(MusicNetworkChannels.HANDSHAKE_STRING.length());
-        if (client.player != null && playerName.equals(client.player.getEntityName())) {
-            ConcertoClient.serverAvailable = true;
-            ConcertoClient.LOGGER.info("Concerto has been installed in this server");
+        String[] args = str.split(":");
+        if (args.length != 3) return;
+        if (args[1].equals("CallJoin")) {
+            String playerName = args[2];
+            if (client.player != null && playerName.equals(client.player.getEntityName())) {
+                ConcertoClient.serverAvailable = true;
+                ConcertoClient.LOGGER.info("Concerto has been installed in this server");
+            }
+        }
+    }
+
+    public static void auditionDataSyncReceiver(MinecraftClient client, ClientPlayNetworkHandler handler,
+                                           PacketByteBuf buf, PacketSender packetSender) {
+        String str = buf.readString(Short.MAX_VALUE << 4);
+        System.out.println(str);
+        String[] args = str.split(";");
+        if (args.length != 3) return;
+        try {
+            if (args[0].equals("DEL")) {
+                MusicAuditionScreen.WAIT_AUDITION.remove(UUID.fromString(args[1]));
+            } else if (args[0].equals("ADD")) {
+                Music music = MusicJsonParsers.from(JsonUtil.from(args[2]));
+                if (music != null) MusicAuditionScreen.WAIT_AUDITION.put(UUID.fromString(args[1]), music);
+            }
+        } catch (IllegalArgumentException e) {
+            ConcertoClient.LOGGER.error("Received an AuditionSyncDataPacket with illegal UUID: " + args[1]);
         }
     }
 

@@ -13,12 +13,13 @@ import top.gregtao.concerto.player.MusicPlayer;
 import top.gregtao.concerto.screen.PageScreen;
 import top.gregtao.concerto.screen.PlaylistPreviewScreen;
 import top.gregtao.concerto.screen.widget.ConcertoListWidget;
+import top.gregtao.concerto.screen.widget.MetadataListWidget;
 
 public class NeteaseCloudUserScreen extends PageScreen {
-    private final ConcertoListWidget<NeteaseCloudPlaylist> playlistList;
+    private final MetadataListWidget<NeteaseCloudPlaylist> playlistList;
 
-    private <T extends WithMetaData> ConcertoListWidget<T> initListWidget() {
-        ConcertoListWidget<T> widget = new ConcertoListWidget<>(this.width, 0, 8, this.height - 35, 18);
+    private <T extends WithMetaData> MetadataListWidget<T> initListWidget() {
+        MetadataListWidget<T> widget = new MetadataListWidget<>(this.width, 0, 8, this.height - 35, 18);
         widget.setRenderBackground(false);
         widget.setRenderHorizontalShadows(false);
         return widget;

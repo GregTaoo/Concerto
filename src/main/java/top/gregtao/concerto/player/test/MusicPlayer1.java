@@ -1,29 +1,27 @@
-package top.gregtao.concerto.player;
+package top.gregtao.concerto.player.test;
 
-import com.goxr3plus.streamplayer.enums.Status;
-import com.goxr3plus.streamplayer.stream.StreamPlayer;
-import com.goxr3plus.streamplayer.stream.StreamPlayerEvent;
-import com.goxr3plus.streamplayer.stream.StreamPlayerException;
-import com.goxr3plus.streamplayer.stream.StreamPlayerListener;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.option.GameOptions;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.text.Text;
+import org.slf4j.Logger;
 import top.gregtao.concerto.ConcertoClient;
 import top.gregtao.concerto.api.MusicJsonParsers;
 import top.gregtao.concerto.music.Music;
-import top.gregtao.concerto.util.SilentLogger;
+import top.gregtao.concerto.player.MusicPlayerStatus;
 
+import javax.sound.sampled.AudioInputStream;
+import javax.sound.sampled.LineUnavailableException;
+import javax.sound.sampled.UnsupportedAudioFileException;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
-import java.util.Map;
 import java.util.function.Supplier;
-import java.util.logging.Logger;
 
-public class MusicPlayer extends StreamPlayer implements StreamPlayerListener {
+public class MusicPlayer1 extends AudioPlayer implements AudioPlayer.Listener {
 
-    public static MusicPlayer INSTANCE = new MusicPlayer(new SilentLogger("player"));
+    public static MusicPlayer1 INSTANCE = new MusicPlayer1(ConcertoClient.LOGGER);
 
 //    public static MusicPlayer INSTANCE = new MusicPlayer();
 
@@ -35,14 +33,9 @@ public class MusicPlayer extends StreamPlayer implements StreamPlayerListener {
 
     public boolean isPlayingTemp = false;
 
-    public MusicPlayer() {
-        super();
-        this.addStreamPlayerListener(this);
-    }
-
-    public MusicPlayer(Logger logger) {
+    public MusicPlayer1(Logger logger) {
         super(logger);
-        this.addStreamPlayerListener(this);
+        this.addListener(this);
     }
 
     public static Thread executeThread(Runnable runnable) {
@@ -93,56 +86,53 @@ public class MusicPlayer extends StreamPlayer implements StreamPlayerListener {
     }
 
     @Override
-    public void play() throws StreamPlayerException {
+    public void loadAudioStream(AudioInputStream inputStream) throws LineUnavailableException, IOException {
         MinecraftClient client = MinecraftClient.getInstance();
         client.getMusicTracker().stop();
-        super.play();
+        super.loadAudioStream(inputStream);
         this.syncVolume();
     }
 
-    public boolean forcePause() {
+    public void forcePause() {
         this.forcePaused = true;
-        return this.pause();
+        this.pause();
     }
 
-    public boolean forceResume() {
+    public void forceResume() {
         this.forcePaused = false;
-        return super.resume();
+        super.resume();
     }
 
     @Override
-    public boolean pause() {
+    public void pause() {
         MusicPlayerStatus.INSTANCE.writeConfig();
-        return super.pause();
+        super.pause();
     }
 
     @Override
-    public boolean resume() {
-        if (this.forcePaused) return false;
-        return super.resume();
+    public void resume() {
+        if (this.forcePaused) return;
+        super.resume();
     }
 
     public void syncVolume() {
         this.setGain(getProperVolume());
     }
 
-    public static double getProperVolume() {
+    public static float getProperVolume() {
         MinecraftClient client = MinecraftClient.getInstance();
         GameOptions options = client.options;
-        return options.getSoundVolume(SoundCategory.MASTER) * options.getSoundVolume(SoundCategory.MUSIC) * 0.5;
+        return (float) (options.getSoundVolume(SoundCategory.MASTER) * options.getSoundVolume(SoundCategory.MUSIC) * 0.5);
     }
 
     @Override
-    public void opened(Object dataSource, Map<String, Object> properties) {}
-
-    @Override
-    public void progress(int nEncodedBytes, long microsecondPosition, byte[] pcmData, Map<String, Object> properties) {
-        MusicPlayerStatus.INSTANCE.updateDisplayTexts(microsecondPosition / 1000);
+    public void onProgress(long progress) {
+        System.out.println(progress);
+        MusicPlayerStatus.INSTANCE.updateDisplayTexts(progress);
     }
 
     @Override
-    public void statusUpdated(StreamPlayerEvent event) {
-        Status status = event.getPlayerStatus();
+    public void onStatusUpdated(Status status) {
         if (status == Status.EOM) {
             this.forcePaused = this.isPlayingTemp = false;
             if (!this.playNextLock) {
@@ -162,17 +152,16 @@ public class MusicPlayer extends StreamPlayer implements StreamPlayerListener {
             if (inputStream == null) return;
             this.forcePaused = false;
             this.playNextLock = this.started = true;
-            this.stop();
+            this.reset();
             MusicPlayerStatus status = MusicPlayerStatus.INSTANCE;
             status.resetInfo();
             status.currentMusic = music;
             status.setupMusicStatus();
             status.updateDisplayTexts();
             try {
-                this.open(inputStream);
-                this.play();
+                this.loadAudioStream(inputStream);
                 this.isPlayingTemp = true;
-            } catch (StreamPlayerException e) {
+            } catch (UnsupportedAudioFileException | LineUnavailableException | IOException e) {
                 this.started = this.isPlayingTemp = this.forcePaused = false;
                 throw new RuntimeException(e);
             }
@@ -192,7 +181,6 @@ public class MusicPlayer extends StreamPlayer implements StreamPlayerListener {
                     return;
                 }
                 this.playNextLock = true;
-                this.stop();
                 Music music = MusicPlayerStatus.INSTANCE.playNext(forward);
                 if (music != null) {
                     InputStream inputStream;
@@ -210,12 +198,11 @@ public class MusicPlayer extends StreamPlayer implements StreamPlayerListener {
                             return;
                         }
                     }
-                    this.open(inputStream);
-                    this.play();
+                    this.loadAudioStream(inputStream);
                     callback.run();
                 }
                 this.playNextLock = this.isPlayingTemp = this.forcePaused = false;
-            } catch (StreamPlayerException e) {
+            } catch (UnsupportedAudioFileException | LineUnavailableException | IOException e) {
                 this.started = this.isPlayingTemp = this.forcePaused = false;
                 throw new RuntimeException(e);
             }
@@ -239,7 +226,7 @@ public class MusicPlayer extends StreamPlayer implements StreamPlayerListener {
     public void clear() {
         executeThread(() -> {
             this.started = false;
-            this.stop();
+            this.reset();
             MusicPlayerStatus.INSTANCE.clear();
         });
     }
@@ -247,7 +234,7 @@ public class MusicPlayer extends StreamPlayer implements StreamPlayerListener {
     public void reloadConfig(Runnable callback) {
         executeThread(() -> {
             this.started = false;
-            this.stop();
+            this.reset();
             MusicPlayerStatus.INSTANCE = MusicJsonParsers.fromRaw(ConcertoClient.MUSIC_CONFIG.read());
             callback.run();
         });

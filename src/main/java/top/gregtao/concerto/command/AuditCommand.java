@@ -36,7 +36,10 @@ public class AuditCommand {
                                     ServerMusicNetworkHandler.rejectAudition(context.getSource().getPlayer(), uuid);
                                     return 0;
                                 })
-                        )
+                        ).then(CommandManager.literal("all").executes(context -> {
+                            ServerMusicNetworkHandler.rejectAll(context.getSource().getPlayer());
+                            return 0;
+                        }))
                 ).then(
                         CommandManager.literal("list").then(
                                 CommandManager.argument("page", IntegerArgumentType.integer(1)).executes(context -> {

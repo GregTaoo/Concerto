@@ -1,11 +1,11 @@
 package top.gregtao.concerto.mixin;
 
-import com.goxr3plus.streamplayer.enums.Status;
 import net.minecraft.client.sound.MusicTracker;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import com.goxr3plus.streamplayer.enums.Status;
 import top.gregtao.concerto.player.MusicPlayer;
 
 @Mixin(MusicTracker.class)

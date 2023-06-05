@@ -14,23 +14,25 @@ import top.gregtao.concerto.http.netease.NeteaseCloudApiClient;
 import top.gregtao.concerto.music.Music;
 import top.gregtao.concerto.music.list.NeteaseCloudPlaylist;
 import top.gregtao.concerto.player.MusicPlayer;
-import top.gregtao.concerto.screen.AddMusicScreen;
+import top.gregtao.concerto.screen.MusicInfoScreen;
 import top.gregtao.concerto.screen.PageScreen;
 import top.gregtao.concerto.screen.PlaylistPreviewScreen;
 import top.gregtao.concerto.screen.widget.ConcertoListWidget;
+import top.gregtao.concerto.screen.widget.MetadataListWidget;
 
 import java.util.Map;
 
 public class NeteaseCloudSearchScreen extends PageScreen {
     public static String DEFAULT_KEYWORD = "";
-    private final ConcertoListWidget<Music> musicList;
-    private final ConcertoListWidget<NeteaseCloudPlaylist> playlistList, albumList;
+    private final MetadataListWidget<Music> musicList;
+    private final MetadataListWidget<NeteaseCloudPlaylist> playlistList, albumList;
     private final Map<SearchType, ConcertoListWidget<?>> listWidgetMap;
     protected TextFieldWidget searchBox;
+    private ButtonWidget infoButton;
     private SearchType searchType = SearchType.MUSIC;
 
-    private <T extends WithMetaData> ConcertoListWidget<T> initListWidget() {
-        ConcertoListWidget<T> widget = new ConcertoListWidget<>(this.width, 0, 38, this.height - 35, 18);
+    private <T extends WithMetaData> MetadataListWidget<T> initListWidget() {
+        MetadataListWidget<T> widget = new MetadataListWidget<>(this.width, 0, 38, this.height - 35, 18);
         widget.setRenderBackground(false);
         widget.setRenderHorizontalShadows(false);
         return widget;
@@ -72,6 +74,7 @@ public class NeteaseCloudSearchScreen extends PageScreen {
         } catch (NullPointerException ignored) {}
         this.addSelectableChild(this.listWidgetMap.get(type));
         this.searchType = type;
+        this.infoButton.active = type == SearchType.MUSIC;
         this.toggleSearch();
     }
 
@@ -82,6 +85,14 @@ public class NeteaseCloudSearchScreen extends PageScreen {
                 this.searchBox, Text.translatable("concerto.screen.search"));
         this.addSelectableChild(this.searchBox);
         this.searchBox.setText(DEFAULT_KEYWORD);
+
+        this.infoButton = ButtonWidget.builder(Text.translatable("concerto.screen.info"), button -> {
+            ConcertoListWidget<Music>.Entry entry = this.musicList.getSelectedOrNull();
+            if (entry != null) {
+                MinecraftClient.getInstance().setScreen(new MusicInfoScreen(entry.item, this));
+            }
+        }).position(this.width / 2 + 120, this.height - 30).size(50, 20).build();
+        this.addDrawableChild(this.infoButton);
 
         this.updateSearchType(this.searchType);
 
@@ -117,9 +128,28 @@ public class NeteaseCloudSearchScreen extends PageScreen {
             }
         }).position(this.width / 2 + 65, this.height - 30).size(50, 20).build());
 
-        this.addDrawableChild(ButtonWidget.builder(Text.translatable("concerto.screen.add"),
-                        button -> MinecraftClient.getInstance().setScreen(new AddMusicScreen(this)))
-                .position(this.width / 2 + 120, this.height - 30).size(50, 20).build());
+        this.addDrawableChild(ButtonWidget.builder(Text.translatable("concerto.screen.add"), button -> {
+            switch (this.searchType) {
+                case MUSIC: {
+                    ConcertoListWidget<Music>.Entry entry = this.musicList.getSelectedOrNull();
+                    if (entry != null) {
+                        MusicPlayer.INSTANCE.addMusic(entry.item);
+                    }
+                }
+                case PLAYLIST: {
+                    ConcertoListWidget<NeteaseCloudPlaylist>.Entry entry = this.playlistList.getSelectedOrNull();
+                    if (entry != null) {
+                        MusicPlayer.INSTANCE.addMusic(() -> entry.item.getList(), () -> {});
+                    }
+                }
+                case ALBUM: {
+                    ConcertoListWidget<NeteaseCloudPlaylist>.Entry entry = this.albumList.getSelectedOrNull();
+                    if (entry != null) {
+                        MusicPlayer.INSTANCE.addMusic(() -> entry.item.getList(), () -> {});
+                    }
+                }
+            }
+        }).position(this.width / 2 + 10, this.height - 30).size(50, 20).build());
     }
 
     @Override

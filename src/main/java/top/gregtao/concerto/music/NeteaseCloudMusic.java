@@ -1,6 +1,7 @@
 package top.gregtao.concerto.music;
 
 import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import net.minecraft.util.StringIdentifiable;
 import top.gregtao.concerto.api.JsonParser;
@@ -61,8 +62,14 @@ public class NeteaseCloudMusic extends Music {
         JsonArray authors = object.getAsJsonArray("ar");
         List<String> authorList = new ArrayList<>();
         authors.forEach(element -> authorList.add(element.getAsJsonObject().get("name").getAsString()));
+        JsonObject album = object.getAsJsonObject("al");
+        String headPic = "";
+        if (!album.isJsonNull()) {
+            JsonElement element = album.get("picUrl");
+            if (element != null && !element.isJsonNull()) headPic = element.getAsString();
+        }
         return new BasicMusicMeta(String.join(", ", authorList), name,
-                Sources.NETEASE_CLOUD.getName().getString(), duration);
+                Sources.NETEASE_CLOUD.getName().getString(), duration, headPic);
     }
 
     @Override

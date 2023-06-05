@@ -6,7 +6,7 @@ import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import top.gregtao.concerto.config.ClientConfig;
-import top.gregtao.concerto.enums.TextAlign;
+import top.gregtao.concerto.enums.TextAlignment;
 import top.gregtao.concerto.http.qrcode.QRCode;
 import top.gregtao.concerto.player.MusicPlayer;
 import top.gregtao.concerto.player.MusicPlayerStatus;
@@ -33,8 +33,8 @@ public class InGameHudRenderer {
                 int startX = (positionType == 0 || positionType == 2) ? scaledWidth / 2 :
                         (positionType == 1 ? 5 : scaledWidth - 5);
                 int startY = positionType == 0 ? scaledHeight - 80 : 5;
-                TextAlign align = (positionType == 0 || positionType == 2) ? TextAlign.CENTER :
-                        (positionType == 1 ? TextAlign.LEFT : TextAlign.RIGHT);
+                TextAlignment align = (positionType == 0 || positionType == 2) ? TextAlignment.CENTER :
+                        (positionType == 1 ? TextAlignment.LEFT : TextAlignment.RIGHT);
 
                 if (displaySetting.get(0)) {
                     TextUtil.renderText(Text.literal(texts[0]).formatted(Formatting.DARK_AQUA), align,

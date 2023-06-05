@@ -61,7 +61,10 @@ public class ShareMusicCommand {
                                     ClientMusicNetworkHandler.reject(context.getSource().getPlayer(), uuid, MinecraftClient.getInstance());
                                     return 0;
                                 })
-                        )
+                        ).then(ClientCommandManager.literal("all").executes(context -> {
+                            ClientMusicNetworkHandler.rejectAll(context.getSource().getPlayer(), MinecraftClient.getInstance());
+                            return 0;
+                        }))
                 ).then(
                         ClientCommandManager.literal("list").then(
                                 ClientCommandManager.argument("page", IntegerArgumentType.integer(1)).executes(context -> {

@@ -12,8 +12,13 @@ public class BasicMusicMeta extends TimelessMusicMeta {
         this.duration = MusicTimestamp.of(duration);
     }
 
+    public BasicMusicMeta(String author, String title, String source, long duration, String headPictureUrl) {
+        super(author, title, source, headPictureUrl);
+        this.duration = MusicTimestamp.of(duration);
+    }
+
     public BasicMusicMeta(TimelessMusicMeta meta, long duration) {
-        this(meta.author(), meta.title(), meta.getSource(), duration);
+        this(meta.author(), meta.title(), meta.getSource(), duration, meta.headPictureUrl());
     }
 
     @Override

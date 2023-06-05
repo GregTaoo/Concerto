@@ -12,13 +12,13 @@ import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
 import org.jetbrains.annotations.Nullable;
 import top.gregtao.concerto.ConcertoServer;
+import top.gregtao.concerto.api.MusicJsonParsers;
 import top.gregtao.concerto.command.AuditCommand;
 import top.gregtao.concerto.config.ServerConfig;
 import top.gregtao.concerto.music.meta.music.MusicMeta;
+import top.gregtao.concerto.util.TextUtil;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 public class ServerMusicNetworkHandler {
 
@@ -27,6 +27,13 @@ public class ServerMusicNetworkHandler {
     }
 
     public static Map<UUID, MusicDataPacket> WAIT_AUDITION = new HashMap<>();
+    public static void removeFirst() {
+        Iterator<Map.Entry<UUID, MusicDataPacket>> iterator = WAIT_AUDITION.entrySet().iterator();
+        if (!iterator.hasNext()) return;
+        Map.Entry<UUID, MusicDataPacket> entry = iterator.next();
+        sendS2CAuditionSyncData(entry.getKey(), entry.getValue(), true);
+        iterator.remove();
+    }
 
     public static void passAudition(@Nullable PlayerEntity auditor, UUID uuid) {
         if (WAIT_AUDITION.containsKey(uuid)) {
@@ -44,9 +51,20 @@ public class ServerMusicNetworkHandler {
             }
             ConcertoServer.LOGGER.info("Auditor ??? passed request from %s: %s to %s"
                     .formatted(packet.from, packet.music.getMeta().title(), packet.to));
+            sendS2CAuditionSyncData(uuid, packet, true);
         } else if (auditor != null) {
             auditor.sendMessage(Text.translatable("concerto.audit.uuid_not_found", uuid));
         }
+    }
+
+    public static void rejectAll(@Nullable PlayerEntity auditor) {
+        WAIT_AUDITION.forEach((uuid, packet) -> {
+            PlayerEntity player = packet.server.getPlayerManager().getPlayer(packet.from);
+            String title = packet.music.getMeta().title();
+            if (player != null) player.sendMessage(Text.translatable("concerto.share.rejected", title));
+        });
+        if (auditor != null) auditor.sendMessage(Text.translatable("concerto.audit.reject", "all guys'", "Musics"));
+        ConcertoServer.LOGGER.info("Auditor " + (auditor == null ? "?" : auditor.getEntityName()) + " rejected all request");
     }
 
     public static void rejectAudition(@Nullable PlayerEntity auditor, UUID uuid) {
@@ -60,9 +78,30 @@ public class ServerMusicNetworkHandler {
                     "concerto.audit.reject", player == null ? "an unknown player" : player.getEntityName(), title));
             ConcertoServer.LOGGER.info("Auditor %s rejected request from %s: %s to %s"
                     .formatted(auditor == null ? "???" : auditor.getEntityName(), packet.from, title, packet.to));
+            sendS2CAuditionSyncData(uuid, packet, true);
         } else if (auditor != null) {
             auditor.sendMessage(Text.translatable("concerto.audit.uuid_not_found", uuid));
         }
+    }
+
+    public static void sendAuditionSyncPacket(UUID uuid, ServerPlayerEntity player, MusicDataPacket packet, boolean isDelete) {
+        PacketByteBuf packetByteBuf = PacketByteBufs.create();
+        packetByteBuf.writeString((isDelete ? "DEL;" : "ADD;") + uuid + ";" +
+                (isDelete ? "QwQ" : Objects.requireNonNull(MusicJsonParsers.to(packet.music)).toString()), Short.MAX_VALUE << 4);
+        ServerPlayNetworking.send(player, MusicNetworkChannels.CHANNEL_AUDITION_SYNC, packetByteBuf);
+    }
+
+    public static void sendS2CAuditionSyncData(UUID uuid, MusicDataPacket packet, boolean isDelete) {
+        PlayerManager playerManager = packet.server.getPlayerManager();
+        for (ServerPlayerEntity player : playerManager.getPlayerList()) {
+            if (player.hasPermissionLevel(packet.server.getOpPermissionLevel())) {
+                sendAuditionSyncPacket(uuid, player, packet, isDelete);
+            }
+        }
+    }
+
+    public static void sendS2CAllAuditionData(ServerPlayerEntity player) {
+        WAIT_AUDITION.forEach((uuid, packet) -> sendAuditionSyncPacket(uuid, player, packet, false));
     }
 
     public static boolean sendS2CMusicData(MusicDataPacket packet, boolean audit) {
@@ -115,14 +154,20 @@ public class ServerMusicNetworkHandler {
                     boolean success = true;
                     if (audit) {
                         UUID uuid = UUID.randomUUID();
-                        for (PlayerEntity player1 : playerManager.getPlayerList()) {
+                        for (ServerPlayerEntity player1 : playerManager.getPlayerList()) {
                             if (player1.hasPermissionLevel(server.getOpPermissionLevel())) {
+                                player1.sendMessage(TextUtil.PAGE_SPLIT);
                                 player1.sendMessage(AuditCommand.chatMessageBuilder(
                                         uuid, packet.from, packet.music.getMeta().title()
                                 ));
+                                player1.sendMessage(TextUtil.PAGE_SPLIT);
+                                sendAuditionSyncPacket(uuid, player1, packet, false);
                             }
                         }
                         WAIT_AUDITION.put(uuid, packet);
+                        if (WAIT_AUDITION.size() > MusicNetworkChannels.WAIT_LIST_MAX_SIZE) {
+                            removeFirst();
+                        }
                     } else {
                         success = sendS2CMusicData(packet, false);
                     }
@@ -144,8 +189,9 @@ public class ServerMusicNetworkHandler {
 
     public static void playerJoinHandshake(ServerPlayerEntity player) {
         PacketByteBuf packetByteBuf = PacketByteBufs.create();
-        packetByteBuf.writeString(MusicNetworkChannels.HANDSHAKE_STRING + player.getEntityName());
+        packetByteBuf.writeString(MusicNetworkChannels.HANDSHAKE_STRING + "CallJoin:" + player.getEntityName());
         ServerPlayNetworking.send(player, MusicNetworkChannels.CHANNEL_HANDSHAKE, packetByteBuf);
+        sendS2CAllAuditionData(player);
     }
 
     public static boolean playerExist(PlayerManager manager, String name) {

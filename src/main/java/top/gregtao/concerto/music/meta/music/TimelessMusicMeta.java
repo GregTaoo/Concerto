@@ -9,11 +9,17 @@ public class TimelessMusicMeta implements MusicMeta {
     private final String author;
     private final String title;
     private final String source;
+    private String headPictureUrl = "";
 
     public TimelessMusicMeta(String author, String title, String source) {
         this.author = author;
         this.title = title;
         this.source = source;
+    }
+
+    public TimelessMusicMeta(String author, String title, String source, String headPictureUrl) {
+        this(author, title, source);
+        this.headPictureUrl = headPictureUrl;
     }
 
     @Override
@@ -34,6 +40,15 @@ public class TimelessMusicMeta implements MusicMeta {
     @Override
     public MusicTimestamp getDuration() {
         return null;
+    }
+
+    @Override
+    public String headPictureUrl() {
+        return this.headPictureUrl;
+    }
+
+    public void setHeadPictureUrl(String s) {
+        this.headPictureUrl = s;
     }
 
     @Override

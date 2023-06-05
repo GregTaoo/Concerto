@@ -5,8 +5,7 @@ import org.jaudiotagger.tag.FieldKey;
 import org.jaudiotagger.tag.KeyNotFoundException;
 import org.jaudiotagger.tag.Tag;
 
-import java.io.BufferedInputStream;
-import java.io.InputStream;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -36,8 +35,12 @@ public class FileUtil {
         }
     }
 
+    public static BufferedInputStream bufferedFileInputStream(File file) throws FileNotFoundException {
+        return createBuffered(new FileInputStream(file));
+    }
+
     public static BufferedInputStream createBuffered(InputStream inputStream) {
-        return new BufferedInputStream(inputStream, 2 << 20);
+        return new BufferedInputStream(inputStream);
     }
 
     public static String getSuffix(String name) {

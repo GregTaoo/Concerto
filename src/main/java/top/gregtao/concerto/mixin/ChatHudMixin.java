@@ -45,12 +45,12 @@ public class ChatHudMixin {
     }
 
     @Inject(method = "addMessage(Lnet/minecraft/text/Text;)V", at = @At("HEAD"), cancellable = true)
-    public void addMessage(Text message, CallbackInfo ci){
+    public void addMessageInject1(Text message, CallbackInfo ci){
         if (handleMessage(message)) ci.cancel();
     }
 
     @Inject(method = "addMessage(Lnet/minecraft/text/Text;Lnet/minecraft/network/message/MessageSignatureData;Lnet/minecraft/client/gui/hud/MessageIndicator;)V ", at = @At("HEAD"), cancellable = true)
-    public void addMessage(Text message, MessageSignatureData signature, MessageIndicator indicator, CallbackInfo ci){
+    public void addMessageInject2(Text message, MessageSignatureData signature, MessageIndicator indicator, CallbackInfo ci){
         if (handleMessage(message)) ci.cancel();
     }
 }

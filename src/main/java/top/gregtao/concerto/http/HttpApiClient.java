@@ -13,8 +13,10 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Function;
 
 public class HttpApiClient {
@@ -72,11 +74,12 @@ public class HttpApiClient {
         // I JUST WAN-NA TELL YOU HOW I'M FEELING
         System.setProperty("jdk.httpclient.allowRestrictedHeaders", "Host,Referer,User-Agent");
 
+        cookieManager.setCookiePolicy(CookiePolicy.ACCEPT_ALL);
         this.cookieManager = cookieManager;
         this.client = HttpClient.newBuilder().cookieHandler(this.cookieManager).build();
 
         try {
-            this.cookieFile.read(this.baseApiUri, this.cookieManager);
+            this.cookieFile.read(this.cookieManager);
             this.cookieManager.put(this.baseApiUri, Map.of("Set-Cookie", cookies));
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -87,20 +90,54 @@ public class HttpApiClient {
         this(name, baseApi, headers, cookies, new CookieManager());
     }
 
-    public String get(String url, Map<String, String> extraHeaders) throws Exception {
+    public String get(String url, Map<String, String> extraHeaders, boolean redirect302) throws Exception {
+        boolean crossSite = !url.startsWith("/");
         HttpRequest request = setHeaders(
                 HttpRequest.newBuilder()
-                        .uri(HttpUtil.getSonOfURL(this.baseApi, url).toURI())
+                        .uri(crossSite ? new URI(url) : HttpUtil.getSonOfURL(this.baseApi, url).toURI())
                         .GET(),
-                this.headers, extraHeaders).build();
+                crossSite ? Map.of() : this.headers, extraHeaders).build();
 
         HttpResponse<String> response = this.client.send(request,
                 HttpResponse.BodyHandlers.ofString());
 
-        this.logger.info("GET " + url + " : " + response.body());
-        this.cookieFile.write(this.baseApiUri, this.cookieManager);
+        String body;
+        if (redirect302) {
+            body = response.body();
+        } else {
+            Optional<String> location = response.headers().firstValue("Location");
+            body = response.statusCode() == 302 && location.isPresent() ? location.get() : response.body();
+        }
 
-        return escapeChars(response.body());
+        this.logger.info(response.statusCode() + " GET " + url + " : " + body.replaceAll("\n", ""));
+        this.cookieFile.write(this.cookieManager);
+
+        return escapeChars(body);
+    }
+
+    public String get(String url, Map<String, String> extraHeaders) throws Exception {
+        return this.get(url, extraHeaders, true);
+    }
+
+    public byte[] getInBytes(String url, Map<String, String> extraHeaders) throws Exception {
+        boolean crossSite = !url.startsWith("/");
+        HttpRequest request = setHeaders(
+                HttpRequest.newBuilder()
+                        .uri(crossSite ? new URI(url) : HttpUtil.getSonOfURL(this.baseApi, url).toURI())
+                        .GET(),
+                crossSite ? Map.of() : this.headers, extraHeaders).build();
+
+        HttpResponse<byte[]> response = this.client.send(request,
+                HttpResponse.BodyHandlers.ofByteArray());
+
+        this.logger.info(response.statusCode() + " GET " + url + " : BINARY");
+        this.cookieFile.write(this.cookieManager);
+
+        return response.body();
+    }
+
+    public byte[] getInBytes(String url) throws Exception {
+        return this.getInBytes(url, Map.of());
     }
 
     public String get(String url) throws Exception {
@@ -111,7 +148,7 @@ public class HttpApiClient {
         return this.get(url + "?" + ContentType.toForm(map), extraHeaders);
     }
 
-    public String post(String url, String data, ContentType type) throws Exception {
+    public String post(String url, String data, ContentType type, boolean redirect302) throws Exception {
         HttpRequest request = setHeaders(
                 HttpRequest.newBuilder()
                         .uri(HttpUtil.getSonOfURL(this.baseApi, url).toURI())
@@ -122,10 +159,22 @@ public class HttpApiClient {
         HttpResponse<String> response = this.client.send(request,
                 HttpResponse.BodyHandlers.ofString());
 
-        this.logger.info("POST " + url + " + " + data + " : " + response.body());
-        this.cookieFile.write(this.baseApiUri, this.cookieManager);
+        String body;
+        if (redirect302) {
+            body = response.body();
+        } else {
+            Optional<String> location = response.headers().firstValue("Location");
+            body = response.statusCode() == 302 && location.isPresent() ? location.get() : response.body();
+        }
 
-        return escapeChars(response.body());
+        this.logger.info(response.statusCode() + " POST " + url + " + " + data + " : " + body.replaceAll("\n", ""));
+        this.cookieFile.write(this.cookieManager);
+
+        return escapeChars(body);
+    }
+
+    public String post(String url, String data, ContentType type) throws Exception {
+        return this.post(url, data, type, true);
     }
 
     public String post(String url, JsonObject object) throws Exception {
@@ -140,8 +189,8 @@ public class HttpApiClient {
         return this.post(url, type.parser.apply(map), type);
     }
 
-    public String getCookie(String key) throws IOException {
-        List<String> cookies = this.cookieManager.get(this.baseApiUri, Map.of()).get("Cookie");
+    public String getCookie(String url, String key) throws IOException, URISyntaxException {
+        List<String> cookies = this.cookieManager.get(new URI(url), Map.of()).get("Cookie");
         for (String s : cookies) {
             int index = s.indexOf('=');
             if (index > 0 && s.substring(0, index).equals(key)) {
@@ -151,10 +200,15 @@ public class HttpApiClient {
         return "";
     }
 
+    public void setCookie(String url, String key, String value) throws IOException, URISyntaxException {
+        this.cookieManager.put(new URI(url), Map.of("Set-Cookie", List.of(key + "=" + value)));
+    }
+
     public void clearCookie() {
         this.cookieManager = new CookieManager();
+        this.cookieManager.setCookiePolicy(CookiePolicy.ACCEPT_ALL);
         this.client = HttpClient.newBuilder().cookieHandler(this.cookieManager).build();
-        this.cookieFile.write(this.baseApiUri, this.cookieManager);
+        this.cookieFile.write(this.cookieManager);
     }
 
     public String getName() {

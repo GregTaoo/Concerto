@@ -10,6 +10,8 @@ public interface MusicMeta extends JsonParsable<MusicMeta>, MetaData {
 
     MusicTimestamp getDuration();
 
+    String headPictureUrl();
+
     @Override
     default String createTime() {
         return "Unknown";

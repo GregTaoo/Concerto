@@ -15,7 +15,7 @@ import top.gregtao.concerto.music.Music;
 import top.gregtao.concerto.network.ClientMusicNetworkHandler;
 import top.gregtao.concerto.network.MusicDataPacket;
 import top.gregtao.concerto.player.MusicPlayer;
-import top.gregtao.concerto.player.MusicPlayerStatus;
+import top.gregtao.concerto.player.MusicPlayerHandler;
 import top.gregtao.concerto.util.TextUtil;
 
 import java.util.Iterator;
@@ -31,7 +31,7 @@ public class ShareMusicCommand {
                                 ClientCommandManager.argument("target", ShareMusicTargetArgumentType.create()).executes(context -> {
                                     String target = ShareMusicTargetArgumentType.get(context, "target");
                                     MusicPlayer.run(() -> {
-                                        Music current = MusicPlayerStatus.INSTANCE.getCurrentMusic();
+                                        Music current = MusicPlayerHandler.INSTANCE.getCurrentMusic();
                                         if (current != null) {
                                             TextUtil.commandMessageClient(context, Text.translatable("concerto.share.sent"));
                                             try {

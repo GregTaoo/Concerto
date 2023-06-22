@@ -10,7 +10,7 @@ import org.joml.Vector2i;
 import top.gregtao.concerto.config.ClientConfig;
 import top.gregtao.concerto.http.QRCode;
 import top.gregtao.concerto.player.MusicPlayer;
-import top.gregtao.concerto.player.MusicPlayerStatus;
+import top.gregtao.concerto.player.MusicPlayerHandler;
 import top.gregtao.concerto.util.TextUtil;
 
 public class InGameHudRenderer {
@@ -20,7 +20,7 @@ public class InGameHudRenderer {
         if (MusicPlayer.INSTANCE.isPlaying()) {
             if (!(ClientConfig.INSTANCE.options.hideWhenChat && client.currentScreen instanceof ChatScreen)) {
                 int scaledWidth = client.getWindow().getScaledWidth(), scaledHeight = client.getWindow().getScaledHeight();
-                String[] texts = MusicPlayerStatus.INSTANCE.getDisplayTexts();
+                String[] texts = MusicPlayerHandler.INSTANCE.getDisplayTexts();
 
                 ClientConfig.ClientConfigOptions options = ClientConfig.INSTANCE.options;
                 if (options.displayLyrics) {
@@ -42,7 +42,7 @@ public class InGameHudRenderer {
                     Vector2i pos = ClientConfig.parsePosition(options.timeProgressPosition, scaledWidth, scaledHeight);
                     TextUtil.renderText(Text.literal(texts[3]), options.timeProgressAlignment,
                             pos.x, pos.y, matrixStack, client.textRenderer, 0xffffffff);
-                    if (MusicPlayerStatus.INSTANCE.currentMeta != null && MusicPlayerStatus.INSTANCE.currentMeta.getDuration() != null) {
+                    if (MusicPlayerHandler.INSTANCE.currentMeta != null && MusicPlayerHandler.INSTANCE.currentMeta.getDuration() != null) {
                         int x;
                         switch (options.timeProgressAlignment) {
                             case LEFT -> x = pos.x + 35;
@@ -50,7 +50,7 @@ public class InGameHudRenderer {
                             default -> x = pos.x - 135;
                         }
                         DrawableHelper.fill(matrixStack, x, pos.y + 3, x + 100, pos.y + 5, 0xffa1c7f6);
-                        DrawableHelper.fill(matrixStack, x, pos.y + 3, (int) (x + 100 * MusicPlayerStatus.INSTANCE.progressPercentage),
+                        DrawableHelper.fill(matrixStack, x, pos.y + 3, (int) (x + 100 * MusicPlayerHandler.INSTANCE.progressPercentage),
                                 pos.y + 5, 0xff0155bc);
                     }
                 }

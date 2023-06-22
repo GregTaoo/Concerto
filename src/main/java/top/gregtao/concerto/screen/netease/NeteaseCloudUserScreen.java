@@ -16,7 +16,7 @@ import top.gregtao.concerto.screen.widget.ConcertoListWidget;
 import top.gregtao.concerto.screen.widget.MetadataListWidget;
 
 public class NeteaseCloudUserScreen extends PageScreen {
-    private final MetadataListWidget<NeteaseCloudPlaylist> playlistList;
+    private MetadataListWidget<NeteaseCloudPlaylist> playlistList;
 
     private <T extends WithMetaData> MetadataListWidget<T> initListWidget() {
         MetadataListWidget<T> widget = new MetadataListWidget<>(this.width, 0, 8, this.height - 35, 18);
@@ -27,8 +27,6 @@ public class NeteaseCloudUserScreen extends PageScreen {
 
     public NeteaseCloudUserScreen(Screen parent) {
         super(Text.translatable("concerto.screen.163.user"), parent);
-        this.playlistList = this.initListWidget();
-        this.configure(this::onPageTurned, this.width / 2 - 120, this.height - 30);
     }
 
     private void onPageTurned(int page) {
@@ -45,10 +43,13 @@ public class NeteaseCloudUserScreen extends PageScreen {
 
     @Override
     protected void init() {
+        this.configure(this::onPageTurned, this.width / 2 - 120, this.height - 30);
+
         super.init();
         if (!this.loggedIn()) {
             MinecraftClient.getInstance().setScreen(new NeteaseCloudLoginScreens(null));
         }
+        this.playlistList = this.initListWidget();
 
         this.onPageTurned(0);
         this.addSelectableChild(this.playlistList);

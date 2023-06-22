@@ -20,19 +20,21 @@ import top.gregtao.concerto.screen.PlaylistPreviewScreen;
 import top.gregtao.concerto.screen.widget.ConcertoListWidget;
 import top.gregtao.concerto.screen.widget.MetadataListWidget;
 
+import java.util.HashMap;
 import java.util.Map;
 
 public class NeteaseCloudSearchScreen extends PageScreen {
     public static String DEFAULT_KEYWORD = "";
-    private final MetadataListWidget<Music> musicList;
-    private final MetadataListWidget<NeteaseCloudPlaylist> playlistList, albumList;
-    private final Map<SearchType, ConcertoListWidget<?>> listWidgetMap;
+    private MetadataListWidget<Music> musicList;
+    private MetadataListWidget<NeteaseCloudPlaylist> playlistList;
+    private MetadataListWidget<NeteaseCloudPlaylist> albumList;
+    private Map<SearchType, ConcertoListWidget<?>> listWidgetMap = new HashMap<>();
     protected TextFieldWidget searchBox;
     private ButtonWidget infoButton;
     private SearchType searchType = SearchType.MUSIC;
 
     private <T extends WithMetaData> MetadataListWidget<T> initListWidget() {
-        MetadataListWidget<T> widget = new MetadataListWidget<>(this.width, 0, 38, this.height - 35, 18);
+        MetadataListWidget<T> widget = new MetadataListWidget<>(this.width, this.height, 38, this.height - 35, 18);
         widget.setRenderBackground(false);
         widget.setRenderHorizontalShadows(false);
         return widget;
@@ -40,15 +42,6 @@ public class NeteaseCloudSearchScreen extends PageScreen {
 
     public NeteaseCloudSearchScreen(Screen parent) {
         super(Text.translatable("concerto.screen.search.163"), parent);
-        this.musicList = this.initListWidget();
-        this.playlistList = this.initListWidget();
-        this.albumList = this.initListWidget();
-        this.configure(page -> this.search(this.searchBox.getText(), page), this.width / 2 - 120, this.height - 30);
-        this.listWidgetMap = Map.of(
-                SearchType.MUSIC, this.musicList,
-                SearchType.PLAYLIST, this.playlistList,
-                SearchType.ALBUM, this.albumList
-        );
     }
 
     private void search(String keyword, int page) {
@@ -80,7 +73,19 @@ public class NeteaseCloudSearchScreen extends PageScreen {
 
     @Override
     protected void init() {
+        this.configure(page -> this.search(this.searchBox.getText(), page), this.width / 2 - 120, this.height - 30);
+
         super.init();
+        this.musicList = this.initListWidget();
+        this.playlistList = this.initListWidget();
+        this.albumList = this.initListWidget();
+
+        this.listWidgetMap = Map.of(
+                SearchType.MUSIC, this.musicList,
+                SearchType.PLAYLIST, this.playlistList,
+                SearchType.ALBUM, this.albumList
+        );
+
         this.searchBox = new TextFieldWidget(this.textRenderer, this.width / 2 - 155, 18, 200, 20,
                 this.searchBox, Text.translatable("concerto.screen.search"));
         this.addSelectableChild(this.searchBox);

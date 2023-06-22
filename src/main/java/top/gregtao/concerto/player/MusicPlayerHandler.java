@@ -19,8 +19,9 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-public class MusicPlayerStatus {
-    public static MusicPlayerStatus INSTANCE = new MusicPlayerStatus();
+public class MusicPlayerHandler {
+
+    public static MusicPlayerHandler INSTANCE = new MusicPlayerHandler();
 
     public static int MAX_SIZE = 1500;
 
@@ -46,9 +47,9 @@ public class MusicPlayerStatus {
 
     private final Random random = new Random();
 
-    public MusicPlayerStatus() {}
+    public MusicPlayerHandler() {}
 
-    public MusicPlayerStatus(ArrayList<Music> musics, int currentIndex, OrderType orderType) {
+    public MusicPlayerHandler(ArrayList<Music> musics, int currentIndex, OrderType orderType) {
         this.currentIndex = currentIndex;
         this.orderType = orderType;
         if (musics.size() > MAX_SIZE) {

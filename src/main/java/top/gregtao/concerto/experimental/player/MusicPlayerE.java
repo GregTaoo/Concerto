@@ -10,7 +10,7 @@ import top.gregtao.concerto.ConcertoClient;
 import top.gregtao.concerto.api.MusicJsonParsers;
 import top.gregtao.concerto.music.Music;
 import top.gregtao.concerto.music.MusicSource;
-import top.gregtao.concerto.player.MusicPlayerStatus;
+import top.gregtao.concerto.player.MusicPlayerHandler;
 
 import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.LineUnavailableException;
@@ -50,7 +50,7 @@ public class MusicPlayerE extends AudioPlayer implements AudioPlayer.Listener {
 
     public void addMusic(Music music, Runnable callback) {
         executeThread(() -> {
-            MusicPlayerStatus.INSTANCE.addMusic(music);
+            MusicPlayerHandler.INSTANCE.addMusic(music);
             callback.run();
         });
     }
@@ -61,14 +61,14 @@ public class MusicPlayerE extends AudioPlayer implements AudioPlayer.Listener {
 
     public void addMusic(List<Music> musics, Runnable callback) {
         executeThread(() -> {
-            MusicPlayerStatus.INSTANCE.addMusic(musics);
+            MusicPlayerHandler.INSTANCE.addMusic(musics);
             callback.run();
         });
     }
 
     public void addMusic(Supplier<List<Music>> musicListAdder, Runnable callback) {
         executeThread(() -> {
-            MusicPlayerStatus.INSTANCE.addMusic(musicListAdder.get());
+            MusicPlayerHandler.INSTANCE.addMusic(musicListAdder.get());
             callback.run();
         });
     }
@@ -79,8 +79,8 @@ public class MusicPlayerE extends AudioPlayer implements AudioPlayer.Listener {
 
     public void addMusicHere(Music music, boolean skip, Runnable callback) {
         executeThread(() -> {
-            MusicPlayerStatus.INSTANCE.addMusicHere(music);
-            if (skip) this.skipTo(MusicPlayerStatus.INSTANCE.getCurrentIndex() + 1);
+            MusicPlayerHandler.INSTANCE.addMusicHere(music);
+            if (skip) this.skipTo(MusicPlayerHandler.INSTANCE.getCurrentIndex() + 1);
             callback.run();
         });
     }
@@ -105,7 +105,7 @@ public class MusicPlayerE extends AudioPlayer implements AudioPlayer.Listener {
 
     @Override
     public void pause() {
-        MusicPlayerStatus.INSTANCE.writeConfig();
+        MusicPlayerHandler.INSTANCE.writeConfig();
         super.pause();
     }
 
@@ -128,7 +128,7 @@ public class MusicPlayerE extends AudioPlayer implements AudioPlayer.Listener {
     @Override
     public void onProgress(long progress) {
         System.out.println(progress);
-        MusicPlayerStatus.INSTANCE.updateDisplayTexts(progress);
+        MusicPlayerHandler.INSTANCE.updateDisplayTexts(progress);
     }
 
     @Override
@@ -136,9 +136,9 @@ public class MusicPlayerE extends AudioPlayer implements AudioPlayer.Listener {
         if (status == Status.EOM) {
             this.forcePaused = this.isPlayingTemp = false;
             if (!this.playNextLock) {
-                MusicPlayerStatus.INSTANCE.resetInfo();
+                MusicPlayerHandler.INSTANCE.resetInfo();
             }
-            if (MusicPlayerStatus.INSTANCE.isEmpty()) {
+            if (MusicPlayerHandler.INSTANCE.isEmpty()) {
                 this.started = false;
             } else if (!this.playNextLock) {
                 this.playNext(1);
@@ -153,7 +153,7 @@ public class MusicPlayerE extends AudioPlayer implements AudioPlayer.Listener {
             this.forcePaused = false;
             this.playNextLock = this.started = true;
             this.reset();
-            MusicPlayerStatus status = MusicPlayerStatus.INSTANCE;
+            MusicPlayerHandler status = MusicPlayerHandler.INSTANCE;
             status.resetInfo();
             status.currentMusic = music;
             status.setupMusicStatus();
@@ -176,12 +176,12 @@ public class MusicPlayerE extends AudioPlayer implements AudioPlayer.Listener {
     public void playNext(int forward, Runnable callback) {
         executeThread(() -> {
             try {
-                if (!this.started || MusicPlayerStatus.INSTANCE.isEmpty()) {
+                if (!this.started || MusicPlayerHandler.INSTANCE.isEmpty()) {
                     this.started = false;
                     return;
                 }
                 this.playNextLock = true;
-                Music music = MusicPlayerStatus.INSTANCE.playNext(forward);
+                Music music = MusicPlayerHandler.INSTANCE.playNext(forward);
                 if (music != null) {
                     MusicSource source;
                     ClientPlayerEntity player = MinecraftClient.getInstance().player;
@@ -190,10 +190,10 @@ public class MusicPlayerE extends AudioPlayer implements AudioPlayer.Listener {
                             player.sendMessage(Text.translatable(
                                     "concerto.player.unable", music.getMeta().title(), music.getMeta().author()));
                         }
-                        MusicPlayerStatus.INSTANCE.setCurrentIndex((MusicPlayerStatus.INSTANCE.getCurrentIndex() + 1)
-                                % MusicPlayerStatus.INSTANCE.getMusicList().size());
-                        MusicPlayerStatus.INSTANCE.resetInfo();
-                        music = MusicPlayerStatus.INSTANCE.playNext(0);
+                        MusicPlayerHandler.INSTANCE.setCurrentIndex((MusicPlayerHandler.INSTANCE.getCurrentIndex() + 1)
+                                % MusicPlayerHandler.INSTANCE.getMusicList().size());
+                        MusicPlayerHandler.INSTANCE.resetInfo();
+                        music = MusicPlayerHandler.INSTANCE.playNext(0);
                         if (music == null) {
                             return;
                         }
@@ -210,9 +210,9 @@ public class MusicPlayerE extends AudioPlayer implements AudioPlayer.Listener {
     }
 
     public void skipTo(int index) {
-        MusicPlayerStatus.INSTANCE.setCurrentIndex(
-                Math.min(MusicPlayerStatus.INSTANCE.getMusicList().size(), index));
-        MusicPlayerStatus.INSTANCE.resetInfo();
+        MusicPlayerHandler.INSTANCE.setCurrentIndex(
+                Math.min(MusicPlayerHandler.INSTANCE.getMusicList().size(), index));
+        MusicPlayerHandler.INSTANCE.resetInfo();
         this.playNext(0);
     }
 
@@ -227,7 +227,7 @@ public class MusicPlayerE extends AudioPlayer implements AudioPlayer.Listener {
         executeThread(() -> {
             this.started = false;
             this.reset();
-            MusicPlayerStatus.INSTANCE.clear();
+            MusicPlayerHandler.INSTANCE.clear();
         });
     }
 
@@ -235,7 +235,7 @@ public class MusicPlayerE extends AudioPlayer implements AudioPlayer.Listener {
         executeThread(() -> {
             this.started = false;
             this.reset();
-            MusicPlayerStatus.INSTANCE = MusicJsonParsers.fromRaw(ConcertoClient.MUSIC_CONFIG.read());
+            MusicPlayerHandler.INSTANCE = MusicJsonParsers.fromRaw(ConcertoClient.MUSIC_CONFIG.read());
             callback.run();
         });
     }
@@ -243,7 +243,7 @@ public class MusicPlayerE extends AudioPlayer implements AudioPlayer.Listener {
     public void cut(Runnable callback) {
         executeThread(() -> {
             if (!this.isPlayingTemp) {
-                MusicPlayerStatus.INSTANCE.removeCurrent();
+                MusicPlayerHandler.INSTANCE.removeCurrent();
             }
             this.playNext(0);
             callback.run();
@@ -251,11 +251,11 @@ public class MusicPlayerE extends AudioPlayer implements AudioPlayer.Listener {
     }
 
     public void remove(int index, Runnable callback) {
-        if (index == MusicPlayerStatus.INSTANCE.getCurrentIndex()) this.cut(callback);
+        if (index == MusicPlayerHandler.INSTANCE.getCurrentIndex()) this.cut(callback);
         else {
             executeThread(() -> {
-                MusicPlayerStatus.INSTANCE.remove(index);
-                if (MusicPlayerStatus.INSTANCE.isEmpty()) this.cut(callback);
+                MusicPlayerHandler.INSTANCE.remove(index);
+                if (MusicPlayerHandler.INSTANCE.isEmpty()) this.cut(callback);
                 else callback.run();
             });
         }

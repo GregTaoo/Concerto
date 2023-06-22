@@ -9,32 +9,32 @@ import net.minecraft.text.Text;
 import top.gregtao.concerto.music.Music;
 import top.gregtao.concerto.music.list.Playlist;
 import top.gregtao.concerto.player.MusicPlayer;
-import top.gregtao.concerto.player.MusicPlayerStatus;
+import top.gregtao.concerto.player.MusicPlayerHandler;
 import top.gregtao.concerto.screen.widget.ConcertoListWidget;
 import top.gregtao.concerto.screen.widget.MetadataListWidget;
 
 public class PlaylistPreviewScreen extends ConcertoScreen {
     private final Playlist playlist;
-    private final MetadataListWidget<Music> widget;
+    private MetadataListWidget<Music> widget;
 
     public PlaylistPreviewScreen(Playlist playlist, Screen parent) {
         super(Text.literal(Text.translatable("concerto." + (playlist.isAlbum() ? "album" : "playlist")).getString() +
                 ": " + playlist.getMeta().title() + " - " + playlist.getMeta().author()), parent);
         this.playlist = playlist;
-        this.widget = new MetadataListWidget<>(this.width, 0, 18, this.height - 35, 18);
-        this.widget.setRenderHorizontalShadows(false);
-        this.widget.setRenderBackground(false);
     }
 
     @Override
     protected void init() {
         super.init();
+        this.widget = new MetadataListWidget<>(this.width, 0, 18, this.height - 35, 18);
+        this.widget.setRenderHorizontalShadows(false);
+        this.widget.setRenderBackground(false);
         this.addSelectableChild(this.widget);
         MusicPlayer.run(() -> this.widget.reset(this.playlist.getList(), null));
 
         this.addDrawableChild(ButtonWidget.builder(Text.translatable("concerto.screen.playlist.add"), button ->
             MusicPlayer.INSTANCE.addMusic(this.playlist.getList(), () -> {
-                MusicPlayer.INSTANCE.skipTo(MusicPlayerStatus.INSTANCE.getMusicList().size() - this.playlist.getList().size());
+                MusicPlayer.INSTANCE.skipTo(MusicPlayerHandler.INSTANCE.getMusicList().size() - this.playlist.getList().size());
                 if (!MusicPlayer.INSTANCE.started) MusicPlayer.INSTANCE.start();
             }
         )).position(this.width / 2 - 160, this.height - 30).size(50, 20).build());

@@ -13,7 +13,7 @@ import top.gregtao.concerto.music.Music;
 import top.gregtao.concerto.music.NeteaseCloudMusic;
 import top.gregtao.concerto.music.list.NeteaseCloudPlaylist;
 import top.gregtao.concerto.player.MusicPlayer;
-import top.gregtao.concerto.player.MusicPlayerStatus;
+import top.gregtao.concerto.player.MusicPlayerHandler;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -49,7 +49,7 @@ public class AddMusicScreen extends ConcertoScreen {
         this.addLabel(Text.translatable("concerto.screen.add.local_file.folder"), this.width / 2, 45, str -> MusicPlayer.run(() -> {
             ArrayList<Music> list = LocalFileMusic.getMusicsInFolder(new File(str));
             MusicPlayer.INSTANCE.addMusic(list, () -> {
-                MusicPlayer.INSTANCE.skipTo(MusicPlayerStatus.INSTANCE.getMusicList().size() - list.size());
+                MusicPlayer.INSTANCE.skipTo(MusicPlayerHandler.INSTANCE.getMusicList().size() - list.size());
                 if (!MusicPlayer.INSTANCE.started) MusicPlayer.INSTANCE.start();
             });
         }));

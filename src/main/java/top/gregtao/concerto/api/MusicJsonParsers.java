@@ -13,7 +13,7 @@ import top.gregtao.concerto.music.parser.PathFileMusicJsonParser;
 import top.gregtao.concerto.experimental.music.QQMusicJsonParser;
 import top.gregtao.concerto.music.parser.meta.BasicMusicMetaJsonParser;
 import top.gregtao.concerto.music.parser.meta.TimelessMusicMetaJsonParser;
-import top.gregtao.concerto.player.MusicPlayerStatus;
+import top.gregtao.concerto.player.MusicPlayerHandler;
 import top.gregtao.concerto.util.JsonUtil;
 
 import java.util.ArrayList;
@@ -113,7 +113,7 @@ public class MusicJsonParsers {
         }
     }
 
-    public static MusicPlayerStatus fromRaw(String json) {
+    public static MusicPlayerHandler fromRaw(String json) {
         try {
             ArrayList<Music> list = new ArrayList<>();
             JsonObject object = JsonUtil.from(json);
@@ -122,14 +122,14 @@ public class MusicJsonParsers {
                 Music music = from(element.getAsJsonObject());
                 if (music != null) list.add(music);
             });
-            return new MusicPlayerStatus(list, Math.min(JsonUtil.getIntOrElse(object, "cur", -1), array.size() - 1),
+            return new MusicPlayerHandler(list, Math.min(JsonUtil.getIntOrElse(object, "cur", -1), array.size() - 1),
                     OrderType.valueOf(JsonUtil.getStringOrElse(object, "ord", OrderType.NORMAL.toString())));
         } catch (Exception e) {
-            return new MusicPlayerStatus();
+            return new MusicPlayerHandler();
         }
     }
 
-    public static String toRaw(MusicPlayerStatus status) {
+    public static String toRaw(MusicPlayerHandler status) {
         JsonArray array = new JsonArray();
         status.getMusicList().forEach(music -> {
             JsonObject object = to(music);

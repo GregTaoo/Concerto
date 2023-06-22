@@ -18,7 +18,7 @@ import top.gregtao.concerto.music.lyric.Lyric;
 import top.gregtao.concerto.music.meta.music.TimelessMusicMetaData;
 import top.gregtao.concerto.music.meta.music.list.PlaylistMetaData;
 import top.gregtao.concerto.player.MusicPlayer;
-import top.gregtao.concerto.player.MusicPlayerStatus;
+import top.gregtao.concerto.player.MusicPlayerHandler;
 import top.gregtao.concerto.util.HashUtil;
 import top.gregtao.concerto.util.HttpUtil;
 import top.gregtao.concerto.util.JsonUtil;
@@ -169,7 +169,7 @@ public class NeteaseCloudApiClient extends HttpApiClient {
 
     public Pair<ArrayList<Music>, PlaylistMetaData> getPlayList(String id, NeteaseCloudMusic.Level level) {
         try {
-            JsonObject object = JsonUtil.from(this.get("/api/v6/playlist/detail?id=" + id + "&n=" + MusicPlayerStatus.MAX_SIZE))
+            JsonObject object = JsonUtil.from(this.get("/api/v6/playlist/detail?id=" + id + "&n=" + MusicPlayerHandler.MAX_SIZE))
                     .getAsJsonObject("playlist");
             return this.parsePlayListJson(object, level, false);
         } catch (Exception e) {
@@ -198,7 +198,7 @@ public class NeteaseCloudApiClient extends HttpApiClient {
             List<Music> musics = new ArrayList<>();
             JsonArray array = object.getAsJsonObject("result").getAsJsonArray("songs");
             array.forEach(element -> musics.add(new NeteaseCloudMusic(element.getAsJsonObject(), NeteaseCloudMusic.Level.STANDARD)));
-            MusicPlayerStatus.loadInThreadPool(musics);
+            MusicPlayerHandler.loadInThreadPool(musics);
             return musics;
         } catch (Exception e) {
             return new ArrayList<>();

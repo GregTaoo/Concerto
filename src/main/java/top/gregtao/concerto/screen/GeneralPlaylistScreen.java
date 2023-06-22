@@ -9,23 +9,24 @@ import net.minecraft.text.Text;
 import top.gregtao.concerto.enums.OrderType;
 import top.gregtao.concerto.music.Music;
 import top.gregtao.concerto.player.MusicPlayer;
-import top.gregtao.concerto.player.MusicPlayerStatus;
+import top.gregtao.concerto.player.MusicPlayerHandler;
 import top.gregtao.concerto.screen.widget.ConcertoListWidget;
 import top.gregtao.concerto.screen.widget.GeneralPlaylistWidget;
 
 public class GeneralPlaylistScreen extends ConcertoScreen {
-    private final GeneralPlaylistWidget widget;
+    private GeneralPlaylistWidget widget;
 
     public GeneralPlaylistScreen(Screen parent) {
         super(Text.translatable("concerto.screen.general_list"), parent);
-        this.widget = new GeneralPlaylistWidget(this.width, 0, 18, this.height - 35, 18);
-        this.widget.setRenderHorizontalShadows(false);
-        this.widget.setRenderBackground(false);
     }
 
     @Override
     protected void init() {
         super.init();
+        this.widget = new GeneralPlaylistWidget(this.width, this.height, 18, this.height - 35, 18);
+        this.widget.setRenderHorizontalShadows(false);
+        this.widget.setRenderBackground(false);
+
         this.addSelectableChild(this.widget);
 
         this.addDrawableChild(ButtonWidget.builder(Text.translatable("concerto.screen.next"), button -> {
@@ -49,9 +50,9 @@ public class GeneralPlaylistScreen extends ConcertoScreen {
         }).position(this.width / 2 - 60, this.height - 30).size(50, 20).build());
 
         this.addDrawableChild(CyclingButtonWidget.builder(OrderType::getName).values(OrderType.values())
-                .initially(MusicPlayerStatus.INSTANCE.getOrderType()).build(
+                .initially(MusicPlayerHandler.INSTANCE.getOrderType()).build(
                         this.width / 2 - 10, this.height - 30, 60, 20, Text.translatable("concerto.screen.order"),
-                        (widget, orderType) -> MusicPlayerStatus.INSTANCE.setOrderType(orderType)));
+                        (widget, orderType) -> MusicPlayerHandler.INSTANCE.setOrderType(orderType)));
 
         this.addDrawableChild(ButtonWidget.builder(Text.translatable("concerto.screen.pause"), button -> {
             if (MusicPlayer.INSTANCE.started) {

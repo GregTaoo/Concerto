@@ -25,6 +25,9 @@ public class PageScreen extends ConcertoScreen {
         this.maxPage = maxPage;
     }
 
+    /**
+     * MUST BE CALLED BEFORE super.init()
+     */
     public void configure(Consumer<Integer> onPageTurned, int buttonX, int buttonY) {
         this.onPageTurned = onPageTurned;
         this.buttonX = buttonX;

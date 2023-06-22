@@ -5,10 +5,10 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.mojang.datafixers.util.Pair;
 import net.minecraft.util.StringIdentifiable;
+import top.gregtao.concerto.api.CacheableMusic;
 import top.gregtao.concerto.api.JsonParser;
 import top.gregtao.concerto.api.MusicJsonParsers;
 import top.gregtao.concerto.api.SimpleStringIdentifiable;
-import top.gregtao.concerto.config.MusicCacheManager;
 import top.gregtao.concerto.enums.Sources;
 import top.gregtao.concerto.http.netease.NeteaseCloudApiClient;
 import top.gregtao.concerto.music.lyric.Lyric;
@@ -20,18 +20,16 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
-public class NeteaseCloudMusic extends CacheableMusic {
+public class NeteaseCloudMusic extends Music implements CacheableMusic {
     private final String id;
     private final Level level;
 
     public NeteaseCloudMusic(String id, Level level) {
-        super(MusicCacheManager.INSTANCE);
         this.id = id;
         this.level = level;
     }
 
     public NeteaseCloudMusic(JsonObject object, Level level) {
-        super(MusicCacheManager.INSTANCE);
         this.id = object.get("id").getAsString();
         this.level = level;
         this.setMusicMeta(parseMetaData(object));
@@ -106,6 +104,11 @@ public class NeteaseCloudMusic extends CacheableMusic {
     @Override
     public String getSuffix() {
         return "mp3";
+    }
+
+    @Override
+    public Music getMusic() {
+        return this;
     }
 
     public enum Level implements SimpleStringIdentifiable {

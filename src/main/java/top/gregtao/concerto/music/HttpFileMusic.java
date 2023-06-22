@@ -1,15 +1,17 @@
 package top.gregtao.concerto.music;
 
+import top.gregtao.concerto.api.CacheableMusic;
 import top.gregtao.concerto.api.JsonParser;
 import top.gregtao.concerto.api.MusicJsonParsers;
 import top.gregtao.concerto.enums.Sources;
 import top.gregtao.concerto.music.meta.music.TimelessMusicMetaData;
+import top.gregtao.concerto.util.HttpUtil;
 import top.gregtao.concerto.util.TextUtil;
 
 import java.net.MalformedURLException;
 import java.net.URL;
 
-public class HttpFileMusic extends PathFileMusic {
+public class HttpFileMusic extends PathFileMusic implements CacheableMusic {
 
     public HttpFileMusic(String rawPath) {
         super(rawPath);
@@ -36,5 +38,15 @@ public class HttpFileMusic extends PathFileMusic {
     @Override
     public JsonParser<Music> getJsonParser() {
         return MusicJsonParsers.HTTP_FILE;
+    }
+
+    @Override
+    public String getSuffix() {
+        return HttpUtil.getSuffix(this.getRawPath());
+    }
+
+    @Override
+    public Music getMusic() {
+        return this;
     }
 }

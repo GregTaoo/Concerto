@@ -9,16 +9,11 @@ import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 
 public class ConcertoScreen extends Screen {
-
-    protected final int width;
-    protected final int height;
     private final Screen parent;
 
     public ConcertoScreen(Text title, Screen parent) {
         super(title.getWithStyle(Style.EMPTY.withColor(Formatting.DARK_AQUA)).get(0));
         this.parent = parent;
-        this.width = MinecraftClient.getInstance().getWindow().getScaledWidth();
-        this.height = MinecraftClient.getInstance().getWindow().getScaledHeight();
     }
 
     @Override

@@ -22,7 +22,7 @@ import top.gregtao.concerto.music.HttpFileMusic;
 import top.gregtao.concerto.music.LocalFileMusic;
 import top.gregtao.concerto.music.Music;
 import top.gregtao.concerto.player.MusicPlayer;
-import top.gregtao.concerto.player.MusicPlayerStatus;
+import top.gregtao.concerto.player.MusicPlayerHandler;
 import top.gregtao.concerto.util.TextUtil;
 
 import java.io.File;
@@ -80,7 +80,7 @@ public class MusicCommand {
                     player.started = false;
                     player.playNextLock = true;
                     player.stop();
-                    MusicPlayerStatus.INSTANCE.resetInfo();
+                    MusicPlayerHandler.INSTANCE.resetInfo();
                     TextUtil.commandMessageClient(context, Text.translatable("concerto.player.stop"));
                     return 0;
                 })
@@ -113,7 +113,7 @@ public class MusicCommand {
                 ClientCommandManager.literal("mode").then(
                         ClientCommandManager.argument("mode", OrderTypeArgumentType.orderType()).executes((context -> {
                             OrderType type = OrderTypeArgumentType.getOrderType(context, "mode");
-                            MusicPlayerStatus.INSTANCE.setOrderType(type);
+                            MusicPlayerHandler.INSTANCE.setOrderType(type);
                             TextUtil.commandMessageClient(context, Text.translatable("concerto.player.mode", type.getName()));
                             return 0;
                         }))
@@ -131,7 +131,7 @@ public class MusicCommand {
                             ClientPlayerEntity clientPlayer = context.getSource().getPlayer();
                             MusicPlayer.run(() -> {
                                 int page = IntegerArgumentType.getInteger(context, "page");
-                                List<Music> list = MusicPlayerStatus.INSTANCE.getMusicList();
+                                List<Music> list = MusicPlayerHandler.INSTANCE.getMusicList();
                                 page = Math.min(page, (int) Math.ceil(list.size() / 10f));
                                 clientPlayer.sendMessage(TextUtil.PAGE_SPLIT);
                                 for (int i = 10 * (page - 1); i < Math.min(10 * page, list.size()); ++i) {

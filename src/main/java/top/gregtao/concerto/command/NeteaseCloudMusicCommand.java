@@ -15,7 +15,7 @@ import top.gregtao.concerto.command.argument.NeteaseLevelArgumentType;
 import top.gregtao.concerto.command.builder.MusicAdderBuilder;
 import top.gregtao.concerto.enums.Sources;
 import top.gregtao.concerto.http.netease.NeteaseCloudApiClient;
-import top.gregtao.concerto.http.qrcode.QRCode;
+import top.gregtao.concerto.http.QRCode;
 import top.gregtao.concerto.music.Music;
 import top.gregtao.concerto.music.NeteaseCloudMusic;
 import top.gregtao.concerto.player.MusicPlayer;
@@ -68,7 +68,7 @@ public class NeteaseCloudMusicCommand {
     }
 
     public static int sendPhoneCaptchaCommand(CommandContext<FabricClientCommandSource> context) {
-        MusicPlayer.executeThread(() -> {
+        MusicPlayer.run(() -> {
             String[] phoneNumber = StringArgumentType.getString(context, "phone").split("\\+");
             try {
                 Pair<Integer, String> message;
@@ -91,7 +91,7 @@ public class NeteaseCloudMusicCommand {
     }
 
     public static int cellphoneLoginCommand(CommandContext<FabricClientCommandSource> context, boolean captcha) {
-        MusicPlayer.executeThread(() -> {
+        MusicPlayer.run(() -> {
             String[] phoneNumber = StringArgumentType.getString(context, "phone").split("\\+");
             String password = StringArgumentType.getString(context, captcha ? "code" : "password");
             try {
@@ -116,7 +116,7 @@ public class NeteaseCloudMusicCommand {
     }
 
     public static int emailLoginCommand(CommandContext<FabricClientCommandSource> context) {
-        MusicPlayer.executeThread(() -> {
+        MusicPlayer.run(() -> {
             String phoneNumber = StringArgumentType.getString(context, "email");
             String password = StringArgumentType.getString(context, "password");
             try {

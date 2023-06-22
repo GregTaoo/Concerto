@@ -15,7 +15,7 @@ import top.gregtao.concerto.ConcertoServer;
 import top.gregtao.concerto.api.MusicJsonParsers;
 import top.gregtao.concerto.command.AuditCommand;
 import top.gregtao.concerto.config.ServerConfig;
-import top.gregtao.concerto.music.meta.music.MusicMeta;
+import top.gregtao.concerto.music.meta.music.MusicMetaData;
 import top.gregtao.concerto.util.TextUtil;
 
 import java.util.*;
@@ -173,7 +173,7 @@ public class ServerMusicNetworkHandler {
                     }
                     player.sendMessage(Text.translatable("concerto.share." + (success ? "success" : "failed")
                             + (audit ? "_audit" : ""), packet.music.getMeta().title()));
-                    MusicMeta meta = packet.music.getMeta();
+                    MusicMetaData meta = packet.music.getMeta();
                     ConcertoServer.LOGGER.info("Received a music request %s - %s from %s to %s"
                             .formatted(meta.getSource(), meta.title(), player.getEntityName(), packet.to));
                 }

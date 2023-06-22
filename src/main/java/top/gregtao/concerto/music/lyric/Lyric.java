@@ -50,7 +50,7 @@ public abstract class Lyric {
     }
 
     public Text startFrom(long timestamp) {
-        this.index = MathUtil.lowerBound(this.lyricBody, Pair.of(MusicTimestamp.of(timestamp), ""),
+        this.index = MathUtil.lowerBound(this.lyricBody, Pair.of(MusicTimestamp.ofMilliseconds(timestamp), ""),
                 (o1, o2) -> o2.getFirst().compareTo(o1.getFirst()));
         return this.getCurrent();
     }

@@ -54,7 +54,7 @@ public class NeteaseCloudSearchScreen extends PageScreen {
     private void search(String keyword, int page) {
         DEFAULT_KEYWORD = keyword;
         if (keyword.isEmpty()) return;
-        MusicPlayer.executeThread(() -> {
+        MusicPlayer.run(() -> {
             switch (this.searchType) {
                 case MUSIC -> this.musicList.reset(NeteaseCloudApiClient.INSTANCE.searchMusic(keyword, page), null);
                 case PLAYLIST -> this.playlistList.reset(NeteaseCloudApiClient.INSTANCE.searchPlaylist(keyword, page), null);

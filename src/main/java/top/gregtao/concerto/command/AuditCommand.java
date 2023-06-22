@@ -43,7 +43,7 @@ public class AuditCommand {
                 ).then(
                         CommandManager.literal("list").then(
                                 CommandManager.argument("page", IntegerArgumentType.integer(1)).executes(context -> {
-                                    MusicPlayer.executeThread(() -> {
+                                    MusicPlayer.run(() -> {
                                         int page = IntegerArgumentType.getInteger(context, "page");
                                         Map<UUID, MusicDataPacket> map = ServerMusicNetworkHandler.WAIT_AUDITION;
                                         Iterator<Map.Entry<UUID, MusicDataPacket>> iterator = map.entrySet().iterator();

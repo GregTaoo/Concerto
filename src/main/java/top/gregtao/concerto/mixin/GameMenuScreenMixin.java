@@ -12,6 +12,6 @@ public class GameMenuScreenMixin {
 
     @Inject(at = @At("HEAD"), method = "disconnect()V")
     private void disconnectInject(CallbackInfo ci) {
-        MusicPlayer.executeThread(() -> MusicPlayer.INSTANCE.pause());
+        MusicPlayer.run(() -> MusicPlayer.INSTANCE.pause());
     }
 }

@@ -1,9 +1,9 @@
-package top.gregtao.concerto.music.parser;
+package top.gregtao.concerto.experimental.music;
 
 import com.google.gson.JsonObject;
 import top.gregtao.concerto.api.JsonParser;
 import top.gregtao.concerto.enums.Sources;
-import top.gregtao.concerto.music.QQMusic;
+import top.gregtao.concerto.experimental.music.QQMusic;
 
 public class QQMusicJsonParser implements JsonParser<QQMusic> {
     @Override

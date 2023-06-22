@@ -2,13 +2,14 @@ package top.gregtao.concerto.music;
 
 import com.goxr3plus.streamplayer.enums.AudioType;
 import com.goxr3plus.streamplayer.tools.TimeTool;
+import com.mojang.datafixers.util.Pair;
 import org.jaudiotagger.audio.AudioFile;
 import org.jaudiotagger.audio.AudioFileIO;
 import org.jaudiotagger.tag.FieldKey;
 import top.gregtao.concerto.api.*;
 import top.gregtao.concerto.music.lyric.LRCFormatLyric;
 import top.gregtao.concerto.music.lyric.Lyric;
-import top.gregtao.concerto.music.meta.music.BasicMusicMeta;
+import top.gregtao.concerto.music.meta.music.BasicMusicMetaData;
 import top.gregtao.concerto.enums.Sources;
 import top.gregtao.concerto.util.FileUtil;
 import top.gregtao.concerto.util.HttpUtil;
@@ -25,17 +26,20 @@ public class LocalFileMusic extends PathFileMusic {
 
     public LocalFileMusic(String rawPath) {
         super(new File(rawPath).getAbsolutePath());
+        if (!FORMATS.contains(HttpUtil.getSuffix(rawPath))) {
+            throw new UnsafeMusicException("Unsupported source");
+        }
     }
 
     @Override
-    public InputStream getInputStream() throws FileNotFoundException {
-        return FileUtil.bufferedFileInputStream(new File(this.getRawPath()));
+    public MusicSource getMusicSource() {
+        return MusicSource.of(new File(this.getRawPath()));
     }
 
     @Override
-    public Lyric getLyric() throws IOException {
-        return new LRCFormatLyric().load(String.join("\n",
-                Files.readAllLines(Path.of(HttpUtil.getRawPathWithoutSuffix(this.getRawPath()) + ".lrc"))));
+    public Pair<Lyric, Lyric> getLyric() throws IOException {
+        return Pair.of(new LRCFormatLyric().load(String.join("\n",
+                Files.readAllLines(Path.of(HttpUtil.getRawPathWithoutSuffix(this.getRawPath()) + ".lrc")))), null);
     }
 
     @Override
@@ -48,7 +52,7 @@ public class LocalFileMusic extends PathFileMusic {
         } catch (Exception e) {
             author = title = null;
         }
-        this.setMusicMeta(new BasicMusicMeta(
+        this.setMusicMeta(new BasicMusicMetaData(
                 author == null || author.isEmpty() ? TextUtil.getTranslatable("concerto.unknown") : author,
                 title == null || title.isEmpty() ? this.getRawPath() : title,
                 Sources.LOCAL_FILE.getName().getString(),

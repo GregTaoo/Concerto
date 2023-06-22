@@ -1,11 +1,12 @@
 package top.gregtao.concerto.player;
 
+import com.mojang.datafixers.util.Pair;
 import net.minecraft.text.Text;
 import net.minecraft.util.math.MathHelper;
 import top.gregtao.concerto.ConcertoClient;
 import top.gregtao.concerto.api.LazyLoadable;
 import top.gregtao.concerto.api.MusicJsonParsers;
-import top.gregtao.concerto.music.meta.music.MusicMeta;
+import top.gregtao.concerto.music.meta.music.MusicMetaData;
 import top.gregtao.concerto.enums.OrderType;
 import top.gregtao.concerto.music.Music;
 import top.gregtao.concerto.music.MusicTimestamp;
@@ -29,17 +30,19 @@ public class MusicPlayerStatus {
 
     public Music currentMusic = null;
 
-    public Lyric currentLyric = null;
+    public Lyric currentLyric = null, currentSubLyric = null;
 
-    public MusicMeta currentMeta = null;
+    public MusicMetaData currentMeta = null;
 
     private MusicTimestamp currentTime = null;
 
-    private String[] displayTexts = new String[]{ "", "", ""}; // Caption; Title | Author; Source | Time;
+    private String[] displayTexts = new String[]{ "", "", "", ""}; // Lyrics; SubLyrics; Title | Author; Source | Time;
 
-    private String timeFormat = "%s - %s";
+    private String timeFormat = "%s" + " ".repeat(30) + "%s";
 
     private OrderType orderType = OrderType.NORMAL;
+
+    public float progressPercentage = 0;
 
     private final Random random = new Random();
 
@@ -56,10 +59,10 @@ public class MusicPlayerStatus {
         loadInThreadPool(this.musicList);
     }
 
-    public static <T extends LazyLoadable> void loadInThreadPool(List<T> objects) {
+    public static <T extends LazyLoadable> void loadInThreadPool(List<T> objects, boolean force) {
         ExecutorService service = Executors.newFixedThreadPool(64);
         objects.forEach(object -> {
-            if (!object.isLoaded()) service.submit(() -> object.load());
+            if (force || !object.isLoaded()) service.submit(() -> object.load());
         });
         service.shutdown();
         try {
@@ -71,12 +74,17 @@ public class MusicPlayerStatus {
         }
     }
 
+    public static <T extends LazyLoadable> void loadInThreadPool(List<T> objects) {
+        loadInThreadPool(objects, false);
+    }
+
     public void resetInfo() {
-        this.currentLyric = null;
+        this.currentLyric = this.currentSubLyric = null;
         this.currentMeta = null;
         this.currentTime = MusicTimestamp.of(0);
-        this.displayTexts = new String[]{ "", "", ""};
-        this.timeFormat = "%s - %s";
+        this.displayTexts = new String[]{ "", "", "", ""};
+        this.timeFormat = "%s" + " ".repeat(30) + "%s";
+        this.progressPercentage = 0;
     }
 
     public void clear() {
@@ -130,27 +138,33 @@ public class MusicPlayerStatus {
     public void updateDisplayTexts() {
         if (this.currentMeta != null) {
             String[] strings = this.currentMeta.asString().split("\n");
-            this.displayTexts[1] = strings[0];
+            this.displayTexts[2] = strings[0];
             this.timeFormat = strings[1];
         } else {
-            this.displayTexts[1] = "";
+            this.displayTexts[2] = "";
         }
     }
 
     public void updateDisplayTexts(long millisecond) {
-        this.currentTime = MusicTimestamp.of(millisecond);
-        this.displayTexts[2] = this.timeFormat.formatted(this.currentTime.toStringWithoutMillisecond(), this.orderType.getName().getString())
-                + " - " + (MusicPlayer.INSTANCE.isPlayingTemp ? "?" : this.currentIndex + 1) + "/" + this.musicList.size();
+        MusicTimestamp duration = this.currentMeta.getDuration();
+        this.progressPercentage = duration == null ? 0 : ((float) millisecond / duration.asMilliseconds());
+        this.currentTime = MusicTimestamp.ofMilliseconds(millisecond);
+        this.displayTexts[3] = this.timeFormat.formatted(this.currentTime.toShortString());
         if (this.currentLyric != null) {
             this.displayTexts[0] = this.currentLyric.stayOrNext(millisecond).getString();
         } else {
             this.displayTexts[0] = Text.translatable("concerto.no_caption").getString();
         }
+        if (this.currentSubLyric != null) {
+            this.displayTexts[1] = this.currentSubLyric.stayOrNext(millisecond).getString();
+        } else {
+            this.displayTexts[1] = "";
+        }
     }
 
     public Music playNext(int forward) {
         if (this.musicList.isEmpty()) return null;
-        this.displayTexts[1] = Text.translatable("concerto.loading").getString();
+        this.displayTexts[2] = Text.translatable("concerto.loading").getString();
         this.currentIndex = this.getNext(forward);
         try {
             this.currentMusic = this.musicList.get(currentIndex);
@@ -166,11 +180,13 @@ public class MusicPlayerStatus {
     public void setupMusicStatus() {
         this.currentMeta = this.currentMusic.getMeta();
         try {
-            this.currentLyric = this.currentMusic.getLyric();
+            Pair<Lyric, Lyric> lyrics = this.currentMusic.getLyric();
+            this.currentLyric = lyrics.getFirst();
+            this.currentSubLyric = lyrics.getSecond();
         } catch (Exception e) {
             this.currentLyric = null;
         }
-        this.displayTexts[1] = "";
+        this.displayTexts[2] = "";
     }
 
     public void removeCurrent() {

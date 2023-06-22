@@ -1,44 +1,46 @@
 package top.gregtao.concerto.music;
 
-import top.gregtao.concerto.api.*;
+import com.mojang.datafixers.util.Pair;
+import top.gregtao.concerto.api.JsonParsable;
+import top.gregtao.concerto.api.LazyLoadable;
+import top.gregtao.concerto.api.WithMetaData;
 import top.gregtao.concerto.music.lyric.Lyric;
-import top.gregtao.concerto.music.meta.music.MusicMeta;
+import top.gregtao.concerto.music.meta.music.MusicMetaData;
 
 import java.io.IOException;
-import java.io.InputStream;
 
 public abstract class Music implements JsonParsable<Music>, LazyLoadable, WithMetaData {
 
     private boolean isMetaLoaded = false;
-    private MusicMeta musicMeta = null;
+    private MusicMetaData musicMetaData = null;
 
-    public InputStream getMusicStream() {
+    public MusicSource getMusicSourceOrNull() {
         try {
-            return this.getInputStream();
-        } catch (Exception e) {
+            return this.getMusicSource();
+        } catch (MusicSourceNotFoundException e) {
             e.printStackTrace();
             return null;
         }
     }
 
-    public Lyric getLyric() throws IOException {
+    public Pair<Lyric, Lyric> getLyric() throws IOException {
         return null;
     }
 
-    public MusicMeta getMeta() {
+    public MusicMetaData getMeta() {
         if (!this.isLoaded()) {
             this.load();
             this.isMetaLoaded = true;
         }
-        return this.musicMeta;
+        return this.musicMetaData;
     }
 
     public void load() {
         this.isMetaLoaded = true;
     }
 
-    public void setMusicMeta(MusicMeta musicMeta) {
-        this.musicMeta = musicMeta;
+    public void setMusicMeta(MusicMetaData musicMetaData) {
+        this.musicMetaData = musicMetaData;
         this.isMetaLoaded = true;
     }
 
@@ -46,5 +48,5 @@ public abstract class Music implements JsonParsable<Music>, LazyLoadable, WithMe
         return this.isMetaLoaded;
     }
 
-    public abstract InputStream getInputStream() throws Exception;
+    public abstract MusicSource getMusicSource() throws MusicSourceNotFoundException;
 }

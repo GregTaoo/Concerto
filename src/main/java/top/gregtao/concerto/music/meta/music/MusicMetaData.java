@@ -4,7 +4,7 @@ import top.gregtao.concerto.api.JsonParsable;
 import top.gregtao.concerto.music.MusicTimestamp;
 import top.gregtao.concerto.music.meta.MetaData;
 
-public interface MusicMeta extends JsonParsable<MusicMeta>, MetaData {
+public interface MusicMetaData extends JsonParsable<MusicMetaData>, MetaData {
 
     String getSource();
 
@@ -24,8 +24,8 @@ public interface MusicMeta extends JsonParsable<MusicMeta>, MetaData {
 
     default String asString() {
         MusicTimestamp timestamp = this.getDuration();
-        return this.title() + " | " + this.author() + "\n" + this.getSource()
-                + " - %s" + (timestamp == null ? "" : " -> " + this.getDuration().toStringWithoutMillisecond()) + " - %s";
+        return this.title() + " | " + this.author() + " | " + this.getSource()
+                + "\n%s" + (timestamp == null ? "" : " ".repeat(30) + this.getDuration().toShortString());
     }
 
 }

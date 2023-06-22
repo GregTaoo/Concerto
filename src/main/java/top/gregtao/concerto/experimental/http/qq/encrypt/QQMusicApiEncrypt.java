@@ -1,4 +1,4 @@
-package top.gregtao.concerto.http.encrypt;
+package top.gregtao.concerto.experimental.http.qq.encrypt;
 
 import top.gregtao.concerto.util.HashUtil;
 

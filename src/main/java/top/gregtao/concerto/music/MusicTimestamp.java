@@ -28,7 +28,7 @@ public class MusicTimestamp implements Comparable<MusicTimestamp> {
         return new MusicTimestamp(seconds / 60, seconds % 60, 0);
     }
 
-    public static MusicTimestamp of(long milliseconds) {
+    public static MusicTimestamp ofMilliseconds(long milliseconds) {
         return new MusicTimestamp((int) (milliseconds / 1000 / 60), (int) (milliseconds / 1000 % 60), (int) (milliseconds % 1000));
     }
 
@@ -49,7 +49,7 @@ public class MusicTimestamp implements Comparable<MusicTimestamp> {
         return String.format("%02d:%02d.%03d", this.minute, this.second, this.millisecond);
     }
 
-    public String toStringWithoutMillisecond() {
+    public String toShortString() {
         return String.format("%02d:%02d", this.minute, this.second);
     }
 }

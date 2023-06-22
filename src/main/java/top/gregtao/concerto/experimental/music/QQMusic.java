@@ -1,17 +1,19 @@
-package top.gregtao.concerto.music;
+package top.gregtao.concerto.experimental.music;
 
 import com.google.gson.JsonObject;
+import com.mojang.datafixers.util.Pair;
 import top.gregtao.concerto.api.JsonParser;
 import top.gregtao.concerto.api.MusicJsonParsers;
 import top.gregtao.concerto.enums.Sources;
-import top.gregtao.concerto.http.qq.QQMusicApiClient;
+import top.gregtao.concerto.experimental.http.qq.QQMusicApiClient;
+import top.gregtao.concerto.music.Music;
+import top.gregtao.concerto.music.MusicSource;
+import top.gregtao.concerto.music.MusicSourceNotFoundException;
 import top.gregtao.concerto.music.lyric.Lyric;
-import top.gregtao.concerto.music.meta.music.BasicMusicMeta;
-import top.gregtao.concerto.music.meta.music.MusicMeta;
+import top.gregtao.concerto.music.meta.music.BasicMusicMetaData;
+import top.gregtao.concerto.music.meta.music.MusicMetaData;
 import top.gregtao.concerto.music.meta.music.UnknownMusicMeta;
-import top.gregtao.concerto.util.FileUtil;
 
-import java.io.InputStream;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
@@ -24,13 +26,13 @@ public class QQMusic extends Music {
         this.mid = mid;
     }
 
-    public MusicMeta parseMetaData(JsonObject object) {
+    public MusicMetaData parseMetaData(JsonObject object) {
         JsonObject trackInfo = object.getAsJsonObject("track_info");
         String title = trackInfo.get("name").getAsString();
         List<String> singers = new ArrayList<>();
         trackInfo.getAsJsonArray("singer").forEach(element -> singers.add(element.getAsJsonObject().get("name").getAsString()));
         this.mediaMid = trackInfo.getAsJsonObject("file").get("media_mid").getAsString();
-        return new BasicMusicMeta(String.join(", ", singers), title, Sources.QQ_MUSIC.getName().getString(), trackInfo.get("interval").getAsLong() * 1000);
+        return new BasicMusicMetaData(String.join(", ", singers), title, Sources.QQ_MUSIC.getName().getString(), trackInfo.get("interval").getAsLong() * 1000);
     }
 
     @Override
@@ -46,10 +48,10 @@ public class QQMusic extends Music {
     }
 
     @Override
-    public Lyric getLyric() {
+    public Pair<Lyric, Lyric> getLyric() {
         try {
             Lyric lyric = QQMusicApiClient.C.getLyric(this.mid);
-            return lyric.isEmpty() ? null : lyric;
+            return Pair.of(lyric.isEmpty() ? null : lyric, null);
         } catch (Exception e) {
             return null;
         }
@@ -61,8 +63,12 @@ public class QQMusic extends Music {
     }
 
     @Override
-    public InputStream getInputStream() throws Exception {
-        return FileUtil.createBuffered(new URL(this.getRawPath()).openStream());
+    public MusicSource getMusicSource() throws MusicSourceNotFoundException {
+        try {
+            return MusicSource.of(new URL(this.getRawPath()));
+        } catch (Exception e) {
+            throw new MusicSourceNotFoundException(e);
+        }
     }
 
     public String getRawPath() throws Exception {

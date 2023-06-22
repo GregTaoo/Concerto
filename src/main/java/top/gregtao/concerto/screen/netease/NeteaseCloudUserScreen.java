@@ -32,7 +32,7 @@ public class NeteaseCloudUserScreen extends PageScreen {
     }
 
     private void onPageTurned(int page) {
-        MusicPlayer.executeThread(() -> {
+        MusicPlayer.run(() -> {
             if (NeteaseCloudApiClient.LOCAL_USER.updateLoginStatus()) {
                 this.playlistList.reset(NeteaseCloudApiClient.LOCAL_USER.userPlaylists(page), null);
             }

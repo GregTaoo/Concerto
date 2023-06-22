@@ -9,14 +9,14 @@ import top.gregtao.concerto.ConcertoClient;
 import top.gregtao.concerto.enums.SearchType;
 import top.gregtao.concerto.enums.Sources;
 import top.gregtao.concerto.http.HttpApiClient;
-import top.gregtao.concerto.http.qrcode.QRCode;
+import top.gregtao.concerto.http.QRCode;
 import top.gregtao.concerto.music.Music;
 import top.gregtao.concerto.music.NeteaseCloudMusic;
 import top.gregtao.concerto.music.list.NeteaseCloudPlaylist;
 import top.gregtao.concerto.music.lyric.LRCFormatLyric;
 import top.gregtao.concerto.music.lyric.Lyric;
-import top.gregtao.concerto.music.meta.music.TimelessMusicMeta;
-import top.gregtao.concerto.music.meta.music.list.PlaylistMeta;
+import top.gregtao.concerto.music.meta.music.TimelessMusicMetaData;
+import top.gregtao.concerto.music.meta.music.list.PlaylistMetaData;
 import top.gregtao.concerto.player.MusicPlayer;
 import top.gregtao.concerto.player.MusicPlayerStatus;
 import top.gregtao.concerto.util.HashUtil;
@@ -52,16 +52,20 @@ public class NeteaseCloudApiClient extends HttpApiClient {
     }
 
     public JsonObject getMusicLink(String id, NeteaseCloudMusic.Level level) throws Exception {
-        return JsonUtil.from(this.get("/api/song/enhance/player/url/v1?encodeType=flac&ids=[" + id + "]&level=" + level.asString()));
+        return JsonUtil.from(this.get("/api/song/enhance/player/url/v1?encodeType=mp3&ids=[" + id + "]&level=" + level.asString()));
     }
 
     public JsonObject getMusicDetail(String id) throws Exception {
         return JsonUtil.from(this.get("/api/v3/song/detail?c=%5B%7B%22id%22%3A%20" + id + "%7D%5D"));
     }
 
-    public Lyric getLyric(String id) throws Exception {
-        return new LRCFormatLyric().load(JsonUtil.from(this.get("/api/song/lyric?id=" + id + "&lv=0&tv=0"))
-                .getAsJsonObject("lrc").get("lyric").getAsString());
+    public Pair<Lyric, Lyric> getLyric(String id) throws Exception {
+        JsonObject object = JsonUtil.from(this.get("/api/song/lyric?id=" + id + "&lv=0&tv=0"));
+        Lyric lyric1 = new LRCFormatLyric().load(object.getAsJsonObject("lrc").get("lyric").getAsString());
+        lyric1 = lyric1.isEmpty() ? null : lyric1;
+        Lyric lyric2 = new LRCFormatLyric().load(object.getAsJsonObject("tlyric").get("lyric").getAsString());
+        lyric2 = lyric2.isEmpty() ? null : lyric2;
+        return Pair.of(lyric1, lyric2);
     }
 
     public Pair<Integer, String> sendPhoneCaptcha(String countryCode, String phoneNumber) throws Exception {
@@ -109,7 +113,7 @@ public class NeteaseCloudApiClient extends HttpApiClient {
         return getCodeAndMessage(JsonUtil.from(this.get("/api/login/qrcode/client/login?type=1&key=" + uniKey)));
     }
 
-    public Pair<ArrayList<Music>, PlaylistMeta> parsePlayListJson(JsonObject object, NeteaseCloudMusic.Level level, boolean simply) {
+    public Pair<ArrayList<Music>, PlaylistMetaData> parsePlayListJson(JsonObject object, NeteaseCloudMusic.Level level, boolean simply) {
         ArrayList<Music> music = new ArrayList<>();
         String createTime = "";
         if (!simply) {
@@ -126,10 +130,10 @@ public class NeteaseCloudApiClient extends HttpApiClient {
         } catch (UnsupportedOperationException e) {
             description = "";
         }
-        return Pair.of(music, new PlaylistMeta(creatorName, name, createTime, description));
+        return Pair.of(music, new PlaylistMetaData(creatorName, name, createTime, description));
     }
 
-    public Pair<ArrayList<Music>, PlaylistMeta> parseAlbumJson(JsonObject object, NeteaseCloudMusic.Level level, boolean simply) {
+    public Pair<ArrayList<Music>, PlaylistMetaData> parseAlbumJson(JsonObject object, NeteaseCloudMusic.Level level, boolean simply) {
         ArrayList<Music> music = new ArrayList<>();
         String createTime = "", name, description;
         JsonObject creator;
@@ -139,7 +143,7 @@ public class NeteaseCloudApiClient extends HttpApiClient {
             String picUrl = album.get("picUrl").getAsString();
             array.forEach(element -> {
                 NeteaseCloudMusic music1 = new NeteaseCloudMusic(element.getAsJsonObject(), level);
-                ((TimelessMusicMeta) music1.getMeta()).setHeadPictureUrl(picUrl);
+                ((TimelessMusicMetaData) music1.getMeta()).setHeadPictureUrl(picUrl);
                 music.add(music1);
             });
             createTime = MathUtil.formattedTime(album.get("publishTime").getAsString());
@@ -160,26 +164,26 @@ public class NeteaseCloudApiClient extends HttpApiClient {
             }
         }
         String creatorName = creator.get("name").getAsString();
-        return Pair.of(music, new PlaylistMeta(creatorName, name, createTime, description));
+        return Pair.of(music, new PlaylistMetaData(creatorName, name, createTime, description));
     }
 
-    public Pair<ArrayList<Music>, PlaylistMeta> getPlayList(String id, NeteaseCloudMusic.Level level) {
+    public Pair<ArrayList<Music>, PlaylistMetaData> getPlayList(String id, NeteaseCloudMusic.Level level) {
         try {
             JsonObject object = JsonUtil.from(this.get("/api/v6/playlist/detail?id=" + id + "&n=" + MusicPlayerStatus.MAX_SIZE))
                     .getAsJsonObject("playlist");
             return this.parsePlayListJson(object, level, false);
         } catch (Exception e) {
-            return Pair.of(new ArrayList<>(), PlaylistMeta.EMPTY);
+            return Pair.of(new ArrayList<>(), PlaylistMetaData.EMPTY);
         }
     }
 
-    public Pair<ArrayList<Music>, PlaylistMeta> getAlbum(String id, NeteaseCloudMusic.Level level) {
+    public Pair<ArrayList<Music>, PlaylistMetaData> getAlbum(String id, NeteaseCloudMusic.Level level) {
         try {
             JsonObject object = JsonUtil.from(this.get("/api/v1/album/" + id));
             return this.parseAlbumJson(object, level, false);
         } catch (Exception e) {
             e.printStackTrace();
-            return Pair.of(new ArrayList<>(), PlaylistMeta.EMPTY);
+            return Pair.of(new ArrayList<>(), PlaylistMetaData.EMPTY);
         }
     }
 
@@ -233,7 +237,7 @@ public class NeteaseCloudApiClient extends HttpApiClient {
             CURRENT_THREAD.stop();
             return;
         }
-        CURRENT_THREAD = MusicPlayer.executeThread(() -> {
+        CURRENT_THREAD = MusicPlayer.run(() -> {
             try {
                 long wait = 120000;
                 while (wait > 0) {

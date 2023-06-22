@@ -2,13 +2,13 @@ package top.gregtao.concerto.music.parser.meta;
 
 import com.google.gson.JsonObject;
 import top.gregtao.concerto.api.JsonParser;
-import top.gregtao.concerto.music.meta.music.TimelessMusicMeta;
+import top.gregtao.concerto.music.meta.music.TimelessMusicMetaData;
 
-public class TimelessMusicMetaJsonParser implements JsonParser<TimelessMusicMeta> {
+public class TimelessMusicMetaJsonParser implements JsonParser<TimelessMusicMetaData> {
 
     @Override
-    public TimelessMusicMeta fromJson(JsonObject object) {
-        return new TimelessMusicMeta(
+    public TimelessMusicMetaData fromJson(JsonObject object) {
+        return new TimelessMusicMetaData(
                 object.get("author").getAsString(),
                 object.get("title").getAsString(),
                 object.get("src").getAsString(),
@@ -17,7 +17,7 @@ public class TimelessMusicMetaJsonParser implements JsonParser<TimelessMusicMeta
     }
 
     @Override
-    public JsonObject toJson(JsonObject object, TimelessMusicMeta meta) {
+    public JsonObject toJson(JsonObject object, TimelessMusicMetaData meta) {
         object.addProperty("title", meta.title());
         object.addProperty("src", meta.getSource());
         object.addProperty("author", meta.author());

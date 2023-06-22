@@ -1,4 +1,4 @@
-package top.gregtao.concerto.player.test;
+package top.gregtao.concerto.experimental.player;
 
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
@@ -9,19 +9,19 @@ import org.slf4j.Logger;
 import top.gregtao.concerto.ConcertoClient;
 import top.gregtao.concerto.api.MusicJsonParsers;
 import top.gregtao.concerto.music.Music;
+import top.gregtao.concerto.music.MusicSource;
 import top.gregtao.concerto.player.MusicPlayerStatus;
 
 import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.LineUnavailableException;
 import javax.sound.sampled.UnsupportedAudioFileException;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.List;
 import java.util.function.Supplier;
 
-public class MusicPlayer1 extends AudioPlayer implements AudioPlayer.Listener {
+public class MusicPlayerE extends AudioPlayer implements AudioPlayer.Listener {
 
-    public static MusicPlayer1 INSTANCE = new MusicPlayer1(ConcertoClient.LOGGER);
+    public static MusicPlayerE INSTANCE = new MusicPlayerE(ConcertoClient.LOGGER);
 
 //    public static MusicPlayer INSTANCE = new MusicPlayer();
 
@@ -33,7 +33,7 @@ public class MusicPlayer1 extends AudioPlayer implements AudioPlayer.Listener {
 
     public boolean isPlayingTemp = false;
 
-    public MusicPlayer1(Logger logger) {
+    public MusicPlayerE(Logger logger) {
         super(logger);
         this.addListener(this);
     }
@@ -148,8 +148,8 @@ public class MusicPlayer1 extends AudioPlayer implements AudioPlayer.Listener {
 
     public void playTempMusic(Music music) {
         executeThread(() -> {
-            InputStream inputStream = music.getMusicStream();
-            if (inputStream == null) return;
+            MusicSource source = music.getMusicSourceOrNull();
+            if (source == null) return;
             this.forcePaused = false;
             this.playNextLock = this.started = true;
             this.reset();
@@ -159,7 +159,7 @@ public class MusicPlayer1 extends AudioPlayer implements AudioPlayer.Listener {
             status.setupMusicStatus();
             status.updateDisplayTexts();
             try {
-                this.loadAudioStream(inputStream);
+                this.loadAudioStream(source.getAudioStream());
                 this.isPlayingTemp = true;
             } catch (UnsupportedAudioFileException | LineUnavailableException | IOException e) {
                 this.started = this.isPlayingTemp = this.forcePaused = false;
@@ -183,9 +183,9 @@ public class MusicPlayer1 extends AudioPlayer implements AudioPlayer.Listener {
                 this.playNextLock = true;
                 Music music = MusicPlayerStatus.INSTANCE.playNext(forward);
                 if (music != null) {
-                    InputStream inputStream;
+                    MusicSource source;
                     ClientPlayerEntity player = MinecraftClient.getInstance().player;
-                    while ((inputStream = music.getMusicStream()) == null) {
+                    while ((source = music.getMusicSourceOrNull()) == null) {
                         if (player != null) {
                             player.sendMessage(Text.translatable(
                                     "concerto.player.unable", music.getMeta().title(), music.getMeta().author()));
@@ -198,7 +198,7 @@ public class MusicPlayer1 extends AudioPlayer implements AudioPlayer.Listener {
                             return;
                         }
                     }
-                    this.loadAudioStream(inputStream);
+                    this.loadAudioStream(source.getAudioStream());
                     callback.run();
                 }
                 this.playNextLock = this.isPlayingTemp = this.forcePaused = false;

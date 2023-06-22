@@ -11,18 +11,18 @@ import net.minecraft.client.texture.NativeImageBackedTexture;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
+import top.gregtao.concerto.ConcertoClient;
+import top.gregtao.concerto.util.HashUtil;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
+import java.io.*;
 import java.net.URL;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-public class URLImageWidget extends DrawableHelper implements Drawable, Widget {
+public class URLImageWidget extends DrawableHelper implements Drawable, Widget, Closeable {
 
     protected int width;
     protected int height;
@@ -39,12 +39,13 @@ public class URLImageWidget extends DrawableHelper implements Drawable, Widget {
         this.x = x;
         this.y = y;
         this.url = url;
-        this.texture = new NativeImageBackedTexture(width, height, false);
+        this.texture = new NativeImageBackedTexture(width << 3, height << 3, false);
         this.textureId = MinecraftClient.getInstance().getTextureManager().registerDynamicTexture("urlimg", this.texture);
     }
 
     public static BufferedImage resizeImage(BufferedImage originalImage, int targetWidth, int targetHeight) {
-        Image resultingImage = originalImage.getScaledInstance(targetWidth, targetHeight, Image.SCALE_AREA_AVERAGING);
+        if (originalImage.getWidth() == targetWidth && originalImage.getHeight() == targetHeight) return originalImage;
+        Image resultingImage = originalImage.getScaledInstance(targetWidth, targetHeight, Image.SCALE_SMOOTH);
         BufferedImage outputImage = new BufferedImage(targetWidth, targetHeight, BufferedImage.TYPE_INT_ARGB);
         outputImage.getGraphics().drawImage(resultingImage, 0, 0, null);
         return outputImage;
@@ -54,7 +55,7 @@ public class URLImageWidget extends DrawableHelper implements Drawable, Widget {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         try {
             ImageIO.write(image, "png", out);
-            return NativeImage.read(out.toByteArray());
+            return NativeImage.read(new ByteArrayInputStream(out.toByteArray()));
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -64,10 +65,35 @@ public class URLImageWidget extends DrawableHelper implements Drawable, Widget {
         this.url = url;
     }
 
+    public String getFileName() {
+        return HashUtil.md5(this.url.toString()) + ".png";
+    }
+
+    public boolean cacheExists() {
+        return ConcertoClient.IMAGE_CACHE_MANAGER.exists(this.getFileName());
+    }
+
+    public File getFromCache() {
+        return ConcertoClient.IMAGE_CACHE_MANAGER.getChild(this.getFileName());
+    }
+
+    public void writeCacheFile(BufferedImage image) throws IOException {
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        ImageIO.write(image, "png", outputStream);
+        ConcertoClient.IMAGE_CACHE_MANAGER.addFile(this.getFileName(), new ByteArrayInputStream(outputStream.toByteArray()));
+    }
+
     public void loadImage() {
         try {
             this.loading = true;
-            this.texture.setImage(toNativeImage(resizeImage(ImageIO.read(this.url), this.width, this.height)));
+            BufferedImage image;
+            if (this.cacheExists()) {
+                image = ImageIO.read(this.getFromCache());
+            } else {
+                image = resizeImage(ImageIO.read(this.url), this.width << 3, this.height << 3);
+                this.writeCacheFile(image);
+            }
+            this.texture.setImage(toNativeImage(image));
             this.texture.upload();
             this.loading = false;
         } catch (IOException e) {
@@ -78,8 +104,14 @@ public class URLImageWidget extends DrawableHelper implements Drawable, Widget {
     public void loadImage(Function<URL, byte[]> imageSupplier) {
         try {
             this.loading = true;
-            this.texture.setImage(toNativeImage(resizeImage(ImageIO.read(
-                    new ByteArrayInputStream(imageSupplier.apply(this.url))), this.width, this.height)));
+            BufferedImage image;
+            if (this.cacheExists()) {
+                image = ImageIO.read(this.getFromCache());
+            } else {
+                image = resizeImage(ImageIO.read(new ByteArrayInputStream(imageSupplier.apply(this.url))), this.width << 3, this.height << 3);
+                this.writeCacheFile(image);
+            }
+            this.texture.setImage(toNativeImage(image));
             this.texture.upload();
             this.loading = false;
         } catch (IOException e) {
@@ -87,6 +119,7 @@ public class URLImageWidget extends DrawableHelper implements Drawable, Widget {
         }
     }
 
+    @Override
     public void close() {
         this.loading = true;
         MinecraftClient.getInstance().getTextureManager().destroyTexture(this.textureId);
@@ -103,7 +136,10 @@ public class URLImageWidget extends DrawableHelper implements Drawable, Widget {
             if (image != null && !this.loading) {
                 RenderSystem.setShaderTexture(0, this.textureId);
                 RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f);
-                DrawableHelper.drawTexture(matrices, this.x, this.y, 0, 0, this.width, this.height, image.getWidth(), image.getHeight());
+                MatrixStack matrixStack = new MatrixStack();
+                matrixStack.scale(0.125f, 0.125f, 1);
+                matrixStack.translate(7 * this.x, 7 * this.y, 0);
+                DrawableHelper.drawTexture(matrixStack, this.x, this.y, 0, 0, this.width << 3, this.height << 3, image.getWidth(), image.getHeight());
                 RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f);
             } else {
                 DrawableHelper.drawCenteredTextWithShadow(matrices, MinecraftClient.getInstance().textRenderer,

@@ -4,20 +4,20 @@ import top.gregtao.concerto.api.JsonParser;
 import top.gregtao.concerto.api.MusicJsonParsers;
 import top.gregtao.concerto.music.MusicTimestamp;
 
-public class TimelessMusicMeta implements MusicMeta {
+public class TimelessMusicMetaData implements MusicMetaData {
 
     private final String author;
     private final String title;
     private final String source;
     private String headPictureUrl = "";
 
-    public TimelessMusicMeta(String author, String title, String source) {
+    public TimelessMusicMetaData(String author, String title, String source) {
         this.author = author;
         this.title = title;
         this.source = source;
     }
 
-    public TimelessMusicMeta(String author, String title, String source, String headPictureUrl) {
+    public TimelessMusicMetaData(String author, String title, String source, String headPictureUrl) {
         this(author, title, source);
         this.headPictureUrl = headPictureUrl;
     }
@@ -52,7 +52,7 @@ public class TimelessMusicMeta implements MusicMeta {
     }
 
     @Override
-    public JsonParser<MusicMeta> getJsonParser() {
+    public JsonParser<MusicMetaData> getJsonParser() {
         return MusicJsonParsers.TIMELESS_META;
     }
 }

@@ -3,41 +3,47 @@ package top.gregtao.concerto.music;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.mojang.datafixers.util.Pair;
 import net.minecraft.util.StringIdentifiable;
 import top.gregtao.concerto.api.JsonParser;
 import top.gregtao.concerto.api.MusicJsonParsers;
 import top.gregtao.concerto.api.SimpleStringIdentifiable;
+import top.gregtao.concerto.config.MusicCacheManager;
 import top.gregtao.concerto.enums.Sources;
 import top.gregtao.concerto.http.netease.NeteaseCloudApiClient;
 import top.gregtao.concerto.music.lyric.Lyric;
-import top.gregtao.concerto.music.meta.music.BasicMusicMeta;
-import top.gregtao.concerto.music.meta.music.MusicMeta;
+import top.gregtao.concerto.music.meta.music.BasicMusicMetaData;
+import top.gregtao.concerto.music.meta.music.MusicMetaData;
 import top.gregtao.concerto.music.meta.music.UnknownMusicMeta;
-import top.gregtao.concerto.util.FileUtil;
 
-import java.io.InputStream;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
-public class NeteaseCloudMusic extends Music {
+public class NeteaseCloudMusic extends CacheableMusic {
     private final String id;
     private final Level level;
 
     public NeteaseCloudMusic(String id, Level level) {
+        super(MusicCacheManager.INSTANCE);
         this.id = id;
         this.level = level;
     }
 
     public NeteaseCloudMusic(JsonObject object, Level level) {
+        super(MusicCacheManager.INSTANCE);
         this.id = object.get("id").getAsString();
         this.level = level;
         this.setMusicMeta(parseMetaData(object));
     }
 
     @Override
-    public InputStream getInputStream() throws Exception {
-        return FileUtil.createBuffered(new URL(this.getRawPath()).openStream());
+    public MusicSource getMusicSource() throws MusicSourceNotFoundException {
+        try {
+            return MusicSource.of(new URL(this.getRawPath()));
+        } catch (Exception e) {
+            throw new MusicSourceNotFoundException(e);
+        }
     }
 
     public String getRawPath() throws Exception {
@@ -47,16 +53,15 @@ public class NeteaseCloudMusic extends Music {
     }
 
     @Override
-    public Lyric getLyric() {
+    public Pair<Lyric, Lyric> getLyric() {
         try {
-            Lyric lyric = NeteaseCloudApiClient.INSTANCE.getLyric(this.id);
-            return lyric.isEmpty() ? null : lyric;
+            return NeteaseCloudApiClient.INSTANCE.getLyric(this.id);
         } catch (Exception e) {
             return null;
         }
     }
 
-    public static MusicMeta parseMetaData(JsonObject object) {
+    public static MusicMetaData parseMetaData(JsonObject object) {
         String name = object.get("name").getAsString();
         long duration = object.get("dt").getAsLong();
         JsonArray authors = object.getAsJsonArray("ar");
@@ -68,7 +73,7 @@ public class NeteaseCloudMusic extends Music {
             JsonElement element = album.get("picUrl");
             if (element != null && !element.isJsonNull()) headPic = element.getAsString();
         }
-        return new BasicMusicMeta(String.join(", ", authorList), name,
+        return new BasicMusicMetaData(String.join(", ", authorList), name,
                 Sources.NETEASE_CLOUD.getName().getString(), duration, headPic);
     }
 
@@ -96,6 +101,11 @@ public class NeteaseCloudMusic extends Music {
 
     public Level getLevel() {
         return this.level;
+    }
+
+    @Override
+    public String getSuffix() {
+        return "mp3";
     }
 
     public enum Level implements SimpleStringIdentifiable {

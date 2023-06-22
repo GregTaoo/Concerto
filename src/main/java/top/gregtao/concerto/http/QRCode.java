@@ -1,4 +1,4 @@
-package top.gregtao.concerto.http.qrcode;
+package top.gregtao.concerto.http;
 
 import com.google.zxing.BarcodeFormat;
 import com.google.zxing.WriterException;

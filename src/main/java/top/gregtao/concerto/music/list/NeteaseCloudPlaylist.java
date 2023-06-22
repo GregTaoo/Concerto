@@ -5,7 +5,7 @@ import com.mojang.datafixers.util.Pair;
 import top.gregtao.concerto.http.netease.NeteaseCloudApiClient;
 import top.gregtao.concerto.music.Music;
 import top.gregtao.concerto.music.NeteaseCloudMusic;
-import top.gregtao.concerto.music.meta.music.list.PlaylistMeta;
+import top.gregtao.concerto.music.meta.music.list.PlaylistMetaData;
 
 import java.util.ArrayList;
 
@@ -31,7 +31,7 @@ public class NeteaseCloudPlaylist extends Playlist {
     }
 
     @Override
-    Pair<ArrayList<Music>, PlaylistMeta> loadData() {
+    Pair<ArrayList<Music>, PlaylistMetaData> loadData() {
         return this.isAlbum() ? NeteaseCloudApiClient.INSTANCE.getAlbum(this.id, NeteaseCloudMusic.Level.STANDARD) :
                 NeteaseCloudApiClient.INSTANCE.getPlayList(this.id, NeteaseCloudMusic.Level.STANDARD);
     }

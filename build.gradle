@@ -28,7 +28,10 @@ dependencies {
 	modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
 	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
 
-	my("com.github.gregtaoo:java-stream-player-forked:4e5218164d") {
+//	my("com.github.goxr3plus:java-stream-player:10.0.2") {
+//		exclude module: 'junit'
+//	}
+	my("com.github.gregtaoo:java-stream-player-forked:4c0a26b80a") {
 		exclude module: 'junit'
 	}
 	my 'com.google.zxing:core:3.3.0'

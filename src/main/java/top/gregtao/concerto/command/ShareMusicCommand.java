@@ -30,7 +30,7 @@ public class ShareMusicCommand {
                         ClientCommandManager.literal("to").then(
                                 ClientCommandManager.argument("target", ShareMusicTargetArgumentType.create()).executes(context -> {
                                     String target = ShareMusicTargetArgumentType.get(context, "target");
-                                    MusicPlayer.executeThread(() -> {
+                                    MusicPlayer.run(() -> {
                                         Music current = MusicPlayerStatus.INSTANCE.getCurrentMusic();
                                         if (current != null) {
                                             TextUtil.commandMessageClient(context, Text.translatable("concerto.share.sent"));
@@ -68,7 +68,7 @@ public class ShareMusicCommand {
                 ).then(
                         ClientCommandManager.literal("list").then(
                                 ClientCommandManager.argument("page", IntegerArgumentType.integer(1)).executes(context -> {
-                                    MusicPlayer.executeThread(() -> {
+                                    MusicPlayer.run(() -> {
                                         int page = IntegerArgumentType.getInteger(context, "page");
                                         Map<UUID, MusicDataPacket> map = ClientMusicNetworkHandler.WAIT_CONFIRMATION;
                                         Iterator<Map.Entry<UUID, MusicDataPacket>> iterator = map.entrySet().iterator();

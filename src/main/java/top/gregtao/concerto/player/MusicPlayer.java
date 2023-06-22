@@ -13,9 +13,10 @@ import net.minecraft.text.Text;
 import top.gregtao.concerto.ConcertoClient;
 import top.gregtao.concerto.api.MusicJsonParsers;
 import top.gregtao.concerto.music.Music;
+import top.gregtao.concerto.music.MusicSource;
 import top.gregtao.concerto.util.SilentLogger;
 
-import java.io.InputStream;
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
@@ -45,7 +46,7 @@ public class MusicPlayer extends StreamPlayer implements StreamPlayerListener {
         this.addStreamPlayerListener(this);
     }
 
-    public static Thread executeThread(Runnable runnable) {
+    public static Thread run(Runnable runnable) {
         Thread thread = new Thread(runnable, ConcertoClient.MOD_ID);
         thread.start();
         return thread;
@@ -56,7 +57,7 @@ public class MusicPlayer extends StreamPlayer implements StreamPlayerListener {
     }
 
     public void addMusic(Music music, Runnable callback) {
-        executeThread(() -> {
+        run(() -> {
             MusicPlayerStatus.INSTANCE.addMusic(music);
             callback.run();
         });
@@ -67,14 +68,14 @@ public class MusicPlayer extends StreamPlayer implements StreamPlayerListener {
     }
 
     public void addMusic(List<Music> musics, Runnable callback) {
-        executeThread(() -> {
+        run(() -> {
             MusicPlayerStatus.INSTANCE.addMusic(musics);
             callback.run();
         });
     }
 
     public void addMusic(Supplier<List<Music>> musicListAdder, Runnable callback) {
-        executeThread(() -> {
+        run(() -> {
             MusicPlayerStatus.INSTANCE.addMusic(musicListAdder.get());
             callback.run();
         });
@@ -85,7 +86,7 @@ public class MusicPlayer extends StreamPlayer implements StreamPlayerListener {
     }
 
     public void addMusicHere(Music music, boolean skip, Runnable callback) {
-        executeThread(() -> {
+        run(() -> {
             MusicPlayerStatus.INSTANCE.addMusicHere(music);
             if (skip) this.skipTo(MusicPlayerStatus.INSTANCE.getCurrentIndex() + 1);
             callback.run();
@@ -157,9 +158,9 @@ public class MusicPlayer extends StreamPlayer implements StreamPlayerListener {
     }
 
     public void playTempMusic(Music music) {
-        executeThread(() -> {
-            InputStream inputStream = music.getMusicStream();
-            if (inputStream == null) return;
+        run(() -> {
+            MusicSource source = music.getMusicSourceOrNull();
+            if (source == null) return;
             this.forcePaused = false;
             this.playNextLock = this.started = true;
             this.stop();
@@ -169,10 +170,10 @@ public class MusicPlayer extends StreamPlayer implements StreamPlayerListener {
             status.setupMusicStatus();
             status.updateDisplayTexts();
             try {
-                this.open(inputStream);
+                source.open(this);
                 this.play();
                 this.isPlayingTemp = true;
-            } catch (StreamPlayerException e) {
+            } catch (StreamPlayerException | IOException e) {
                 this.started = this.isPlayingTemp = this.forcePaused = false;
                 throw new RuntimeException(e);
             }
@@ -185,7 +186,7 @@ public class MusicPlayer extends StreamPlayer implements StreamPlayerListener {
     }
 
     public void playNext(int forward, Runnable callback) {
-        executeThread(() -> {
+        run(() -> {
             try {
                 if (!this.started || MusicPlayerStatus.INSTANCE.isEmpty()) {
                     this.started = false;
@@ -195,9 +196,9 @@ public class MusicPlayer extends StreamPlayer implements StreamPlayerListener {
                 this.stop();
                 Music music = MusicPlayerStatus.INSTANCE.playNext(forward);
                 if (music != null) {
-                    InputStream inputStream;
+                    MusicSource source;
                     ClientPlayerEntity player = MinecraftClient.getInstance().player;
-                    while ((inputStream = music.getMusicStream()) == null) {
+                    while ((source = music.getMusicSourceOrNull()) == null) {
                         if (player != null) {
                             player.sendMessage(Text.translatable(
                                     "concerto.player.unable", music.getMeta().title(), music.getMeta().author()));
@@ -210,12 +211,12 @@ public class MusicPlayer extends StreamPlayer implements StreamPlayerListener {
                             return;
                         }
                     }
-                    this.open(inputStream);
+                    source.open(this);
                     this.play();
                     callback.run();
                 }
                 this.playNextLock = this.isPlayingTemp = this.forcePaused = false;
-            } catch (StreamPlayerException e) {
+            } catch (StreamPlayerException | IOException e) {
                 this.started = this.isPlayingTemp = this.forcePaused = false;
                 throw new RuntimeException(e);
             }
@@ -237,7 +238,7 @@ public class MusicPlayer extends StreamPlayer implements StreamPlayerListener {
     }
 
     public void clear() {
-        executeThread(() -> {
+        run(() -> {
             this.started = false;
             this.stop();
             MusicPlayerStatus.INSTANCE.clear();
@@ -245,7 +246,7 @@ public class MusicPlayer extends StreamPlayer implements StreamPlayerListener {
     }
 
     public void reloadConfig(Runnable callback) {
-        executeThread(() -> {
+        run(() -> {
             this.started = false;
             this.stop();
             MusicPlayerStatus.INSTANCE = MusicJsonParsers.fromRaw(ConcertoClient.MUSIC_CONFIG.read());
@@ -254,7 +255,7 @@ public class MusicPlayer extends StreamPlayer implements StreamPlayerListener {
     }
 
     public void cut(Runnable callback) {
-        executeThread(() -> {
+        run(() -> {
             if (!this.isPlayingTemp) {
                 MusicPlayerStatus.INSTANCE.removeCurrent();
             }
@@ -266,7 +267,7 @@ public class MusicPlayer extends StreamPlayer implements StreamPlayerListener {
     public void remove(int index, Runnable callback) {
         if (index == MusicPlayerStatus.INSTANCE.getCurrentIndex()) this.cut(callback);
         else {
-            executeThread(() -> {
+            run(() -> {
                 MusicPlayerStatus.INSTANCE.remove(index);
                 if (MusicPlayerStatus.INSTANCE.isEmpty()) this.cut(callback);
                 else callback.run();

@@ -33,4 +33,10 @@ public class HttpUtil {
         if (index == -1) return rawPath;
         return rawPath.substring(0, index);
     }
+
+    public static String getSuffix(String rawPath) {
+        int index = rawPath.lastIndexOf('.');
+        if (index == -1) return rawPath;
+        return rawPath.substring(index);
+    }
 }

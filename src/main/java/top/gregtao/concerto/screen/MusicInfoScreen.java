@@ -4,7 +4,7 @@ import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.Text;
 import top.gregtao.concerto.music.Music;
-import top.gregtao.concerto.music.meta.music.MusicMeta;
+import top.gregtao.concerto.music.meta.music.MusicMetaData;
 import top.gregtao.concerto.player.MusicPlayer;
 import top.gregtao.concerto.screen.widget.URLImageWidget;
 
@@ -26,14 +26,14 @@ public class MusicInfoScreen extends ConcertoScreen {
         super.init();
         this.headPicture = new URLImageWidget(140, 140, this.width / 2 - 145, this.height / 2 - 70, null);
 
-        MusicPlayer.executeThread(() -> {
+        MusicPlayer.run(() -> {
             this.music.getMeta();
             this.initInfo();
         });
     }
 
     private void initInfo() {
-        MusicMeta meta = this.music.getMeta();
+        MusicMetaData meta = this.music.getMeta();
         try {
             if (!meta.headPictureUrl().isEmpty()) {
                 this.headPicture.setUrl(new URL(meta.headPictureUrl()));

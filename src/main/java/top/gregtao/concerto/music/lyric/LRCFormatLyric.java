@@ -9,7 +9,7 @@ public class LRCFormatLyric extends Lyric {
         String[] lines = raw.split("(\n|\r|\r\n)");
         for (String line : lines) {
             line = line.trim();
-            if (!line.isEmpty() && line.matches(MusicTimestamp.FORMAT_REGEX)) {
+            if (!line.isEmpty() && line.matches(MusicTimestamp.FORMAT_REGEX) && !line.endsWith("]")) {
                 String[] args = line.split("]");
                 for (int index = 0; index < args.length - 1; ++index) {
                     String[] timesArr = args[index].substring(1).split(":");

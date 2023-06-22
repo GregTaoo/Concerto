@@ -1,11 +1,11 @@
-package top.gregtao.concerto.http.qq;
+package top.gregtao.concerto.experimental.http.qq;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.mojang.datafixers.util.Pair;
 import top.gregtao.concerto.enums.Sources;
 import top.gregtao.concerto.http.HttpApiClient;
-import top.gregtao.concerto.http.encrypt.QQMusicApiEncrypt;
+import top.gregtao.concerto.experimental.http.qq.encrypt.QQMusicApiEncrypt;
 import top.gregtao.concerto.music.lyric.LRCFormatLyric;
 import top.gregtao.concerto.music.lyric.Lyric;
 import top.gregtao.concerto.util.HttpUtil;

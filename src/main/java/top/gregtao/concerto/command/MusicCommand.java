@@ -12,7 +12,7 @@ import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.command.CommandRegistryAccess;
 import net.minecraft.text.Text;
-import top.gregtao.concerto.music.meta.music.MusicMeta;
+import top.gregtao.concerto.music.meta.music.MusicMetaData;
 import top.gregtao.concerto.command.argument.OrderTypeArgumentType;
 import top.gregtao.concerto.command.builder.MusicAdderBuilder;
 import top.gregtao.concerto.config.ClientConfig;
@@ -129,16 +129,16 @@ public class MusicCommand {
                 ClientCommandManager.literal("list").then(
                         ClientCommandManager.argument("page", IntegerArgumentType.integer(1)).executes(context -> {
                             ClientPlayerEntity clientPlayer = context.getSource().getPlayer();
-                            MusicPlayer.executeThread(() -> {
+                            MusicPlayer.run(() -> {
                                 int page = IntegerArgumentType.getInteger(context, "page");
                                 List<Music> list = MusicPlayerStatus.INSTANCE.getMusicList();
                                 page = Math.min(page, (int) Math.ceil(list.size() / 10f));
                                 clientPlayer.sendMessage(TextUtil.PAGE_SPLIT);
                                 for (int i = 10 * (page - 1); i < Math.min(10 * page, list.size()); ++i) {
-                                    MusicMeta meta = list.get(i).getMeta();
+                                    MusicMetaData meta = list.get(i).getMeta();
                                     clientPlayer.sendMessage(Text.literal(
                                                     (i + 1) + ". " + meta.title() + " | " + meta.author()
-                                                            + " | " + meta.getSource() + " | " + meta.getDuration().toStringWithoutMillisecond())
+                                                            + " | " + meta.getSource() + " | " + meta.getDuration().toShortString())
                                             .setStyle(TextUtil.getRunCommandStyle("/concerto skip " + (i + 1))));
                                 }
                                 clientPlayer.sendMessage(TextUtil.PAGE_SPLIT);

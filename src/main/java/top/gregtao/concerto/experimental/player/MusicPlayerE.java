@@ -156,7 +156,7 @@ public class MusicPlayerE extends AudioPlayer implements AudioPlayer.Listener {
             MusicPlayerHandler status = MusicPlayerHandler.INSTANCE;
             status.resetInfo();
             status.currentMusic = music;
-            status.setupMusicStatus();
+            status.initMusicStatus();
             status.updateDisplayTexts();
             try {
                 this.loadAudioStream(source.getAudioStream());

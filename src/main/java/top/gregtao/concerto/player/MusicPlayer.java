@@ -167,7 +167,7 @@ public class MusicPlayer extends StreamPlayer implements StreamPlayerListener {
             MusicPlayerHandler status = MusicPlayerHandler.INSTANCE;
             status.resetInfo();
             status.currentMusic = music;
-            status.setupMusicStatus();
+            status.initMusicStatus();
             status.updateDisplayTexts();
             try {
                 source.open(this);

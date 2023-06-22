@@ -172,13 +172,13 @@ public class MusicPlayerHandler {
         } catch (Exception e) {
             return this.currentMusic = null;
         }
-        this.setupMusicStatus();
+        this.initMusicStatus();
         this.updateDisplayTexts();
         this.writeConfig();
         return this.currentMusic;
     }
 
-    public void setupMusicStatus() {
+    public void initMusicStatus() {
         this.currentMeta = this.currentMusic.getMeta();
         try {
             Pair<Lyric, Lyric> lyrics = this.currentMusic.getLyric();

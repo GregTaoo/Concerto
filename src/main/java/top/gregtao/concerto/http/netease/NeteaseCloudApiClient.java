@@ -9,7 +9,7 @@ import top.gregtao.concerto.ConcertoClient;
 import top.gregtao.concerto.enums.SearchType;
 import top.gregtao.concerto.enums.Sources;
 import top.gregtao.concerto.http.HttpApiClient;
-import top.gregtao.concerto.http.QRCode;
+import top.gregtao.concerto.screen.QRCodeRenderer;
 import top.gregtao.concerto.music.Music;
 import top.gregtao.concerto.music.NeteaseCloudMusic;
 import top.gregtao.concerto.music.list.NeteaseCloudPlaylist;
@@ -259,12 +259,12 @@ public class NeteaseCloudApiClient extends HttpApiClient {
                     }
                 }
                 if (wait <= 0) player.sendMessage(Text.translatable("concerto.login.163.qrcode.expired"));
-                QRCode.clear();
+                QRCodeRenderer.clear();
             } catch (Exception e) {
                 player.sendMessage(Text.translatable("concerto.login.163.qrcode.error"));
                 ConcertoClient.LOGGER.error("Error occurs while checking QR code scanning status.");
                 e.printStackTrace();
-                QRCode.clear();
+                QRCodeRenderer.clear();
             }
         });
     }

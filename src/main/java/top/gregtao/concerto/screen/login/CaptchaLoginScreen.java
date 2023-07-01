@@ -1,13 +1,12 @@
 package top.gregtao.concerto.screen.login;
 
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.DrawableHelper;
+import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.gui.widget.TextFieldWidget;
 import net.minecraft.client.gui.widget.TextWidget;
 import net.minecraft.client.network.ClientPlayerEntity;
-import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.Text;
 import top.gregtao.concerto.screen.ConcertoScreen;
 
@@ -87,10 +86,10 @@ public class CaptchaLoginScreen extends ConcertoScreen {
     }
 
     @Override
-    public void render(MatrixStack matrices, int mouseX, int mouseY, float delta) {
+    public void render(DrawContext matrices, int mouseX, int mouseY, float delta) {
         super.render(matrices, mouseX, mouseY, delta);
         this.usernameField.render(matrices, mouseX, mouseY, delta);
         this.captchaField.render(matrices, mouseX, mouseY, delta);
-        DrawableHelper.drawCenteredTextWithShadow(matrices, this.textRenderer, this.message, this.width / 2, 120, 0xffffffff);
+        matrices.drawCenteredTextWithShadow(this.textRenderer, this.message, this.width / 2, 120, 0xffffffff);
     }
 }

@@ -1,25 +1,31 @@
 package top.gregtao.concerto.screen.widget;
 
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.narration.NarrationMessageBuilder;
 import net.minecraft.client.gui.widget.AlwaysSelectedEntryListWidget;
-import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.Text;
+import net.minecraft.util.Util;
 
 import java.util.List;
 import java.util.function.BiFunction;
+import java.util.function.Consumer;
 
 public class ConcertoListWidget<T> extends AlwaysSelectedEntryListWidget<ConcertoListWidget<T>.Entry> {
     private int color = 0xffffffff;
     private final BiFunction<T, Integer, Text> narrationSupplier;
+    private final Consumer<Entry> onDoubleClicked;
 
-    public ConcertoListWidget(int width, int height, int top, int bottom, int itemHeight, BiFunction<T, Integer, Text> narrationSupplier) {
+    public ConcertoListWidget(int width, int height, int top, int bottom, int itemHeight,
+                              BiFunction<T, Integer, Text> narrationSupplier, Consumer<Entry> onDoubleClicked) {
         super(MinecraftClient.getInstance(), width, height, top, bottom, itemHeight);
         this.narrationSupplier = narrationSupplier;
+        this.onDoubleClicked = onDoubleClicked;
     }
 
-    public ConcertoListWidget(int width, int height, int top, int bottom, int itemHeight, BiFunction<T, Integer, Text> narrationSupplier, int color) {
-        this(width, height, top, bottom, itemHeight, narrationSupplier);
+    public ConcertoListWidget(int width, int height, int top, int bottom, int itemHeight,
+                              BiFunction<T, Integer, Text> narrationSupplier, Consumer<Entry> onDoubleClicked, int color) {
+        this(width, height, top, bottom, itemHeight, narrationSupplier, onDoubleClicked);
         this.color = color;
     }
 
@@ -56,42 +62,41 @@ public class ConcertoListWidget<T> extends AlwaysSelectedEntryListWidget<Concert
     }
 
     @Override
-    protected void renderBackground(MatrixStack matrices) {
-    }
-
-    @Override
     public void appendNarrations(NarrationMessageBuilder builder) {
     }
 
     public class Entry extends AlwaysSelectedEntryListWidget.Entry<Entry> {
         public T item;
         public int index;
+        private long lastClickTime = 0;
+
         public Entry(T item, int index) {
             this.item = item;
             this.index = index;
         }
 
         @Override
-        public void render(MatrixStack matrices, int index, int y, int x, int entryWidth, int entryHeight, int mouseX, int mouseY, boolean hovered, float tickDelta) {
-            MinecraftClient.getInstance().textRenderer.draw(matrices, this.getNarration(), x, y + 3, ConcertoListWidget.this.color);
-        }
-
-        @Override
         public boolean mouseClicked(double mouseX, double mouseY, int button) {
             if (button == 0) {
-                this.onPressed();
+                if (Util.getMeasuringTimeMs() - this.lastClickTime < 250) {
+                    ConcertoListWidget.this.onDoubleClicked.accept(this);
+                } else {
+                    ConcertoListWidget.this.setSelected(this);
+                }
+                this.lastClickTime = Util.getMeasuringTimeMs();
                 return true;
             }
             return false;
         }
 
-        private void onPressed() {
-            ConcertoListWidget.this.setSelected(this);
-        }
-
         @Override
         public Text getNarration() {
             return ConcertoListWidget.this.narrationSupplier.apply(this.item, this.index);
+        }
+
+        @Override
+        public void render(DrawContext context, int index, int y, int x, int entryWidth, int entryHeight, int mouseX, int mouseY, boolean hovered, float tickDelta) {
+            context.drawText(MinecraftClient.getInstance().textRenderer, this.getNarration(), x, y + 3, ConcertoListWidget.this.color, false);
         }
     }
 }

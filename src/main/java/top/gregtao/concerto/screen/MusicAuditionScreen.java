@@ -2,7 +2,7 @@ package top.gregtao.concerto.screen;
 
 import com.mojang.datafixers.util.Pair;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.DrawableHelper;
+import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.network.ClientPlayerEntity;
@@ -19,7 +19,7 @@ import java.util.UUID;
 
 public class MusicAuditionScreen extends ConcertoScreen {
 
-    public static Map<UUID, Music> WAIT_AUDITION = new HashMap<>();
+    public static final Map<UUID, Music> WAIT_AUDITION = new HashMap<>();
 
     private final MusicWithUUIDListWidget widget;
 
@@ -75,12 +75,12 @@ public class MusicAuditionScreen extends ConcertoScreen {
     }
 
     @Override
-    public void render(MatrixStack matrices, int mouseX, int mouseY, float delta) {
+    public void render(DrawContext matrices, int mouseX, int mouseY, float delta) {
         super.render(matrices, mouseX, mouseY, delta);
         this.widget.render(matrices, mouseX, mouseY, delta);
         ClientPlayerEntity player = MinecraftClient.getInstance().player;
         if (player == null || !player.hasPermissionLevel(2)) {
-            DrawableHelper.drawCenteredTextWithShadow(matrices, this.textRenderer, Text.translatable("concerto.screen.audition.permission_denied"),
+            matrices.drawCenteredTextWithShadow(this.textRenderer, Text.translatable("concerto.screen.audition.permission_denied"),
                     this.width / 2, this.height / 2, 0xffffffff);
         }
     }

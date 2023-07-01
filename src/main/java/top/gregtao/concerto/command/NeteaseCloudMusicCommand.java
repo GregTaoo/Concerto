@@ -15,7 +15,7 @@ import top.gregtao.concerto.command.argument.NeteaseLevelArgumentType;
 import top.gregtao.concerto.command.builder.MusicAdderBuilder;
 import top.gregtao.concerto.enums.Sources;
 import top.gregtao.concerto.http.netease.NeteaseCloudApiClient;
-import top.gregtao.concerto.http.QRCode;
+import top.gregtao.concerto.screen.QRCodeRenderer;
 import top.gregtao.concerto.music.Music;
 import top.gregtao.concerto.music.NeteaseCloudMusic;
 import top.gregtao.concerto.player.MusicPlayer;
@@ -55,7 +55,7 @@ public class NeteaseCloudMusicCommand {
                             PlayerEntity player = context.getSource().getPlayer();
                             try {
                                 String key = NeteaseCloudApiClient.INSTANCE.generateQRCodeKey();
-                                QRCode.load(NeteaseCloudApiClient.INSTANCE.getQRCodeLoginLink(key));
+                                QRCodeRenderer.load(NeteaseCloudApiClient.INSTANCE.getQRCodeLoginLink(key));
                                 NeteaseCloudApiClient.checkQRCodeStatusProgress(player, key);
                             } catch (Exception e) {
                                 player.sendMessage(Text.translatable("concerto.login.163.qrcode.error"));

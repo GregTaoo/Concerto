@@ -2,10 +2,10 @@ package top.gregtao.concerto.screen;
 
 import com.mojang.datafixers.util.Pair;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.network.ClientPlayerEntity;
-import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.Text;
 import top.gregtao.concerto.music.Music;
 import top.gregtao.concerto.network.ClientMusicNetworkHandler;
@@ -73,7 +73,7 @@ public class MusicConfirmationScreen extends ConcertoScreen {
     }
 
     @Override
-    public void render(MatrixStack matrices, int mouseX, int mouseY, float delta) {
+    public void render(DrawContext matrices, int mouseX, int mouseY, float delta) {
         super.render(matrices, mouseX, mouseY, delta);
         this.widget.render(matrices, mouseX, mouseY, delta);
     }

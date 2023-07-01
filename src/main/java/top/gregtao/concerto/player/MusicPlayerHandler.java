@@ -11,6 +11,7 @@ import top.gregtao.concerto.enums.OrderType;
 import top.gregtao.concerto.music.Music;
 import top.gregtao.concerto.music.MusicTimestamp;
 import top.gregtao.concerto.music.lyric.Lyric;
+import top.gregtao.concerto.util.TextUtil;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -138,9 +139,10 @@ public class MusicPlayerHandler {
 
     public void updateDisplayTexts() {
         if (this.currentMeta != null) {
-            String[] strings = this.currentMeta.asString().split("\n");
-            this.displayTexts[2] = strings[0];
-            this.timeFormat = strings[1];
+            this.displayTexts[2] = TextUtil.cutIfTooLong(this.currentMeta.title(), 50) + " | " +
+                    TextUtil.cutIfTooLong(this.currentMeta.author(), 40) + " | " + this.currentMeta.getSource();
+            MusicTimestamp timestamp = this.currentMeta.getDuration();
+            this.timeFormat = "%s" + (timestamp == null ? "" : " ".repeat(30) + this.currentMeta.getDuration().toShortString());
         } else {
             this.displayTexts[2] = "";
         }
@@ -168,8 +170,8 @@ public class MusicPlayerHandler {
         this.displayTexts[2] = Text.translatable("concerto.loading").getString();
         this.currentIndex = this.getNext(forward);
         try {
-            this.currentMusic = this.musicList.get(currentIndex);
-        } catch (Exception e) {
+            this.currentMusic = this.musicList.get(this.currentIndex);
+        } catch (IndexOutOfBoundsException e) {
             return this.currentMusic = null;
         }
         this.initMusicStatus();

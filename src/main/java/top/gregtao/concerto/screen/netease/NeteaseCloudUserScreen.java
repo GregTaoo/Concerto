@@ -1,14 +1,14 @@
 package top.gregtao.concerto.screen.netease;
 
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.DrawableHelper;
+import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
-import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.Text;
 import top.gregtao.concerto.api.WithMetaData;
 import top.gregtao.concerto.http.netease.NeteaseCloudApiClient;
 import top.gregtao.concerto.music.list.NeteaseCloudPlaylist;
+import top.gregtao.concerto.music.list.Playlist;
 import top.gregtao.concerto.player.MusicPlayer;
 import top.gregtao.concerto.screen.PageScreen;
 import top.gregtao.concerto.screen.PlaylistPreviewScreen;
@@ -19,7 +19,9 @@ public class NeteaseCloudUserScreen extends PageScreen {
     private MetadataListWidget<NeteaseCloudPlaylist> playlistList;
 
     private <T extends WithMetaData> MetadataListWidget<T> initListWidget() {
-        MetadataListWidget<T> widget = new MetadataListWidget<>(this.width, 0, 8, this.height - 35, 18);
+        MetadataListWidget<T> widget = new MetadataListWidget<>(this.width, 0, 15, this.height - 35, 18,
+                entry -> MinecraftClient.getInstance().setScreen(new PlaylistPreviewScreen((Playlist) entry.item, this))
+        );
         widget.setRenderBackground(false);
         widget.setRenderHorizontalShadows(false);
         return widget;
@@ -71,12 +73,12 @@ public class NeteaseCloudUserScreen extends PageScreen {
     }
 
     @Override
-    public void render(MatrixStack matrices, int mouseX, int mouseY, float delta) {
+    public void render(DrawContext matrices, int mouseX, int mouseY, float delta) {
         super.render(matrices, mouseX, mouseY, delta);
         if (this.loggedIn()) {
             this.playlistList.render(matrices, mouseX, mouseY, delta);
         } else {
-            DrawableHelper.drawCenteredTextWithShadow(matrices, this.textRenderer, Text.translatable("concerto.screen.163.not_login"),
+            matrices.drawCenteredTextWithShadow(this.textRenderer, Text.translatable("concerto.screen.163.not_login"),
                     this.width / 2, this.height / 2, 0xffffffff);
         }
     }

@@ -15,6 +15,7 @@ public class NeteaseCloudUser {
     public long uid;
     public String nickname;
     public String signature;
+    public String avatarUrl;
     public boolean loggedIn = false;
 
     public final NeteaseCloudApiClient apiClient;
@@ -34,6 +35,7 @@ public class NeteaseCloudUser {
                 JsonObject profile = detail.getAsJsonObject("profile");
                 this.nickname = profile.get("nickname").getAsString();
                 this.signature = profile.get("signature").getAsString();
+                this.avatarUrl = profile.get("defaultAvatar").getAsBoolean() ? "" : profile.get("avatarUrl").getAsString();
                 return this.loggedIn = true;
             }
         } catch (Exception e) {

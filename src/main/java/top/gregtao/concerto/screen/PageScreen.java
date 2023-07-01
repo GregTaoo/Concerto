@@ -2,7 +2,7 @@ package top.gregtao.concerto.screen;
 
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
-import net.minecraft.client.gui.DrawableHelper;
+import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.util.math.MatrixStack;
@@ -52,10 +52,10 @@ public class PageScreen extends ConcertoScreen {
     }
 
     @Override
-    public void render(MatrixStack matrices, int mouseX, int mouseY, float delta) {
+    public void render(DrawContext matrices, int mouseX, int mouseY, float delta) {
         super.render(matrices, mouseX, mouseY, delta);
         TextRenderer renderer = MinecraftClient.getInstance().textRenderer;
         Text text = Text.translatable("concerto.screen.page", this.page + 1);
-        DrawableHelper.drawCenteredTextWithShadow(matrices, renderer, text, this.buttonX, this.buttonY + 5, 0xffffffff);
+        matrices.drawCenteredTextWithShadow(renderer, text, this.buttonX, this.buttonY + 5, 0xffffffff);
     }
 }

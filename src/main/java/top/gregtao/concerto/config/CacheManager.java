@@ -14,7 +14,6 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
 
-// TODO: Use WatchService to rewrite
 public class CacheManager {
 
     public static String CACHE_ROOT_FOLDER = "Concerto/cache/";

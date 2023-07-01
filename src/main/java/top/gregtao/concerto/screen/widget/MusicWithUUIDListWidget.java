@@ -17,7 +17,8 @@ public class MusicWithUUIDListWidget extends ConcertoListWidget<Pair<Music, UUID
         }, 0xffffffff);
     }
 
-    public MusicWithUUIDListWidget(int width, int height, int top, int bottom, int itemHeight, BiFunction<Pair<Music, UUID>, Integer, Text> narrationSupplier, int color) {
-        super(width, height, top, bottom, itemHeight, narrationSupplier, color);
+    public MusicWithUUIDListWidget(int width, int height, int top, int bottom, int itemHeight,
+                                   BiFunction<Pair<Music, UUID>, Integer, Text> narrationSupplier, int color) {
+        super(width, height, top, bottom, itemHeight, narrationSupplier, entry -> {}, color);
     }
 }

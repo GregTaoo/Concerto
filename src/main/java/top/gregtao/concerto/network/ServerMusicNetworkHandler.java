@@ -3,18 +3,23 @@ package top.gregtao.concerto.network;
 import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.fabricmc.fabric.api.networking.v1.PacketSender;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
+import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.PlayerManager;
 import net.minecraft.server.network.ServerPlayNetworkHandler;
 import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.server.world.ServerWorld;
 import net.minecraft.text.Text;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.World;
 import org.jetbrains.annotations.Nullable;
 import top.gregtao.concerto.ConcertoServer;
 import top.gregtao.concerto.api.MusicJsonParsers;
 import top.gregtao.concerto.command.AuditCommand;
 import top.gregtao.concerto.config.ServerConfig;
+import top.gregtao.concerto.experimental.player.mc.ConcertoBlockEntity;
 import top.gregtao.concerto.music.meta.music.MusicMetaData;
 import top.gregtao.concerto.util.TextUtil;
 
@@ -192,6 +197,21 @@ public class ServerMusicNetworkHandler {
         packetByteBuf.writeString(MusicNetworkChannels.HANDSHAKE_STRING + "CallJoin:" + player.getEntityName());
         ServerPlayNetworking.send(player, MusicNetworkChannels.CHANNEL_HANDSHAKE, packetByteBuf);
         sendS2CAllAuditionData(player);
+    }
+
+    public static void playerBlockStatusUpdate(ConcertoBlockEntity blockEntity) {
+        World world = blockEntity.getWorld();
+        BlockPos pos = blockEntity.getPos();
+        PacketByteBuf packetByteBuf = PacketByteBufs.create();
+        packetByteBuf.writeString(MusicNetworkChannels.HANDSHAKE_STRING + "PlayerStat:%d,%d,%d".formatted(pos.getX(), pos.getY(), pos.getZ())
+                + ":" + TextUtil.toBase64(Objects.requireNonNull(MusicJsonParsers.to(blockEntity.currentMusic, false)).toString()));
+        if (world instanceof ServerWorld serverWorld) {
+            serverWorld.getPlayers().forEach(player -> {
+                if (pos.isWithinDistance(player.getPos(), 128)) {
+                    ServerPlayNetworking.send(player, MusicNetworkChannels.CHANNEL_HANDSHAKE, packetByteBuf);
+                }
+            });
+        }
     }
 
     public static boolean playerExist(PlayerManager manager, String name) {

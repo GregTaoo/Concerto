@@ -14,6 +14,7 @@ import top.gregtao.concerto.api.MusicJsonParsers;
 import top.gregtao.concerto.music.Music;
 import top.gregtao.concerto.network.ClientMusicNetworkHandler;
 import top.gregtao.concerto.network.MusicDataPacket;
+import top.gregtao.concerto.player.MusicPlayer;
 import top.gregtao.concerto.util.JsonUtil;
 
 import java.util.Base64;
@@ -29,8 +30,9 @@ public class ChatHudMixin {
         Matcher matcher = PATTERN.matcher(text.getString());
         if (!matcher.find()) return false;
         String code = new String(Base64.getDecoder().decode(matcher.group(1)));
-        Music music = MusicJsonParsers.from(JsonUtil.from(code));
-        if (music == null || !music.isLoaded()) return false;
+        Music music = MusicJsonParsers.from(JsonUtil.from(code), false);
+        if (music == null) return false;
+        music.getMeta();
         MinecraftClient client = MinecraftClient.getInstance();
         if (client.player == null) return false;
         String[] authors = music.getMeta().getSource().split(",\\s");
@@ -44,13 +46,13 @@ public class ChatHudMixin {
         return true;
     }
 
-    @Inject(method = "addMessage(Lnet/minecraft/text/Text;)V", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "addMessage(Lnet/minecraft/text/Text;)V", at = @At("HEAD"))
     public void addMessageInject1(Text message, CallbackInfo ci){
-        if (handleMessage(message)) ci.cancel();
+        MusicPlayer.run(() -> handleMessage(message));
     }
 
-    @Inject(method = "addMessage(Lnet/minecraft/text/Text;Lnet/minecraft/network/message/MessageSignatureData;Lnet/minecraft/client/gui/hud/MessageIndicator;)V ", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "addMessage(Lnet/minecraft/text/Text;Lnet/minecraft/network/message/MessageSignatureData;Lnet/minecraft/client/gui/hud/MessageIndicator;)V ", at = @At("HEAD"))
     public void addMessageInject2(Text message, MessageSignatureData signature, MessageIndicator indicator, CallbackInfo ci){
-        if (handleMessage(message)) ci.cancel();
+        MusicPlayer.run(() -> handleMessage(message));
     }
 }

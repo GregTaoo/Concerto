@@ -1,24 +1,23 @@
 package top.gregtao.concerto.screen;
 
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.DrawableHelper;
+import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.ChatScreen;
-import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import org.joml.Vector2i;
 import top.gregtao.concerto.config.ClientConfig;
-import top.gregtao.concerto.http.QRCode;
 import top.gregtao.concerto.player.MusicPlayer;
 import top.gregtao.concerto.player.MusicPlayerHandler;
 import top.gregtao.concerto.util.TextUtil;
 
 public class InGameHudRenderer {
 
-    public static void render(MatrixStack matrixStack, float tickDelta) {
+    public static void render(DrawContext matrixStack, float tickDelta) {
         MinecraftClient client = MinecraftClient.getInstance();
         if (MusicPlayer.INSTANCE.isPlaying()) {
             if (!(ClientConfig.INSTANCE.options.hideWhenChat && client.currentScreen instanceof ChatScreen)) {
+
                 int scaledWidth = client.getWindow().getScaledWidth(), scaledHeight = client.getWindow().getScaledHeight();
                 String[] texts = MusicPlayerHandler.INSTANCE.getDisplayTexts();
 
@@ -49,15 +48,15 @@ public class InGameHudRenderer {
                             case CENTER -> x = pos.x - 50;
                             default -> x = pos.x - 135;
                         }
-                        DrawableHelper.fill(matrixStack, x, pos.y + 3, x + 100, pos.y + 5, 0xffa1c7f6);
-                        DrawableHelper.fill(matrixStack, x, pos.y + 3, (int) (x + 100 * MusicPlayerHandler.INSTANCE.progressPercentage),
+                        matrixStack.fill(x, pos.y + 3, x + 100, pos.y + 5, 0xffa1c7f6);
+                        matrixStack.fill(x, pos.y + 3, (int) (x + 100 * MusicPlayerHandler.INSTANCE.progressPercentage),
                                 pos.y + 5, 0xff0155bc);
                     }
                 }
             }
         }
         if (client.currentScreen == null || client.currentScreen instanceof ChatScreen) {
-            QRCode.drawQRCode(matrixStack, 5, 5);
+            QRCodeRenderer.drawQRCode(matrixStack, 5, 5);
         }
     }
 }

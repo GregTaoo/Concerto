@@ -15,8 +15,15 @@ public abstract class Lyric {
 
     private int index = 0;
 
+    public Text getCurrent(int delta) {
+        if (this.index + delta < 0 || this.index + delta >= this.lyricBody.size()) {
+            throw new UnsupportedOperationException("Out of bound");
+        }
+        return Text.literal(this.lyricBody.get(this.index + delta).getSecond());
+    }
+
     public Text getCurrent() {
-        return Text.literal(this.lyricBody.get(this.index).getSecond());
+        return this.getCurrent(0);
     }
 
     public Text nextLine() {

@@ -17,6 +17,7 @@ public class ClientLoginNetworkHandlerMixin {
     public void onDisconnectedInject(Text reason, CallbackInfo ci) {
         ConcertoClient.serverAvailable = false;
         ClientMusicNetworkHandler.WAIT_CONFIRMATION.clear();
+        ClientMusicNetworkHandler.PLAYING_SONGS.clear();
         MusicAuditionScreen.WAIT_AUDITION.clear();
         ConcertoClient.LOGGER.info("Quit server. Server side functions are unavailable now");
     }

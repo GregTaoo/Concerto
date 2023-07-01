@@ -2,13 +2,12 @@ package top.gregtao.concerto.screen.widget;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.Drawable;
-import net.minecraft.client.gui.DrawableHelper;
 import net.minecraft.client.gui.widget.ClickableWidget;
 import net.minecraft.client.gui.widget.Widget;
 import net.minecraft.client.texture.NativeImage;
 import net.minecraft.client.texture.NativeImageBackedTexture;
-import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 import top.gregtao.concerto.ConcertoClient;
@@ -22,7 +21,7 @@ import java.net.URL;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-public class URLImageWidget extends DrawableHelper implements Drawable, Widget, Closeable {
+public class URLImageWidget implements Drawable, Widget, Closeable {
 
     protected int width;
     protected int height;
@@ -84,6 +83,7 @@ public class URLImageWidget extends DrawableHelper implements Drawable, Widget, 
     }
 
     public void loadImage() {
+        if (this.url == null) return;
         try {
             this.loading = true;
             BufferedImage image;
@@ -126,23 +126,20 @@ public class URLImageWidget extends DrawableHelper implements Drawable, Widget, 
     }
 
     @Override
-    public void render(MatrixStack matrices, int mouseX, int mouseY, float delta) {
-        DrawableHelper.drawBorder(matrices, this.x, this.y, this.width, this.height, 0xffffffff);
+    public void render(DrawContext matrices, int mouseX, int mouseY, float delta) {
+        matrices.drawBorder(this.x, this.y, this.width, this.height, 0xffffffff);
         if (this.url == null) {
-            DrawableHelper.drawCenteredTextWithShadow(matrices, MinecraftClient.getInstance().textRenderer,
+            matrices.drawCenteredTextWithShadow(MinecraftClient.getInstance().textRenderer,
                     Text.translatable("concerto.screen.url_image.empty"), this.x + this.width / 2, this.y + this.height / 2, 0xffffffff);
         } else {
             NativeImage image = this.texture.getImage();
             if (image != null && !this.loading) {
-                RenderSystem.setShaderTexture(0, this.textureId);
-                RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f);
-                MatrixStack matrixStack = new MatrixStack();
-                matrixStack.scale(0.125f, 0.125f, 1);
-                matrixStack.translate(7 * this.x, 7 * this.y, 0);
-                DrawableHelper.drawTexture(matrixStack, this.x, this.y, 0, 0, this.width << 3, this.height << 3, image.getWidth(), image.getHeight());
-                RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f);
+                DrawContext drawContext = new DrawContext(MinecraftClient.getInstance(), matrices.getVertexConsumers());
+                drawContext.getMatrices().scale(0.125f, 0.125f, 1);
+                drawContext.getMatrices().translate(7 * this.x, 7 * this.y, 0);
+                drawContext.drawTexture(this.textureId, this.x, this.y, 0, 0, this.width << 3, this.height << 3, image.getWidth(), image.getHeight());
             } else {
-                DrawableHelper.drawCenteredTextWithShadow(matrices, MinecraftClient.getInstance().textRenderer,
+                matrices.drawCenteredTextWithShadow(MinecraftClient.getInstance().textRenderer,
                         Text.translatable("concerto.screen.loading"), this.x + this.width / 2, this.y + this.height / 2, 0xffffffff);
             }
         }

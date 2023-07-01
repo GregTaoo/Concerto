@@ -35,12 +35,9 @@ public class ConcertoAudioStream implements AudioStream {
     @Override
     public ByteBuffer getBuffer(int size) throws IOException {
         ByteBuffer byteBuffer = BufferUtils.createByteBuffer(size);
-        int nBytesRead, totalRead = 0;
-        byte[] bytes = new byte[size];
-        while (totalRead < size && (nBytesRead = this.audioInputStream.read(bytes, totalRead, 4096)) != -1) {
-            totalRead += nBytesRead;
-        }
+        byte[] bytes = this.audioInputStream.readNBytes(size);
         byteBuffer.put(bytes);
+        byteBuffer.flip();
         return byteBuffer;
     }
 

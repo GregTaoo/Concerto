@@ -1,11 +1,11 @@
 package top.gregtao.concerto.screen.netease;
 
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.gui.widget.CyclingButtonWidget;
 import net.minecraft.client.gui.widget.TextFieldWidget;
-import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.Text;
 import org.lwjgl.glfw.GLFW;
 import top.gregtao.concerto.api.WithMetaData;
@@ -13,6 +13,7 @@ import top.gregtao.concerto.enums.SearchType;
 import top.gregtao.concerto.http.netease.NeteaseCloudApiClient;
 import top.gregtao.concerto.music.Music;
 import top.gregtao.concerto.music.list.NeteaseCloudPlaylist;
+import top.gregtao.concerto.music.list.Playlist;
 import top.gregtao.concerto.player.MusicPlayer;
 import top.gregtao.concerto.screen.MusicInfoScreen;
 import top.gregtao.concerto.screen.PageScreen;
@@ -34,7 +35,21 @@ public class NeteaseCloudSearchScreen extends PageScreen {
     private SearchType searchType = SearchType.MUSIC;
 
     private <T extends WithMetaData> MetadataListWidget<T> initListWidget() {
-        MetadataListWidget<T> widget = new MetadataListWidget<>(this.width, this.height, 38, this.height - 35, 18);
+        MetadataListWidget<T> widget = new MetadataListWidget<>(this.width, this.height, 38, this.height - 35, 18, entry -> {
+            switch (this.searchType) {
+                case MUSIC: {
+                    MusicPlayer.INSTANCE.addMusicHere((Music) entry.item, true, () -> {
+                        if (!MusicPlayer.INSTANCE.started) MusicPlayer.INSTANCE.start();
+                    });
+                }
+                case PLAYLIST: {
+                    MinecraftClient.getInstance().setScreen(new PlaylistPreviewScreen((Playlist) entry.item, this));
+                }
+                case ALBUM: {
+                    MinecraftClient.getInstance().setScreen(new PlaylistPreviewScreen((Playlist) entry.item, this));
+                }
+            }
+        });
         widget.setRenderBackground(false);
         widget.setRenderHorizontalShadows(false);
         return widget;
@@ -158,7 +173,7 @@ public class NeteaseCloudSearchScreen extends PageScreen {
     }
 
     @Override
-    public void render(MatrixStack matrices, int mouseX, int mouseY, float delta) {
+    public void render(DrawContext matrices, int mouseX, int mouseY, float delta) {
         super.render(matrices, mouseX, mouseY, delta);
         switch (this.searchType) {
             case PLAYLIST -> this.playlistList.render(matrices, mouseX, mouseY, delta);

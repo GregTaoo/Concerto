@@ -2,15 +2,14 @@ package top.gregtao.concerto.screen.login;
 
 import com.google.zxing.WriterException;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.DrawableHelper;
+import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.network.ClientPlayerEntity;
-import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.Text;
-import top.gregtao.concerto.http.QRCode;
 import top.gregtao.concerto.player.MusicPlayer;
 import top.gregtao.concerto.screen.ConcertoScreen;
+import top.gregtao.concerto.screen.QRCodeRenderer;
 import top.gregtao.concerto.screen.widget.URLImageWidget;
 
 import java.net.MalformedURLException;
@@ -70,7 +69,7 @@ public class QRCodeLoginScreen extends ConcertoScreen {
                         player.sendMessage(Text.translatable("concerto.screen.login.qrcode.success"));
                     }
                     MinecraftClient.getInstance().setScreen(null);
-                    QRCode.clear();
+                    QRCodeRenderer.clear();
                 }
                 case WAITING -> {
                     if (!this.updaterLock) {
@@ -102,7 +101,7 @@ public class QRCodeLoginScreen extends ConcertoScreen {
                 this.key = this.qrKeySupplier.get();
                 String link = this.qrCodeLinkGetter.apply(this.key);
                 try {
-                    QRCode.load(link);
+                    QRCodeRenderer.load(link);
                     this.status = Status.WAITING;
                 } catch (WriterException e) {
                     throw new RuntimeException(e);
@@ -117,21 +116,21 @@ public class QRCodeLoginScreen extends ConcertoScreen {
     }
 
     @Override
-    public void render(MatrixStack matrices, int mouseX, int mouseY, float delta) {
+    public void render(DrawContext matrices, int mouseX, int mouseY, float delta) {
         super.render(matrices, mouseX, mouseY, delta);
         if (this.isSpecificImage) {
             this.urlImageWidget.render(matrices, mouseX, mouseY, delta);
         } else {
-            QRCode.drawQRCode(matrices, this.width / 2 - this.qrWidth / 2, 30);
+            QRCodeRenderer.drawQRCode(matrices, this.width / 2 - this.qrWidth / 2, 30);
         }
-        DrawableHelper.drawCenteredTextWithShadow(matrices, this.textRenderer, this.message, this.width / 2, this.height - 20, 0xffffffff);
+        matrices.drawCenteredTextWithShadow(this.textRenderer, this.message, this.width / 2, 120, 0xffffffff);
     }
 
     @Override
     public void close() {
         super.close();
         if (this.isSpecificImage) this.urlImageWidget.close();
-        else QRCode.clear();
+        else QRCodeRenderer.clear();
     }
 
     public enum Status {

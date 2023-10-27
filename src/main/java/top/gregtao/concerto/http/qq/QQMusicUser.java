@@ -1,4 +1,4 @@
-package top.gregtao.concerto.experimental.http.qq;
+package top.gregtao.concerto.http.qq;
 
 import com.google.gson.JsonObject;
 
@@ -21,7 +21,6 @@ public class QQMusicUser {
             this.loggedIn = true;
         } catch (Exception e) {
             this.loggedIn = false;
-            throw new RuntimeException(e);
         }
     }
 

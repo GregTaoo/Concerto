@@ -1,14 +1,15 @@
-package top.gregtao.concerto.experimental.screen.qq;
+package top.gregtao.concerto.screen.qq;
 
 import com.mojang.datafixers.util.Pair;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.text.Text;
-import top.gregtao.concerto.experimental.http.qq.QQMusicApiClient;
-import top.gregtao.concerto.experimental.http.qq.QQMusicUser;
+import top.gregtao.concerto.http.qq.QQMusicApiClient;
 import top.gregtao.concerto.screen.ConcertoScreen;
 import top.gregtao.concerto.screen.login.QRCodeLoginScreen;
+
+import java.net.http.HttpResponse;
 
 public class QQMusicLoginScreens extends ConcertoScreen {
 
@@ -40,23 +41,23 @@ public class QQMusicLoginScreens extends ConcertoScreen {
         return new QRCodeLoginScreen(
                 () -> {
                     try {
-                        return QQMusicApiClient.U.getWeChatQRKey();
+                        return QQMusicApiClient.INSTANCE.getWeChatQRKey();
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
                 },
-                key -> QQMusicApiClient.U.combineWeChatQRLink(key),
+                QQMusicApiClient.INSTANCE::combineWeChatQRLink,
                 null,
                 key -> {
                     try {
-                        Pair<Integer, String> pair = QQMusicApiClient.U.getWeChatQRStatus(key);
+                        Pair<Integer, String> pair = QQMusicApiClient.INSTANCE.getWeChatQRStatus(key);
                         int code = pair.getFirst();
                         if (code == 408 || code == 404) {
                             return QRCodeLoginScreen.Status.WAITING;
                         } else if (code == 402) {
                             return QRCodeLoginScreen.Status.EXPIRED;
                         } else if (code == 405) {
-                            QQMusicApiClient.U.setWxLoginCookies(pair.getSecond());
+                            QQMusicApiClient.INSTANCE.setWxLoginCookies(pair.getSecond());
                             QQMusicApiClient.LOCAL_USER.updateLoginStatus();
                             return QRCodeLoginScreen.Status.SUCCESS;
                         } else {
@@ -74,26 +75,26 @@ public class QQMusicLoginScreens extends ConcertoScreen {
 
     public QRCodeLoginScreen qqQRLogin() {
         return new QRCodeLoginScreen(
-                () -> QQMusicApiClient.U.getQQLoginQRLink(),
+                QQMusicApiClient.INSTANCE::getQQLoginQRLink,
                 null,
                 url -> {
                     try {
-                        return QQMusicApiClient.U.getInBytes(url.toString());
+                        return QQMusicApiClient.INSTANCE.openQQLoginApi().url(url.toString()).get(HttpResponse.BodyHandlers.ofByteArray()).body();
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
                 },
                 key -> {
                     try {
-                        Pair<Integer, String> pair = QQMusicApiClient.U.getQQLoginQRStatus();
+                        Pair<Integer, String> pair = QQMusicApiClient.INSTANCE.getQQLoginQRStatus();
                         int code = pair.getFirst();
                         if (code == 66 || code == 67) {
                             return QRCodeLoginScreen.Status.WAITING;
                         } else if (code == 68) {
                             return QRCodeLoginScreen.Status.EXPIRED;
                         } else if (code == 0) {
-                            QQMusicApiClient.U.get(pair.getSecond());
-                            QQMusicApiClient.U.authorizeQQLogin();
+                            QQMusicApiClient.INSTANCE.openQQLoginApi().url(pair.getSecond()).get();
+                            QQMusicApiClient.INSTANCE.authorizeQQLogin();
                             QQMusicApiClient.LOCAL_USER.updateLoginStatus();
                             return QRCodeLoginScreen.Status.SUCCESS;
                         } else {

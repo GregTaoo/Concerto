@@ -6,7 +6,7 @@ import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.text.Text;
 import top.gregtao.concerto.ConcertoClient;
-import top.gregtao.concerto.experimental.screen.qq.QQMusicIndexScreen;
+import top.gregtao.concerto.screen.qq.QQMusicIndexScreen;
 import top.gregtao.concerto.screen.netease.NeteaseCloudIndexScreen;
 
 public class ConcertoIndexScreen extends ConcertoScreen {

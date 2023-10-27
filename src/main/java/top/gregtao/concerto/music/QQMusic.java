@@ -1,11 +1,11 @@
-package top.gregtao.concerto.experimental.music;
+package top.gregtao.concerto.music;
 
 import com.google.gson.JsonObject;
 import com.mojang.datafixers.util.Pair;
 import top.gregtao.concerto.api.JsonParser;
 import top.gregtao.concerto.api.MusicJsonParsers;
 import top.gregtao.concerto.enums.Sources;
-import top.gregtao.concerto.experimental.http.qq.QQMusicApiClient;
+import top.gregtao.concerto.http.qq.QQMusicApiClient;
 import top.gregtao.concerto.music.Music;
 import top.gregtao.concerto.music.MusicSource;
 import top.gregtao.concerto.music.MusicSourceNotFoundException;
@@ -38,7 +38,7 @@ public class QQMusic extends Music {
     @Override
     public void load() {
         try {
-            JsonObject object = QQMusicApiClient.U.getMusicDetail(this.mid)
+            JsonObject object = QQMusicApiClient.INSTANCE.getMusicDetail(this.mid)
                     .getAsJsonObject("songinfo").getAsJsonObject("data");
             this.setMusicMeta(this.parseMetaData(object));
         } catch (Exception e) {
@@ -50,7 +50,7 @@ public class QQMusic extends Music {
     @Override
     public Pair<Lyrics, Lyrics> getLyric() {
         try {
-            Lyrics lyrics = QQMusicApiClient.C.getLyric(this.mid);
+            Lyrics lyrics = QQMusicApiClient.INSTANCE.getLyric(this.mid);
             return Pair.of(lyrics.isEmpty() ? null : lyrics, null);
         } catch (Exception e) {
             return null;
@@ -71,7 +71,7 @@ public class QQMusic extends Music {
         }
     }
 
-    public String getRawPath() throws Exception {
-        return QQMusicApiClient.U.getMusicLink(this.mid, this.mediaMid);
+    public String getRawPath() {
+        return QQMusicApiClient.INSTANCE.getMusicLink(this.mid, this.mediaMid);
     }
 }

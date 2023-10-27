@@ -12,8 +12,6 @@ import top.gregtao.concerto.screen.login.PasswordLoginScreen;
 import top.gregtao.concerto.screen.login.QRCodeLoginScreen;
 import top.gregtao.concerto.util.TextUtil;
 
-import java.net.MalformedURLException;
-
 public class NeteaseCloudLoginScreens extends ConcertoScreen {
 
     public static Text SOURCE_TEXT = Text.translatable("concerto.source.netease_cloud");
@@ -98,13 +96,7 @@ public class NeteaseCloudLoginScreens extends ConcertoScreen {
                         throw new RuntimeException(e);
                     }
                 },
-                key -> {
-                    try {
-                        return NeteaseCloudApiClient.INSTANCE.getQRCodeLoginLink(key);
-                    } catch (MalformedURLException e) {
-                        throw new RuntimeException(e);
-                    }
-                },
+                key -> NeteaseCloudApiClient.INSTANCE.getQRCodeLoginLink(key),
                 null,
                 key -> {
                     try {

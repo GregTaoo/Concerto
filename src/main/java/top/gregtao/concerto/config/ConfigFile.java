@@ -40,7 +40,7 @@ public class ConfigFile {
                 return false;
             }
         } catch (IOException e) {
-            return false;
+            throw new RuntimeException(e);
         }
     }
 }

@@ -10,7 +10,7 @@ import top.gregtao.concerto.music.Music;
 import top.gregtao.concerto.music.meta.music.MusicMetaData;
 import top.gregtao.concerto.music.parser.NeteaseCloudMusicJsonParser;
 import top.gregtao.concerto.music.parser.PathFileMusicJsonParser;
-import top.gregtao.concerto.experimental.music.QQMusicJsonParser;
+import top.gregtao.concerto.music.parser.QQMusicJsonParser;
 import top.gregtao.concerto.music.parser.meta.BasicMusicMetaJsonParser;
 import top.gregtao.concerto.music.parser.meta.TimelessMusicMetaJsonParser;
 import top.gregtao.concerto.player.MusicPlayerHandler;

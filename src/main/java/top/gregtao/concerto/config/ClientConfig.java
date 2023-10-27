@@ -31,7 +31,7 @@ public class ClientConfig extends ConfigFile {
     public static class ClientConfigOptions {
         public boolean confirmAfterReceived = true;
         public boolean hideWhenChat = true;
-        public boolean cacheBeforePlay = true;
+        public boolean printRequestResults = false;
         public int maxCacheSize = 1000 * 1000 * 100;
         public boolean displayLyrics = true;
         public String lyricsPosition = "0.5,1-70";

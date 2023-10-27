@@ -44,7 +44,7 @@ public class NeteaseCloudMusic extends Music implements CacheableMusic {
         }
     }
 
-    public String getRawPath() throws Exception {
+    public String getRawPath() {
         JsonObject object = NeteaseCloudApiClient.INSTANCE.getMusicLink(this.id, this.level)
                 .getAsJsonArray("data").get(0).getAsJsonObject();
         return object.get("url").getAsString();
@@ -83,7 +83,6 @@ public class NeteaseCloudMusic extends Music implements CacheableMusic {
             this.setMusicMeta(parseMetaData(object));
         } catch (Exception e) {
             this.setMusicMeta(new UnknownMusicMeta(Sources.NETEASE_CLOUD.getName().getString()));
-            e.printStackTrace();
         }
         super.load();
     }

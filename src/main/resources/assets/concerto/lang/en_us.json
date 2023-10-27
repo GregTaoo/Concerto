@@ -70,6 +70,7 @@
   "concerto.screen.delete": "Delete",
   "concerto.screen.order": "Order",
   "concerto.screen.pause": "Pause",
+  "concerto.screen.clear": "Clear",
   "concerto.screen.previous_page": "<<",
   "concerto.screen.next_page": ">>",
   "concerto.screen.page": "Page %s",

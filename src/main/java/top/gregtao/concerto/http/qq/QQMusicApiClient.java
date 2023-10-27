@@ -3,6 +3,7 @@ package top.gregtao.concerto.http.qq;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.mojang.datafixers.util.Pair;
+import org.apache.commons.lang3.RandomStringUtils;
 import top.gregtao.concerto.enums.Sources;
 import top.gregtao.concerto.http.HttpApiClient;
 import top.gregtao.concerto.http.HttpRequestBuilder;
@@ -75,9 +76,12 @@ public class QQMusicApiClient extends HttpApiClient {
         return uuid;
     }
 
-    public int getQQLoginGTK() throws IOException, URISyntaxException {
+    public String getQQLoginGTK() throws IOException, URISyntaxException {
+        if (!LOCAL_USER.gtk.isEmpty() && !LOCAL_USER.gtk.equals("5381")) return LOCAL_USER.gtk;
         String sKey = this.getCookie("https://graph.qq.com", "p_skey");
-        return calculateGTK(sKey);
+        String gtk = String.valueOf(calculateGTK(sKey));
+        LOCAL_USER.gtk = gtk;
+        return gtk;
     }
 
     public String getMusicLink(String mid, String mediaMid) {
@@ -219,12 +223,21 @@ public class QQMusicApiClient extends HttpApiClient {
         );
     }
 
+    public static String randomNumber(int length, boolean with0) {
+        return with0 ? RandomStringUtils.random(length, '0', '1', '2', '3', '4', '5', '6', '7', '8', '9') : RandomStringUtils.random(length, '1', '2', '3', '4', '5', '6', '7', '8', '9');
+    }
+
+    public void searchMusic(String keyword) throws IOException, URISyntaxException {
+        String id = randomNumber(1, false) + randomNumber(16, true);
+        this.requestSignedApi("music.search.SearchCgiService", "DoSearchForQQMusicDesktop", "\"remoteplace\":\"txt.yqq.top\",\"searchid\":\"" + id + "\",\"search_type\":0,\"query\":\"" + keyword + "\",\"page_num\":1,\"num_per_page\":10");
+    }
+
     public JsonObject requestSignedApi(String module, String method, String params) throws IOException, URISyntaxException {
         String data = "{\"comm\":{\"cv\":4747474,\"ct\":24,\"format\":\"json\",\"inCharset\":\"utf-8\",\"outCharset\":\"utf-8\",\"notice\":0,\"platform\":\"yqq.json\",\"needNewCode\":1,\"uin\":\"" + this.getUin() + "\",\"g_tk_new_20200303\":" + this.getQQLoginGTK() + ",\"g_tk\":" + this.getQQLoginGTK() + "},\"req_1\":{\"module\":\"" + module + "\",\"method\":\"" + method + "\",\"param\":" + params + "}}";
         String url = "https://u.y.qq.com/cgi-bin/musics.fcg?_=" + TextUtil.getCurrentTime() + "&sign=" + QQMusicApiEncrypt.Sign.getSign(data);
-        JsonObject object = parseJson(this.openUApi().url(url).post(
+        JsonObject object = parseJson(this.openUApi().setFixedReferer("https://y.qq.com/").url(url).post(
                 HttpResponse.BodyHandlers.ofString(),
-                HttpRequestBuilder.ContentType.JSON,
+                HttpRequestBuilder.ContentType.FORM,
                 data
         ));
         return object == null ? null : object.getAsJsonObject("req_1");

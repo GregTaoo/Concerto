@@ -10,6 +10,7 @@ public class TimelessMusicMetaData implements MusicMetaData {
     private final String title;
     private final String source;
     private String headPictureUrl = "";
+    private String status = "";
 
     public TimelessMusicMetaData(String author, String title, String source) {
         this.author = author;

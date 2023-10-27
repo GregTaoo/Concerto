@@ -106,7 +106,7 @@ public class HttpRequestBuilder {
         try {
             HttpResponse<T> response = this.client.getClient().send(request, bodyHandler);
             if (ClientConfig.INSTANCE.options.printRequestResults && bodyHandler == HttpResponse.BodyHandlers.ofString()) {
-                this.client.getLogger().info(response.statusCode() + " POST " + this.url + " : " + response.body());
+                this.client.getLogger().info(response.statusCode() + " POST " + this.url + " - " + data + " : " + response.body());
             } else {
                 this.client.getLogger().info(response.statusCode() + " POST " + this.url);
             }

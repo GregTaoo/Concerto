@@ -70,10 +70,10 @@ public class AddMusicScreen extends ConcertoScreen {
             NeteaseCloudPlaylist playlist = new NeteaseCloudPlaylist(str, false);
             playlist.load(() -> MinecraftClient.getInstance().setScreen(new PlaylistPreviewScreen(playlist, this)));
         });
-        this.addLabel(Text.translatable("concerto.screen.add.qq"), this.width / 2, 170,
-                str -> MusicPlayer.INSTANCE.addMusicHere(new QQMusic(str), true, () -> {
-                    if (!MusicPlayer.INSTANCE.started) MusicPlayer.INSTANCE.start();
-                }));
+//        this.addLabel(Text.translatable("concerto.screen.add.qq"), this.width / 2, 170,
+//                str -> MusicPlayer.INSTANCE.addMusicHere(new QQMusic(str), true, () -> {
+//                    if (!MusicPlayer.INSTANCE.started) MusicPlayer.INSTANCE.start();
+//                }));
     }
 
     @Override

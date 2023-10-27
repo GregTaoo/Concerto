@@ -11,6 +11,7 @@ import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;
 import net.minecraft.command.CommandRegistryAccess;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.text.Text;
+import top.gregtao.concerto.ConcertoClient;
 import top.gregtao.concerto.command.argument.NeteaseLevelArgumentType;
 import top.gregtao.concerto.command.builder.MusicAdderBuilder;
 import top.gregtao.concerto.enums.Sources;
@@ -108,8 +109,8 @@ public class NeteaseCloudMusicCommand {
                             "concerto.login.163.failed." + message.getFirst()));
                 }
             } catch (Exception e) {
-                e.printStackTrace();
                 TextUtil.commandMessageClient(context, Text.translatable("concerto.login.163.error"));
+                ConcertoClient.LOGGER.error(e.getMessage());
             }
         });
         return 0;
@@ -128,8 +129,8 @@ public class NeteaseCloudMusicCommand {
                             "concerto.login.163.failed", message.getSecond()));
                 }
             } catch (Exception e) {
-                e.printStackTrace();
                 TextUtil.commandMessageClient(context, Text.translatable("concerto.login.163.error"));
+                ConcertoClient.LOGGER.error(e.getMessage());
             }
         });
         return 0;

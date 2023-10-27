@@ -223,6 +223,13 @@ public class MusicPlayer extends StreamPlayer implements StreamPlayerListener {
         });
     }
 
+    public void startAt(int index) {
+        this.started = true;
+        this.forcePaused = false;
+        this.playNextLock = false;
+        this.skipTo(index);
+    }
+
     public void skipTo(int index) {
         MusicPlayerHandler.INSTANCE.setCurrentIndex(
                 Math.min(MusicPlayerHandler.INSTANCE.getMusicList().size(), index));

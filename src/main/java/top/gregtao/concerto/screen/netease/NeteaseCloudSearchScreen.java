@@ -8,6 +8,7 @@ import net.minecraft.client.gui.widget.CyclingButtonWidget;
 import net.minecraft.client.gui.widget.TextFieldWidget;
 import net.minecraft.text.Text;
 import org.lwjgl.glfw.GLFW;
+import top.gregtao.concerto.ConcertoClient;
 import top.gregtao.concerto.api.WithMetaData;
 import top.gregtao.concerto.enums.SearchType;
 import top.gregtao.concerto.http.netease.NeteaseCloudApiClient;
@@ -36,18 +37,21 @@ public class NeteaseCloudSearchScreen extends PageScreen {
 
     private <T extends WithMetaData> MetadataListWidget<T> initListWidget() {
         MetadataListWidget<T> widget = new MetadataListWidget<>(this.width, this.height, 38, this.height - 35, 18, entry -> {
-            switch (this.searchType) {
-                case MUSIC: {
-                    MusicPlayer.INSTANCE.addMusicHere((Music) entry.item, true, () -> {
-                        if (!MusicPlayer.INSTANCE.started) MusicPlayer.INSTANCE.start();
-                    });
+            try {
+                switch (this.searchType) {
+                    case MUSIC: {
+                        MusicPlayer.INSTANCE.addMusicHere((Music) entry.item, true, () -> {
+                            if (!MusicPlayer.INSTANCE.started) MusicPlayer.INSTANCE.start();
+                        });
+                        break;
+                    }
+                    case PLAYLIST, ALBUM: {
+                        MinecraftClient.getInstance().setScreen(new PlaylistPreviewScreen((Playlist) entry.item, this));
+                        break;
+                    }
                 }
-                case PLAYLIST: {
-                    MinecraftClient.getInstance().setScreen(new PlaylistPreviewScreen((Playlist) entry.item, this));
-                }
-                case ALBUM: {
-                    MinecraftClient.getInstance().setScreen(new PlaylistPreviewScreen((Playlist) entry.item, this));
-                }
+            } catch (ClassCastException e) {
+                ConcertoClient.LOGGER.error(e.getMessage());
             }
         });
         widget.setRenderBackground(false);

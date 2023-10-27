@@ -5,6 +5,7 @@ import com.google.gson.JsonObject;
 public class QQMusicUser {
 
     public String nickname;
+    public String gtk = "";
     public boolean loggedIn = false;
     public final QQMusicApiClient apiClient;
 
@@ -19,6 +20,7 @@ public class QQMusicUser {
             JsonObject data = object.getAsJsonObject("data").getAsJsonObject("map_userinfo").getAsJsonObject(uin);
             this.nickname = data.get("nick").getAsString();
             this.loggedIn = true;
+            this.apiClient.searchMusic("fontaine");
         } catch (Exception e) {
             this.loggedIn = false;
         }

@@ -32,26 +32,25 @@ public class GeneralPlaylistScreen extends ConcertoScreen {
         this.addDrawableChild(ButtonWidget.builder(Text.translatable("concerto.screen.next"), button -> {
             if (!MusicPlayer.INSTANCE.started) MusicPlayer.INSTANCE.start();
             else MusicPlayer.INSTANCE.playNext(1, this.widget::reset);
-        }).position(this.width / 2 - 160, this.height - 30).size(50, 20).build());
+        }).position(this.width / 2 - 185, this.height - 30).size(50, 20).build());
 
         this.addDrawableChild(ButtonWidget.builder(Text.translatable("concerto.screen.play"), button -> {
             ConcertoListWidget<Music>.Entry entry = this.widget.getSelectedOrNull();
             if (entry != null) {
-                MusicPlayer.INSTANCE.skipTo(entry.index);
-                if (!MusicPlayer.INSTANCE.started) MusicPlayer.INSTANCE.start();
+                MusicPlayer.INSTANCE.startAt(entry.index);
             }
-        }).position(this.width / 2 - 110, this.height - 30).size(50, 20).build());
+        }).position(this.width / 2 - 135, this.height - 30).size(50, 20).build());
 
         this.addDrawableChild(ButtonWidget.builder(Text.translatable("concerto.screen.delete"), button -> {
             ConcertoListWidget<Music>.Entry entry = this.widget.getSelectedOrNull();
             if (entry != null) {
                 MusicPlayer.INSTANCE.remove(entry.index, () -> this.widget.removeEntryWithoutScrolling(entry));
             }
-        }).position(this.width / 2 - 60, this.height - 30).size(50, 20).build());
+        }).position(this.width / 2 - 85, this.height - 30).size(50, 20).build());
 
         this.addDrawableChild(CyclingButtonWidget.builder(OrderType::getName).values(OrderType.values())
                 .initially(MusicPlayerHandler.INSTANCE.getOrderType()).build(
-                        this.width / 2 - 10, this.height - 30, 60, 20, Text.translatable("concerto.screen.order"),
+                        this.width / 2 - 35, this.height - 30, 60, 20, Text.translatable("concerto.screen.order"),
                         (widget, orderType) -> MusicPlayerHandler.INSTANCE.setOrderType(orderType)));
 
         this.addDrawableChild(ButtonWidget.builder(Text.translatable("concerto.screen.pause"), button -> {
@@ -59,14 +58,19 @@ public class GeneralPlaylistScreen extends ConcertoScreen {
                 if (MusicPlayer.INSTANCE.forcePaused) MusicPlayer.INSTANCE.forceResume();
                 else MusicPlayer.INSTANCE.forcePause();
             }
-        }).position(this.width / 2 + 50, this.height - 30).size(50, 20).build());
+        }).position(this.width / 2 + 25, this.height - 30).size(50, 20).build());
 
         this.addDrawableChild(ButtonWidget.builder(Text.translatable("concerto.screen.info"), button -> {
             ConcertoListWidget<Music>.Entry entry = this.widget.getSelectedOrNull();
             if (entry != null) {
                 MinecraftClient.getInstance().setScreen(new MusicInfoScreen(entry.item, this));
             }
-        }).position(this.width / 2 + 100, this.height - 30).size(50, 20).build());
+        }).position(this.width / 2 + 75, this.height - 30).size(50, 20).build());
+
+        this.addDrawableChild(ButtonWidget.builder(Text.translatable("concerto.screen.clear"), button -> {
+            MusicPlayer.INSTANCE.clear();
+            MinecraftClient.getInstance().setScreen(null);
+        }).position(this.width / 2 + 125, this.height - 30).size(50, 20).build());
     }
 
     @Override

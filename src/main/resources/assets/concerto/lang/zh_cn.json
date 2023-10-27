@@ -70,6 +70,7 @@
   "concerto.screen.delete": "删除",
   "concerto.screen.order": "顺序",
   "concerto.screen.pause": "暂停",
+  "concerto.screen.clear": "清空",
   "concerto.screen.previous_page": "<<",
   "concerto.screen.next_page": ">>",
   "concerto.screen.page": "第 %s 页",

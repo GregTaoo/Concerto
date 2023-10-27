@@ -88,7 +88,10 @@ public class MusicPlayer extends StreamPlayer implements StreamPlayerListener {
     public void addMusicHere(Music music, boolean skip, Runnable callback) {
         run(() -> {
             MusicPlayerHandler.INSTANCE.addMusicHere(music);
-            if (skip) this.skipTo(MusicPlayerHandler.INSTANCE.getCurrentIndex() + 1);
+            if (skip) {
+                if (this.isPlaying()) this.skipTo(MusicPlayerHandler.INSTANCE.getCurrentIndex() + 1);
+                else this.startAt(MusicPlayerHandler.INSTANCE.getCurrentIndex() + 1);
+            }
             callback.run();
         });
     }

@@ -44,24 +44,15 @@ public class AddMusicScreen extends ConcertoScreen {
     protected void init() {
         super.init();
         this.addLabel(Text.translatable("concerto.screen.add.local_file"), this.width / 2, 20,
-                str -> MusicPlayer.INSTANCE.addMusicHere(new LocalFileMusic(str), true, () -> {
-                    if (!MusicPlayer.INSTANCE.started) MusicPlayer.INSTANCE.start();
-                }));
+                str -> MusicPlayer.INSTANCE.addMusicHere(new LocalFileMusic(str), true));
         this.addLabel(Text.translatable("concerto.screen.add.local_file.folder"), this.width / 2, 45, str -> MusicPlayer.run(() -> {
             ArrayList<Music> list = LocalFileMusic.getMusicsInFolder(new File(str));
-            MusicPlayer.INSTANCE.addMusic(list, () -> {
-                MusicPlayer.INSTANCE.skipTo(MusicPlayerHandler.INSTANCE.getMusicList().size() - list.size());
-                if (!MusicPlayer.INSTANCE.started) MusicPlayer.INSTANCE.start();
-            });
+            MusicPlayer.INSTANCE.addMusic(list, () -> MusicPlayer.INSTANCE.startAt(MusicPlayerHandler.INSTANCE.getMusicList().size() - list.size()));
         }));
         this.addLabel(Text.translatable("concerto.screen.add.internet"), this.width / 2, 70,
-                str -> MusicPlayer.INSTANCE.addMusicHere(new HttpFileMusic(str), true, () -> {
-                    if (!MusicPlayer.INSTANCE.started) MusicPlayer.INSTANCE.start();
-                }));
+                str -> MusicPlayer.INSTANCE.addMusicHere(new HttpFileMusic(str), true));
         this.addLabel(Text.translatable("concerto.screen.add.netease_cloud"), this.width / 2, 95,
-                str -> MusicPlayer.INSTANCE.addMusicHere(new NeteaseCloudMusic(str, NeteaseCloudMusic.Level.STANDARD), true, () -> {
-                    if (!MusicPlayer.INSTANCE.started) MusicPlayer.INSTANCE.start();
-                }));
+                str -> MusicPlayer.INSTANCE.addMusicHere(new NeteaseCloudMusic(str, NeteaseCloudMusic.Level.STANDARD), true));
         this.addLabel(Text.translatable("concerto.screen.add.netease_cloud.playlist"), this.width / 2, 120, str -> {
             NeteaseCloudPlaylist playlist = new NeteaseCloudPlaylist(str, false);
             playlist.load(() -> MinecraftClient.getInstance().setScreen(new PlaylistPreviewScreen(playlist, this)));

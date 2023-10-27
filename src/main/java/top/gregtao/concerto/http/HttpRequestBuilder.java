@@ -131,8 +131,8 @@ public class HttpRequestBuilder {
     }
 
     public enum ContentType {
-        JSON("application/json", HttpApiClientO.ContentType::toJson),
-        FORM("application/x-www-form-urlencoded", HttpApiClientO.ContentType::toForm);
+        JSON("application/json", ContentType::toJson),
+        FORM("application/x-www-form-urlencoded", ContentType::toForm);
 
         public final String name;
         public final Function<Map<?, ?>, String> parser;

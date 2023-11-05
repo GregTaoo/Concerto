@@ -257,7 +257,7 @@ public class NeteaseCloudApiClient extends HttpApiClient {
 
     public static void checkQRCodeStatusProgress(PlayerEntity player, String uniKey) {
         if (CURRENT_THREAD != null) {
-            CURRENT_THREAD.stop();
+            CURRENT_THREAD.interrupt();
             return;
         }
         CURRENT_THREAD = MusicPlayer.run(() -> {
@@ -267,6 +267,7 @@ public class NeteaseCloudApiClient extends HttpApiClient {
                     Pair<Integer, String> pair = INSTANCE.getQRCodeStatus(uniKey);
                     int code = pair.getFirst();
                     if (code == 801 || code == 802) {
+                        if (CURRENT_THREAD.isInterrupted()) return;
                         Thread.sleep(1000L);
                         wait -= 1000;
                     } else if (code == 800) {

@@ -1,0 +1,29 @@
+name: Build
+on:
+  push:
+    branches: [dev,release]
+  pull_request:
+    branches: [dev,release]
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Validate Gradle wrapper
+        uses: gradle/wrapper-validation-action@ccb4328a959376b642e027874838f60f8e596de3
+
+      - name: Publish package
+        uses: gradle/gradle-build-action@v2
+
+      - name: Upload to artifact
+        uses: actions/upload-artifact@main
+        with:
+          name: concerto
+          path: build/libs/concerto-*-*-mc*.jar~build/libs/concerto-*-*-mc*-*.jar

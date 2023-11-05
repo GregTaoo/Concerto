@@ -26,7 +26,7 @@ public class PlaylistPreviewScreen extends ConcertoScreen {
     protected void init() {
         super.init();
         this.widget = new MetadataListWidget<>(this.width, 0, 18, this.height - 35, 18,
-                entry -> MusicPlayer.INSTANCE.addMusicHere((Music) entry.item, true, () -> { if (!MusicPlayer.INSTANCE.started) MusicPlayer.INSTANCE.start(); })
+                entry -> MusicPlayer.INSTANCE.addMusicHere((Music) entry.item, true)
         );
         this.widget.setRenderHorizontalShadows(false);
         this.widget.setRenderBackground(false);
@@ -34,17 +34,14 @@ public class PlaylistPreviewScreen extends ConcertoScreen {
         MusicPlayer.run(() -> this.widget.reset(this.playlist.getList(), null));
 
         this.addDrawableChild(ButtonWidget.builder(Text.translatable("concerto.screen.playlist.add"), button ->
-            MusicPlayer.INSTANCE.addMusic(this.playlist.getList(), () -> {
-                MusicPlayer.INSTANCE.startAt(MusicPlayerHandler.INSTANCE.getMusicList().size() - this.playlist.getList().size());
-            }
+            MusicPlayer.INSTANCE.addMusic(this.playlist.getList(), () ->
+                    MusicPlayer.INSTANCE.skipTo(MusicPlayerHandler.INSTANCE.getMusicList().size() - this.playlist.getList().size())
         )).position(this.width / 2 - 160, this.height - 30).size(50, 20).build());
 
         this.addDrawableChild(ButtonWidget.builder(Text.translatable("concerto.screen.play"), button -> {
             ConcertoListWidget<Music>.Entry entry = this.widget.getSelectedOrNull();
             if (entry != null) {
-                MusicPlayer.INSTANCE.addMusicHere(entry.item, true, () -> {
-                    if (!MusicPlayer.INSTANCE.started) MusicPlayer.INSTANCE.start();
-                });
+                MusicPlayer.INSTANCE.addMusicHere(entry.item, true);
             }
         }).position(this.width / 2 - 105, this.height - 30).size(50, 20).build());
 

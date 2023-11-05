@@ -63,10 +63,6 @@ public class MusicPlayer extends StreamPlayer implements StreamPlayerListener {
         });
     }
 
-    public void addMusic(List<Music> musics) {
-        this.addMusic(musics, () -> {});
-    }
-
     public void addMusic(List<Music> musics, Runnable callback) {
         run(() -> {
             MusicPlayerHandler.INSTANCE.addMusic(musics);
@@ -88,7 +84,9 @@ public class MusicPlayer extends StreamPlayer implements StreamPlayerListener {
     public void addMusicHere(Music music, boolean skip, Runnable callback) {
         run(() -> {
             MusicPlayerHandler.INSTANCE.addMusicHere(music);
-            if (skip) this.skipTo(MusicPlayerHandler.INSTANCE.getCurrentIndex() + 1);
+            if (skip) {
+                this.skipTo(MusicPlayerHandler.INSTANCE.getCurrentIndex() + 1);
+            }
             callback.run();
         });
     }
@@ -101,14 +99,14 @@ public class MusicPlayer extends StreamPlayer implements StreamPlayerListener {
         this.syncVolume();
     }
 
-    public boolean forcePause() {
+    public void forcePause() {
         this.forcePaused = true;
-        return this.pause();
+        this.pause();
     }
 
-    public boolean forceResume() {
+    public void forceResume() {
         this.forcePaused = false;
-        return super.resume();
+        super.resume();
     }
 
     @Override
@@ -223,18 +221,11 @@ public class MusicPlayer extends StreamPlayer implements StreamPlayerListener {
         });
     }
 
-    public void startAt(int index) {
-        this.started = true;
-        this.forcePaused = false;
-        this.playNextLock = false;
-        this.skipTo(index);
-    }
-
     public void skipTo(int index) {
         MusicPlayerHandler.INSTANCE.setCurrentIndex(
                 Math.min(MusicPlayerHandler.INSTANCE.getMusicList().size(), index));
         MusicPlayerHandler.INSTANCE.resetInfo();
-        this.playNext(0);
+        this.start();
     }
 
     public void start() {

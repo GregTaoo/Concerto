@@ -17,7 +17,6 @@ import top.gregtao.concerto.command.ShareMusicCommand;
 import top.gregtao.concerto.config.CacheManager;
 import top.gregtao.concerto.config.ClientConfig;
 import top.gregtao.concerto.config.ConfigFile;
-import top.gregtao.concerto.http.qq.QQMusicApiClient;
 import top.gregtao.concerto.http.netease.NeteaseCloudApiClient;
 import top.gregtao.concerto.network.ClientMusicNetworkHandler;
 import top.gregtao.concerto.player.MusicPlayer;

@@ -40,9 +40,7 @@ public class NeteaseCloudSearchScreen extends PageScreen {
             try {
                 switch (this.searchType) {
                     case MUSIC: {
-                        MusicPlayer.INSTANCE.addMusicHere((Music) entry.item, true, () -> {
-                            if (!MusicPlayer.INSTANCE.started) MusicPlayer.INSTANCE.start();
-                        });
+                        MusicPlayer.INSTANCE.addMusicHere((Music) entry.item, true);
                         break;
                     }
                     case PLAYLIST, ALBUM: {
@@ -132,9 +130,7 @@ public class NeteaseCloudSearchScreen extends PageScreen {
                 case MUSIC: {
                     ConcertoListWidget<Music>.Entry entry = this.musicList.getSelectedOrNull();
                     if (entry != null) {
-                        MusicPlayer.INSTANCE.addMusicHere(entry.item, true, () -> {
-                            if (!MusicPlayer.INSTANCE.started) MusicPlayer.INSTANCE.start();
-                        });
+                        MusicPlayer.INSTANCE.addMusicHere(entry.item, true);
                     }
                 }
                 case PLAYLIST: {

@@ -15,6 +15,8 @@ import top.gregtao.concerto.screen.PlaylistPreviewScreen;
 import top.gregtao.concerto.screen.widget.ConcertoListWidget;
 import top.gregtao.concerto.screen.widget.MetadataListWidget;
 
+import java.util.concurrent.CompletableFuture;
+
 public class NeteaseCloudUserScreen extends PageScreen {
     private MetadataListWidget<NeteaseCloudPlaylist> playlistList;
 
@@ -55,6 +57,13 @@ public class NeteaseCloudUserScreen extends PageScreen {
 
         this.onPageTurned(0);
         this.addSelectableChild(this.playlistList);
+
+        this.addDrawableChild(ButtonWidget.builder(Text.translatable("concerto.screen.daily_recommendation"),
+                button -> CompletableFuture.supplyAsync(
+                        () -> NeteaseCloudApiClient.INSTANCE.getDailyRecommendation()
+                ).thenAccept(playlist -> MinecraftClient.getInstance().setScreen(new PlaylistPreviewScreen(playlist, this)))
+                ).position(this.width / 2 + 10, this.height - 30).size(50, 20).build()
+        );
 
         this.addDrawableChild(ButtonWidget.builder(Text.translatable("concerto.screen.play"), button -> {
             ConcertoListWidget<NeteaseCloudPlaylist>.Entry entry = this.playlistList.getSelectedOrNull();

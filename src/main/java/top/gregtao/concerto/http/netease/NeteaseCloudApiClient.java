@@ -12,6 +12,7 @@ import top.gregtao.concerto.http.HttpApiClient;
 import top.gregtao.concerto.http.HttpRequestBuilder;
 import top.gregtao.concerto.music.Music;
 import top.gregtao.concerto.music.NeteaseCloudMusic;
+import top.gregtao.concerto.music.list.FixedPlaylist;
 import top.gregtao.concerto.music.list.NeteaseCloudPlaylist;
 import top.gregtao.concerto.music.lyric.LRCFormatLyrics;
 import top.gregtao.concerto.music.lyric.Lyrics;
@@ -49,17 +50,17 @@ public class NeteaseCloudApiClient extends HttpApiClient {
 
     public JsonObject getMusicLink(String id, NeteaseCloudMusic.Level level) {
         String url = "http://music.163.com/api/song/enhance/player/url/v1?encodeType=mp3&ids=[" + id + "]&level=" + level.asString();
-        return parseJson(this.open().url(url).get(HttpResponse.BodyHandlers.ofString()));
+        return parseJson(this.open().url(url).get());
     }
 
     public JsonObject getMusicDetail(String id) {
         String url = "http://music.163.com/api/v3/song/detail?c=%5B%7B%22id%22%3A%20" + id + "%7D%5D";
-        return parseJson(this.open().url(url).get(HttpResponse.BodyHandlers.ofString()));
+        return parseJson(this.open().url(url).get());
     }
 
     public Pair<Lyrics, Lyrics> getLyric(String id) {
         String url = "http://music.163.com/api/song/lyric?id=" + id + "&lv=0&tv=0";
-        JsonObject object = parseJson(this.open().url(url).get(HttpResponse.BodyHandlers.ofString()));
+        JsonObject object = parseJson(this.open().url(url).get());
         if (object == null) return null;
         Lyrics lyrics1 = new LRCFormatLyrics().load(object.getAsJsonObject("lrc").get("lyric").getAsString());
         lyrics1 = lyrics1.isEmpty() ? null : lyrics1;
@@ -70,7 +71,7 @@ public class NeteaseCloudApiClient extends HttpApiClient {
 
     public Pair<Integer, String> sendPhoneCaptcha(String countryCode, String phoneNumber) {
         String url = "http://music.163.com/api/sms/captcha/sent?cellphone=" + phoneNumber + "&ctcode=" + countryCode;
-        JsonObject object = parseJson(this.open().url(url).get(HttpResponse.BodyHandlers.ofString()));
+        JsonObject object = parseJson(this.open().url(url).get());
         if (object == null) return null;
         return getCodeAndMessage(object);
     }
@@ -84,7 +85,7 @@ public class NeteaseCloudApiClient extends HttpApiClient {
         JsonObject object = parseJson(this.open().url(url, Map.of(
                 "phone", phoneNumber, "countrycode", countryCode, "rememberLogin", true,
                 captcha ? "captcha" : "password", captcha ? code : HashUtil.md5(code)
-        )).get(HttpResponse.BodyHandlers.ofString()));
+        )).get());
         if (object == null) return null;
         Pair<Integer, String> result = getCodeAndMessage(object);
         if (result.getFirst() == 200) LOCAL_USER.updateLoginStatus();
@@ -99,7 +100,7 @@ public class NeteaseCloudApiClient extends HttpApiClient {
         String url = "http://music.163.com/api/login";
         JsonObject object = parseJson(this.open().url(url, Map.of(
                 "username", email, "password", HashUtil.md5(password), "rememberLogin", true
-        )).get(HttpResponse.BodyHandlers.ofString()));
+        )).get());
         if (object == null) return null;
         Pair<Integer, String> result = getCodeAndMessage(object);
         if (result.getFirst() == 200) LOCAL_USER.updateLoginStatus();
@@ -108,7 +109,7 @@ public class NeteaseCloudApiClient extends HttpApiClient {
 
     public String generateQRCodeKey() {
         String url = "http://music.163.com/api/login/qrcode/unikey?type=1";
-        JsonObject object = parseJson(this.open().url(url).get(HttpResponse.BodyHandlers.ofString()));
+        JsonObject object = parseJson(this.open().url(url).get());
         if (object == null) return null;
         return object.get("unikey").getAsString();
     }
@@ -120,7 +121,7 @@ public class NeteaseCloudApiClient extends HttpApiClient {
     public Pair<Integer, String> getQRCodeStatus(String uniKey) {
         return getCodeAndMessage(parseJson(this.open()
                 .url("http://music.163.com/api/login/qrcode/client/login?type=1&key=" + uniKey)
-                .get(HttpResponse.BodyHandlers.ofString())));
+                .get()));
     }
 
     public Pair<ArrayList<Music>, PlaylistMetaData> parsePlayListJson(JsonObject object, NeteaseCloudMusic.Level level, boolean simply) {
@@ -180,7 +181,7 @@ public class NeteaseCloudApiClient extends HttpApiClient {
     public Pair<ArrayList<Music>, PlaylistMetaData> getPlayList(String id, NeteaseCloudMusic.Level level) {
         try {
             String url = "http://music.163.com/api/v6/playlist/detail?id=" + id + "&n=" + MusicPlayerHandler.MAX_SIZE;
-            JsonObject object = Objects.requireNonNull(parseJson(this.open().url(url).get(HttpResponse.BodyHandlers.ofString())))
+            JsonObject object = Objects.requireNonNull(parseJson(this.open().url(url).get()))
                     .getAsJsonObject("playlist");
             return this.parsePlayListJson(object, level, false);
         } catch (Exception e) {
@@ -191,7 +192,7 @@ public class NeteaseCloudApiClient extends HttpApiClient {
     public Pair<ArrayList<Music>, PlaylistMetaData> getAlbum(String id, NeteaseCloudMusic.Level level) {
         try {
             JsonObject object = parseJson(this.open().url("http://music.163.com/api/v1/album/" + id)
-                    .get(HttpResponse.BodyHandlers.ofString()));
+                    .get());
             return this.parseAlbumJson(object, level, false);
         } catch (Exception e) {
             return Pair.of(new ArrayList<>(), PlaylistMetaData.EMPTY);
@@ -240,6 +241,16 @@ public class NeteaseCloudApiClient extends HttpApiClient {
         } catch (Exception e) {
             return new ArrayList<>();
         }
+    }
+
+    public FixedPlaylist getDailyRecommendation() {
+         JsonObject object = parseJson(this.open().url("http://music.163.com/api/v3/discovery/recommend/songs").post());
+         if (object == null) return null;
+         JsonArray songs = object.getAsJsonObject("data").getAsJsonArray("dailySongs");
+         ArrayList<Music> musics = new ArrayList<>();
+         songs.forEach(element -> musics.add(new NeteaseCloudMusic(element.getAsJsonObject(), NeteaseCloudMusic.Level.STANDARD)));
+         return new FixedPlaylist(musics, new PlaylistMetaData("",
+                 Text.translatable("concerto.screen.daily_recommendation").getString(), "", ""), false);
     }
 
     public static Thread CURRENT_THREAD = null;

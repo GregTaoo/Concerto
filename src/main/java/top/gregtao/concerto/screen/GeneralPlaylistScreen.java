@@ -37,7 +37,7 @@ public class GeneralPlaylistScreen extends ConcertoScreen {
         this.addDrawableChild(ButtonWidget.builder(Text.translatable("concerto.screen.play"), button -> {
             ConcertoListWidget<Music>.Entry entry = this.widget.getSelectedOrNull();
             if (entry != null) {
-                MusicPlayer.INSTANCE.startAt(entry.index);
+                MusicPlayer.INSTANCE.skipTo(entry.index);
             }
         }).position(this.width / 2 - 135, this.height - 30).size(50, 20).build());
 

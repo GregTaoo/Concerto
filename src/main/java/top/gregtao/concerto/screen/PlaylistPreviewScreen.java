@@ -34,9 +34,8 @@ public class PlaylistPreviewScreen extends ConcertoScreen {
         MusicPlayer.run(() -> this.widget.reset(this.playlist.getList(), null));
 
         this.addDrawableChild(ButtonWidget.builder(Text.translatable("concerto.screen.playlist.add"), button ->
-            MusicPlayer.INSTANCE.addMusic(this.playlist.getList(), () -> {
-                MusicPlayer.INSTANCE.startAt(MusicPlayerHandler.INSTANCE.getMusicList().size() - this.playlist.getList().size());
-            }
+            MusicPlayer.INSTANCE.addMusic(this.playlist.getList(), () ->
+                    MusicPlayer.INSTANCE.skipTo(MusicPlayerHandler.INSTANCE.getMusicList().size() - this.playlist.getList().size())
         )).position(this.width / 2 - 160, this.height - 30).size(50, 20).build());
 
         this.addDrawableChild(ButtonWidget.builder(Text.translatable("concerto.screen.play"), button -> {

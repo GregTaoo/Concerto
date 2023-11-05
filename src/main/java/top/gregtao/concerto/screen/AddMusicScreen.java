@@ -47,7 +47,7 @@ public class AddMusicScreen extends ConcertoScreen {
                 str -> MusicPlayer.INSTANCE.addMusicHere(new LocalFileMusic(str), true));
         this.addLabel(Text.translatable("concerto.screen.add.local_file.folder"), this.width / 2, 45, str -> MusicPlayer.run(() -> {
             ArrayList<Music> list = LocalFileMusic.getMusicsInFolder(new File(str));
-            MusicPlayer.INSTANCE.addMusic(list, () -> MusicPlayer.INSTANCE.startAt(MusicPlayerHandler.INSTANCE.getMusicList().size() - list.size()));
+            MusicPlayer.INSTANCE.addMusic(list, () -> MusicPlayer.INSTANCE.skipTo(MusicPlayerHandler.INSTANCE.getMusicList().size() - list.size()));
         }));
         this.addLabel(Text.translatable("concerto.screen.add.internet"), this.width / 2, 70,
                 str -> MusicPlayer.INSTANCE.addMusicHere(new HttpFileMusic(str), true));

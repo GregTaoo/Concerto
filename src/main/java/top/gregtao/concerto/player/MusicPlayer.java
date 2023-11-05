@@ -89,8 +89,7 @@ public class MusicPlayer extends StreamPlayer implements StreamPlayerListener {
         run(() -> {
             MusicPlayerHandler.INSTANCE.addMusicHere(music);
             if (skip) {
-                if (this.isPlaying()) this.skipTo(MusicPlayerHandler.INSTANCE.getCurrentIndex() + 1);
-                else this.startAt(MusicPlayerHandler.INSTANCE.getCurrentIndex() + 1);
+                this.skipTo(MusicPlayerHandler.INSTANCE.getCurrentIndex() + 1);
             }
             callback.run();
         });
@@ -226,18 +225,11 @@ public class MusicPlayer extends StreamPlayer implements StreamPlayerListener {
         });
     }
 
-    public void startAt(int index) {
-        this.started = true;
-        this.forcePaused = false;
-        this.playNextLock = false;
-        this.skipTo(index);
-    }
-
     public void skipTo(int index) {
         MusicPlayerHandler.INSTANCE.setCurrentIndex(
                 Math.min(MusicPlayerHandler.INSTANCE.getMusicList().size(), index));
         MusicPlayerHandler.INSTANCE.resetInfo();
-        this.playNext(0);
+        this.start();
     }
 
     public void start() {

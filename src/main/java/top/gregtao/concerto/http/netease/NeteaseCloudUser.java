@@ -27,13 +27,13 @@ public class NeteaseCloudUser {
 
     public boolean updateLoginStatus() {
         String url = "http://music.163.com/api/w/nuser/account/get";
-        JsonObject object = HttpApiClient.parseJson(this.apiClient.open().url(url).post(HttpResponse.BodyHandlers.ofString()));
+        JsonObject object = HttpApiClient.parseJson(this.apiClient.open().url(url).post());
         if (object == null || object.get("account").isJsonNull()) {
             this.loggedIn = false;
         } else {
             this.uid = object.getAsJsonObject("profile").get("userId").getAsLong();
             String url1 = "http://music.163.com/api/v1/user/detail/" + this.uid;
-            JsonObject detail = HttpApiClient.parseJson(this.apiClient.open().url(url1).post(HttpResponse.BodyHandlers.ofString()));
+            JsonObject detail = HttpApiClient.parseJson(this.apiClient.open().url(url1).post());
             if (detail == null) return false;
             JsonObject profile = detail.getAsJsonObject("profile");
             this.nickname = profile.get("nickname").getAsString();
@@ -45,7 +45,7 @@ public class NeteaseCloudUser {
     }
 
     public void logout() {
-        this.apiClient.open().url("http://music.163.com/api/logout").get(HttpResponse.BodyHandlers.ofString());
+        this.apiClient.open().url("http://music.163.com/api/logout").get();
         this.apiClient.clearCookie();
         this.loggedIn = false;
     }

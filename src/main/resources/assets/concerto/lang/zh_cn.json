@@ -85,6 +85,7 @@
   "concerto.screen.audition": "审核音乐分享",
   "concerto.screen.confirmation": "接受音乐分享",
   "concerto.screen.audition.permission_denied": "你没有权限",
+  "concerto.screen.daily_recommendation": "每日推荐",
 
   "concerto.screen.add.local_file": "本地文件:",
   "concerto.screen.add.local_file.folder": "本地文件夹:",

@@ -10,3 +10,6 @@
 ### Q & A
 - Q: 为什么某些网易云音乐在30秒就停止播放了？
 - -- A: 你没有VIP权限，没打钱给网易:)
+
+感谢：
+[java-stream-player](https://github.com/goxr3plus/java-stream-player)

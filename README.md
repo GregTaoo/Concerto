@@ -11,3 +11,6 @@ More music platforms and more client behaviours will be supported in the future.
 ### Q & A
 - Q: Why some NeteaseCloud musics stopped playing at 00:30?
 - -- A: You don't have the privilege of NeteaseCloud VIP, or it requires extra payments.
+
+Thanks:
+[java-stream-player](https://github.com/goxr3plus/java-stream-player)

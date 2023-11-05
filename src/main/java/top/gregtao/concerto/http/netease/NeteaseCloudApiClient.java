@@ -92,11 +92,11 @@ public class NeteaseCloudApiClient extends HttpApiClient {
         return result;
     }
 
-    public Pair<Integer, String> cellphoneLogin(String phoneNumber, boolean captcha, String code) throws Exception {
+    public Pair<Integer, String> cellphoneLogin(String phoneNumber, boolean captcha, String code) {
         return cellphoneLogin("86", phoneNumber, captcha, code);
     }
 
-    public Pair<Integer, String> emailPasswordLogin(String email, String password) throws Exception {
+    public Pair<Integer, String> emailPasswordLogin(String email, String password) {
         String url = "http://music.163.com/api/login";
         JsonObject object = parseJson(this.open().url(url, Map.of(
                 "username", email, "password", HashUtil.md5(password), "rememberLogin", true
@@ -290,10 +290,6 @@ public class NeteaseCloudApiClient extends HttpApiClient {
                 throw new RuntimeException(e);
             }
         });
-    }
-
-    public static int getCode(JsonObject body) {
-        return JsonUtil.getIntOrElse(body, "code", 200);
     }
 
     public static Pair<Integer, String> getCodeAndMessage(JsonObject body) {

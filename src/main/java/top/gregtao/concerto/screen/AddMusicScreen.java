@@ -7,7 +7,6 @@ import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.gui.widget.TextFieldWidget;
 import net.minecraft.client.gui.widget.TextWidget;
 import net.minecraft.text.Text;
-import top.gregtao.concerto.music.QQMusic;
 import top.gregtao.concerto.music.HttpFileMusic;
 import top.gregtao.concerto.music.LocalFileMusic;
 import top.gregtao.concerto.music.Music;

@@ -63,10 +63,6 @@ public class MusicPlayer extends StreamPlayer implements StreamPlayerListener {
         });
     }
 
-    public void addMusic(List<Music> musics) {
-        this.addMusic(musics, () -> {});
-    }
-
     public void addMusic(List<Music> musics, Runnable callback) {
         run(() -> {
             MusicPlayerHandler.INSTANCE.addMusic(musics);
@@ -103,14 +99,14 @@ public class MusicPlayer extends StreamPlayer implements StreamPlayerListener {
         this.syncVolume();
     }
 
-    public boolean forcePause() {
+    public void forcePause() {
         this.forcePaused = true;
-        return this.pause();
+        this.pause();
     }
 
-    public boolean forceResume() {
+    public void forceResume() {
         this.forcePaused = false;
-        return super.resume();
+        super.resume();
     }
 
     @Override

@@ -11,6 +11,7 @@
   "concerto.reject.all": "全部拒绝",
   "concerto.accept": "同意",
   "concerto.refresh": "刷新",
+  "concerto.not_cacheable": "不是可缓存的",
 
   "concerto.playlist": "歌单",
   "concerto.album": "专辑",

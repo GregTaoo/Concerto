@@ -8,6 +8,7 @@ import net.minecraft.text.Text;
 import net.minecraft.util.Util;
 
 import java.util.List;
+import java.util.ListIterator;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 
@@ -48,6 +49,10 @@ public class ConcertoListWidget<T> extends AlwaysSelectedEntryListWidget<Concert
 
     @Override
     public boolean removeEntryWithoutScrolling(Entry entry) {
+        ListIterator<Entry> iterator = this.children().listIterator(entry.index);
+        while (iterator.hasNext()) {
+            iterator.next().index--;
+        }
         return super.removeEntryWithoutScrolling(entry);
     }
 

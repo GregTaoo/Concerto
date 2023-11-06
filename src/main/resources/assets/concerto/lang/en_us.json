@@ -11,6 +11,8 @@
   "concerto.reject.all": "Reject All",
   "concerto.accept": "Accept",
   "concerto.refresh": "Refresh",
+  "concerto.success": "Success",
+  "concerto.not_cacheable": "Not cacheable",
 
   "concerto.playlist": "Playlist",
   "concerto.album": "Album",

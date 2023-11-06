@@ -154,18 +154,18 @@ public class MusicCommand {
                 ClientCommandManager.literal("save").executes(context -> {
                     ClientPlayerEntity clientPlayer = context.getSource().getPlayer();
                     if (MusicPlayerHandler.INSTANCE.currentMusic == null) {
-                        clientPlayer.sendMessage(Text.literal("No musics found"));
+                        clientPlayer.sendMessage(Text.translatable("concerto.unknown"));
                     } else if (MusicPlayerHandler.INSTANCE.currentMusic instanceof CacheableMusic music) {
                         MusicPlayer.run(() -> {
                             try {
                                 MusicCacheManager.INSTANCE.addMusic(music);
-                                clientPlayer.sendMessage(Text.literal("Success"));
+                                clientPlayer.sendMessage(Text.translatable("concerto.success"));
                             } catch (IOException | UnsupportedAudioFileException e) {
                                 throw new RuntimeException(e);
                             }
                         });
                     } else {
-                        clientPlayer.sendMessage(Text.literal("Not cacheable"));
+                        clientPlayer.sendMessage(Text.translatable("concerto.not_cacheable"));
                     }
                     return 0;
                 })

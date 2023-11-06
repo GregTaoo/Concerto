@@ -58,13 +58,13 @@ public class NeteaseCloudApiClient extends HttpApiClient {
         return parseJson(this.open().url(url).get());
     }
 
-    public Pair<Lyrics, Lyrics> getLyric(String id) {
+    public Pair<Lyrics, Lyrics> getLyrics(String id) {
         String url = "http://music.163.com/api/song/lyric?id=" + id + "&lv=0&tv=0";
         JsonObject object = parseJson(this.open().url(url).get());
         if (object == null) return null;
-        Lyrics lyrics1 = new LRCFormatLyrics().load(object.getAsJsonObject("lrc").get("lyrics").getAsString());
+        Lyrics lyrics1 = new LRCFormatLyrics().load(object.getAsJsonObject("lrc").get("lyric").getAsString());
         lyrics1 = lyrics1.isEmpty() ? null : lyrics1;
-        Lyrics lyrics2 = new LRCFormatLyrics().load(object.getAsJsonObject("tlyric").get("lyrics").getAsString());
+        Lyrics lyrics2 = new LRCFormatLyrics().load(object.getAsJsonObject("tlyric").get("lyric").getAsString());
         lyrics2 = lyrics2.isEmpty() ? null : lyrics2;
         return Pair.of(lyrics1, lyrics2);
     }

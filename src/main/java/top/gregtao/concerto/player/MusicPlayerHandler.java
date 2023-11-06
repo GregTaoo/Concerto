@@ -183,7 +183,7 @@ public class MusicPlayerHandler {
     public void initMusicStatus() {
         this.currentMeta = this.currentMusic.getMeta();
         try {
-            Pair<Lyrics, Lyrics> lyrics = this.currentMusic.getLyric();
+            Pair<Lyrics, Lyrics> lyrics = this.currentMusic.getLyrics();
             this.currentLyrics = lyrics.getFirst();
             this.currentSubLyrics = lyrics.getSecond();
         } catch (Exception e) {

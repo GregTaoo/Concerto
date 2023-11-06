@@ -34,7 +34,7 @@ public abstract class Music implements JsonParsable<Music>, LazyLoadable, WithMe
         }
     }
 
-    public Pair<Lyrics, Lyrics> getLyric() throws IOException {
+    public Pair<Lyrics, Lyrics> getLyrics() throws IOException {
         return null;
     }
 

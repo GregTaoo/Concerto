@@ -45,7 +45,7 @@ public class QQMusic extends Music {
     }
 
     @Override
-    public Pair<Lyrics, Lyrics> getLyric() {
+    public Pair<Lyrics, Lyrics> getLyrics() {
         try {
             Lyrics lyrics = QQMusicApiClient.INSTANCE.getLyric(this.mid);
             return Pair.of(lyrics.isEmpty() ? null : lyrics, null);

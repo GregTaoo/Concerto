@@ -37,7 +37,7 @@ public class LocalFileMusic extends PathFileMusic {
     }
 
     @Override
-    public Pair<Lyrics, Lyrics> getLyric() throws IOException {
+    public Pair<Lyrics, Lyrics> getLyrics() throws IOException {
         return Pair.of(new LRCFormatLyrics().load(String.join("\n",
                 Files.readAllLines(Path.of(HttpUtil.getRawPathWithoutSuffix(this.getRawPath()) + ".lrc")))), null);
     }

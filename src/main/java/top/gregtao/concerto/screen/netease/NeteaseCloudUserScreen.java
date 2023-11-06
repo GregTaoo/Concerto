@@ -20,7 +20,7 @@ import java.util.concurrent.CompletableFuture;
 public class NeteaseCloudUserScreen extends PageScreen {
     private MetadataListWidget<NeteaseCloudPlaylist> playlistList;
 
-    private <T extends WithMetaData> MetadataListWidget<T> initListWidget() {
+    private <T extends WithMetaData> MetadataListWidget<T> initWidget() {
         MetadataListWidget<T> widget = new MetadataListWidget<>(this.width, 0, 15, this.height - 35, 18,
                 entry -> MinecraftClient.getInstance().setScreen(new PlaylistPreviewScreen((Playlist) entry.item, this))
         );
@@ -53,7 +53,7 @@ public class NeteaseCloudUserScreen extends PageScreen {
         if (!this.loggedIn()) {
             MinecraftClient.getInstance().setScreen(new NeteaseCloudLoginScreens(null));
         }
-        this.playlistList = this.initListWidget();
+        this.playlistList = this.initWidget();
 
         this.onPageTurned(0);
         this.addSelectableChild(this.playlistList);

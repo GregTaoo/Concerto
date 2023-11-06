@@ -11,7 +11,7 @@ import top.gregtao.concerto.api.MusicJsonParsers;
 import top.gregtao.concerto.api.SimpleStringIdentifiable;
 import top.gregtao.concerto.enums.Sources;
 import top.gregtao.concerto.http.netease.NeteaseCloudApiClient;
-import top.gregtao.concerto.music.lyric.Lyrics;
+import top.gregtao.concerto.music.lyrics.Lyrics;
 import top.gregtao.concerto.music.meta.music.BasicMusicMetaData;
 import top.gregtao.concerto.music.meta.music.MusicMetaData;
 import top.gregtao.concerto.music.meta.music.UnknownMusicMeta;

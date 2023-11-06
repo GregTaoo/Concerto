@@ -30,12 +30,12 @@ public class NeteaseCloudSearchScreen extends PageScreen {
     private MetadataListWidget<Music> musicList;
     private MetadataListWidget<NeteaseCloudPlaylist> playlistList;
     private MetadataListWidget<NeteaseCloudPlaylist> albumList;
-    private Map<SearchType, ConcertoListWidget<?>> listWidgetMap = new HashMap<>();
+    private Map<SearchType, ConcertoListWidget<?>> listWidgetsMap = new HashMap<>();
     protected TextFieldWidget searchBox;
     private ButtonWidget infoButton;
     private SearchType searchType = SearchType.MUSIC;
 
-    private <T extends WithMetaData> MetadataListWidget<T> initListWidget() {
+    private <T extends WithMetaData> MetadataListWidget<T> initListsWidget() {
         MetadataListWidget<T> widget = new MetadataListWidget<>(this.width, this.height, 38, this.height - 35, 18, entry -> {
             try {
                 switch (this.searchType) {
@@ -70,6 +70,7 @@ public class NeteaseCloudSearchScreen extends PageScreen {
                 case PLAYLIST -> this.playlistList.reset(NeteaseCloudApiClient.INSTANCE.searchPlaylist(keyword, page), null);
                 case ALBUM -> this.albumList.reset(NeteaseCloudApiClient.INSTANCE.searchAlbum(keyword, page), null);
             }
+            this.listWidgetsMap.get(this.searchType).setScrollAmount(0);
         });
     }
 
@@ -80,9 +81,9 @@ public class NeteaseCloudSearchScreen extends PageScreen {
 
     private void updateSearchType(SearchType type) {
         try {
-            this.remove(this.listWidgetMap.get(this.searchType));
+            this.remove(this.listWidgetsMap.get(this.searchType));
         } catch (NullPointerException ignored) {}
-        this.addSelectableChild(this.listWidgetMap.get(type));
+        this.addSelectableChild(this.listWidgetsMap.get(type));
         this.searchType = type;
         this.infoButton.active = type == SearchType.MUSIC;
         this.toggleSearch();
@@ -93,11 +94,11 @@ public class NeteaseCloudSearchScreen extends PageScreen {
         this.configure(page -> this.search(this.searchBox.getText(), page), this.width / 2 - 120, this.height - 30);
 
         super.init();
-        this.musicList = this.initListWidget();
-        this.playlistList = this.initListWidget();
-        this.albumList = this.initListWidget();
+        this.musicList = this.initListsWidget();
+        this.playlistList = this.initListsWidget();
+        this.albumList = this.initListsWidget();
 
-        this.listWidgetMap = Map.of(
+        this.listWidgetsMap = Map.of(
                 SearchType.MUSIC, this.musicList,
                 SearchType.PLAYLIST, this.playlistList,
                 SearchType.ALBUM, this.albumList

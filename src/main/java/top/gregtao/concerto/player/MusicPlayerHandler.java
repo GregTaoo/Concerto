@@ -6,7 +6,7 @@ import net.minecraft.util.math.MathHelper;
 import top.gregtao.concerto.ConcertoClient;
 import top.gregtao.concerto.api.LazyLoadable;
 import top.gregtao.concerto.api.MusicJsonParsers;
-import top.gregtao.concerto.music.lyric.Lyrics;
+import top.gregtao.concerto.music.lyrics.Lyrics;
 import top.gregtao.concerto.music.meta.music.MusicMetaData;
 import top.gregtao.concerto.enums.OrderType;
 import top.gregtao.concerto.music.Music;

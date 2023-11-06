@@ -7,8 +7,8 @@ import org.apache.commons.lang3.RandomStringUtils;
 import top.gregtao.concerto.enums.Sources;
 import top.gregtao.concerto.http.HttpApiClient;
 import top.gregtao.concerto.http.HttpRequestBuilder;
-import top.gregtao.concerto.music.lyric.LRCFormatLyrics;
-import top.gregtao.concerto.music.lyric.Lyrics;
+import top.gregtao.concerto.music.lyrics.LRCFormatLyrics;
+import top.gregtao.concerto.music.lyrics.Lyrics;
 import top.gregtao.concerto.util.JsonUtil;
 import top.gregtao.concerto.util.MathUtil;
 import top.gregtao.concerto.util.TextUtil;
@@ -118,7 +118,7 @@ public class QQMusicApiClient extends HttpApiClient {
         if (!matcher.find()) return null;
         result = matcher.group(1);
         JsonObject object = JsonUtil.from(result);
-        String raw = new String(Base64.getDecoder().decode(object.get("lyric").getAsString()));
+        String raw = new String(Base64.getDecoder().decode(object.get("lyrics").getAsString()));
         return new LRCFormatLyrics().load(raw);
     }
 
@@ -143,7 +143,7 @@ public class QQMusicApiClient extends HttpApiClient {
     private final Pattern WECHAT_QRKEY_UPDATE_PATTERN = Pattern.compile("window.wx_errcode=([0-9]{3});window.wx_code='([0-9a-zA-Z]*)';");
 
     // 402: expired, 408: waiting, 404: scanning, 405: success
-    public Pair<Integer, String> getWeChatQRStatus(String key) throws Exception {
+    public Pair<Integer, String> getWeChatQRStatus(String key) {
         String[] args = key.split(":");
         if (args.length != 2) return Pair.of(-1, "");
         String url = "https://lp.open.weixin.qq.com/connect/l/qrconnect?uuid=" + args[0] + "&_=" + args[1];

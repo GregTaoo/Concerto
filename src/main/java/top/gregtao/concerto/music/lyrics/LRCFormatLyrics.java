@@ -1,4 +1,4 @@
-package top.gregtao.concerto.music.lyric;
+package top.gregtao.concerto.music.lyrics;
 
 import top.gregtao.concerto.music.MusicTimestamp;
 import top.gregtao.concerto.util.MathUtil;

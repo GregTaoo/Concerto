@@ -12,6 +12,8 @@ import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.command.CommandRegistryAccess;
 import net.minecraft.text.Text;
+import top.gregtao.concerto.api.CacheableMusic;
+import top.gregtao.concerto.config.MusicCacheManager;
 import top.gregtao.concerto.music.meta.music.MusicMetaData;
 import top.gregtao.concerto.command.argument.OrderTypeArgumentType;
 import top.gregtao.concerto.command.builder.MusicAdderBuilder;
@@ -25,7 +27,9 @@ import top.gregtao.concerto.player.MusicPlayer;
 import top.gregtao.concerto.player.MusicPlayerHandler;
 import top.gregtao.concerto.util.TextUtil;
 
+import javax.sound.sampled.UnsupportedAudioFileException;
 import java.io.File;
+import java.io.IOException;
 import java.util.List;
 
 public class MusicCommand {
@@ -146,6 +150,25 @@ public class MusicCommand {
                             return 0;
                         })
                 )
+        ).then(
+                ClientCommandManager.literal("save").executes(context -> {
+                    ClientPlayerEntity clientPlayer = context.getSource().getPlayer();
+                    if (MusicPlayerHandler.INSTANCE.currentMusic == null) {
+                        clientPlayer.sendMessage(Text.literal("No musics found"));
+                    } else if (MusicPlayerHandler.INSTANCE.currentMusic instanceof CacheableMusic music) {
+                        MusicPlayer.run(() -> {
+                            try {
+                                MusicCacheManager.INSTANCE.addMusic(music);
+                                clientPlayer.sendMessage(Text.literal("Success"));
+                            } catch (IOException | UnsupportedAudioFileException e) {
+                                throw new RuntimeException(e);
+                            }
+                        });
+                    } else {
+                        clientPlayer.sendMessage(Text.literal("Not cacheable"));
+                    }
+                    return 0;
+                })
         );
     }
 

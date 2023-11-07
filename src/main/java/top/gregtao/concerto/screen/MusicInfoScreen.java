@@ -2,6 +2,7 @@ package top.gregtao.concerto.screen;
 
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.text.Text;
 import top.gregtao.concerto.music.Music;
 import top.gregtao.concerto.music.meta.music.MusicMetaData;
@@ -30,6 +31,16 @@ public class MusicInfoScreen extends ConcertoScreen {
             this.music.getMeta();
             this.initInfo();
         });
+
+        this.addDrawableChild(ButtonWidget.builder(
+                Text.translatable("concerto.screen.play"),
+                button -> MusicPlayer.INSTANCE.addMusicHere(this.music, true)
+        ).position(this.width / 2 + 65, this.height - 30).size(50, 20).build());
+
+        this.addDrawableChild(ButtonWidget.builder(
+                Text.translatable("concerto.screen.add"),
+                button -> MusicPlayer.INSTANCE.addMusic(this.music)
+        ).position(this.width / 2 + 120, this.height - 30).size(50, 20).build());
     }
 
     private void initInfo() {

@@ -1,6 +1,5 @@
 package top.gregtao.concerto.screen.widget;
 
-import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.Drawable;
@@ -10,7 +9,7 @@ import net.minecraft.client.texture.NativeImage;
 import net.minecraft.client.texture.NativeImageBackedTexture;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
-import top.gregtao.concerto.ConcertoClient;
+import top.gregtao.concerto.config.CacheManager;
 import top.gregtao.concerto.util.HashUtil;
 
 import javax.imageio.ImageIO;
@@ -69,17 +68,17 @@ public class URLImageWidget implements Drawable, Widget, Closeable {
     }
 
     public boolean cacheExists() {
-        return ConcertoClient.IMAGE_CACHE_MANAGER.exists(this.getFileName());
+        return CacheManager.IMAGE_CACHE_MANAGER.exists(this.getFileName());
     }
 
     public File getFromCache() {
-        return ConcertoClient.IMAGE_CACHE_MANAGER.getChild(this.getFileName());
+        return CacheManager.IMAGE_CACHE_MANAGER.getChild(this.getFileName());
     }
 
     public void writeCacheFile(BufferedImage image) throws IOException {
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         ImageIO.write(image, "png", outputStream);
-        ConcertoClient.IMAGE_CACHE_MANAGER.addFile(this.getFileName(), new ByteArrayInputStream(outputStream.toByteArray()));
+        CacheManager.IMAGE_CACHE_MANAGER.addFile(this.getFileName(), new ByteArrayInputStream(outputStream.toByteArray()));
     }
 
     public void loadImage() {

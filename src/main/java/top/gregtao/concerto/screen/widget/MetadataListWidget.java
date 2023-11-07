@@ -1,6 +1,7 @@
 package top.gregtao.concerto.screen.widget;
 
 import net.minecraft.text.Text;
+import net.minecraft.util.Formatting;
 import top.gregtao.concerto.api.WithMetaData;
 import top.gregtao.concerto.music.meta.MetaData;
 
@@ -12,7 +13,7 @@ public class MetadataListWidget<T extends WithMetaData> extends ConcertoListWidg
     public MetadataListWidget(int width, int height, int top, int bottom, int itemHeight, Consumer<Entry> onDoubleClicked) {
         this(width, height, top, bottom, itemHeight, (t, index) -> {
             MetaData meta = t.getMeta();
-            return Text.literal(meta.title() + " - " + meta.author());
+            return Text.literal(meta.title()).append("  ").append(Text.literal(meta.author()).formatted(Formatting.BOLD, Formatting.GRAY));
         }, onDoubleClicked, 0xffffffff);
     }
 

@@ -43,6 +43,12 @@ public class ConcertoListWidget<T> extends AlwaysSelectedEntryListWidget<Concert
         }
     }
 
+    public void setSelected(int index) {
+        Entry entry = this.children().get(index);
+        this.setSelected(entry);
+        this.centerScrollOn(entry);
+    }
+
     public void clear() {
         super.clearEntries();
     }

@@ -14,7 +14,7 @@ import java.util.function.Consumer;
 
 public class ConcertoListWidget<T> extends AlwaysSelectedEntryListWidget<ConcertoListWidget<T>.Entry> {
     private int color = 0xffffffff;
-    private final BiFunction<T, Integer, Text> narrationSupplier;
+    protected final BiFunction<T, Integer, Text> narrationSupplier;
     private final Consumer<Entry> onDoubleClicked;
 
     public ConcertoListWidget(int width, int height, int top, int bottom, int itemHeight,
@@ -30,17 +30,24 @@ public class ConcertoListWidget<T> extends AlwaysSelectedEntryListWidget<Concert
         this.color = color;
     }
 
-    public void reset(List<T> list, T selected) {
+    public void reset(List<T> list, T selected, String key) {
         this.clearEntries();
-        for (int i = 0; i < list.size(); ++i) {
+        key = key.toLowerCase();
+        for (int i = 0, j = 0; i < list.size(); ++i) {
             T music = list.get(i);
-            Entry entry = new Entry(music, i);
-            this.addEntry(entry);
-            if (music == selected) {
-                this.setSelected(entry);
-                this.centerScrollOn(entry);
+            if (key.isEmpty() || this.narrationSupplier.apply(music, i).getString().toLowerCase().matches(".*" + key + ".*")) {
+                Entry entry = new Entry(music, i, j++);
+                this.addEntry(entry);
+                if (music == selected) {
+                    this.setSelected(entry);
+                    this.centerScrollOn(entry);
+                }
             }
         }
+    }
+
+    public void reset(List<T> list, T selected) {
+        this.reset(list, selected, "");
     }
 
     public void setSelected(int index) {
@@ -55,7 +62,7 @@ public class ConcertoListWidget<T> extends AlwaysSelectedEntryListWidget<Concert
 
     @Override
     public boolean removeEntryWithoutScrolling(Entry entry) {
-        ListIterator<Entry> iterator = this.children().listIterator(entry.index);
+        ListIterator<Entry> iterator = this.children().listIterator(entry.entryIndex + 1);
         while (iterator.hasNext()) {
             iterator.next().index--;
         }
@@ -78,12 +85,13 @@ public class ConcertoListWidget<T> extends AlwaysSelectedEntryListWidget<Concert
 
     public class Entry extends AlwaysSelectedEntryListWidget.Entry<Entry> {
         public T item;
-        public int index;
+        public int index, entryIndex;
         private long lastClickTime = 0;
 
-        public Entry(T item, int index) {
+        public Entry(T item, int index, int entryIndex) {
             this.item = item;
             this.index = index;
+            this.entryIndex = entryIndex;
         }
 
         @Override

@@ -14,4 +14,8 @@ public class GeneralPlaylistWidget extends MetadataListWidget<Music> {
     public void reset() {
         super.reset(MusicPlayerHandler.INSTANCE.getMusicList(), MusicPlayerHandler.INSTANCE.currentMusic);
     }
+
+    public void reset(String keyword) {
+        super.reset(MusicPlayerHandler.INSTANCE.getMusicList(), MusicPlayerHandler.INSTANCE.currentMusic, keyword);
+    }
 }

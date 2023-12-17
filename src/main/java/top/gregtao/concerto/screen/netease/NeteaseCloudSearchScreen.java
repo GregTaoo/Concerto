@@ -104,7 +104,7 @@ public class NeteaseCloudSearchScreen extends PageScreen {
                 SearchType.ALBUM, this.albumList
         );
 
-        this.searchBox = new TextFieldWidget(this.textRenderer, this.width / 2 - 155, 18, 200, 20,
+        this.searchBox = new TextFieldWidget(this.textRenderer, this.width / 2 - 155, 17, 200, 20,
                 this.searchBox, Text.translatable("concerto.screen.search"));
         this.addSelectableChild(this.searchBox);
         this.searchBox.setText(DEFAULT_KEYWORD);
@@ -120,10 +120,10 @@ public class NeteaseCloudSearchScreen extends PageScreen {
         this.updateSearchType(this.searchType);
 
         this.addDrawableChild(ButtonWidget.builder(Text.translatable("concerto.screen.search"),
-                button -> this.toggleSearch()).position(this.width / 2 + 50, 18).size(52, 20).build());
+                button -> this.toggleSearch()).position(this.width / 2 + 50, 17).size(52, 20).build());
 
         this.addDrawableChild(CyclingButtonWidget.builder(SearchType::getName).values(SearchType.values()).initially(this.searchType).build(
-                this.width / 2 + 105, 18, 65, 20, Text.translatable("concerto.search_type"),
+                this.width / 2 + 105, 17, 65, 20, Text.translatable("concerto.search_type"),
                 (widget, type) -> this.updateSearchType(type)));
 
         this.addDrawableChild(ButtonWidget.builder(Text.translatable("concerto.screen.play"), button -> {

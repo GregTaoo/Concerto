@@ -59,8 +59,7 @@ public class QQMusic extends Music {
     @Override
     public Pair<Lyrics, Lyrics> getLyrics() {
         try {
-            Lyrics lyrics = QQMusicApiClient.INSTANCE.getLyric(this.mid);
-            return Pair.of(lyrics.isEmpty() ? null : lyrics, null);
+            return QQMusicApiClient.INSTANCE.getLyric(this.mid);
         } catch (Exception e) {
             return null;
         }

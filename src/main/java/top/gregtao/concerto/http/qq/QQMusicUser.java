@@ -23,9 +23,10 @@ public class QQMusicUser {
     public void updateLoginStatus() {
         try {
             String uin = this.apiClient.getUin();
-            JsonObject object = this.apiClient.requestSignedApi("userInfo.BaseUserInfoServer", "get_user_baseinfo_v2", "{\"vec_uin\":[\"" + uin + "\"]}");
+            JsonObject object = this.apiClient.requestSignedApi("userInfo.BaseUserInfoServer", "get_user_baseinfo_v2", "\"vec_uin\":[\"" + uin + "\"]");
             JsonObject data = object.getAsJsonObject("data").getAsJsonObject("map_userinfo").getAsJsonObject(uin);
             this.nickname = data.get("nick").getAsString();
+            this.apiClient.getQQLoginGTK();
             this.loggedIn = true;
         } catch (Exception e) {
             this.loggedIn = false;

@@ -42,8 +42,8 @@ public class ConcertoIndexScreen extends ConcertoScreen {
                         button -> MinecraftClient.getInstance().setScreen(new AddMusicScreen(this)))
                 .position(this.width / 2 - 50, 160).size(100, 20).build());
 
-//        this.addDrawableChild(ButtonWidget.builder(Text.translatable("concerto.screen.index.qq"),
-//                button -> MinecraftClient.getInstance().setScreen(new QQMusicIndexScreen(this))
-//        ).position(this.width / 2 - 50, 200).size(100, 20).build());
+        this.addDrawableChild(ButtonWidget.builder(Text.translatable("concerto.screen.index.qq"),
+                button -> MinecraftClient.getInstance().setScreen(new QQMusicIndexScreen(this))
+        ).position(this.width / 2 - 50, 200).size(100, 20).build());
     }
 }

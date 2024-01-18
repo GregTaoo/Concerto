@@ -7,10 +7,7 @@ import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.gui.widget.TextFieldWidget;
 import net.minecraft.client.gui.widget.TextWidget;
 import net.minecraft.text.Text;
-import top.gregtao.concerto.music.HttpFileMusic;
-import top.gregtao.concerto.music.LocalFileMusic;
-import top.gregtao.concerto.music.Music;
-import top.gregtao.concerto.music.NeteaseCloudMusic;
+import top.gregtao.concerto.music.*;
 import top.gregtao.concerto.music.list.NeteaseCloudPlaylist;
 import top.gregtao.concerto.player.MusicPlayer;
 import top.gregtao.concerto.player.MusicPlayerHandler;
@@ -60,10 +57,10 @@ public class AddMusicScreen extends ConcertoScreen {
             NeteaseCloudPlaylist playlist = new NeteaseCloudPlaylist(str, false);
             playlist.load(() -> MinecraftClient.getInstance().setScreen(new PlaylistPreviewScreen(playlist, this)));
         });
-//        this.addLabel(Text.translatable("concerto.screen.add.qq"), this.width / 2, 170,
-//                str -> MusicPlayer.INSTANCE.addMusicHere(new QQMusic(str), true, () -> {
-//                    if (!MusicPlayer.INSTANCE.started) MusicPlayer.INSTANCE.start();
-//                }));
+        this.addLabel(Text.translatable("concerto.screen.add.qq"), this.width / 2, 170,
+                str -> MusicPlayer.INSTANCE.addMusicHere(new QQMusic(str), true, () -> {
+                    if (!MusicPlayer.INSTANCE.started) MusicPlayer.INSTANCE.start();
+                }));
     }
 
     @Override

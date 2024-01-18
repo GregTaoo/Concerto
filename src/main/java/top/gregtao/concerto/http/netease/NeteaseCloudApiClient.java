@@ -202,7 +202,7 @@ public class NeteaseCloudApiClient extends HttpApiClient {
     private JsonObject search(String keyword, int page, SearchType type) {
         return parseJson(this.open().url("http://music.163.com/api/cloudsearch/pc/").post(
                 HttpResponse.BodyHandlers.ofString(), HttpRequestBuilder.ContentType.FORM,
-                Map.of("s", keyword, "offset", 30 * page, "limit", 30, "type", type.searchKey, "total", true)
+                Map.of("s", keyword, "offset", 30 * page, "limit", 30, "type", type.neteaseKey, "total", true)
         ));
     }
 

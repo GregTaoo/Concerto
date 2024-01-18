@@ -23,13 +23,25 @@ public class QQMusic extends Music {
         this.mid = mid;
     }
 
+    public QQMusic(JsonObject object, int type) {
+        this.mid = object.get(type == 2 ? "songmid" : "mid").getAsString();
+        this.setMusicMeta(type == 2 ? this.parseMetaData2(object) : this.parseMetaData(object));
+    }
+
     public MusicMetaData parseMetaData(JsonObject object) {
-        JsonObject trackInfo = object.getAsJsonObject("track_info");
-        String title = trackInfo.get("name").getAsString();
+        String title = object.get("name").getAsString();
         List<String> singers = new ArrayList<>();
-        trackInfo.getAsJsonArray("singer").forEach(element -> singers.add(element.getAsJsonObject().get("name").getAsString()));
-        this.mediaMid = trackInfo.getAsJsonObject("file").get("media_mid").getAsString();
-        return new BasicMusicMetaData(String.join(", ", singers), title, Sources.QQ_MUSIC.getName().getString(), trackInfo.get("interval").getAsLong() * 1000);
+        object.getAsJsonArray("singer").forEach(element -> singers.add(element.getAsJsonObject().get("name").getAsString()));
+        this.mediaMid = object.getAsJsonObject("file").get("media_mid").getAsString();
+        return new BasicMusicMetaData(String.join(", ", singers), title, Sources.QQ_MUSIC.getName().getString(), object.get("interval").getAsLong() * 1000);
+    }
+
+    public MusicMetaData parseMetaData2(JsonObject object) {
+        String title = object.get("songname").getAsString();
+        List<String> singers = new ArrayList<>();
+        object.getAsJsonArray("singer").forEach(element -> singers.add(element.getAsJsonObject().get("name").getAsString()));
+        this.mediaMid = object.get("strMediaMid").getAsString();
+        return new BasicMusicMetaData(String.join(", ", singers), title, Sources.QQ_MUSIC.getName().getString(), object.get("interval").getAsLong() * 1000);
     }
 
     @Override
@@ -37,7 +49,7 @@ public class QQMusic extends Music {
         try {
             JsonObject object = QQMusicApiClient.INSTANCE.getMusicDetail(this.mid)
                     .getAsJsonObject("songinfo").getAsJsonObject("data");
-            this.setMusicMeta(this.parseMetaData(object));
+            this.setMusicMeta(this.parseMetaData(object.getAsJsonObject("track_info")));
         } catch (Exception e) {
             this.setMusicMeta(new UnknownMusicMeta(Sources.QQ_MUSIC.getName().getString()));
         }

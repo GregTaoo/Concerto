@@ -4,11 +4,16 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.mojang.datafixers.util.Pair;
 import org.apache.commons.lang3.RandomStringUtils;
+import top.gregtao.concerto.enums.SearchType;
 import top.gregtao.concerto.enums.Sources;
 import top.gregtao.concerto.http.HttpApiClient;
 import top.gregtao.concerto.http.HttpRequestBuilder;
+import top.gregtao.concerto.music.Music;
+import top.gregtao.concerto.music.QQMusic;
+import top.gregtao.concerto.music.list.QQMusicPlaylist;
 import top.gregtao.concerto.music.lyrics.LRCFormatLyrics;
 import top.gregtao.concerto.music.lyrics.Lyrics;
+import top.gregtao.concerto.music.meta.music.list.PlaylistMetaData;
 import top.gregtao.concerto.util.JsonUtil;
 import top.gregtao.concerto.util.MathUtil;
 import top.gregtao.concerto.util.TextUtil;
@@ -16,10 +21,7 @@ import top.gregtao.concerto.util.TextUtil;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.net.http.HttpResponse;
-import java.util.Base64;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Random;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -77,10 +79,12 @@ public class QQMusicApiClient extends HttpApiClient {
     }
 
     public String getQQLoginGTK() throws IOException, URISyntaxException {
+        LOCAL_USER.gtk = this.getCookie("https://graph.qq.com", "gtk");
         if (!LOCAL_USER.gtk.isEmpty() && !LOCAL_USER.gtk.equals("5381")) return LOCAL_USER.gtk;
         String sKey = this.getCookie("https://graph.qq.com", "p_skey");
         String gtk = String.valueOf(calculateGTK(sKey));
         LOCAL_USER.gtk = gtk;
+        this.setCookie("https://graph.qq.com", "gtk", gtk);
         return gtk;
     }
 
@@ -227,13 +231,53 @@ public class QQMusicApiClient extends HttpApiClient {
         return with0 ? RandomStringUtils.random(length, '0', '1', '2', '3', '4', '5', '6', '7', '8', '9') : RandomStringUtils.random(length, '1', '2', '3', '4', '5', '6', '7', '8', '9');
     }
 
-    public void searchMusic(String keyword) throws IOException, URISyntaxException {
-        String id = randomNumber(1, false) + randomNumber(16, true);
-        this.requestSignedApi("music.search.SearchCgiService", "DoSearchForQQMusicDesktop", "\"remoteplace\":\"txt.yqq.top\",\"searchid\":\"" + id + "\",\"search_type\":0,\"query\":\"" + keyword + "\",\"page_num\":1,\"num_per_page\":10");
+    public JsonObject search(String keyword, SearchType type, int page) {
+        try {
+            page += 1;
+            String id = randomNumber(1, false) + randomNumber(16, true);
+            return this.requestSignedApi("music.search.SearchCgiService", "DoSearchForQQMusicDesktop", "\"remoteplace\":\"txt.yqq." + type.qqSuffix + "\",\"searchid\":\"" + id + "\",\"search_type\":" + type.qqKey + ",\"query\":\"" + keyword + "\",\"page_num\":" + page + ",\"num_per_page\":10")
+                    .getAsJsonObject("data").getAsJsonObject("body");
+        } catch (IOException | URISyntaxException e) {
+            return null;
+        }
+    }
+
+    public List<Music> searchMusic(String keyword, int page) {
+        JsonArray array = this.search(keyword, SearchType.MUSIC, page).getAsJsonObject("song").getAsJsonArray("list");
+        List<Music> list = new ArrayList<>();
+        array.forEach(element -> list.add(new QQMusic(element.getAsJsonObject(), 1)));
+        return list;
+    }
+
+    public List<QQMusicPlaylist> searchAlbum(String keyword, int page) {
+        JsonArray array = this.search(keyword, SearchType.ALBUM, page).getAsJsonObject("album").getAsJsonArray("list");
+        List<QQMusicPlaylist> list = new ArrayList<>();
+        array.forEach(element -> list.add(new QQMusicPlaylist(element.getAsJsonObject(), true, true)));
+        return list;
+    }
+
+    public List<QQMusicPlaylist> searchPlaylist(String keyword, int page) {
+        JsonArray array = this.search(keyword, SearchType.PLAYLIST, page).getAsJsonObject("songlist").getAsJsonArray("list");
+        List<QQMusicPlaylist> list = new ArrayList<>();
+        array.forEach(element -> list.add(new QQMusicPlaylist(element.getAsJsonObject(), false, true)));
+        return list;
+    }
+
+    public Pair<ArrayList<Music>, PlaylistMetaData> parseAlbumJson(JsonObject object, boolean simply) {
+        return Pair.of(new ArrayList<>(), new PlaylistMetaData(
+                object.get("singerName").getAsString(), object.get("albumName").getAsString(),
+                object.get("publicTime").getAsString(), ""));
+    }
+
+    public Pair<ArrayList<Music>, PlaylistMetaData> parsePlaylistJson(JsonObject object, boolean simply) {
+        return Pair.of(new ArrayList<>(), new PlaylistMetaData(
+                object.getAsJsonObject("creator").get("name").getAsString(),
+                object.get("dissname").getAsString(), object.get("createtime").getAsString(), object.get("introduction").getAsString()
+        ));
     }
 
     public JsonObject requestSignedApi(String module, String method, String params) throws IOException, URISyntaxException {
-        String data = "{\"comm\":{\"cv\":4747474,\"ct\":24,\"format\":\"json\",\"inCharset\":\"utf-8\",\"outCharset\":\"utf-8\",\"notice\":0,\"platform\":\"yqq.json\",\"needNewCode\":1,\"uin\":\"" + this.getUin() + "\",\"g_tk_new_20200303\":" + this.getQQLoginGTK() + ",\"g_tk\":" + this.getQQLoginGTK() + "},\"req_1\":{\"module\":\"" + module + "\",\"method\":\"" + method + "\",\"param\":" + params + "}}";
+        String data = "{\"comm\":{\"cv\":4747474,\"ct\":24,\"format\":\"json\",\"inCharset\":\"utf-8\",\"outCharset\":\"utf-8\",\"notice\":0,\"platform\":\"yqq.json\",\"needNewCode\":1,\"uin\":\"" + this.getUin() + "\",\"g_tk_new_20200303\":" + this.getQQLoginGTK() + ",\"g_tk\":" + this.getQQLoginGTK() + ",\"mesh_devops\":\"DevopsBase\"},\"req_1\":{\"module\":\"" + module + "\",\"method\":\"" + method + "\",\"param\":{" + params + "}}}";
         String url = "https://u.y.qq.com/cgi-bin/musics.fcg?_=" + TextUtil.getCurrentTime() + "&sign=" + QQMusicApiEncrypt.Sign.getSign(data);
         JsonObject object = parseJson(this.openUApi().setFixedReferer("https://y.qq.com/").url(url).post(
                 HttpResponse.BodyHandlers.ofString(),
@@ -245,5 +289,21 @@ public class QQMusicApiClient extends HttpApiClient {
 
     public JsonObject requestSignedApi(String module, String method, Map<?, ?> params) throws IOException, URISyntaxException {
         return this.requestSignedApi(module, method, HttpRequestBuilder.ContentType.toJson(params));
+    }
+
+    public Pair<ArrayList<Music>, PlaylistMetaData> getPlayList(String id) throws IOException, URISyntaxException {
+        String data = this.openCApi().url("https://c.y.qq.com/qzone/fcg-bin/fcg_ucc_getcdinfo_byids_cp.fcg?type=1&hostUin=" + this.getUin() + "&loginUin=" + this.getUin() + "&disstid=" + id).setFixedReferer("https://y.qq.com/")
+                .get().body();
+        data = data.substring(13, data.length() - 1);
+        JsonObject object = JsonUtil.from(data).getAsJsonArray("cdlist").get(0).getAsJsonObject();
+        ArrayList<Music> musics = new ArrayList<>();
+        object.get("songlist").getAsJsonArray().forEach(element -> musics.add(new QQMusic(element.getAsJsonObject(), 2)));
+        PlaylistMetaData metaData = new PlaylistMetaData(object.get("nickname").getAsString(), object.get("dissname").getAsString(), object.get("ctime").getAsString(), object.get("desc").getAsString());
+        return Pair.of(musics, metaData);
+    }
+
+    public Pair<ArrayList<Music>, PlaylistMetaData> getAlbum(String id) throws IOException, URISyntaxException {
+        this.requestSignedApi("music.musichallAlbum.AlbumSongList", "GetAlbumSongList", "\"albumMid\":\"albummid\",\"albumID\":\"\",\"begin\": 0,\"num\":99999,\"order\":2");
+        return null;
     }
 }

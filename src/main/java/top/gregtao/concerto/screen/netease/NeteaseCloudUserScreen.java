@@ -30,13 +30,13 @@ public class NeteaseCloudUserScreen extends PageScreen {
     }
 
     public NeteaseCloudUserScreen(Screen parent) {
-        super(Text.translatable("concerto.screen.163.user"), parent);
+        super(Text.translatable("concerto.screen.user"), parent);
     }
 
     private void onPageTurned(int page) {
         MusicPlayer.run(() -> {
             if (NeteaseCloudApiClient.LOCAL_USER.updateLoginStatus()) {
-                this.playlistList.reset(NeteaseCloudApiClient.LOCAL_USER.userPlaylists(page), null);
+                this.playlistList.reset(NeteaseCloudApiClient.LOCAL_USER.getUserPlaylists(page), null);
             }
         });
     }

@@ -16,8 +16,8 @@ import java.util.Objects;
 public class MusicDataPacket {
 
     public static List<String> ALLOWED_SOURCES = List.of(
-            Sources.NETEASE_CLOUD.asString()
-//            Sources.QQ_MUSIC.asString()
+            Sources.NETEASE_CLOUD.asString(),
+            Sources.QQ_MUSIC.asString()
     );
 
     public final Music music;

@@ -3,7 +3,7 @@ package top.gregtao.concerto.music.lyrics;
 import top.gregtao.concerto.music.MusicTimestamp;
 import top.gregtao.concerto.util.MathUtil;
 
-public class LRCFormatLyrics extends Lyrics {
+public class DefaultFormatLyrics extends Lyrics {
     @Override
     public void parse(String raw) {
         String[] lines = raw.split("(\n|\r|\r\n)");

@@ -30,13 +30,13 @@ public class QQMusicUserScreen extends PageScreen {
     }
 
     public QQMusicUserScreen(Screen parent) {
-        super(Text.translatable("concerto.screen.163.user"), parent);
+        super(Text.translatable("concerto.screen.user"), parent);
     }
 
     private void onPageTurned(int page) {
         MusicPlayer.run(() -> {
             QQMusicApiClient.LOCAL_USER.updateLoginStatus();
-            this.playlistList.reset(QQMusicApiClient.LOCAL_USER.userPlaylists(), null);
+            this.playlistList.reset(QQMusicApiClient.LOCAL_USER.getUserPlaylists(), null);
         });
     }
 
@@ -65,11 +65,8 @@ public class QQMusicUserScreen extends PageScreen {
         }).position(this.width / 2 + 65, this.height - 30).size(50, 20).build());
 
         this.addDrawableChild(ButtonWidget.builder(Text.translatable("concerto.screen.logout"), button -> {
-            if (this.loggedIn()) {
-                QQMusicApiClient.LOCAL_USER.logout();
-            } else {
-                MinecraftClient.getInstance().setScreen(new QQMusicLoginScreens(this));
-            }
+            QQMusicApiClient.LOCAL_USER.logout();
+            MinecraftClient.getInstance().setScreen(new QQMusicLoginScreens(this));
         }).position(this.width / 2 + 120, this.height - 30).size(50, 20).build());
     }
 
@@ -82,7 +79,7 @@ public class QQMusicUserScreen extends PageScreen {
                 if (!iterator.hasNext()) this.playlistList.render(matrices, mouseX, mouseY, delta);
             }
         } else {
-            matrices.drawCenteredTextWithShadow(this.textRenderer, Text.translatable("concerto.screen.163.not_login"),
+            matrices.drawCenteredTextWithShadow(this.textRenderer, Text.translatable("concerto.screen.qq.not_login"),
                     this.width / 2, this.height / 2, 0xffffffff);
         }
     }

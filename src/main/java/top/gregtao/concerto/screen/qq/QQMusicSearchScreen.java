@@ -58,7 +58,7 @@ public class QQMusicSearchScreen extends PageScreen {
     }
 
     public QQMusicSearchScreen(Screen parent) {
-        super(Text.translatable("concerto.screen.search.163"), parent);
+        super(Text.translatable("concerto.screen.search.qq"), parent);
     }
 
     private void search(String keyword, int page) {

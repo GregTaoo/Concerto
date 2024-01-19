@@ -14,7 +14,7 @@ import top.gregtao.concerto.music.Music;
 import top.gregtao.concerto.music.NeteaseCloudMusic;
 import top.gregtao.concerto.music.list.FixedPlaylist;
 import top.gregtao.concerto.music.list.NeteaseCloudPlaylist;
-import top.gregtao.concerto.music.lyrics.LRCFormatLyrics;
+import top.gregtao.concerto.music.lyrics.DefaultFormatLyrics;
 import top.gregtao.concerto.music.lyrics.Lyrics;
 import top.gregtao.concerto.music.meta.music.TimelessMusicMetaData;
 import top.gregtao.concerto.music.meta.music.list.PlaylistMetaData;
@@ -62,9 +62,9 @@ public class NeteaseCloudApiClient extends HttpApiClient {
         String url = "http://music.163.com/api/song/lyric?id=" + id + "&lv=0&tv=0";
         JsonObject object = parseJson(this.open().url(url).get());
         if (object == null) return null;
-        Lyrics lyrics1 = new LRCFormatLyrics().load(object.getAsJsonObject("lrc").get("lyric").getAsString());
+        Lyrics lyrics1 = new DefaultFormatLyrics().load(object.getAsJsonObject("lrc").get("lyric").getAsString());
         lyrics1 = lyrics1.isEmpty() ? null : lyrics1;
-        Lyrics lyrics2 = new LRCFormatLyrics().load(object.getAsJsonObject("tlyric").get("lyric").getAsString());
+        Lyrics lyrics2 = new DefaultFormatLyrics().load(object.getAsJsonObject("tlyric").get("lyric").getAsString());
         lyrics2 = lyrics2.isEmpty() ? null : lyrics2;
         return Pair.of(lyrics1, lyrics2);
     }

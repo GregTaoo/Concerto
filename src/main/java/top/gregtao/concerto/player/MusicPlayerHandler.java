@@ -46,13 +46,16 @@ public class MusicPlayerHandler {
 
     public float progressPercentage = 0;
 
+    public int progressBytes = 0;
+
     private final Random random = new Random();
 
     public MusicPlayerHandler() {}
 
-    public MusicPlayerHandler(ArrayList<Music> musics, int currentIndex, OrderType orderType) {
+    public MusicPlayerHandler(ArrayList<Music> musics, int currentIndex, int progressBytes, OrderType orderType) {
         this.currentIndex = currentIndex;
         this.orderType = orderType;
+        this.progressBytes = progressBytes;
         if (musics.size() > MAX_SIZE) {
             this.musicList = (ArrayList<Music>) musics.subList(0, MAX_SIZE - 1);
         } else {

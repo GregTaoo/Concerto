@@ -7,7 +7,7 @@ import org.jaudiotagger.audio.AudioFile;
 import org.jaudiotagger.audio.AudioFileIO;
 import org.jaudiotagger.tag.FieldKey;
 import top.gregtao.concerto.api.*;
-import top.gregtao.concerto.music.lyrics.LRCFormatLyrics;
+import top.gregtao.concerto.music.lyrics.DefaultFormatLyrics;
 import top.gregtao.concerto.music.lyrics.Lyrics;
 import top.gregtao.concerto.music.meta.music.BasicMusicMetaData;
 import top.gregtao.concerto.enums.Sources;
@@ -38,7 +38,7 @@ public class LocalFileMusic extends PathFileMusic {
 
     @Override
     public Pair<Lyrics, Lyrics> getLyrics() throws IOException {
-        return Pair.of(new LRCFormatLyrics().load(String.join("\n",
+        return Pair.of(new DefaultFormatLyrics().load(String.join("\n",
                 Files.readAllLines(Path.of(HttpUtil.getRawPathWithoutSuffix(this.getRawPath()) + ".lrc")))), null);
     }
 

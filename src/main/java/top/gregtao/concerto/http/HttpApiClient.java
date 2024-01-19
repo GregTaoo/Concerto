@@ -18,10 +18,6 @@ import java.util.Map;
 
 public class HttpApiClient {
 
-    public static Map<Character, Character> ESCAPE_MAP = Map.of(
-            '\u00a0', ' ', '\r', '\n'
-    );
-
     private HttpClient client;
     private CookieManager cookieManager;
     private final CookieFile cookieFile;
@@ -96,6 +92,10 @@ public class HttpApiClient {
         this.cookieManager.put(new URI(url), Map.of("Set-Cookie", List.of(key + "=" + value)));
         this.updateCookie();
     }
+
+    public static Map<Character, Character> ESCAPE_MAP = Map.of(
+            '\u00a0', ' ', '\r', '\n'
+    ); // escape illegal spaces
 
     public static String escapeChars(String string) {
         for (Map.Entry<Character, Character> entry : ESCAPE_MAP.entrySet()) {

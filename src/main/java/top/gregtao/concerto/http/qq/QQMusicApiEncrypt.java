@@ -63,18 +63,14 @@ public class QQMusicApiEncrypt {
         private static String head(String md5Str) {
             final List<String> res = new ArrayList<>();
             char[] chars = md5Str.toCharArray();
-            List.of(21, 4, 9, 26, 16, 20, 27, 30).forEach(integer -> {
-                res.add(String.valueOf(chars[integer]));
-            });
+            List.of(21, 4, 9, 26, 16, 20, 27, 30).forEach(integer -> res.add(String.valueOf(chars[integer])));
             return String.join("", res);
         }
 
         private static String tail(String md5Str) {
             final List<String> res = new ArrayList<>();
             char[] chars = md5Str.toCharArray();
-            List.of(18, 11, 3, 2, 1, 7, 6, 25).forEach(integer -> {
-                res.add(String.valueOf(chars[integer]));
-            });
+            List.of(18, 11, 3, 2, 1, 7, 6, 25).forEach(integer -> res.add(String.valueOf(chars[integer])));
             return String.join("", res);
         }
 

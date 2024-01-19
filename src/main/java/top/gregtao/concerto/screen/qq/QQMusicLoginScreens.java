@@ -16,21 +16,18 @@ public class QQMusicLoginScreens extends ConcertoScreen {
     public static Text SOURCE_TEXT = Text.translatable("concerto.source.qq_music");
 
     public QQMusicLoginScreens(Screen parent) {
-        super(Text.translatable("concerto.screen.login").append(SOURCE_TEXT), parent);
+        super(Text.literal(Text.translatable("concerto.screen.login").getString() + SOURCE_TEXT.getString()), parent);
     }
 
     @Override
     protected void init() {
         super.init();
-        this.addDrawableChild(ButtonWidget.builder(Text.translatable("concerto.screen.login.type.qrcode"),
+        this.addDrawableChild(ButtonWidget.builder(Text.translatable("concerto.screen.login.type.qrcode.wechat"),
                 button -> MinecraftClient.getInstance().setScreen(this.weChatQRLogin())
         ).size(100, 20).position(this.width / 2 - 50, 40).build());
-        this.addDrawableChild(ButtonWidget.builder(Text.translatable("concerto.screen.login.type.qrcode"),
+        this.addDrawableChild(ButtonWidget.builder(Text.translatable("concerto.screen.login.type.qrcode.qq"),
                 button -> MinecraftClient.getInstance().setScreen(this.qqQRLogin())
         ).size(100, 20).position(this.width / 2 - 50, 70).build());
-        this.addDrawableChild(ButtonWidget.builder(Text.translatable("concerto.screen.login.type.qrcode"),
-                button -> QQMusicApiClient.LOCAL_USER.logout()
-        ).size(100, 20).position(this.width / 2 - 50, 100).build());
     }
 
     private static boolean loginChecker() {

@@ -35,12 +35,8 @@ public class FileUtil {
         }
     }
 
-    public static BufferedInputStream bufferedFileInputStream(File file) throws FileNotFoundException {
-        return createBuffered(new FileInputStream(file));
-    }
-
     public static BufferedInputStream createBuffered(InputStream inputStream) {
-        return new BufferedInputStream(inputStream);
+        return new BufferedInputStream(inputStream, 16384);
     }
 
     public static String getSuffix(String name) {

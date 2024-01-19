@@ -17,6 +17,7 @@ import java.util.concurrent.atomic.AtomicLong;
 public class CacheManager {
 
     public static String CACHE_ROOT_FOLDER = "Concerto/cache/";
+    public static CacheManager IMAGE_CACHE_MANAGER = new CacheManager("images");
 
     private final File folder;
     private int maxSize = 1000 * 1000 * 100; // 100 MB

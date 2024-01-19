@@ -2,7 +2,6 @@ package top.gregtao.concerto.config;
 
 import com.google.gson.GsonBuilder;
 import org.joml.Vector2i;
-import top.gregtao.concerto.ConcertoClient;
 import top.gregtao.concerto.enums.TextAlignment;
 
 public class ClientConfig extends ConfigFile {
@@ -21,7 +20,7 @@ public class ClientConfig extends ConfigFile {
         this.writeOptions();
 
         MusicCacheManager.INSTANCE = new MusicCacheManager(this.options.maxCacheSize);
-        ConcertoClient.IMAGE_CACHE_MANAGER = new CacheManager("images", this.options.maxCacheSize);
+        CacheManager.IMAGE_CACHE_MANAGER = new CacheManager("images", this.options.maxCacheSize);
     }
 
     public void writeOptions() {

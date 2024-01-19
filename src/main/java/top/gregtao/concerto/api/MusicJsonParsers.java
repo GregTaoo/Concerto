@@ -122,8 +122,10 @@ public class MusicJsonParsers {
                 Music music = from(element.getAsJsonObject());
                 if (music != null) list.add(music);
             });
-            return new MusicPlayerHandler(list, Math.min(JsonUtil.getIntOrElse(object, "cur", -1), array.size() - 1),
-                    OrderType.valueOf(JsonUtil.getStringOrElse(object, "ord", OrderType.NORMAL.toString())));
+            return new MusicPlayerHandler(list,
+                    Math.min(JsonUtil.getIntOrElse(object, "cur", -1), array.size() - 1), 0,
+                    OrderType.valueOf(JsonUtil.getStringOrElse(object, "ord", OrderType.NORMAL.toString()))
+            );
         } catch (Exception e) {
             return new MusicPlayerHandler();
         }

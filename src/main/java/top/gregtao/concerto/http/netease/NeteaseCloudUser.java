@@ -50,7 +50,7 @@ public class NeteaseCloudUser {
         this.loggedIn = false;
     }
 
-    public List<NeteaseCloudPlaylist> userPlaylists(int page) {
+    public List<NeteaseCloudPlaylist> getUserPlaylists(int page) {
         List<NeteaseCloudPlaylist> lists = new ArrayList<>();
         String url = "http://music.163.com/api/user/playlist";
         JsonObject object = HttpApiClient.parseJson(this.apiClient.open().url(url).post(

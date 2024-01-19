@@ -1,4 +1,4 @@
-package top.gregtao.concerto.music.lyric;
+package top.gregtao.concerto.music.lyrics;
 
 import com.mojang.datafixers.util.Pair;
 import net.minecraft.text.Text;

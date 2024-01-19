@@ -3,7 +3,7 @@ on:
   push:
     branches: [dev,release]
   pull_request:
-    branches: [dev,release]
+    branches: [release]
 jobs:
   build:
     runs-on: windows-latest
@@ -19,7 +19,7 @@ jobs:
       - name: Validate Gradle wrapper
         uses: gradle/wrapper-validation-action@v1
 
-      - name: Publish package
+      - name: Use Gradle build action
         uses: gradle/gradle-build-action@v2
 
       - name: Execute Gradle build

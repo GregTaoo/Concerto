@@ -9,12 +9,9 @@ import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.text.Text;
 import top.gregtao.concerto.music.Music;
 import top.gregtao.concerto.network.ClientMusicNetworkHandler;
-import top.gregtao.concerto.network.MusicDataPacket;
 import top.gregtao.concerto.screen.widget.ConcertoListWidget;
 import top.gregtao.concerto.screen.widget.MusicWithUUIDListWidget;
 
-import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
 public class MusicConfirmationScreen extends ConcertoScreen {
@@ -28,12 +25,9 @@ public class MusicConfirmationScreen extends ConcertoScreen {
         this.widget.setRenderBackground(false);
     }
 
-    private static List<Pair<Music, UUID>> toPairList(Map<UUID, MusicDataPacket> map) {
-        return map.entrySet().stream().map(entry -> Pair.of(entry.getValue().music, entry.getKey())).toList();
-    }
-
     public void refresh() {
-        this.widget.reset(toPairList(ClientMusicNetworkHandler.WAIT_CONFIRMATION), null);
+        this.widget.reset(ClientMusicNetworkHandler.WAIT_CONFIRMATION.entrySet().stream().map(
+                entry -> Pair.of(entry.getValue().music, entry.getKey())).toList(), null);
     }
 
     @Override

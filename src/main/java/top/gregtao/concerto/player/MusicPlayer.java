@@ -19,6 +19,7 @@ import top.gregtao.concerto.util.SilentLogger;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.logging.Logger;
 
@@ -122,7 +123,9 @@ public class MusicPlayer extends StreamPlayer implements StreamPlayerListener {
     }
 
     public void syncVolume() {
-        this.setGain(getProperVolume());
+        try {
+            this.setGain(getProperVolume());
+        } catch (NullPointerException ignore) {}
     }
 
     public static double getProperVolume() {
@@ -137,6 +140,7 @@ public class MusicPlayer extends StreamPlayer implements StreamPlayerListener {
     @Override
     public void progress(int nEncodedBytes, long microsecondPosition, byte[] pcmData, Map<String, Object> properties) {
         MusicPlayerHandler.INSTANCE.updateDisplayTexts(microsecondPosition / 1000);
+        MusicPlayerHandler.INSTANCE.progressBytes += pcmData.length;
     }
 
     @Override
@@ -184,8 +188,13 @@ public class MusicPlayer extends StreamPlayer implements StreamPlayerListener {
     }
 
     public void playNext(int forward, Runnable callback) {
+        this.playNext(forward, index -> callback.run());
+    }
+
+    public void playNext(int forward, Consumer<Integer> callback) {
         run(() -> {
             try {
+                MusicPlayerHandler.INSTANCE.progressBytes = 0;
                 if (!this.started || MusicPlayerHandler.INSTANCE.isEmpty()) {
                     this.started = false;
                     return;
@@ -211,7 +220,7 @@ public class MusicPlayer extends StreamPlayer implements StreamPlayerListener {
                     }
                     source.open(this);
                     this.play();
-                    callback.run();
+                    callback.accept(MusicPlayerHandler.INSTANCE.getCurrentIndex());
                 }
                 this.playNextLock = this.isPlayingTemp = this.forcePaused = false;
             } catch (StreamPlayerException | IOException e) {

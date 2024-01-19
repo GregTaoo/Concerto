@@ -14,19 +14,24 @@ public class HttpURLInputStream extends InputStream {
     private HttpURLConnection connection;
     private InputStream in;
     private final int szBytes;
-    private int readBytesTotal = 0;
+    private int readBytesTotal;
 
-    public HttpURLInputStream(URL url) throws IOException {
+    public HttpURLInputStream(URL url, int startBytePos) throws IOException {
+        this.readBytesTotal = startBytePos;
         this.url = url;
         this.connection = this.openNewConnection();
         if (this.connection.getResponseCode() == 200) {
             this.szBytes = this.connection.getContentLength();
             this.in = this.connection.getInputStream();
         } else {
-            String message = this.connection.getResponseCode() + " - cannot access to url: " + url;
+            String message = this.connection.getResponseCode() + " - couldn't access to: " + url;
             ConcertoClient.LOGGER.error(message);
             throw new IOException(message);
         }
+    }
+
+    public HttpURLInputStream(URL url) throws IOException {
+        this(url, 0);
     }
 
     private HttpURLConnection openNewConnection() throws IOException {

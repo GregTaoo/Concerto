@@ -19,15 +19,11 @@ public class ConcertoIndexScreen extends ConcertoScreen {
         super.init();
         this.addDrawableChild(ButtonWidget.builder(Text.translatable("concerto.screen.general_list"),
                 button -> MinecraftClient.getInstance().setScreen(new GeneralPlaylistScreen(this))
-        ).position(this.width / 2 - 50, 40).size(100, 20).build());
-
-        this.addDrawableChild(ButtonWidget.builder(Text.translatable("concerto.screen.index.163"),
-                button -> MinecraftClient.getInstance().setScreen(new NeteaseCloudIndexScreen(this))
-        ).position(this.width / 2 - 50, 70).size(100, 20).build());
+        ).position(this.width / 2 - 120, 40).size(100, 20).build());
 
         ButtonWidget widget = ButtonWidget.builder(Text.translatable("concerto.screen.audition"),
                 button -> MinecraftClient.getInstance().setScreen(new MusicAuditionScreen(this))
-        ).position(this.width / 2 - 50, 100).size(100, 20).build();
+        ).position(this.width / 2 - 120, 70).size(100, 20).build();
         this.addDrawableChild(widget);
         ClientPlayerEntity player = MinecraftClient.getInstance().player;
         if (player == null || !player.hasPermissionLevel(2) || !ConcertoClient.isServerAvailable()) {
@@ -36,14 +32,18 @@ public class ConcertoIndexScreen extends ConcertoScreen {
 
         this.addDrawableChild(ButtonWidget.builder(Text.translatable("concerto.screen.confirmation"),
                 button -> MinecraftClient.getInstance().setScreen(new MusicConfirmationScreen(this))
-        ).position(this.width / 2 - 50, 130).size(100, 20).build());
+        ).position(this.width / 2 - 120, 100).size(100, 20).build());
 
         this.addDrawableChild(ButtonWidget.builder(Text.translatable("concerto.screen.add"),
                         button -> MinecraftClient.getInstance().setScreen(new AddMusicScreen(this)))
-                .position(this.width / 2 - 50, 160).size(100, 20).build());
+                .position(this.width / 2 - 120, 130).size(100, 20).build());
 
-//        this.addDrawableChild(ButtonWidget.builder(Text.translatable("concerto.screen.index.qq"),
-//                button -> MinecraftClient.getInstance().setScreen(new QQMusicIndexScreen(this))
-//        ).position(this.width / 2 - 50, 200).size(100, 20).build());
+        this.addDrawableChild(ButtonWidget.builder(Text.translatable("concerto.screen.index.163"),
+                button -> MinecraftClient.getInstance().setScreen(new NeteaseCloudIndexScreen(this))
+        ).position(this.width / 2 + 20, 40).size(100, 20).build());
+
+        this.addDrawableChild(ButtonWidget.builder(Text.translatable("concerto.screen.index.qq"),
+                button -> MinecraftClient.getInstance().setScreen(new QQMusicIndexScreen(this))
+        ).position(this.width / 2 + 20, 70).size(100, 20).build());
     }
 }

@@ -23,10 +23,10 @@ public class NeteaseCloudIndexScreen extends ConcertoScreen {
     @Override
     protected void init() {
         super.init();
-        this.addDrawableChild(ButtonWidget.builder(Text.translatable("concerto.screen.163.user"),
+        this.addDrawableChild(ButtonWidget.builder(Text.translatable("concerto.screen.user"),
                 button -> MinecraftClient.getInstance().setScreen(new NeteaseCloudUserScreen(this))
         ).size(100, 20).position(this.width / 2 - 50, 40).build());
-        this.addDrawableChild(ButtonWidget.builder(Text.translatable("concerto.screen.163.search"),
+        this.addDrawableChild(ButtonWidget.builder(Text.translatable("concerto.screen.search"),
                 button -> MinecraftClient.getInstance().setScreen(new NeteaseCloudSearchScreen(this))
         ).size(100, 20).position(this.width / 2 - 50, 65).build());
 

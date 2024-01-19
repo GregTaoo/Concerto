@@ -1,4 +1,4 @@
-package top.gregtao.concerto.screen.netease;
+package top.gregtao.concerto.screen.qq;
 
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
@@ -11,9 +11,9 @@ import org.lwjgl.glfw.GLFW;
 import top.gregtao.concerto.ConcertoClient;
 import top.gregtao.concerto.api.WithMetaData;
 import top.gregtao.concerto.enums.SearchType;
-import top.gregtao.concerto.http.netease.NeteaseCloudApiClient;
+import top.gregtao.concerto.http.qq.QQMusicApiClient;
 import top.gregtao.concerto.music.Music;
-import top.gregtao.concerto.music.list.NeteaseCloudPlaylist;
+import top.gregtao.concerto.music.list.QQMusicPlaylist;
 import top.gregtao.concerto.music.list.Playlist;
 import top.gregtao.concerto.player.MusicPlayer;
 import top.gregtao.concerto.screen.MusicInfoScreen;
@@ -25,11 +25,11 @@ import top.gregtao.concerto.screen.widget.MetadataListWidget;
 import java.util.HashMap;
 import java.util.Map;
 
-public class NeteaseCloudSearchScreen extends PageScreen {
+public class QQMusicSearchScreen extends PageScreen {
     public static String DEFAULT_KEYWORD = "";
     private MetadataListWidget<Music> musicList;
-    private MetadataListWidget<NeteaseCloudPlaylist> playlistList;
-    private MetadataListWidget<NeteaseCloudPlaylist> albumList;
+    private MetadataListWidget<QQMusicPlaylist> playlistList;
+    private MetadataListWidget<QQMusicPlaylist> albumList;
     private Map<SearchType, ConcertoListWidget<?>> listWidgetsMap = new HashMap<>();
     protected TextFieldWidget searchBox;
     private ButtonWidget infoButton;
@@ -57,8 +57,8 @@ public class NeteaseCloudSearchScreen extends PageScreen {
         return widget;
     }
 
-    public NeteaseCloudSearchScreen(Screen parent) {
-        super(Text.translatable("concerto.screen.search.163"), parent);
+    public QQMusicSearchScreen(Screen parent) {
+        super(Text.translatable("concerto.screen.search.qq"), parent);
     }
 
     private void search(String keyword, int page) {
@@ -66,9 +66,9 @@ public class NeteaseCloudSearchScreen extends PageScreen {
         if (keyword.isEmpty()) return;
         MusicPlayer.run(() -> {
             switch (this.searchType) {
-                case MUSIC -> this.musicList.reset(NeteaseCloudApiClient.INSTANCE.searchMusic(keyword, page), null);
-                case PLAYLIST -> this.playlistList.reset(NeteaseCloudApiClient.INSTANCE.searchPlaylist(keyword, page), null);
-                case ALBUM -> this.albumList.reset(NeteaseCloudApiClient.INSTANCE.searchAlbum(keyword, page), null);
+                case MUSIC -> this.musicList.reset(QQMusicApiClient.INSTANCE.searchMusic(keyword, page), null);
+                case PLAYLIST -> this.playlistList.reset(QQMusicApiClient.INSTANCE.searchPlaylist(keyword, page), null);
+                case ALBUM -> this.albumList.reset(QQMusicApiClient.INSTANCE.searchAlbum(keyword, page), null);
             }
             this.listWidgetsMap.get(this.searchType).setScrollAmount(0);
         });
@@ -135,13 +135,13 @@ public class NeteaseCloudSearchScreen extends PageScreen {
                     }
                 }
                 case PLAYLIST: {
-                    ConcertoListWidget<NeteaseCloudPlaylist>.Entry entry = this.playlistList.getSelectedOrNull();
+                    ConcertoListWidget<QQMusicPlaylist>.Entry entry = this.playlistList.getSelectedOrNull();
                     if (entry != null) {
                         MinecraftClient.getInstance().setScreen(new PlaylistPreviewScreen(entry.item, this));
                     }
                 }
                 case ALBUM: {
-                    ConcertoListWidget<NeteaseCloudPlaylist>.Entry entry = this.albumList.getSelectedOrNull();
+                    ConcertoListWidget<QQMusicPlaylist>.Entry entry = this.albumList.getSelectedOrNull();
                     if (entry != null) {
                         MinecraftClient.getInstance().setScreen(new PlaylistPreviewScreen(entry.item, this));
                     }
@@ -158,13 +158,13 @@ public class NeteaseCloudSearchScreen extends PageScreen {
                     }
                 }
                 case PLAYLIST: {
-                    ConcertoListWidget<NeteaseCloudPlaylist>.Entry entry = this.playlistList.getSelectedOrNull();
+                    ConcertoListWidget<QQMusicPlaylist>.Entry entry = this.playlistList.getSelectedOrNull();
                     if (entry != null) {
                         MusicPlayer.INSTANCE.addMusic(() -> entry.item.getList(), () -> {});
                     }
                 }
                 case ALBUM: {
-                    ConcertoListWidget<NeteaseCloudPlaylist>.Entry entry = this.albumList.getSelectedOrNull();
+                    ConcertoListWidget<QQMusicPlaylist>.Entry entry = this.albumList.getSelectedOrNull();
                     if (entry != null) {
                         MusicPlayer.INSTANCE.addMusic(() -> entry.item.getList(), () -> {});
                     }
@@ -176,10 +176,14 @@ public class NeteaseCloudSearchScreen extends PageScreen {
     @Override
     public void render(DrawContext matrices, int mouseX, int mouseY, float delta) {
         super.render(matrices, mouseX, mouseY, delta);
-        switch (this.searchType) {
-            case PLAYLIST -> this.playlistList.render(matrices, mouseX, mouseY, delta);
-            case MUSIC -> this.musicList.render(matrices, mouseX, mouseY, delta);
-            case ALBUM -> this.albumList.render(matrices, mouseX, mouseY, delta);
+        try {
+            switch (this.searchType) {
+                case PLAYLIST -> this.playlistList.render(matrices, mouseX, mouseY, delta);
+                case MUSIC -> this.musicList.render(matrices, mouseX, mouseY, delta);
+                case ALBUM -> this.albumList.render(matrices, mouseX, mouseY, delta);
+            }
+        } catch (IndexOutOfBoundsException e) {
+            ConcertoClient.LOGGER.error(e.getMessage());
         }
         this.searchBox.render(matrices, mouseX, mouseY, delta);
     }

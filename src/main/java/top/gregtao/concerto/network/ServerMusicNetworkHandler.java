@@ -3,19 +3,24 @@ package top.gregtao.concerto.network;
 import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.fabricmc.fabric.api.networking.v1.PacketSender;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
+import net.minecraft.block.entity.JukeboxBlockEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.network.PacketByteBuf;
+import net.minecraft.network.packet.s2c.play.WorldEventS2CPacket;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.PlayerManager;
 import net.minecraft.server.network.ServerPlayNetworkHandler;
 import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.server.world.ServerWorld;
 import net.minecraft.text.Text;
+import net.minecraft.util.math.BlockPos;
 import org.jetbrains.annotations.Nullable;
 import top.gregtao.concerto.ConcertoServer;
 import top.gregtao.concerto.api.MusicJsonParsers;
 import top.gregtao.concerto.command.AuditCommand;
 import top.gregtao.concerto.config.ServerConfig;
 import top.gregtao.concerto.music.meta.music.MusicMetaData;
+import top.gregtao.concerto.player.exp.ConcertoJukeboxBlockEntity;
 import top.gregtao.concerto.util.TextUtil;
 
 import java.util.*;
@@ -192,6 +197,20 @@ public class ServerMusicNetworkHandler {
         packetByteBuf.writeString(MusicNetworkChannels.HANDSHAKE_STRING + "CallJoin:" + player.getEntityName());
         ServerPlayNetworking.send(player, MusicNetworkChannels.CHANNEL_HANDSHAKE, packetByteBuf);
         sendS2CAllAuditionData(player);
+    }
+
+    public static void broadcastJukeboxEvent(ServerWorld serverWorld, ConcertoJukeboxBlockEntity blockEntity, boolean start) {
+        BlockPos pos = blockEntity.getPos();
+        String posStr = pos.getX() + "_" + pos.getY() + "_" + pos.getZ();
+        PacketByteBuf packetByteBuf = PacketByteBufs.create();
+        packetByteBuf.writeString(MusicNetworkChannels.HANDSHAKE_STRING + "Jukebox:" + posStr +
+                (start ? ":st:" + TextUtil.toBase64(MusicJsonParsers.to(blockEntity.getMusic()).toString()) : ":ed"));
+        List<ServerPlayerEntity> playerList = serverWorld.getServer().getPlayerManager().getPlayerList();
+        playerList.forEach(player -> {
+            if (player.getPos().distanceTo(blockEntity.getPos().toCenterPos()) <= 64) {
+                ServerPlayNetworking.send(player, MusicNetworkChannels.CHANNEL_HANDSHAKE, packetByteBuf);
+            }
+        });
     }
 
     public static boolean playerExist(PlayerManager manager, String name) {

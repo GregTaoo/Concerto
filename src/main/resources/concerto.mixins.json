@@ -11,7 +11,8 @@
     "GameMenuScreenMixin",
     "MusicTrackerMixin",
     "SoundManagerAccessor",
-    "SoundManagerMixin"
+    "SoundManagerMixin",
+    "SoundSystemMixin"
   ],
   "server": [
     "PlayerManagerMixin"

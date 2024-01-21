@@ -13,7 +13,7 @@ public class ConcertoHotkeys {
 
     public static String CATEGORY = "concerto.hotkey";
 
-    public static KeyBinding GENERAL_PLAYLIST, INDEX_SCREEN, NEXT;
+    public static KeyBinding GENERAL_PLAYLIST, INDEX_SCREEN, NEXT_MUSIC;
 
     public static void register() {
         GENERAL_PLAYLIST = KeyBindingHelper.registerKeyBinding(new KeyBinding(
@@ -28,7 +28,7 @@ public class ConcertoHotkeys {
                 GLFW.GLFW_KEY_I,
                 CATEGORY
         ));
-        NEXT = KeyBindingHelper.registerKeyBinding(new KeyBinding(
+        NEXT_MUSIC = KeyBindingHelper.registerKeyBinding(new KeyBinding(
                 "concerto.screen.next",
                 InputUtil.Type.KEYSYM,
                 GLFW.GLFW_KEY_N,
@@ -39,7 +39,7 @@ public class ConcertoHotkeys {
                 client.setScreen(new GeneralPlaylistScreen(null));
             } else if (INDEX_SCREEN.wasPressed()) {
                 client.setScreen(new ConcertoIndexScreen(null));
-            } else if (NEXT.wasPressed()) {
+            } else if (NEXT_MUSIC.wasPressed()) {
                 if (!MusicPlayer.INSTANCE.started) MusicPlayer.INSTANCE.start();
                 else MusicPlayer.INSTANCE.playNext(1);
             }

@@ -75,6 +75,14 @@ public class MusicJsonParsers {
         return parser1;
     }
 
+    public static Music from(String str) {
+        return from(JsonUtil.from(str));
+    }
+
+    public static Music from(String str, boolean withMeta) {
+        return from(JsonUtil.from(str), withMeta);
+    }
+
     public static Music from(JsonObject jsonObject) {
         return from(jsonObject, true);
     }
@@ -123,7 +131,7 @@ public class MusicJsonParsers {
                 if (music != null) list.add(music);
             });
             return new MusicPlayerHandler(list,
-                    Math.min(JsonUtil.getIntOrElse(object, "cur", -1), array.size() - 1), 0,
+                    Math.min(JsonUtil.getIntOrElse(object, "cur", -1), array.size() - 1),
                     OrderType.valueOf(JsonUtil.getStringOrElse(object, "ord", OrderType.NORMAL.toString()))
             );
         } catch (Exception e) {

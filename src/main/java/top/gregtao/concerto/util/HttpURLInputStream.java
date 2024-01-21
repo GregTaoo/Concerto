@@ -1,5 +1,6 @@
 package top.gregtao.concerto.util;
 
+import net.minecraft.util.math.MathHelper;
 import org.jetbrains.annotations.NotNull;
 import top.gregtao.concerto.ConcertoClient;
 
@@ -63,7 +64,7 @@ public class HttpURLInputStream extends InputStream {
         try {
             this.disconnect();
             this.connect();
-        } catch (IOException e1) {
+        } catch (IOException e) {
             ConcertoClient.LOGGER.error("Failed to reconnect!");
         }
     }

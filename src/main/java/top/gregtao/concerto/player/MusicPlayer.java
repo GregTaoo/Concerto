@@ -140,7 +140,6 @@ public class MusicPlayer extends StreamPlayer implements StreamPlayerListener {
     @Override
     public void progress(int nEncodedBytes, long microsecondPosition, byte[] pcmData, Map<String, Object> properties) {
         MusicPlayerHandler.INSTANCE.updateDisplayTexts(microsecondPosition / 1000);
-        MusicPlayerHandler.INSTANCE.progressBytes += pcmData.length;
     }
 
     @Override
@@ -169,6 +168,7 @@ public class MusicPlayer extends StreamPlayer implements StreamPlayerListener {
             MusicPlayerHandler status = MusicPlayerHandler.INSTANCE;
             status.resetInfo();
             status.currentMusic = music;
+            status.currentSource = source;
             status.initMusicStatus();
             status.updateDisplayTexts();
             try {
@@ -194,7 +194,6 @@ public class MusicPlayer extends StreamPlayer implements StreamPlayerListener {
     public void playNext(int forward, Consumer<Integer> callback) {
         run(() -> {
             try {
-                MusicPlayerHandler.INSTANCE.progressBytes = 0;
                 if (!this.started || MusicPlayerHandler.INSTANCE.isEmpty()) {
                     this.started = false;
                     return;
@@ -218,6 +217,7 @@ public class MusicPlayer extends StreamPlayer implements StreamPlayerListener {
                             return;
                         }
                     }
+                    MusicPlayerHandler.INSTANCE.currentSource = source;
                     source.open(this);
                     this.play();
                     callback.accept(MusicPlayerHandler.INSTANCE.getCurrentIndex());

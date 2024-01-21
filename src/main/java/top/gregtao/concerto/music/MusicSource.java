@@ -30,10 +30,10 @@ public class MusicSource {
         }
     }
 
-    public AudioInputStream getAudioStream() throws UnsupportedAudioFileException, IOException {
+    public InputStream getAudioStream() throws UnsupportedAudioFileException, IOException {
         switch (this.type) {
             case URL -> {
-                return AudioSystem.getAudioInputStream((URL) this.object);
+                return FileUtil.createBuffered(new HttpURLInputStream((URL) this.object));
             }
             case FILE -> {
                 return AudioSystem.getAudioInputStream((File) this.object);

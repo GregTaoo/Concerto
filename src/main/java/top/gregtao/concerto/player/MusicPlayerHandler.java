@@ -6,6 +6,7 @@ import net.minecraft.util.math.MathHelper;
 import top.gregtao.concerto.ConcertoClient;
 import top.gregtao.concerto.api.LazyLoadable;
 import top.gregtao.concerto.api.MusicJsonParsers;
+import top.gregtao.concerto.music.MusicSource;
 import top.gregtao.concerto.music.lyrics.Lyrics;
 import top.gregtao.concerto.music.meta.music.MusicMetaData;
 import top.gregtao.concerto.enums.OrderType;
@@ -32,6 +33,8 @@ public class MusicPlayerHandler {
 
     public Music currentMusic = null;
 
+    public MusicSource currentSource = null;
+
     public Lyrics currentLyrics = null, currentSubLyrics = null;
 
     public MusicMetaData currentMeta = null;
@@ -46,16 +49,13 @@ public class MusicPlayerHandler {
 
     public float progressPercentage = 0;
 
-    public int progressBytes = 0;
-
     private final Random random = new Random();
 
     public MusicPlayerHandler() {}
 
-    public MusicPlayerHandler(ArrayList<Music> musics, int currentIndex, int progressBytes, OrderType orderType) {
+    public MusicPlayerHandler(ArrayList<Music> musics, int currentIndex, OrderType orderType) {
         this.currentIndex = currentIndex;
         this.orderType = orderType;
-        this.progressBytes = progressBytes;
         if (musics.size() > MAX_SIZE) {
             this.musicList = (ArrayList<Music>) musics.subList(0, MAX_SIZE - 1);
         } else {

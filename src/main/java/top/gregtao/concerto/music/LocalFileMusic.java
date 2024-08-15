@@ -47,7 +47,6 @@ public class LocalFileMusic extends PathFileMusic {
                 return FileUtil.createBuffered(reader.getAudioInputStream(stream));
             } catch (UnsupportedAudioFileException e) {
                 return stream;
-//                return new ByteArrayInputStream(stream.readAllBytes());
             } catch (IOException e) {
                 return new ByteArrayInputStream(stream.readAllBytes());
             }

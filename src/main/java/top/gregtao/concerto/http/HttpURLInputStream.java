@@ -15,6 +15,7 @@ public class HttpURLInputStream extends InputStream {
     private InputStream in;
     private final int szBytes;
     private int readBytesTotal;
+    private int retryCount = 0;
 
     public HttpURLInputStream(URL url, int startBytePos) throws IOException {
         this.readBytesTotal = startBytePos;
@@ -59,13 +60,16 @@ public class HttpURLInputStream extends InputStream {
         }
     }
 
-    private void reconnect() {
+    private void reconnect() throws IOException {
         ConcertoClient.LOGGER.warn("Connection Reset: Trying reconnecting to {}", this.url);
         try {
             this.disconnect();
             this.connect();
         } catch (IOException e) {
             ConcertoClient.LOGGER.error("Failed to reconnect!");
+            if (++this.retryCount > 10) {
+                this.close();
+            }
         }
     }
 
@@ -78,6 +82,7 @@ public class HttpURLInputStream extends InputStream {
         while (k == -1 && ++counter <= 3) {
             try {
                 if ((k = this.in.read()) == -1) this.reconnect();
+                this.retryCount = 0;
             } catch (IOException e) {
                 this.reconnect();
             }

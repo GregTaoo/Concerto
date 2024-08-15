@@ -6,14 +6,11 @@ import com.google.gson.JsonObject;
 import com.mojang.datafixers.util.Pair;
 import com.mojang.serialization.Codec;
 import net.minecraft.util.StringIdentifiable;
-import top.gregtao.concerto.api.CacheableMusic;
-import top.gregtao.concerto.api.JsonParser;
-import top.gregtao.concerto.api.MusicJsonParsers;
-import top.gregtao.concerto.api.SimpleStringIdentifiable;
+import top.gregtao.concerto.api.*;
 import top.gregtao.concerto.enums.Sources;
-import top.gregtao.concerto.http.HttpClientInputStream;
 import top.gregtao.concerto.http.HttpURLInputStream;
 import top.gregtao.concerto.http.netease.NeteaseCloudApiClient;
+import top.gregtao.concerto.music.lyrics.DefaultFormatLyrics;
 import top.gregtao.concerto.music.lyrics.Lyrics;
 import top.gregtao.concerto.music.meta.music.BasicMusicMetaData;
 import top.gregtao.concerto.music.meta.music.MusicMetaData;
@@ -25,9 +22,10 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
-public class NeteaseCloudMusic extends Music implements CacheableMusic {
+public class NeteaseCloudMusic extends Music implements CacheableMusic, DynamicPath {
     private final String id;
     private final Level level;
+    private String rawPath, rawLyrics, rawSubLyrics;
 
     public NeteaseCloudMusic(String id, Level level) {
         this.id = id;
@@ -52,13 +50,33 @@ public class NeteaseCloudMusic extends Music implements CacheableMusic {
     public String getRawPath() {
         JsonObject object = NeteaseCloudApiClient.INSTANCE.getMusicLink(this.id, this.level)
                 .getAsJsonArray("data").get(0).getAsJsonObject();
-        return object.get("url").getAsString();
+        return this.rawPath = object.get("url").getAsString();
+    }
+
+    @Override
+    public String getLastRawPath() {
+        return this.rawPath;
+    }
+
+    @Override
+    public String getLastLyrics() {
+        return this.rawLyrics;
+    }
+
+    @Override
+    public String getLastSubLyrics() {
+        return this.rawSubLyrics;
     }
 
     @Override
     public Pair<Lyrics, Lyrics> getLyrics() {
         try {
-            return NeteaseCloudApiClient.INSTANCE.getLyrics(this.id);
+            Pair<String, String> pair = NeteaseCloudApiClient.INSTANCE.getLyrics(this.id);
+            this.rawLyrics = pair.getFirst();
+            this.rawSubLyrics = pair.getSecond();
+            Lyrics lyrics1 = new DefaultFormatLyrics().load(pair.getFirst());
+            Lyrics lyrics2 = new DefaultFormatLyrics().load(pair.getSecond());
+            return Pair.of(lyrics1.isEmpty() ? null : lyrics1, lyrics2.isEmpty() ? null : lyrics2);
         } catch (Exception e) {
             return null;
         }

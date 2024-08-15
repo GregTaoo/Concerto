@@ -153,6 +153,14 @@ public class MusicPlayer extends StreamPlayer implements StreamPlayerListener {
         return super.resume();
     }
 
+    public boolean musicRoomPause() {
+        return super.pause();
+    }
+
+    public boolean musicRoomResume() {
+        return super.resume();
+    }
+
     public void syncVolume() {
         try {
             this.setGain(getProperVolume());
@@ -177,15 +185,15 @@ public class MusicPlayer extends StreamPlayer implements StreamPlayerListener {
     public void statusUpdated(StreamPlayerEvent event) {
         Status status = event.getPlayerStatus();
         if (status == Status.EOM) {
-            this.forcePaused = this.isPlayingTemp = false;
             if (!this.playNextLock) {
                 MusicPlayerHandler.INSTANCE.resetInfo();
             }
             if (MusicPlayerHandler.INSTANCE.isEmpty()) {
                 this.started = false;
-            } else if (!this.playNextLock) {
+            } else if (!this.playNextLock && !this.isPlayingTemp) {
                 this.playNext(1);
             }
+            this.forcePaused = this.isPlayingTemp = false;
         }
     }
 
@@ -208,6 +216,7 @@ public class MusicPlayer extends StreamPlayer implements StreamPlayerListener {
                 this.isPlayingTemp = true;
             } catch (StreamPlayerException e) {
                 this.started = this.isPlayingTemp = this.forcePaused = false;
+                ConcertoClient.LOGGER.error(e.toString());
                 throw new RuntimeException(e);
             }
             this.playNextLock = false;
@@ -263,6 +272,7 @@ public class MusicPlayer extends StreamPlayer implements StreamPlayerListener {
                 this.playNextLock = this.isPlayingTemp = this.forcePaused = false;
             } catch (Exception e) {
                 this.started = this.isPlayingTemp = this.forcePaused = false;
+                ConcertoClient.LOGGER.error(e.toString());
                 throw new RuntimeException(e);
             }
         });

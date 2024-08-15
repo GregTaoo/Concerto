@@ -435,6 +435,8 @@ public class StreamPlayer implements StreamPlayerInterface, Callable<Void> {
             CompletableFuture.runAsync(() -> {
 				try {
 					decoder.decode();
+					pipedInputStream.close();
+					pipedOutputStream.close();
 				} catch (IOException e) {
 					throw new RuntimeException(e);
 				}
@@ -1233,7 +1235,7 @@ public class StreamPlayer implements StreamPlayerInterface, Callable<Void> {
 
 	/**
 	 * Sets Gain value. Line should be opened before calling this method. Linear
-	 * scale 0.0 ... 1.0 Threshold Coef.  1/2 to avoid saturation.
+	 * scale 0.0 ... 1.0 Threshold Coed.  1/2 to avoid saturation.
 	 *
 	 * @param fGain The new gain value
 	 */

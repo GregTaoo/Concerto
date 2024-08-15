@@ -8,7 +8,8 @@ public enum Sources implements SimpleStringIdentifiable {
     INTERNET,
     NETEASE_CLOUD,
     QQ_MUSIC,
-    BILIBILI
+    BILIBILI,
+    SHARED
     ;
 
     public Text getName() {

@@ -28,11 +28,16 @@ public class MusicRoomCommand {
                         })).then(ClientCommandManager.literal("members").executes(context -> {
                             if (MusicRoom.CLIENT_ROOM != null) {
                                 context.getSource().getPlayer().sendMessage(Text.of(
-                                        "Admin: " + MusicRoom.CLIENT_ROOM.admin + "; Members: " + String.join(",", MusicRoom.CLIENT_ROOM.members)
+                                        "Admin: " + MusicRoom.CLIENT_ROOM.admin + "; Members: " + String.join(",", MusicRoom.CLIENT_ROOM.members.keySet())
                                 ));
                             }
                             return 0;
-                        }))
+                        })).then(ClientCommandManager.literal("op").then(
+                                ClientCommandManager.argument("player", StringArgumentType.string()).executes(context -> {
+                                    MusicRoom.clientSetOp(StringArgumentType.getString(context, "player"));
+                                    return 0;
+                                })
+                        ))
         );
         dispatcher.register(ClientCommandManager.literal("concerto").redirect(node));
     }

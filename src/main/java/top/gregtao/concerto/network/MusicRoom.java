@@ -7,8 +7,10 @@ import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
+import top.gregtao.concerto.api.DynamicPath;
 import top.gregtao.concerto.api.MusicJsonParsers;
 import top.gregtao.concerto.music.Music;
+import top.gregtao.concerto.music.SharedMusic;
 import top.gregtao.concerto.player.MusicPlayer;
 import top.gregtao.concerto.util.TextUtil;
 
@@ -24,14 +26,14 @@ public class MusicRoom {
     public String admin;
     public Music music;
     public boolean pause = true;
-    public List<String> members = new ArrayList<>();
+    public Map<String, Integer> members = new HashMap<>();
 
-    public boolean isAdmin = false; // Client Side
+    public int permission = 0; // Client Side
 
     public MusicRoom(String creator) {
         this.uuid = UUID.randomUUID();
         this.admin = creator;
-        this.members.add(creator);
+        this.members.put(creator, 3); // 0: banned, 1: common, 2: admin, 3:super_admin
     }
 
     public MusicRoom(UUID uuid) {
@@ -39,43 +41,63 @@ public class MusicRoom {
     }
 
     public String buildArgs(boolean withMusic) {
-        return this.uuid + ":" + this.admin + ":" + (this.pause ? "1" : "0") + ":" + String.join(",", this.members)
+        return this.uuid + ":" + this.admin + ":" + (this.pause ? "1" : "0") + ":"
+                + String.join(",", this.members.entrySet().stream().map(entry -> entry.getKey() + "+" + entry.getValue()).toList())
                 + ":" + (!withMusic || this.music == null ? "null" : TextUtil.toBase64(MusicJsonParsers.to(music).toString()));
     }
 
-    public void send2EachMember(String command, String args, boolean admin, MinecraftServer server) {
-        this.members.forEach(member -> {
-            if (admin || !member.equals(this.admin)) serverSender(command, args, server.getPlayerManager().getPlayer(member));
+    public void send2EachMember(String command, String args, String ignores, MinecraftServer server) {
+        List<String> strings = Arrays.stream(ignores.split(",")).toList();
+        this.members.forEach((member, permission) -> {
+            if (!strings.contains(member)) {
+                serverSender(command, args, server.getPlayerManager().getPlayer(member));
+            }
         });
     }
 
     public void serverOnRemove(String name, MinecraftServer server) throws IllegalAccessException {
-        if (!name.equals(this.admin)) throw new IllegalAccessException("No permission");
-        this.send2EachMember("REM", "", true, server);
+        if (this.members.get(name) < 2) throw new IllegalAccessException("No permission");
+        this.send2EachMember("REM", "", "", server);
     }
 
     public void serverOnJoin(String name, MinecraftServer server) {
-        this.members.add(name);
-        this.send2EachMember("UPD", this.buildArgs(false), true, server);
+        this.members.put(name, 1);
+        this.send2EachMember("UPD", this.buildArgs(false), "", server);
     }
 
     public void serverOnQuit(String name, MinecraftServer server) {
         this.members.remove(name);
-        this.send2EachMember("UPD", this.buildArgs(false), true, server);
+        this.send2EachMember("UPD", this.buildArgs(false), "", server);
     }
 
     public void serverOnUpdate(String name, String music, MinecraftServer server) throws IllegalAccessException {
-        if (!name.equals(this.admin)) throw new IllegalAccessException("No permission");
+        if (this.members.get(name) < 2) throw new IllegalAccessException("No permission");
         this.music = MusicJsonParsers.from(TextUtil.fromBase64(music));
         this.pause = false;
-        this.send2EachMember("UPD", this.buildArgs(true), false, server);
+        this.send2EachMember("UPD", this.buildArgs(true), name, server);
     }
 
     public void serverOnPause(String name, boolean pause, MinecraftServer server) throws IllegalAccessException {
-        if (!name.equals(this.admin)) throw new IllegalAccessException("No permission");
+        if (this.members.get(name) < 3) throw new IllegalAccessException("No permission");
         this.pause = pause;
-        this.send2EachMember("UPD", this.buildArgs(false), false, server);
+        this.send2EachMember("UPD", this.buildArgs(false), name, server);
     }
+
+    public void serverOnSetOp(String name, ServerPlayerEntity player, String target, MinecraftServer server) throws IllegalAccessException {
+        if (this.members.get(name) < 3) throw new IllegalAccessException("No permission");
+        Integer permission = this.members.get(target);
+        if (permission == null) {
+            player.sendMessage(Text.literal("err1"));
+        } else if (permission == 2) {
+            this.members.put(target, 1);
+            player.sendMessage(Text.literal("suc"));
+        } else {
+            this.members.put(target, 2);
+            player.sendMessage(Text.literal("suc"));
+        }
+        this.send2EachMember("UPD", this.buildArgs(false), name, server);
+    }
+
 
     public static void serverSender(String command, String args, ServerPlayerEntity player) {
         ConcertoPayload payload = new ConcertoPayload(ConcertoPayload.Channel.MUSIC_ROOM, command + ":" + args);
@@ -86,7 +108,7 @@ public class MusicRoom {
         ServerPlayerEntity player = context.player();
         MinecraftServer server = context.player().getServer();
         String[] args = payload.string.split(":");
-        System.out.println(Arrays.toString(args));
+        System.out.println(payload.string);
         switch (args[0]) {
             case "CRE": {
                 MusicRoom room = new MusicRoom(player.getName().getString());
@@ -151,6 +173,16 @@ public class MusicRoom {
                 }
                 break;
             }
+            case "SOP": {
+                try {
+                    UUID uuid1 = UUID.fromString(args[1]);
+                    MusicRoom room = Objects.requireNonNull(ROOMS.get(uuid1));
+                    room.serverOnSetOp(player.getName().getString(), player, args[2], server);
+                } catch (NullPointerException | IllegalArgumentException | IllegalAccessException e) {
+                    player.sendMessage(Text.translatable("concerto.room.update.fail"));
+                }
+                break;
+            }
         }
     }
 
@@ -173,18 +205,37 @@ public class MusicRoom {
 
     public static void clientQuit() {
         if (CLIENT_ROOM == null) return;
-        if (CLIENT_ROOM.isAdmin) clientRemove();
+        if (CLIENT_ROOM.permission == 3) clientRemove();
         else clientSender("QUI", CLIENT_ROOM.uuid.toString());
     }
 
     public static void clientUpdate(Music music) {
-        if (CLIENT_ROOM == null || !CLIENT_ROOM.isAdmin) return;
-        clientSender("UPD", CLIENT_ROOM.uuid.toString() + ":" + TextUtil.toBase64(MusicJsonParsers.to(music).toString()));
+        if (CLIENT_ROOM == null || CLIENT_ROOM.permission < 2) return;
+        if (!MusicDataPacket.ALLOWED_SOURCES.contains(music.getJsonParser().name())) {
+            if (MinecraftClient.getInstance().player != null) {
+                MinecraftClient.getInstance().player.sendMessage(Text.translatable("concerto.share.unsafe"));
+            }
+            return;
+        }
+        Music music1;
+        if (music instanceof DynamicPath dynamicPath) {
+            String path = dynamicPath.getLastRawPath();
+            music1 = new SharedMusic(path, music.getMeta(), dynamicPath.getLastLyrics(), dynamicPath.getLastSubLyrics());
+        } else {
+            music1 = music;
+        }
+        clientSender("UPD", CLIENT_ROOM.uuid.toString() + ":" + TextUtil.toBase64(MusicJsonParsers.to(music1).toString()));
     }
 
     public static void clientPause(boolean pause) {
-        if (CLIENT_ROOM == null || !CLIENT_ROOM.isAdmin) return;
+        if (CLIENT_ROOM == null || CLIENT_ROOM.permission < 2) return;
         clientSender("PAU", CLIENT_ROOM.uuid.toString() + (pause ? ":1" : ":0"));
+    }
+
+    public static void clientSetOp(String target) {
+        if (CLIENT_ROOM == null || CLIENT_ROOM.permission < 3) return;
+        clientSender("SOP", CLIENT_ROOM.uuid.toString() + ":" + target);
+        CLIENT_ROOM.members.put(target, 2);
     }
 
     public static void clientSender(String command, String args) {
@@ -197,7 +248,7 @@ public class MusicRoom {
         if (client.player == null) return;
         ClientPlayerEntity player = client.player;
         String[] args = payload.string.split(":");
-        System.out.println(Arrays.toString(args));
+        System.out.println(player.getName().getString() + ":" + Arrays.toString(args));
         switch (args[0]) {
             case "REM": {
                 CLIENT_ROOM = null;
@@ -209,10 +260,15 @@ public class MusicRoom {
                     CLIENT_ROOM = new MusicRoom(uuid1);
                     client.keyboard.setClipboard(uuid1.toString());
                     CLIENT_ROOM.admin = args[2];
-                    if (CLIENT_ROOM.admin.equals(player.getName().getString())) {
-                        CLIENT_ROOM.isAdmin = true;
-                    }
-                    CLIENT_ROOM.members = List.of(args[4].split(","));
+                    CLIENT_ROOM.members = new HashMap<>();
+                    Arrays.stream(args[4].split(",")).forEach(str -> {
+                        String[] strings = str.split("\\+");
+                        int permission = Integer.parseInt(strings[1]);
+                        CLIENT_ROOM.members.put(strings[0], permission);
+                        if (strings[0].equals(player.getName().getString())) {
+                            CLIENT_ROOM.permission = permission;
+                        }
+                    });
                     CLIENT_ROOM.pause = args[3].equals("1");
                     if (!args[5].equals("null")) {
                         CLIENT_ROOM.music = MusicJsonParsers.from(TextUtil.fromBase64(args[5]));
@@ -243,7 +299,15 @@ public class MusicRoom {
                     UUID uuid1 = UUID.fromString(args[1]);
                     if (CLIENT_ROOM.uuid.compareTo(uuid1) != 0) break;
                     CLIENT_ROOM.admin = args[2];
-                    CLIENT_ROOM.members = List.of(args[4].split(","));
+                    CLIENT_ROOM.members = new HashMap<>();
+                    Arrays.stream(args[4].split(",")).forEach(str -> {
+                        String[] strings = str.split("\\+");
+                        int permission = Integer.parseInt(strings[1]);
+                        CLIENT_ROOM.members.put(strings[0], permission);
+                        if (strings[0].equals(player.getName().getString())) {
+                            CLIENT_ROOM.permission = permission;
+                        }
+                    });
                     CLIENT_ROOM.pause = args[3].equals("1");
                     if (!args[5].equals("null")) {
                         CLIENT_ROOM.music = MusicJsonParsers.from(TextUtil.fromBase64(args[5]));
@@ -251,9 +315,9 @@ public class MusicRoom {
                             if (CLIENT_ROOM.pause) MusicPlayer.INSTANCE.pause();
                         });
                     } else if (CLIENT_ROOM.pause) {
-                        MusicPlayer.INSTANCE.pause();
+                        MusicPlayer.INSTANCE.musicRoomPause();
                     } else {
-                        MusicPlayer.INSTANCE.resume();
+                        MusicPlayer.INSTANCE.musicRoomResume();
                     }
                 } catch (NullPointerException | IllegalArgumentException e) {
                     player.sendMessage(Text.translatable("concerto.room.update.fail"));

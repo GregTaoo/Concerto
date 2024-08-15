@@ -8,10 +8,7 @@ import top.gregtao.concerto.music.HttpFileMusic;
 import top.gregtao.concerto.music.LocalFileMusic;
 import top.gregtao.concerto.music.Music;
 import top.gregtao.concerto.music.meta.music.MusicMetaData;
-import top.gregtao.concerto.music.parser.BilibiliMusicJsonParser;
-import top.gregtao.concerto.music.parser.NeteaseCloudMusicJsonParser;
-import top.gregtao.concerto.music.parser.PathFileMusicJsonParser;
-import top.gregtao.concerto.music.parser.QQMusicJsonParser;
+import top.gregtao.concerto.music.parser.*;
 import top.gregtao.concerto.music.parser.meta.BasicMusicMetaJsonParser;
 import top.gregtao.concerto.music.parser.meta.TimelessMusicMetaJsonParser;
 import top.gregtao.concerto.player.MusicPlayerHandler;
@@ -46,6 +43,8 @@ public class MusicJsonParsers {
     public static final JsonParser<Music> QQ_MUSIC = registerMusicParser(new QQMusicJsonParser());
 
     public static final JsonParser<Music> BILIBILI = registerMusicParser(new BilibiliMusicJsonParser());
+
+    public static final JsonParser<Music> SHARED = registerMusicParser(new SharedMusicJsonParser());
 
     // =================================================================================================================
     // Meta parsers

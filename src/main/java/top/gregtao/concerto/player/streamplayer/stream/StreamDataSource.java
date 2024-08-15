@@ -1,7 +1,5 @@
 package top.gregtao.concerto.player.streamplayer.stream;
 
-import top.gregtao.concerto.player.streamplayer.stream.DataSource;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.time.Duration;

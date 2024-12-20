@@ -14,8 +14,6 @@ import top.gregtao.concerto.music.Music;
 import top.gregtao.concerto.music.NeteaseCloudMusic;
 import top.gregtao.concerto.music.list.FixedPlaylist;
 import top.gregtao.concerto.music.list.NeteaseCloudPlaylist;
-import top.gregtao.concerto.music.lyrics.DefaultFormatLyrics;
-import top.gregtao.concerto.music.lyrics.Lyrics;
 import top.gregtao.concerto.music.meta.music.TimelessMusicMetaData;
 import top.gregtao.concerto.music.meta.music.list.PlaylistMetaData;
 import top.gregtao.concerto.player.MusicPlayerHandler;
@@ -249,7 +247,7 @@ public class NeteaseCloudApiClient extends HttpApiClient {
          JsonArray songs = object.getAsJsonObject("data").getAsJsonArray("dailySongs");
          ArrayList<Music> musics = new ArrayList<>();
          songs.forEach(element -> musics.add(new NeteaseCloudMusic(element.getAsJsonObject(), NeteaseCloudMusic.Level.HIRES)));
-         return new FixedPlaylist(musics, new PlaylistMetaData("",
+         return new FixedPlaylist(musics, new PlaylistMetaData(Text.translatable("concerto.source.netease_cloud").getString(),
                  Text.translatable("concerto.screen.daily_recommendation").getString(), "", ""), false);
     }
 

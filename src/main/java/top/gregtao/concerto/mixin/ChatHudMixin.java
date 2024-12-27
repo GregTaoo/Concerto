@@ -59,8 +59,8 @@ public class ChatHudMixin {
         MusicPlayer.run(() -> handleMessage(message));
     }
 
-    @Inject(method = "render(Lnet/minecraft/client/gui/DrawContext;IIIZ)V", at = @At("HEAD"))
-    public void renderInject(DrawContext context, int currentTick, int mouseX, int mouseY, boolean focused, CallbackInfo ci) {
+    @Inject(method = "render(Lnet/minecraft/client/gui/DrawContext;III)V", at = @At("HEAD"))
+    public void renderInject(DrawContext context, int currentTick, int mouseX, int mouseY, CallbackInfo ci) {
         InGameHudRenderer.render(context);
     }
 }

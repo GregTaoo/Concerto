@@ -1,7 +1,6 @@
 package top.gregtao.concerto.music;
 
 import com.mojang.datafixers.util.Pair;
-import net.minecraft.client.gui.screen.ChatScreen;
 import org.jaudiotagger.audio.AudioFile;
 import org.jaudiotagger.audio.AudioFileIO;
 import org.jaudiotagger.tag.FieldKey;

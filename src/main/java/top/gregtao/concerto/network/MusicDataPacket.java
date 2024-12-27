@@ -1,6 +1,8 @@
 package top.gregtao.concerto.network;
 
 import com.google.gson.JsonObject;
+import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
+import net.minecraft.network.PacketByteBuf;
 import net.minecraft.server.MinecraftServer;
 import top.gregtao.concerto.api.MusicJsonParsers;
 import top.gregtao.concerto.music.UnsafeMusicException;
@@ -36,31 +38,31 @@ public class MusicDataPacket {
         else this.to = target;
     }
 
-    public ConcertoPayload toPacket(String senderName) {
+    public PacketByteBuf toPacket(String senderName) {
         if (this.isS2C) throw new RuntimeException("Only for C2S packet");
+        PacketByteBuf buf = PacketByteBufs.create();
         JsonObject object = MusicJsonParsers.to(this.music);
-        ConcertoPayload payload = new ConcertoPayload(ConcertoPayload.Channel.MUSIC_DATA, "");
         if (object != null) {
             JsonObject metaObject = object.getAsJsonObject("meta");
             String src = metaObject.get("src").getAsString();
             metaObject.addProperty("src", src + ", " + senderName);
-            payload.string = object + "\n" + (this.isS2C ? this.from : this.to);
+            buf.writeString(object + "\n" + (this.isS2C ? this.from : this.to));
         }
-        return payload;
+        return buf;
     }
 
-    public ConcertoPayload toPacket() {
-        ConcertoPayload payload = new ConcertoPayload(ConcertoPayload.Channel.MUSIC_DATA, "");
+    public PacketByteBuf toPacket() {
+        PacketByteBuf buf = PacketByteBufs.create();
         JsonObject object = MusicJsonParsers.to(this.music);
         if (object != null) {
-            payload.string = object + "\n" + (this.isS2C ? this.from : this.to);
+            buf.writeString(object + "\n" + (this.isS2C ? this.from : this.to));
         }
-        return payload;
+        return buf;
     }
 
-    public static MusicDataPacket fromPacket(ConcertoPayload buf, boolean isS2C) throws UnsafeMusicException {
+    public static MusicDataPacket fromPacket(PacketByteBuf buf, boolean isS2C) throws UnsafeMusicException {
         try {
-            String[] strings = buf.string.split("\n");
+            String[] strings = buf.readString(Short.MAX_VALUE).split("\n");
             if (strings.length < 2) {
                 return null;
             } else {

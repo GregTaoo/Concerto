@@ -12,12 +12,12 @@ import java.util.ListIterator;
 public class ConcertoListWidget<T> extends AlwaysSelectedEntryListWidget<ConcertoListWidget<T>.Entry> {
     private int color = 0xffffffff;
 
-    public ConcertoListWidget(int width, int height, int top, int itemHeight) {
-        super(MinecraftClient.getInstance(), width, height, top, itemHeight);
+    public ConcertoListWidget(int width, int height, int top, int bottom, int itemHeight) {
+        super(MinecraftClient.getInstance(), width, height, top, bottom, itemHeight);
     }
 
-    public ConcertoListWidget(int width, int height, int top, int itemHeight, int color) {
-        this(width, height, top, itemHeight);
+    public ConcertoListWidget(int width, int height, int top, int bottom, int itemHeight, int color) {
+        this(width, height, top, bottom, itemHeight);
         this.color = color;
     }
 
@@ -68,7 +68,12 @@ public class ConcertoListWidget<T> extends AlwaysSelectedEntryListWidget<Concert
 
     @Override
     public int getRowWidth() {
-        return this.width - 35;
+        return this.width - 20;
+    }
+
+    @Override
+    protected int getScrollbarPositionX() {
+        return this.width - 10;
     }
 
     public class Entry extends AlwaysSelectedEntryListWidget.Entry<Entry> {

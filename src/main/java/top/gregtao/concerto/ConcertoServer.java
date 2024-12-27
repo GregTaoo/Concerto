@@ -17,7 +17,6 @@ public class ConcertoServer implements ModInitializer {
     public void onInitialize() {
         ServerConfig.INSTANCE.readOptions();
         CommandRegistrationCallback.EVENT.register(AuditCommand::register);
-        MusicNetworkChannels.register();
         ServerMusicNetworkHandler.register();
     }
 }

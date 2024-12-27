@@ -1,10 +1,15 @@
 package top.gregtao.concerto.network;
 
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
+import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
+import net.fabricmc.fabric.api.networking.v1.PacketSender;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.client.network.ClientPlayerEntity;
+import net.minecraft.network.PacketByteBuf;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.network.ServerPlayNetworkHandler;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
 import top.gregtao.concerto.api.DynamicPath;
@@ -100,18 +105,18 @@ public class MusicRoom {
 
 
     public static void serverSender(String command, String args, ServerPlayerEntity player) {
-        ConcertoPayload payload = new ConcertoPayload(ConcertoPayload.Channel.MUSIC_ROOM, command + ":" + args);
-        ServerPlayNetworking.send(player, payload);
+        PacketByteBuf buf = PacketByteBufs.create();
+        buf.writeString(command + ":" + args);
+        ServerPlayNetworking.send(player, MusicNetworkChannels.CHANNEL_MUSIC_ROOM, buf);
     }
 
-    public static void serverReceiver(ConcertoPayload payload, ServerPlayNetworking.Context context) {
-        ServerPlayerEntity player = context.player();
-        MinecraftServer server = context.player().getServer();
-        String[] args = payload.string.split(":");
-        System.out.println(payload.string);
+    public static void serverReceiver(MinecraftServer server, ServerPlayerEntity player,
+                                      ServerPlayNetworkHandler handler, PacketByteBuf buf, PacketSender sender) {
+        String[] args = buf.readString().split(":");
+        System.out.println(Arrays.toString(args));
         switch (args[0]) {
             case "CRE": {
-                MusicRoom room = new MusicRoom(player.getName().getString());
+                MusicRoom room = new MusicRoom(player.getEntityName());
                 ROOMS.put(room.uuid, room);
                 serverSender("JOI", room.buildArgs(false), player);
                 player.sendMessage(Text.translatable("concerto.room.create", room.uuid.toString()));
@@ -121,7 +126,7 @@ public class MusicRoom {
                 try {
                     UUID uuid1 = UUID.fromString(args[1]);
                     MusicRoom room = Objects.requireNonNull(ROOMS.get(uuid1));
-                    room.serverOnRemove(player.getName().getString(), server);
+                    room.serverOnRemove(player.getEntityName(), server);
                     ROOMS.remove(uuid1);
                     player.sendMessage(Text.translatable("concerto.room.remove", uuid1.toString()));
                 } catch (NullPointerException | IllegalArgumentException | IllegalAccessException e) {
@@ -133,7 +138,7 @@ public class MusicRoom {
                 try {
                     UUID uuid1 = UUID.fromString(args[1]);
                     MusicRoom room = Objects.requireNonNull(ROOMS.get(uuid1));
-                    room.serverOnJoin(player.getName().getString(), server);
+                    room.serverOnJoin(player.getEntityName(), server);
                     serverSender("JOI", room.buildArgs(true), player);
                     player.sendMessage(Text.translatable("concerto.room.join", uuid1.toString()));
                 } catch (NullPointerException | IllegalArgumentException e) {
@@ -145,7 +150,7 @@ public class MusicRoom {
                 try {
                     UUID uuid1 = UUID.fromString(args[1]);
                     MusicRoom room = Objects.requireNonNull(ROOMS.get(uuid1));
-                    room.serverOnQuit(player.getName().getString(), server);
+                    room.serverOnQuit(player.getEntityName(), server);
                     serverSender("QUI", uuid1.toString(), player);
                     player.sendMessage(Text.translatable("concerto.room.quit", uuid1.toString()));
                 } catch (NullPointerException | IllegalArgumentException e) {
@@ -157,7 +162,7 @@ public class MusicRoom {
                 try {
                     UUID uuid1 = UUID.fromString(args[1]);
                     MusicRoom room = Objects.requireNonNull(ROOMS.get(uuid1));
-                    room.serverOnUpdate(player.getName().getString(), args[2], server);
+                    room.serverOnUpdate(player.getEntityName(), args[2], server);
                 } catch (NullPointerException | IllegalArgumentException | IllegalAccessException e) {
                     player.sendMessage(Text.translatable("concerto.room.update.fail"));
                 }
@@ -167,7 +172,7 @@ public class MusicRoom {
                 try {
                     UUID uuid1 = UUID.fromString(args[1]);
                     MusicRoom room = Objects.requireNonNull(ROOMS.get(uuid1));
-                    room.serverOnPause(player.getName().getString(), args[2].equals("1"), server);
+                    room.serverOnPause(player.getEntityName(), args[2].equals("1"), server);
                 } catch (NullPointerException | IllegalArgumentException | IllegalAccessException e) {
                     player.sendMessage(Text.translatable("concerto.room.update.fail"));
                 }
@@ -239,16 +244,17 @@ public class MusicRoom {
     }
 
     public static void clientSender(String command, String args) {
-        ConcertoPayload payload = new ConcertoPayload(ConcertoPayload.Channel.MUSIC_ROOM, command + ":" + args);
-        ClientPlayNetworking.send(payload);
+        PacketByteBuf buf = PacketByteBufs.create();
+        buf.writeString(command + ":" + args);
+        ClientPlayNetworking.send(MusicNetworkChannels.CHANNEL_MUSIC_ROOM, buf);
     }
 
-    public static void clientReceiver(ConcertoPayload payload, ClientPlayNetworking.Context context) {
-        MinecraftClient client = context.client();
+    public static void clientReceiver(MinecraftClient client, ClientPlayNetworkHandler handler,
+                                      PacketByteBuf buf, PacketSender packetSender) {
         if (client.player == null) return;
         ClientPlayerEntity player = client.player;
-        String[] args = payload.string.split(":");
-        System.out.println(player.getName().getString() + ":" + Arrays.toString(args));
+        String[] args = buf.readString().split(":");
+        System.out.println(Arrays.toString(args));
         switch (args[0]) {
             case "REM": {
                 CLIENT_ROOM = null;

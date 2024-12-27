@@ -3,7 +3,6 @@ package top.gregtao.concerto.screen.netease;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.screen.TitleScreen;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.gui.widget.CyclingButtonWidget;
 import net.minecraft.client.gui.widget.TextFieldWidget;
@@ -37,7 +36,7 @@ public class NeteaseCloudSearchScreen extends PageScreen {
     private SearchType searchType = SearchType.MUSIC;
 
     private <T extends WithMetaData> MetadataListWidget<T> initListsWidget() {
-        return new MetadataListWidget<>(this.width, this.height - 75, 40, 18) {
+        MetadataListWidget<T> widget = new MetadataListWidget<>(this.width, this.height, 38, this.height - 35, 18) {
             @Override
             public void onDoubleClicked(ConcertoListWidget<T>.Entry entry) {
                 try {
@@ -56,6 +55,9 @@ public class NeteaseCloudSearchScreen extends PageScreen {
                 }
             }
         };
+        widget.setRenderBackground(false);
+        widget.setRenderHorizontalShadows(false);
+        return widget;
     }
 
     public NeteaseCloudSearchScreen(Screen parent) {

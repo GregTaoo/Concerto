@@ -30,7 +30,9 @@ public class MusicConfirmationScreen extends ConcertoScreen {
     @Override
     protected void init() {
         super.init();
-        this.widget = new MusicWithUUIDListWidget(this.width, this.height - 55, 20, 18);
+        this.widget = new MusicWithUUIDListWidget(this.width, 0, 18, this.height - 35, 18);
+        this.widget.setRenderBackground(false);
+        this.widget.setRenderHorizontalShadows(false);
         this.refresh();
         this.addSelectableChild(this.widget);
 

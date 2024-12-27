@@ -53,7 +53,6 @@ public class LocalFileMusic extends PathFileMusic {
             }
         } catch (IOException e) {
             throw new MusicSourceNotFoundException(e);
-            ChatScreen
         }
     }
 

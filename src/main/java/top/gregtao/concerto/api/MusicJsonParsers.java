@@ -2,16 +2,14 @@ package top.gregtao.concerto.api;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import top.gregtao.concerto.ConcertoClient;
 import top.gregtao.concerto.enums.OrderType;
 import top.gregtao.concerto.enums.Sources;
 import top.gregtao.concerto.music.HttpFileMusic;
 import top.gregtao.concerto.music.LocalFileMusic;
 import top.gregtao.concerto.music.Music;
 import top.gregtao.concerto.music.meta.music.MusicMetaData;
-import top.gregtao.concerto.music.parser.BilibiliMusicJsonParser;
-import top.gregtao.concerto.music.parser.NeteaseCloudMusicJsonParser;
-import top.gregtao.concerto.music.parser.PathFileMusicJsonParser;
-import top.gregtao.concerto.music.parser.QQMusicJsonParser;
+import top.gregtao.concerto.music.parser.*;
 import top.gregtao.concerto.music.parser.meta.BasicMusicMetaJsonParser;
 import top.gregtao.concerto.music.parser.meta.TimelessMusicMetaJsonParser;
 import top.gregtao.concerto.player.MusicPlayerHandler;
@@ -46,6 +44,8 @@ public class MusicJsonParsers {
     public static final JsonParser<Music> QQ_MUSIC = registerMusicParser(new QQMusicJsonParser());
 
     public static final JsonParser<Music> BILIBILI = registerMusicParser(new BilibiliMusicJsonParser());
+
+    public static final JsonParser<Music> SHARED = registerMusicParser(new SharedMusicJsonParser());
 
     // =================================================================================================================
     // Meta parsers
@@ -100,6 +100,7 @@ public class MusicJsonParsers {
             }
             return music;
         } catch (Exception e) {
+            ConcertoClient.LOGGER.warn("{}: {}", e, jsonObject.toString());
             return null;
         }
     }
@@ -120,6 +121,7 @@ public class MusicJsonParsers {
             }
             return object;
         } catch (Exception e) {
+            ConcertoClient.LOGGER.warn("{}: {}", e, music.getMeta());
             return null;
         }
     }
@@ -138,6 +140,7 @@ public class MusicJsonParsers {
                     OrderType.valueOf(JsonUtil.getStringOrElse(object, "ord", OrderType.NORMAL.toString()))
             );
         } catch (Exception e) {
+            ConcertoClient.LOGGER.warn(e.toString());
             return new MusicPlayerHandler();
         }
     }

@@ -24,16 +24,16 @@ public class NeteaseCloudPlaylist extends Playlist {
      * @param simply TRUE if there isn't music data in the Json or else FALSE
      */
     public NeteaseCloudPlaylist(JsonObject object, boolean isAlbum, boolean simply) {
-        super(isAlbum ? NeteaseCloudApiClient.INSTANCE.parseAlbumJson(object, NeteaseCloudMusic.Level.STANDARD, simply) :
-                NeteaseCloudApiClient.INSTANCE.parsePlayListJson(object, NeteaseCloudMusic.Level.STANDARD, simply), isAlbum);
+        super(isAlbum ? NeteaseCloudApiClient.INSTANCE.parseAlbumJson(object, NeteaseCloudMusic.Level.HIRES, simply) :
+                NeteaseCloudApiClient.INSTANCE.parsePlayListJson(object, NeteaseCloudMusic.Level.HIRES, simply), isAlbum);
         this.simply = simply;
         this.id = object.get("id").getAsString();
     }
 
     @Override
     Pair<ArrayList<Music>, PlaylistMetaData> loadData() {
-        return this.isAlbum() ? NeteaseCloudApiClient.INSTANCE.getAlbum(this.id, NeteaseCloudMusic.Level.STANDARD) :
-                NeteaseCloudApiClient.INSTANCE.getPlayList(this.id, NeteaseCloudMusic.Level.STANDARD);
+        return this.isAlbum() ? NeteaseCloudApiClient.INSTANCE.getAlbum(this.id, NeteaseCloudMusic.Level.HIRES) :
+                NeteaseCloudApiClient.INSTANCE.getPlayList(this.id, NeteaseCloudMusic.Level.HIRES);
     }
 
     // It is suggested to call this in an independent thread

@@ -1,0 +1,1 @@
+Files in this directory are written by [goxr3plus](https://github.com/goxr3plus/java-stream-player). GPL-3.0 license

@@ -47,7 +47,7 @@ public class ConcertoClient implements ClientModInitializer {
 		ResourceManagerHelper.get(ResourceType.CLIENT_RESOURCES).registerReloadListener(new SimpleSynchronousResourceReloadListener() {
 			@Override
 			public Identifier getFabricId() {
-				return new Identifier(ConcertoClient.MOD_ID, "music");
+				return Identifier.of(ConcertoClient.MOD_ID, "music");
 			}
 
 			@Override

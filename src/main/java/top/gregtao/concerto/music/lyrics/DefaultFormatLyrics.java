@@ -2,10 +2,12 @@ package top.gregtao.concerto.music.lyrics;
 
 import top.gregtao.concerto.music.MusicTimestamp;
 import top.gregtao.concerto.util.MathUtil;
+import top.gregtao.concerto.util.TextUtil;
 
 public class DefaultFormatLyrics extends Lyrics {
     @Override
     public void parse(String raw) {
+        raw = TextUtil.trimSurrounding(raw, "[", "]");
         String[] lines = raw.split("(\n|\r|\r\n)");
         for (String line : lines) {
             line = line.trim();

@@ -171,6 +171,11 @@ public class MusicCommand {
                     }
                     return 0;
                 })
+        ).then(
+                ClientCommandManager.literal("downloadAll").executes(context -> {
+                    MusicPlayerHandler.downloadPlaylist(MusicPlayerHandler.INSTANCE.getMusicList());
+                    return 0;
+                })
         );
     }
 

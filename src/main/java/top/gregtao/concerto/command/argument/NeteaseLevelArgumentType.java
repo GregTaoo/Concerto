@@ -18,7 +18,7 @@ public class NeteaseLevelArgumentType extends EnumArgumentType<NeteaseCloudMusic
         try {
             return context.getArgument(id, NeteaseCloudMusic.Level.class);
         } catch (IllegalArgumentException e) {
-            return NeteaseCloudMusic.Level.STANDARD;
+            return NeteaseCloudMusic.Level.HIRES;
         }
     }
 }

@@ -3,10 +3,11 @@ package top.gregtao.concerto.network;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.network.codec.PacketCodec;
 import net.minecraft.network.packet.CustomPayload;
+import net.minecraft.util.Identifier;
 
 public class ConcertoPayload implements CustomPayload {
 
-    public static final Id<ConcertoPayload> ID = CustomPayload.id("concerto:string");
+    public static final Id<ConcertoPayload> ID = new Id<>(Identifier.of("concerto", "string"));
     public String string;
     public Channel channel;
 

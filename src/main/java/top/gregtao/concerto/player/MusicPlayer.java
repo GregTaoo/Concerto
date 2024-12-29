@@ -1,10 +1,10 @@
 package top.gregtao.concerto.player;
 
-import com.goxr3plus.streamplayer.enums.Status;
-import com.goxr3plus.streamplayer.stream.StreamPlayer;
-import com.goxr3plus.streamplayer.stream.StreamPlayerEvent;
-import com.goxr3plus.streamplayer.stream.StreamPlayerException;
-import com.goxr3plus.streamplayer.stream.StreamPlayerListener;
+import top.gregtao.concerto.player.streamplayer.enums.Status;
+import top.gregtao.concerto.player.streamplayer.stream.StreamPlayer;
+import top.gregtao.concerto.player.streamplayer.stream.StreamPlayerEvent;
+import top.gregtao.concerto.player.streamplayer.stream.StreamPlayerException;
+import top.gregtao.concerto.player.streamplayer.stream.StreamPlayerListener;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.option.GameOptions;
@@ -14,8 +14,8 @@ import top.gregtao.concerto.ConcertoClient;
 import top.gregtao.concerto.api.MusicJsonParsers;
 import top.gregtao.concerto.music.Music;
 import top.gregtao.concerto.network.MusicRoom;
-import top.gregtao.concerto.util.SilentLogger;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
@@ -24,18 +24,39 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
+import java.util.logging.FileHandler;
+import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.logging.SimpleFormatter;
 
 public class MusicPlayer extends StreamPlayer implements StreamPlayerListener {
 
-    public static MusicPlayer INSTANCE = new MusicPlayer(new SilentLogger("player"));
+    public static MusicPlayer INSTANCE;
+    public static final Logger PLAYER_LOGGER;
 
-//    public static MusicPlayer INSTANCE = new MusicPlayer();
+    static {
+        PLAYER_LOGGER = Logger.getLogger(MusicPlayer.class.getName());
+        FileHandler fileHandler;
+        try {
+            fileHandler = new FileHandler("Concerto/player.log", false);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        fileHandler.setFormatter(new SimpleFormatter());
+        PLAYER_LOGGER.addHandler(fileHandler);
+        PLAYER_LOGGER.setLevel(Level.ALL);
+        resetInstance();
+    }
 
     public static void resetInstance() {
-        INSTANCE.reset();
-        INSTANCE = new MusicPlayer(new SilentLogger("player"));
-//        INSTANCE = new MusicPlayer();
+        try {
+            if (MusicPlayerHandler.INSTANCE.currentSource != null) {
+                MusicPlayerHandler.INSTANCE.currentSource.close();
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        INSTANCE = new MusicPlayer(PLAYER_LOGGER);
     }
 
     public boolean forcePaused = false;
@@ -120,15 +141,33 @@ public class MusicPlayer extends StreamPlayer implements StreamPlayerListener {
 
     @Override
     public boolean pause() {
-        MusicPlayerHandler.INSTANCE.writeConfig();
-        MusicRoom.clientPause(true);
-        return super.pause();
+        if (!super.isPaused()) {
+            MusicPlayerHandler.INSTANCE.writeConfig();
+            MusicRoom.clientPause(true);
+            return super.pause();
+        } else {
+            return false;
+        }
     }
 
     @Override
     public boolean resume() {
         if (this.forcePaused) return false;
-        MusicRoom.clientPause(false);
+        if (super.isPaused()) {
+            MusicRoom.clientPause(false);
+            return super.resume();
+        } else {
+            return false;
+        }
+    }
+
+    public boolean musicRoomPause() {
+        this.forcePaused = true;
+        return super.pause();
+    }
+
+    public boolean musicRoomResume() {
+        this.forcePaused = false;
         return super.resume();
     }
 
@@ -156,15 +195,15 @@ public class MusicPlayer extends StreamPlayer implements StreamPlayerListener {
     public void statusUpdated(StreamPlayerEvent event) {
         Status status = event.getPlayerStatus();
         if (status == Status.EOM) {
-            this.forcePaused = this.isPlayingTemp = false;
             if (!this.playNextLock) {
                 MusicPlayerHandler.INSTANCE.resetInfo();
             }
             if (MusicPlayerHandler.INSTANCE.isEmpty()) {
                 this.started = false;
-            } else if (!this.playNextLock) {
+            } else if (!this.playNextLock && !this.isPlayingTemp) {
                 this.playNext(1);
             }
+            this.forcePaused = this.isPlayingTemp = false;
         }
     }
 
@@ -187,6 +226,7 @@ public class MusicPlayer extends StreamPlayer implements StreamPlayerListener {
                 this.isPlayingTemp = true;
             } catch (StreamPlayerException e) {
                 this.started = this.isPlayingTemp = this.forcePaused = false;
+                ConcertoClient.LOGGER.error(e.toString());
                 throw new RuntimeException(e);
             }
             this.playNextLock = false;
@@ -235,12 +275,14 @@ public class MusicPlayer extends StreamPlayer implements StreamPlayerListener {
                     MusicPlayerHandler.INSTANCE.currentSource = source;
                     this.open(source);
                     this.play();
+                    ConcertoClient.LOGGER.info("Start playing music: {}", music.getMeta().title());
                     MusicRoom.clientUpdate(music);
                     callback.accept(MusicPlayerHandler.INSTANCE.getCurrentIndex());
                 }
                 this.playNextLock = this.isPlayingTemp = this.forcePaused = false;
-            } catch (StreamPlayerException e) {
+            } catch (Exception e) {
                 this.started = this.isPlayingTemp = this.forcePaused = false;
+                ConcertoClient.LOGGER.error(e.toString());
                 throw new RuntimeException(e);
             }
         });

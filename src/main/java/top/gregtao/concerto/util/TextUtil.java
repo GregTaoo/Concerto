@@ -82,4 +82,13 @@ public class TextUtil {
         }
         return str;
     }
+
+    public static String trimSurrounding(String s, String r1, String r2) {
+        s = s.trim();
+        if (s.startsWith(r1) && s.endsWith(r2)) {
+            if (s.length() <= r1.length() + r2.length()) return "";
+            return s.substring(r1.length(), s.length() - r2.length());
+        }
+        return s;
+    }
 }

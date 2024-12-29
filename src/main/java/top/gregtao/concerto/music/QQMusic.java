@@ -3,12 +3,13 @@ package top.gregtao.concerto.music;
 import com.google.gson.JsonObject;
 import com.mojang.datafixers.util.Pair;
 import top.gregtao.concerto.api.CacheableMusic;
+import top.gregtao.concerto.api.DynamicPath;
 import top.gregtao.concerto.api.JsonParser;
 import top.gregtao.concerto.api.MusicJsonParsers;
 import top.gregtao.concerto.enums.Sources;
-import top.gregtao.concerto.http.HttpClientInputStream;
 import top.gregtao.concerto.http.HttpURLInputStream;
 import top.gregtao.concerto.http.qq.QQMusicApiClient;
+import top.gregtao.concerto.music.lyrics.DefaultFormatLyrics;
 import top.gregtao.concerto.music.lyrics.Lyrics;
 import top.gregtao.concerto.music.meta.music.BasicMusicMetaData;
 import top.gregtao.concerto.music.meta.music.MusicMetaData;
@@ -20,9 +21,9 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
-public class QQMusic extends Music implements CacheableMusic {
+public class QQMusic extends Music implements CacheableMusic, DynamicPath {
 
-    public String mid, mediaMid;
+    public String mid, mediaMid, rawPath, rawLyrics, rawSubLyrics;
 
     public QQMusic(String mid) {
         this.mid = mid;
@@ -66,7 +67,12 @@ public class QQMusic extends Music implements CacheableMusic {
     @Override
     public Pair<Lyrics, Lyrics> getLyrics() {
         try {
-            return QQMusicApiClient.INSTANCE.getLyrics(this.mid);
+            Pair<String, String> pair = QQMusicApiClient.INSTANCE.getLyrics(this.mid);
+            this.rawLyrics = pair.getFirst();
+            this.rawSubLyrics = pair.getSecond();
+            Lyrics lyrics1 = new DefaultFormatLyrics().load(pair.getFirst());
+            Lyrics lyrics2 = new DefaultFormatLyrics().load(pair.getSecond());
+            return Pair.of(lyrics1.isEmpty() ? null : lyrics1, lyrics2.isEmpty() ? null : lyrics2);
         } catch (Exception e) {
             return null;
         }
@@ -87,7 +93,23 @@ public class QQMusic extends Music implements CacheableMusic {
     }
 
     public String getRawPath() {
-        return QQMusicApiClient.INSTANCE.getMusicLink(this.mid, this.mediaMid);
+        return this.rawPath = QQMusicApiClient.INSTANCE.getMusicLink(this.mid, this.mediaMid);
+    }
+
+    @Override
+    public String getLastRawPath() {
+        if (this.rawPath == null) return this.getRawPath();
+        return this.rawPath;
+    }
+
+    @Override
+    public String getLastLyrics() {
+        return this.rawLyrics;
+    }
+
+    @Override
+    public String getLastSubLyrics() {
+        return this.rawSubLyrics;
     }
 
     @Override

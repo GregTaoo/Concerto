@@ -5,8 +5,8 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import com.goxr3plus.streamplayer.enums.Status;
 import top.gregtao.concerto.player.MusicPlayer;
+import top.gregtao.concerto.player.streamplayer.enums.Status;
 
 @Mixin(MusicTracker.class)
 public class MusicTrackerMixin {

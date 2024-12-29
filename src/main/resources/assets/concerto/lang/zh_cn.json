@@ -155,6 +155,7 @@
   "concerto.hotkey.general_music_list": "打开全局歌单",
   "concerto.hotkey.index": "打开Concerto索引页",
 
+  "concerto.room": "音乐室",
   "concerto.room.create": "创建了UUID为%s的音乐室，UUID已被自动复制到剪贴板",
   "concerto.room.remove": "删除了该音乐室: %s",
   "concerto.room.remove.fail": "删除音乐室失败",
@@ -163,6 +164,8 @@
   "concerto.room.quit": "退出了该音乐室: %s",
   "concerto.room.quit.fail": "退出该音乐室失败",
   "concerto.room.update.fail": "更新音乐室相关信息失败",
+  "concerto.room.de_op": "取消了 {} 的音乐室管理员权限",
+  "concerto.room.op": "设置了 {} 为音乐室管理员",
 
   "concerto.error.invalid_path": "不可用的路径或文件格式"
 }

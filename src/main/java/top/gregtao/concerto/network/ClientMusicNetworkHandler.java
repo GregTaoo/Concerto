@@ -36,8 +36,6 @@ public class ClientMusicNetworkHandler {
         iterator.remove();
     }
 
-    public static final Map<BlockPos, SoundInstance> PLAYING_SONGS = new HashMap<>();
-
     public static void generalReceiver(ConcertoPayload payload, ClientPlayNetworking.Context context) {
         switch (payload.channel) {
             case MUSIC_DATA -> musicDataReceiver(payload, context);

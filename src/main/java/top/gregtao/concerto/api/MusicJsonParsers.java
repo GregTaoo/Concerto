@@ -2,6 +2,7 @@ package top.gregtao.concerto.api;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import top.gregtao.concerto.ConcertoClient;
 import top.gregtao.concerto.enums.OrderType;
 import top.gregtao.concerto.enums.Sources;
 import top.gregtao.concerto.music.HttpFileMusic;
@@ -99,6 +100,7 @@ public class MusicJsonParsers {
             }
             return music;
         } catch (Exception e) {
+            ConcertoClient.LOGGER.warn("{}: {}", e, jsonObject.toString());
             return null;
         }
     }
@@ -119,6 +121,7 @@ public class MusicJsonParsers {
             }
             return object;
         } catch (Exception e) {
+            ConcertoClient.LOGGER.warn("{}: {}", e, music.getMeta());
             return null;
         }
     }
@@ -137,6 +140,7 @@ public class MusicJsonParsers {
                     OrderType.valueOf(JsonUtil.getStringOrElse(object, "ord", OrderType.NORMAL.toString()))
             );
         } catch (Exception e) {
+            ConcertoClient.LOGGER.warn(e.toString());
             return new MusicPlayerHandler();
         }
     }

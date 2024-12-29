@@ -55,6 +55,7 @@ public class NeteaseCloudMusic extends Music implements CacheableMusic, DynamicP
 
     @Override
     public String getLastRawPath() {
+        if (this.rawPath == null) return this.getRawPath();
         return this.rawPath;
     }
 

@@ -29,11 +29,11 @@ public class SharedMusic extends PathFileMusic {
     }
 
     public String getRawLyrics() {
-        return this.rawLyrics;
+        return this.rawLyrics == null ? "" : this.rawLyrics;
     }
 
     public String getRawSubLyrics() {
-        return this.rawSubLyrics;
+        return this.rawSubLyrics == null ? "" : this.rawSubLyrics;
     }
 
     @Override

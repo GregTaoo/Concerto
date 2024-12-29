@@ -11,8 +11,6 @@ import top.gregtao.concerto.http.HttpRequestBuilder;
 import top.gregtao.concerto.music.Music;
 import top.gregtao.concerto.music.QQMusic;
 import top.gregtao.concerto.music.list.QQMusicPlaylist;
-import top.gregtao.concerto.music.lyrics.DefaultFormatLyrics;
-import top.gregtao.concerto.music.lyrics.Lyrics;
 import top.gregtao.concerto.music.meta.music.list.PlaylistMetaData;
 import top.gregtao.concerto.util.JsonUtil;
 import top.gregtao.concerto.util.MathUtil;

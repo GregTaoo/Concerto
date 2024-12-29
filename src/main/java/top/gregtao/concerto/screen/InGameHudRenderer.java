@@ -41,15 +41,17 @@ public class InGameHudRenderer {
                     Vector2i pos = ClientConfig.parsePosition(options.timeProgressPosition, scaledWidth, scaledHeight);
                     TextUtil.renderText(Text.literal(texts[3]), options.timeProgressAlignment,
                             pos.x, pos.y, context, client.textRenderer, 0xffffffff);
+                    int blankWidth = client.textRenderer.getWidth("                              "); // 兼容不同字体
+                    int timeWidth = (client.textRenderer.getWidth(Text.literal(texts[3])) - blankWidth) / 2;
                     if (MusicPlayerHandler.INSTANCE.currentMeta != null && MusicPlayerHandler.INSTANCE.currentMeta.getDuration() != null) {
                         int x;
                         switch (options.timeProgressAlignment) {
-                            case LEFT -> x = pos.x + 35;
-                            case CENTER -> x = pos.x - 50;
-                            default -> x = pos.x - 135;
+                            case LEFT -> x = pos.x + timeWidth + 9;
+                            case CENTER -> x = pos.x - blankWidth / 2 - 10;
+                            default -> x = pos.x - blankWidth - 15;
                         }
-                        context.fill(x, pos.y + 3, x + 100, pos.y + 5, 0xffa1c7f6);
-                        context.fill(x, pos.y + 3, (int) (x + 100 * MusicPlayerHandler.INSTANCE.progressPercentage),
+                        context.fill(x, pos.y + 3, x + blankWidth - 20, pos.y + 5, 0xffa1c7f6);
+                        context.fill(x, pos.y + 3, (int) (x + (blankWidth - 20) * MusicPlayerHandler.INSTANCE.progressPercentage),
                                 pos.y + 5, 0xff0155bc);
                     }
                 }

@@ -7,6 +7,7 @@ import top.gregtao.concerto.ConcertoClient;
 import top.gregtao.concerto.api.CacheableMusic;
 import top.gregtao.concerto.api.LazyLoadable;
 import top.gregtao.concerto.api.MusicJsonParsers;
+import top.gregtao.concerto.music.SharedMusic;
 import top.gregtao.concerto.music.lyrics.Lyrics;
 import top.gregtao.concerto.music.meta.music.MusicMetaData;
 import top.gregtao.concerto.enums.OrderType;
@@ -68,18 +69,17 @@ public class MusicPlayerHandler {
     }
 
     public static <T extends LazyLoadable> void loadInThreadPool(List<T> objects, boolean force) {
-        try (ExecutorService service = Executors.newFixedThreadPool(32)) {
-            objects.forEach(object -> {
-                if (force || !object.isLoaded()) service.submit(() -> object.load());
-            });
-            service.shutdown();
-            try {
-                if (!service.awaitTermination(Integer.MAX_VALUE, TimeUnit.SECONDS)) {
-                    throw new TimeoutException();
-                }
-            } catch (InterruptedException | TimeoutException e) {
-                throw new RuntimeException(e);
+        ExecutorService service = Executors.newFixedThreadPool(32);
+        objects.forEach(object -> {
+            if (force || !object.isLoaded()) service.submit(() -> object.load());
+        });
+        service.shutdown();
+        try {
+            if (!service.awaitTermination(Integer.MAX_VALUE, TimeUnit.SECONDS)) {
+                throw new TimeoutException();
             }
+        } catch (InterruptedException | TimeoutException e) {
+            throw new RuntimeException(e);
         }
     }
 
@@ -141,11 +141,11 @@ public class MusicPlayerHandler {
     private void removeMusic(int size) {
         if (this.orderType == OrderType.REVERSED) {
             while (size-- > 0) {
-                this.musicList.removeLast();
+                this.musicList.remove(this.musicList.size() - 1);
             }
         } else {
             while (size-- > 0) {
-                this.musicList.removeFirst();
+                this.musicList.remove(0);
             }
         }
     }
@@ -153,7 +153,8 @@ public class MusicPlayerHandler {
     public void updateDisplayTexts() {
         if (this.currentMeta != null) {
             this.displayTexts[2] = TextUtil.cutIfTooLong(this.currentMeta.title(), 50) + " | " +
-                    TextUtil.cutIfTooLong(this.currentMeta.author(), 40) + " | " + this.currentMeta.getSource();
+                    TextUtil.cutIfTooLong(this.currentMeta.author(), 40) + " | " + this.currentMeta.getSource() +
+                    (this.currentMusic instanceof SharedMusic ? ", " + Text.translatable("concerto.room").getString() : "");
             MusicTimestamp timestamp = this.currentMeta.getDuration();
             this.timeFormat = "%s" + (timestamp == null ? "" : " ".repeat(30) + this.currentMeta.getDuration().toShortString());
         } else {
@@ -291,38 +292,37 @@ public class MusicPlayerHandler {
             if (!file.exists() || !file.isDirectory()) {
                 if (!file.mkdirs()) return;
             }
-            try (ExecutorService service = Executors.newFixedThreadPool(32)) {
-                musics.forEach(music -> {
-                    if (music instanceof CacheableMusic cacheableMusic) {
-                        service.submit(() -> {
-                            MusicMetaData metaData = music.getMeta();
-                            String filename = filenameFilter(metaData.title() + " - " + metaData.author());
-                            File file1 = file.toPath().resolve(filename + "." + cacheableMusic.getSuffix()).toFile();
-                            try {
-                                if (!file1.exists()) {
-                                    if (file1.createNewFile()) {
-                                        try (FileOutputStream stream = new FileOutputStream(file1)) {
-                                            stream.write(music.getMusicSource().readAllBytes());
-                                        }
+            ExecutorService service = Executors.newFixedThreadPool(32);
+            musics.forEach(music -> {
+                if (music instanceof CacheableMusic cacheableMusic) {
+                    service.submit(() -> {
+                        MusicMetaData metaData = music.getMeta();
+                        String filename = filenameFilter(metaData.title() + " - " + metaData.author());
+                        File file1 = file.toPath().resolve(filename + "." + cacheableMusic.getSuffix()).toFile();
+                        try {
+                            if (!file1.exists()) {
+                                if (file1.createNewFile()) {
+                                    try (FileOutputStream stream = new FileOutputStream(file1)) {
+                                        stream.write(music.getMusicSource().readAllBytes());
                                     }
-                                    ConcertoClient.LOGGER.info("Downloaded: {}", filename);
                                 }
-                            } catch (IOException e) {
-                                ConcertoClient.LOGGER.error("{} - {}", e, file1.getAbsolutePath());
+                                ConcertoClient.LOGGER.info("Downloaded: {}", filename);
                             }
-                        });
-                    } else {
-                        ConcertoClient.LOGGER.info("Detected non-cacheable music");
-                    }
-                });
-                service.shutdown();
-                try {
-                    if (!service.awaitTermination(Integer.MAX_VALUE, TimeUnit.SECONDS)) {
-                        throw new TimeoutException();
-                    }
-                } catch (InterruptedException | TimeoutException e) {
-                    throw new RuntimeException(e);
+                        } catch (IOException e) {
+                            ConcertoClient.LOGGER.error("{} - {}", e, file1.getAbsolutePath());
+                        }
+                    });
+                } else {
+                    ConcertoClient.LOGGER.info("Detected non-cacheable music");
                 }
+            });
+            service.shutdown();
+            try {
+                if (!service.awaitTermination(Integer.MAX_VALUE, TimeUnit.SECONDS)) {
+                    throw new TimeoutException();
+                }
+            } catch (InterruptedException | TimeoutException e) {
+                throw new RuntimeException(e);
             }
         });
     }

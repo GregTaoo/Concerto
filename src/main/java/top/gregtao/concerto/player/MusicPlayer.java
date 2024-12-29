@@ -141,23 +141,33 @@ public class MusicPlayer extends StreamPlayer implements StreamPlayerListener {
 
     @Override
     public boolean pause() {
-        MusicPlayerHandler.INSTANCE.writeConfig();
-        MusicRoom.clientPause(true);
-        return super.pause();
+        if (!super.isPaused()) {
+            MusicPlayerHandler.INSTANCE.writeConfig();
+            MusicRoom.clientPause(true);
+            return super.pause();
+        } else {
+            return false;
+        }
     }
 
     @Override
     public boolean resume() {
         if (this.forcePaused) return false;
-        MusicRoom.clientPause(false);
-        return super.resume();
+        if (super.isPaused()) {
+            MusicRoom.clientPause(false);
+            return super.resume();
+        } else {
+            return false;
+        }
     }
 
     public boolean musicRoomPause() {
+        this.forcePaused = true;
         return super.pause();
     }
 
     public boolean musicRoomResume() {
+        this.forcePaused = false;
         return super.resume();
     }
 

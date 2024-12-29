@@ -4,7 +4,6 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.mojang.datafixers.util.Pair;
-import com.mojang.serialization.Codec;
 import net.minecraft.util.StringIdentifiable;
 import top.gregtao.concerto.api.*;
 import top.gregtao.concerto.enums.Sources;
@@ -55,6 +54,7 @@ public class NeteaseCloudMusic extends Music implements CacheableMusic, DynamicP
 
     @Override
     public String getLastRawPath() {
+        if (this.rawPath == null) return this.getRawPath();
         return this.rawPath;
     }
 

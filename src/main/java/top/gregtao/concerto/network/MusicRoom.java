@@ -12,6 +12,8 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayNetworkHandler;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
+import top.gregtao.concerto.ConcertoClient;
+import top.gregtao.concerto.ConcertoServer;
 import top.gregtao.concerto.api.DynamicPath;
 import top.gregtao.concerto.api.MusicJsonParsers;
 import top.gregtao.concerto.music.Music;
@@ -83,7 +85,7 @@ public class MusicRoom {
     }
 
     public void serverOnPause(String name, boolean pause, MinecraftServer server) throws IllegalAccessException {
-        if (this.members.get(name) < 3) throw new IllegalAccessException("No permission");
+        if (this.members.get(name) < 2) throw new IllegalAccessException("No permission");
         this.pause = pause;
         this.send2EachMember("UPD", this.buildArgs(false), name, server);
     }
@@ -92,13 +94,13 @@ public class MusicRoom {
         if (this.members.get(name) < 3) throw new IllegalAccessException("No permission");
         Integer permission = this.members.get(target);
         if (permission == null) {
-            player.sendMessage(Text.literal("err1"));
+            player.sendMessage(Text.translatable("concerto.room.update.fail"));
         } else if (permission == 2) {
             this.members.put(target, 1);
-            player.sendMessage(Text.literal("suc"));
+            player.sendMessage(Text.translatable("concerto.room.de_op"));
         } else {
             this.members.put(target, 2);
-            player.sendMessage(Text.literal("suc"));
+            player.sendMessage(Text.translatable("concerto.room.op"));
         }
         this.send2EachMember("UPD", this.buildArgs(false), name, server);
     }
@@ -113,7 +115,7 @@ public class MusicRoom {
     public static void serverReceiver(MinecraftServer server, ServerPlayerEntity player,
                                       ServerPlayNetworkHandler handler, PacketByteBuf buf, PacketSender sender) {
         String[] args = buf.readString().split(":");
-        System.out.println(Arrays.toString(args));
+        // System.out.println(Arrays.toString(args));
         switch (args[0]) {
             case "CRE": {
                 MusicRoom room = new MusicRoom(player.getEntityName());
@@ -130,6 +132,7 @@ public class MusicRoom {
                     ROOMS.remove(uuid1);
                     player.sendMessage(Text.translatable("concerto.room.remove", uuid1.toString()));
                 } catch (NullPointerException | IllegalArgumentException | IllegalAccessException e) {
+                    ConcertoServer.LOGGER.warn(e.toString());
                     player.sendMessage(Text.translatable("concerto.room.remove.fail"));
                 }
                 break;
@@ -142,6 +145,7 @@ public class MusicRoom {
                     serverSender("JOI", room.buildArgs(true), player);
                     player.sendMessage(Text.translatable("concerto.room.join", uuid1.toString()));
                 } catch (NullPointerException | IllegalArgumentException e) {
+                    ConcertoServer.LOGGER.warn(e.toString());
                     player.sendMessage(Text.translatable("concerto.room.join.fail"));
                 }
                 break;
@@ -154,6 +158,7 @@ public class MusicRoom {
                     serverSender("QUI", uuid1.toString(), player);
                     player.sendMessage(Text.translatable("concerto.room.quit", uuid1.toString()));
                 } catch (NullPointerException | IllegalArgumentException e) {
+                    ConcertoServer.LOGGER.warn(e.toString());
                     player.sendMessage(Text.translatable("concerto.room.quit.fail"));
                 }
                 break;
@@ -164,6 +169,7 @@ public class MusicRoom {
                     MusicRoom room = Objects.requireNonNull(ROOMS.get(uuid1));
                     room.serverOnUpdate(player.getEntityName(), args[2], server);
                 } catch (NullPointerException | IllegalArgumentException | IllegalAccessException e) {
+                    ConcertoServer.LOGGER.warn(e.toString());
                     player.sendMessage(Text.translatable("concerto.room.update.fail"));
                 }
                 break;
@@ -174,6 +180,7 @@ public class MusicRoom {
                     MusicRoom room = Objects.requireNonNull(ROOMS.get(uuid1));
                     room.serverOnPause(player.getEntityName(), args[2].equals("1"), server);
                 } catch (NullPointerException | IllegalArgumentException | IllegalAccessException e) {
+                    ConcertoServer.LOGGER.warn(e.toString());
                     player.sendMessage(Text.translatable("concerto.room.update.fail"));
                 }
                 break;
@@ -184,6 +191,7 @@ public class MusicRoom {
                     MusicRoom room = Objects.requireNonNull(ROOMS.get(uuid1));
                     room.serverOnSetOp(player.getName().getString(), player, args[2], server);
                 } catch (NullPointerException | IllegalArgumentException | IllegalAccessException e) {
+                    ConcertoServer.LOGGER.warn(e.toString());
                     player.sendMessage(Text.translatable("concerto.room.update.fail"));
                 }
                 break;
@@ -254,7 +262,7 @@ public class MusicRoom {
         if (client.player == null) return;
         ClientPlayerEntity player = client.player;
         String[] args = buf.readString().split(":");
-        System.out.println(Arrays.toString(args));
+        // System.out.println(Arrays.toString(args));
         switch (args[0]) {
             case "REM": {
                 CLIENT_ROOM = null;
@@ -284,6 +292,7 @@ public class MusicRoom {
                     }
                     player.sendMessage(Text.translatable("concerto.room.join", uuid1.toString()));
                 } catch (NullPointerException | IllegalArgumentException e) {
+                    ConcertoClient.LOGGER.warn(e.toString());
                     player.sendMessage(Text.translatable("concerto.room.join.fail"));
                 }
                 break;
@@ -295,6 +304,7 @@ public class MusicRoom {
                     if (CLIENT_ROOM.uuid.compareTo(uuid1) == 0) CLIENT_ROOM = null;
                     player.sendMessage(Text.translatable("concerto.room.quit", uuid1.toString()));
                 } catch (NullPointerException | IllegalArgumentException e) {
+                    ConcertoClient.LOGGER.warn(e.toString());
                     player.sendMessage(Text.translatable("concerto.room.join.fail"));
                 }
                 break;
@@ -326,6 +336,7 @@ public class MusicRoom {
                         MusicPlayer.INSTANCE.musicRoomResume();
                     }
                 } catch (NullPointerException | IllegalArgumentException e) {
+                    ConcertoClient.LOGGER.warn(e.toString());
                     player.sendMessage(Text.translatable("concerto.room.update.fail"));
                 }
                 break;

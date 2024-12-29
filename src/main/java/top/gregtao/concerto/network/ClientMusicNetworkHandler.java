@@ -42,8 +42,6 @@ public class ClientMusicNetworkHandler {
         iterator.remove();
     }
 
-    public static final Map<BlockPos, SoundInstance> PLAYING_SONGS = new HashMap<>();
-
     public static void sendC2SMusicData(MusicDataPacket packet) {
         if (!ConcertoClient.isServerAvailable()) {
             ClientPlayerEntity player = MinecraftClient.getInstance().player;

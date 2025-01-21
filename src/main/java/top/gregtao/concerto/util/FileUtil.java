@@ -26,6 +26,15 @@ public class FileUtil {
         }
     }
 
+    public static String getLocalAudioLyrics(AudioFile file) {
+        try {
+            Tag tag = file.getTagAndConvertOrCreateDefault();
+            return getTagValueOrElse(tag, FieldKey.LYRICS, "");
+        } catch (Exception e) {
+            return "";
+        }
+    }
+
     public static String getTagValueOrElse(Tag tag, FieldKey key, String orElse) {
         try {
             String value = tag.getFirst(key);

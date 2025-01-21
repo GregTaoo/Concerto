@@ -70,7 +70,6 @@ public class LocalFileMusic extends PathFileMusic {
             try {
                 lyrics = new DefaultFormatLyrics().load(FileUtil.getLocalAudioLyrics(
                         AudioFileIO.read(new File(this.getRawPath()))));
-                System.out.println(lyrics.getCurrent().getString());
             } catch (IOException | CannotReadException | TagException | InvalidAudioFrameException | ReadOnlyFileException e1) {
                 ConcertoClient.LOGGER.warn("Error occurs while loading file: '{}'", this.getRawPath());
             }

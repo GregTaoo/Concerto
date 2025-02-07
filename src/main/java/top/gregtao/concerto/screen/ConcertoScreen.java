@@ -2,8 +2,10 @@ package top.gregtao.concerto.screen;
 
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
+import net.minecraft.client.gui.screen.ConfirmLinkScreen;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.NarratedMultilineTextWidget;
+import net.minecraft.client.gui.widget.PressableTextWidget;
 import net.minecraft.text.Style;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
@@ -33,6 +35,14 @@ public class ConcertoScreen extends Screen {
     @Override
     protected void init() {
         super.init();
+        Text text = Text.translatable("concerto.donate");
+        int width = this.textRenderer.getWidth(text);
+        this.addDrawableChild(
+                new PressableTextWidget(this.width - 5 - width, this.height - 5 - this.textRenderer.fontHeight, width,
+                        this.textRenderer.fontHeight,
+                        text, button -> ConfirmLinkScreen.open(this, "https://afdian.com/a/gregtao", true),
+                        this.textRenderer)
+        );
         this.message = this.addDrawableChild(new NarratedMultilineTextWidget(
                 this.width, Text.empty(), this.textRenderer, 12));
         this.message.visible = false;

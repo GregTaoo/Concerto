@@ -41,7 +41,7 @@ public class NeteaseCloudMusic extends Music implements CacheableMusic, DynamicP
     @Override
     public InputStream getMusicSource() throws MusicSourceNotFoundException {
         try {
-            return FileUtil.createBuffered(new HttpURLInputStream(new URL(this.getRawPath())));
+            return FileUtil.createBuffered(new HttpURLInputStream(new URL(this.getRawPath()), this::getRawPath));
         } catch (Exception e) {
             throw new MusicSourceNotFoundException(e);
         }

@@ -4,16 +4,16 @@
   "package": "top.gregtao.concerto.mixin",
   "compatibilityLevel": "JAVA_21",
   "mixins": [
+    "PlayerManagerMixin"
   ],
   "client": [
     "ChatHudMixin",
-    "ClientLoginNetworkHandlerMixin",
     "GameMenuScreenMixin",
     "MusicTrackerMixin",
+    "MinecraftClientMixin",
     "SoundManagerMixin"
   ],
   "server": [
-    "PlayerManagerMixin"
   ],
   "injectors": {
     "defaultRequire": 1

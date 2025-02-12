@@ -7,9 +7,11 @@ import com.google.zxing.qrcode.QRCodeWriter;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
+import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.texture.NativeImage;
 import net.minecraft.client.texture.NativeImageBackedTexture;
 import net.minecraft.util.Identifier;
+import top.gregtao.concerto.ConcertoClient;
 
 public class QRCodeRenderer {
     private static NativeImageBackedTexture TEXTURE;
@@ -28,11 +30,12 @@ public class QRCodeRenderer {
         BitMatrix matrix = new QRCodeWriter().encode(content, BarcodeFormat.QR_CODE, SIZE, SIZE);
         for (int i = 0; i < SIZE; ++i) {
             for (int j = 0; j < SIZE; ++j) {
-                image.setColor(i, j, matrix.get(i, j) ? BLACK : WHITE);
+                image.setColorArgb(i, j, matrix.get(i, j) ? BLACK : WHITE);
             }
         }
         TEXTURE = new NativeImageBackedTexture(image);
-        IDENTIFIER = MinecraftClient.getInstance().getTextureManager().registerDynamicTexture("qrcode", TEXTURE);
+        IDENTIFIER = Identifier.of(ConcertoClient.MOD_ID, "qrcode");
+        MinecraftClient.getInstance().getTextureManager().registerTexture(IDENTIFIER, TEXTURE);
     }
 
     public static void clear() {
@@ -43,6 +46,6 @@ public class QRCodeRenderer {
     public static void drawQRCode(DrawContext matrices, int x, int y) {
         if (TEXTURE == null || TEXTURE.getImage() == null) return;
         RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f);
-        matrices.drawTexture(IDENTIFIER, x, y, 8, 8, SIZE - 16, SIZE - 16, SIZE, SIZE);
+        matrices.drawTexture(RenderLayer::getGuiTextured, IDENTIFIER, x, y, 8, 8, SIZE - 16, SIZE - 16, SIZE, SIZE);
     }
 }

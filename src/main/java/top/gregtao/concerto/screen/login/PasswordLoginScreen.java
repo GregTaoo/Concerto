@@ -74,7 +74,7 @@ public class PasswordLoginScreen extends ConcertoScreen {
         if (this.loginChecker.get()) {
             ClientPlayerEntity player = MinecraftClient.getInstance().player;
             if (player != null) {
-                player.sendMessage(Text.translatable("concerto.screen.login.success"));
+                player.sendMessage(Text.translatable("concerto.screen.login.success"), false);
             }
             MinecraftClient.getInstance().setScreen(null);
         }

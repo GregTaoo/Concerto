@@ -1,6 +1,7 @@
 package top.gregtao.concerto.api;
 
 import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import top.gregtao.concerto.ConcertoClient;
 import top.gregtao.concerto.enums.OrderType;
@@ -8,7 +9,10 @@ import top.gregtao.concerto.enums.Sources;
 import top.gregtao.concerto.music.HttpFileMusic;
 import top.gregtao.concerto.music.LocalFileMusic;
 import top.gregtao.concerto.music.Music;
+import top.gregtao.concerto.music.list.FixedPlaylist;
+import top.gregtao.concerto.music.list.Playlist;
 import top.gregtao.concerto.music.meta.music.MusicMetaData;
+import top.gregtao.concerto.music.meta.music.list.PlaylistMetaData;
 import top.gregtao.concerto.music.parser.*;
 import top.gregtao.concerto.music.parser.meta.BasicMusicMetaJsonParser;
 import top.gregtao.concerto.music.parser.meta.TimelessMusicMetaJsonParser;
@@ -100,7 +104,7 @@ public class MusicJsonParsers {
             }
             return music;
         } catch (Exception e) {
-            ConcertoClient.LOGGER.warn("{}: {}", e, jsonObject.toString());
+            ConcertoClient.LOGGER.warn("Error occurred when converting from JSON to music, {}: {}", e, jsonObject.toString());
             return null;
         }
     }
@@ -121,7 +125,63 @@ public class MusicJsonParsers {
             }
             return object;
         } catch (Exception e) {
-            ConcertoClient.LOGGER.warn("{}: {}", e, music.getMeta());
+            ConcertoClient.LOGGER.warn("Error occurred when converting from music to JSON, {}: {}", e, music.getMeta());
+            return null;
+        }
+    }
+
+    public static Playlist fromPlaylist(String str) {
+        return fromPlaylist(JsonUtil.from(str), false);
+    }
+
+    public static Playlist fromPlaylist(String str, boolean withMeta) {
+        return fromPlaylist(JsonUtil.from(str), withMeta);
+    }
+
+    public static Playlist fromPlaylist(JsonObject object) {
+        return fromPlaylist(object, false);
+    }
+
+    public static Playlist fromPlaylist(JsonObject object, boolean withMeta) {
+        try {
+            String title = object.get("title").getAsString(), author = object.get("author").getAsString(),
+                    createTime = object.get("createTime").getAsString(), description = object.get("description").getAsString();
+            boolean isAlbum = object.get("isAlbum").getAsBoolean();
+            ArrayList<Music> musicList = new ArrayList<>();
+            for (JsonElement element : object.getAsJsonArray("list")) {
+                Music music = from(element.getAsJsonObject(), withMeta);
+                if (music != null) musicList.add(music);
+            }
+            return new FixedPlaylist(musicList, new PlaylistMetaData(author, title, createTime, description), isAlbum);
+        } catch (Exception e) {
+            ConcertoClient.LOGGER.warn("Error occurred when converting from JSON to playlist, {}: {}", e, object.toString());
+            return null;
+        }
+    }
+
+    public static JsonObject toPlaylist(Playlist playlist) {
+        return toPlaylist(playlist, false);
+    }
+
+    public static JsonObject toPlaylist(Playlist playlist, boolean withMeta) {
+        try {
+            playlist.load();
+            JsonObject object = new JsonObject();
+            PlaylistMetaData meta = playlist.getMeta();
+            object.addProperty("title", meta.title());
+            object.addProperty("author", meta.author());
+            object.addProperty("createTime", meta.createTime());
+            object.addProperty("description", meta.description());
+            object.addProperty("isAlbum", playlist.isAlbum());
+            JsonArray array = new JsonArray();
+            for (Music music : playlist.getList()) {
+                JsonObject musicObject = to(music, withMeta);
+                if (musicObject != null) array.add(musicObject);
+            }
+            object.add("list", array);
+            return object;
+        } catch (Exception e) {
+            ConcertoClient.LOGGER.warn("Error occurred when converting from playlist to JSON, {}: {}", e, playlist.getMeta());
             return null;
         }
     }

@@ -1,7 +1,6 @@
 package top.gregtao.concerto.config;
 
 import com.google.gson.JsonObject;
-import top.gregtao.concerto.ConcertoClient;
 import top.gregtao.concerto.api.CacheableMusic;
 import top.gregtao.concerto.api.MusicJsonParsers;
 import top.gregtao.concerto.music.MusicSourceNotFoundException;

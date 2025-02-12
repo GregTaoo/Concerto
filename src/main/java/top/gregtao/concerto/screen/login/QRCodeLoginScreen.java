@@ -68,7 +68,7 @@ public class QRCodeLoginScreen extends ConcertoScreen {
                 case SUCCESS -> {
                     ClientPlayerEntity player = MinecraftClient.getInstance().player;
                     if (player != null) {
-                        player.sendMessage(Text.translatable("concerto.screen.login.qrcode.success"));
+                        player.sendMessage(Text.translatable("concerto.screen.login.qrcode.success"), false);
                     }
                     MinecraftClient.getInstance().setScreen(null);
                     QRCodeRenderer.clear();

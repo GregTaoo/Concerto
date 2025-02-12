@@ -18,6 +18,10 @@ public class MusicDataPacket {
             Sources.QQ_MUSIC.asString()
     );
 
+    public static boolean isMusicSafe(Music music) {
+        return ALLOWED_SOURCES.contains(music.getJsonParser().name());
+    }
+
     public final Music music;
 
     public String from = null, to;

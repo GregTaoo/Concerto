@@ -59,7 +59,7 @@ public class NeteaseCloudMusicCommand {
                                 QRCodeRenderer.load(NeteaseCloudApiClient.INSTANCE.getQRCodeLoginLink(key));
                                 NeteaseCloudApiClient.checkQRCodeStatusProgress(player, key);
                             } catch (Exception e) {
-                                player.sendMessage(Text.translatable("concerto.login.163.qrcode.error"));
+                                player.sendMessage(Text.translatable("concerto.login.163.qrcode.error"), false);
                                 throw new RuntimeException(e);
                             }
                             return 0;

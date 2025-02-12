@@ -39,7 +39,8 @@ public class ConcertoPayload implements CustomPayload {
         MUSIC_DATA('0'),
         HANDSHAKE('1'),
         AUDITION_SYNC('2'),
-        MUSIC_ROOM('3');
+        MUSIC_ROOM('3'),
+        PRESET_RADIOS('4');
 
         public static Channel getById(char id) {
             for (Channel channel1 : values()) {

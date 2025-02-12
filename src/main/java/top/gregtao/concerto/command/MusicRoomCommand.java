@@ -27,9 +27,10 @@ public class MusicRoomCommand {
                             return 0;
                         })).then(ClientCommandManager.literal("members").executes(context -> {
                             if (MusicRoom.CLIENT_ROOM != null) {
-                                context.getSource().getPlayer().sendMessage(Text.of(
-                                        "Admin: " + MusicRoom.CLIENT_ROOM.admin + "; Members: " + String.join(",", MusicRoom.CLIENT_ROOM.members.keySet())
-                                ));
+                                context.getSource().getPlayer().sendMessage(Text.translatable(
+                                        "concerto.room.members", MusicRoom.CLIENT_ROOM.owner,
+                                        String.join(",", MusicRoom.CLIENT_ROOM.members.keySet())
+                                ), false);
                             }
                             return 0;
                         })).then(ClientCommandManager.literal("op").then(

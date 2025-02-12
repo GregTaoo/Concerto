@@ -16,7 +16,7 @@ public class MusicAdderBuilder {
     public static int execute(CommandContext<FabricClientCommandSource> context,
                               Pair<Music, Text> pair, boolean insert) {
         ClientPlayerEntity player = context.getSource().getPlayer();
-        Runnable callback = () -> player.sendMessage(pair.getSecond());
+        Runnable callback = () -> player.sendMessage(pair.getSecond(), false);
         if (insert) {
             MusicPlayer.INSTANCE.addMusicHere(pair.getFirst(), true, callback);
         } else {
@@ -28,7 +28,7 @@ public class MusicAdderBuilder {
     public static int executePlayList(CommandContext<FabricClientCommandSource> context,
                                       Pair<Supplier<List<Music>>, Text> pair) {
         ClientPlayerEntity player = context.getSource().getPlayer();
-        MusicPlayer.INSTANCE.addMusic(pair.getFirst(), () -> player.sendMessage(pair.getSecond()));
+        MusicPlayer.INSTANCE.addMusic(pair.getFirst(), () -> player.sendMessage(pair.getSecond(), false));
         return 0;
     }
 

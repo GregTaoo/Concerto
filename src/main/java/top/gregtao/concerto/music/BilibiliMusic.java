@@ -17,7 +17,7 @@ import top.gregtao.concerto.util.FileUtil;
 import javax.sound.sampled.UnsupportedAudioFileException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URL;
+import java.net.URI;
 
 public class BilibiliMusic extends Music implements CacheableMusic {
     private final String bvid;
@@ -35,7 +35,7 @@ public class BilibiliMusic extends Music implements CacheableMusic {
     @Override
     public InputStream getMusicSource() throws MusicSourceNotFoundException {
         try {
-            return FileUtil.createBuffered(new HttpURLInputStream(new URL(this.getRawPath())));
+            return FileUtil.createBuffered(new HttpURLInputStream(URI.create(this.getRawPath()).toURL()));
         } catch (Exception e) {
             throw new MusicSourceNotFoundException(e);
         }

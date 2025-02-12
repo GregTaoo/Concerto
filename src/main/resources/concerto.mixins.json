@@ -8,10 +8,11 @@
   ],
   "client": [
     "ChatHudMixin",
+    "MinecraftClientMixin",
     "GameMenuScreenMixin",
     "MusicTrackerMixin",
-    "MinecraftClientMixin",
-    "SoundManagerMixin"
+    "SoundManagerMixin",
+    "DrawContextAccessor"
   ],
   "server": [
   ],

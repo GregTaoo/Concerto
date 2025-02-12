@@ -5,7 +5,6 @@ import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.network.ClientPlayerEntity;
-import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.*;
@@ -26,7 +25,7 @@ public class TextUtil {
 
     public static void commandMessageClient(CommandContext<FabricClientCommandSource> context, Text text) {
         ClientPlayerEntity player = context.getSource().getPlayer();
-        player.sendMessage(text);
+        player.sendMessage(text, false);
     }
 
     public static void commandMessageServer(CommandContext<ServerCommandSource> context, Text text) {

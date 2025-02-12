@@ -272,7 +272,7 @@ public class NeteaseCloudApiClient extends HttpApiClient {
                         wait = -1;
                         break;
                     } else if (code == 803) {
-                        player.sendMessage(Text.translatable("concerto.login.163.qrcode.success"));
+                        player.sendMessage(Text.translatable("concerto.login.163.qrcode.success"), false);
                         LOCAL_USER.updateLoginStatus();
                         break;
                     } else {
@@ -280,10 +280,10 @@ public class NeteaseCloudApiClient extends HttpApiClient {
                         break;
                     }
                 }
-                if (wait <= 0) player.sendMessage(Text.translatable("concerto.login.163.qrcode.expired"));
+                if (wait <= 0) player.sendMessage(Text.translatable("concerto.login.163.qrcode.expired"), false);
                 QRCodeRenderer.clear();
             } catch (Exception e) {
-                player.sendMessage(Text.translatable("concerto.login.163.qrcode.error"));
+                player.sendMessage(Text.translatable("concerto.login.163.qrcode.error"), false);
                 ConcertoClient.LOGGER.error("Error occurs while checking QR code scanning status.");
                 QRCodeRenderer.clear();
                 throw new RuntimeException(e);

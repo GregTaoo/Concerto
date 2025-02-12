@@ -1,5 +1,5 @@
 plugins {
-	id 'fabric-loom' version '1.6-SNAPSHOT'
+	id 'fabric-loom' version '1.9.2'
 	id 'maven-publish'
 }
 
@@ -43,7 +43,7 @@ dependencies {
 		exclude group: 'com.googlecode.soundlibs', module: 'tritonus-share'
 	}
 	my 'net.jthink:jaudiotagger:3.0.1'
-	my 'commons-io:commons-io:2.7'
+	my 'commons-io:commons-io:2.14.0'
 }
 
 processResources {

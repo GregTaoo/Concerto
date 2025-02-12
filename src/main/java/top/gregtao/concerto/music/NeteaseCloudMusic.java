@@ -18,7 +18,7 @@ import top.gregtao.concerto.music.meta.music.UnknownMusicMeta;
 import top.gregtao.concerto.util.FileUtil;
 
 import java.io.InputStream;
-import java.net.URL;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -41,7 +41,7 @@ public class NeteaseCloudMusic extends Music implements CacheableMusic, DynamicP
     @Override
     public InputStream getMusicSource() throws MusicSourceNotFoundException {
         try {
-            return FileUtil.createBuffered(new HttpURLInputStream(new URL(this.getRawPath()), this::getRawPath));
+            return FileUtil.createBuffered(new HttpURLInputStream(URI.create(this.getRawPath()).toURL(), this::getRawPath));
         } catch (Exception e) {
             throw new MusicSourceNotFoundException(e);
         }

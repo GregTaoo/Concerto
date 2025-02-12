@@ -18,9 +18,12 @@ import top.gregtao.concerto.config.ClientConfig;
 import top.gregtao.concerto.config.ConfigFile;
 import top.gregtao.concerto.http.netease.NeteaseCloudApiClient;
 import top.gregtao.concerto.http.qq.QQMusicApiClient;
+import top.gregtao.concerto.music.list.Playlist;
 import top.gregtao.concerto.network.ClientMusicNetworkHandler;
 import top.gregtao.concerto.player.MusicPlayer;
 import top.gregtao.concerto.util.ConcertoHotkeys;
+
+import java.util.List;
 
 public class ConcertoClient implements ClientModInitializer {
 
@@ -30,12 +33,19 @@ public class ConcertoClient implements ClientModInitializer {
 
 	public static final ConfigFile MUSIC_CONFIG = new ConfigFile("Concerto/musics.json");
 
+	// ======================================================
+	// Server States
+
 	public static boolean serverAvailable = false;
+
+	public static List<Playlist> presetRadios = List.of();
 
 	public static boolean isServerAvailable() {
 		return serverAvailable || MinecraftClient.getInstance().isInSingleplayer();
 //		return serverAvailable; // DEBUG
 	}
+
+	// ======================================================
 
 	@Override
 	public void onInitializeClient() {

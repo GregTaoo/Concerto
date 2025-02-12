@@ -262,7 +262,7 @@ public class MusicPlayer extends StreamPlayer implements StreamPlayerListener {
                         ConcertoClient.LOGGER.error("Unable to play music: '{}' of '{}'", music.getMeta().title(), music.getMeta().author());
                         if (player != null) {
                             player.sendMessage(Text.translatable(
-                                    "concerto.player.unable", music.getMeta().title(), music.getMeta().author()));
+                                    "concerto.player.unable", music.getMeta().title(), music.getMeta().author()), false);
                         }
                         MusicPlayerHandler.INSTANCE.setCurrentIndex((MusicPlayerHandler.INSTANCE.getCurrentIndex() + 1)
                                 % MusicPlayerHandler.INSTANCE.getMusicList().size());

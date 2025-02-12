@@ -28,7 +28,7 @@ public class PlayerManagerMixin {
     public void removeInject(ServerPlayerEntity player, CallbackInfo ci) {
         List<UUID> removeList = new ArrayList<>();
         for (Map.Entry<UUID, MusicRoom> entry : MusicRoom.ROOMS.entrySet()) {
-            if (entry.getValue().admin.equals(player.getName().getString())) {
+            if (entry.getValue().owner.equals(player.getName().getString())) {
                 removeList.add(entry.getKey());
                 try {
                     entry.getValue().serverOnRemove(player.getName().getString(), player.server);

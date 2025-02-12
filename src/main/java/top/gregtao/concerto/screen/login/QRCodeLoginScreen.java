@@ -13,6 +13,7 @@ import top.gregtao.concerto.screen.QRCodeRenderer;
 import top.gregtao.concerto.screen.widget.URLImageWidget;
 
 import java.net.MalformedURLException;
+import java.net.URI;
 import java.net.URL;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -92,7 +93,7 @@ public class QRCodeLoginScreen extends ConcertoScreen {
             if (this.isSpecificImage) {
                 String link = this.qrKeySupplier.get();
                 try {
-                    this.urlImageWidget.setUrl(new URL(link));
+                    this.urlImageWidget.setUrl(URI.create(link).toURL());
                     if (this.imageUpdater != null) this.urlImageWidget.loadImage(this.imageUpdater, false);
                     else this.urlImageWidget.loadImage();
                     this.status = Status.WAITING;

@@ -179,8 +179,8 @@
   "concerto.room.quit": "Quited the music room: %s",
   "concerto.room.quit.fail": "Failed to quit the music room",
   "concerto.room.update.fail": "Failed to update information of music room",
-  "concerto.room.de_op": "Cancelled {}'s op permissions of music room",
-  "concerto.room.op": "Set {} to op of music room",
+  "concerto.room.de_op": "Cancelled %s's op permissions of music room",
+  "concerto.room.op": "Set %s to op of music room",
   "concerto.room.members": "Owner: %s; Members: %s.",
 
   "concerto.error.invalid_path": "Invalid path or file format"

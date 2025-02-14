@@ -43,7 +43,7 @@ dependencies {
 		exclude group: 'com.googlecode.soundlibs', module: 'tritonus-share'
 	}
 	my 'net.jthink:jaudiotagger:3.0.1'
-	my 'commons-io:commons-io:2.14.0'
+//	my 'commons-io:commons-io:2.14.0'
 }
 
 processResources {

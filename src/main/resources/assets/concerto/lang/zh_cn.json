@@ -179,8 +179,8 @@
   "concerto.room.quit": "退出了该音乐室: %s",
   "concerto.room.quit.fail": "退出该音乐室失败",
   "concerto.room.update.fail": "更新音乐室相关信息失败",
-  "concerto.room.de_op": "取消了 {} 的音乐室管理员权限",
-  "concerto.room.op": "设置了 {} 为音乐室管理员",
+  "concerto.room.de_op": "取消了 %s 的音乐室管理员权限",
+  "concerto.room.op": "设置了 %s 为音乐室管理员",
   "concerto.room.members": "所有者: %s; 成员: %s.",
 
   "concerto.error.invalid_path": "不可用的路径或文件格式"

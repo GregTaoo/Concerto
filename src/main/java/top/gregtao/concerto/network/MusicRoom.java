@@ -87,16 +87,16 @@ public class MusicRoom {
     }
 
     public void serverOnSetOp(String name, ServerPlayerEntity player, String target, MinecraftServer server) throws IllegalAccessException {
-        if (this.members.get(name) < 3) throw new IllegalAccessException("No permission");
+        if (this.members.get(name) < 3 || name.equals(target)) throw new IllegalAccessException("No permission");
         Integer permission = this.members.get(target);
         if (permission == null) {
             player.sendMessage(Text.translatable("concerto.room.update.fail"));
         } else if (permission == 2) {
             this.members.put(target, 1);
-            player.sendMessage(Text.translatable("concerto.room.de_op"));
+            player.sendMessage(Text.translatable("concerto.room.de_op", target));
         } else {
             this.members.put(target, 2);
-            player.sendMessage(Text.translatable("concerto.room.op"));
+            player.sendMessage(Text.translatable("concerto.room.op", target));
         }
         this.send2EachMember("UPD", this.buildArgs(false), name, server);
     }

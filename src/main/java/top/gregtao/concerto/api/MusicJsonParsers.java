@@ -188,6 +188,7 @@ public class MusicJsonParsers {
 
     public static MusicPlayerHandler fromRaw(String json) {
         try {
+            if (json.isEmpty()) return new MusicPlayerHandler();
             ArrayList<Music> list = new ArrayList<>();
             JsonObject object = JsonUtil.from(json);
             JsonArray array = object.get("data").getAsJsonArray();
@@ -200,7 +201,7 @@ public class MusicJsonParsers {
                     OrderType.valueOf(JsonUtil.getStringOrElse(object, "ord", OrderType.NORMAL.toString()))
             );
         } catch (Exception e) {
-            ConcertoClient.LOGGER.warn(e.toString());
+            ConcertoClient.LOGGER.warn("Error parsing JSON from music.json: {}", e.toString());
             return new MusicPlayerHandler();
         }
     }

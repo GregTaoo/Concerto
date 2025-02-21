@@ -5,6 +5,7 @@
   "concerto.source.local_file": "Local File",
   "concerto.source.internet": "Internet Resources",
 
+  "concerto.donate": "Donate",
   "concerto.no_caption": "No Captions",
   "concerto.loading": "Loading",
   "concerto.unknown": "Unknown",
@@ -13,8 +14,10 @@
   "concerto.accept": "Accept",
   "concerto.refresh": "Refresh",
   "concerto.success": "Success",
+  "concerto.fail": "Fail",
   "concerto.not_cacheable": "Not cacheable",
   "concerto.drag_confirm": "Do you want to add the following files/folders to Concerto?",
+  "concerto.thank_you": "Thank you! Your support keeps me going always!",
 
   "concerto.playlist": "Playlist",
   "concerto.album": "Album",
@@ -131,6 +134,17 @@
   "concerto.screen.login.type.qrcode.qq": "QQ QR Code",
   "concerto.screen.login.type.qrcode.wechat": "WeChat QR Code",
   "concerto.screen.general_list": "General Playlist",
+  "concerto.screen.preset_radios": "Server Preset Radios",
+  "concerto.screen.acknowledgement": "Thank you for supporting!",
+
+  "concerto.donate.afdian": "Afdian",
+  "concerto.donate.bilibili": "Bilibili",
+  "concerto.donate.ko-fi": "Ko-fi",
+  "concerto.donate.supporters": "Supporters List",
+
+  "concerto.playlist.export": "Export as JSON",
+  "concerto.playlist.export.fail": "Failed to export playlist to JSON",
+  "concerto.playlist.export.success": "Successfully exported playlist to JSON in concerto_playlist_export.json",
 
   "concerto.search_type": "Type",
   "concerto.search_type.music": "Music",
@@ -156,6 +170,7 @@
   "concerto.hotkey.index": "Open Concerto Index Page",
 
   "concerto.room": "MusicRoom",
+  "concerto.room.permission_denied": "Permission Denied. Please contact the operators.",
   "concerto.room.create": "Created a music room. The UUID %s has been copied to your clipboard",
   "concerto.room.remove": "Removed the music room: %s",
   "concerto.room.remove.fail": "Failed to remove the music room",
@@ -164,8 +179,9 @@
   "concerto.room.quit": "Quited the music room: %s",
   "concerto.room.quit.fail": "Failed to quit the music room",
   "concerto.room.update.fail": "Failed to update information of music room",
-  "concerto.room.de_op": "Cancelled {}'s op permissions of music room",
-  "concerto.room.op": "Set {} to op of music room",
+  "concerto.room.de_op": "Cancelled %s's op permissions of music room",
+  "concerto.room.op": "Set %s to op of music room",
+  "concerto.room.members": "Owner: %s; Members: %s.",
 
   "concerto.error.invalid_path": "Invalid path or file format"
 }

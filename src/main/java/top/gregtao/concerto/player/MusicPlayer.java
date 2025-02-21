@@ -15,6 +15,7 @@ import top.gregtao.concerto.api.MusicJsonParsers;
 import top.gregtao.concerto.music.Music;
 import top.gregtao.concerto.network.MusicRoom;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
@@ -36,6 +37,10 @@ public class MusicPlayer extends StreamPlayer implements StreamPlayerListener {
 
     static {
         PLAYER_LOGGER = Logger.getLogger(MusicPlayer.class.getName());
+        File file = new File("Concerto");
+        if (!file.exists() && !file.isDirectory() && !file.mkdir()) {
+            throw new RuntimeException("Cannot mkdir!");
+        }
         FileHandler fileHandler;
         try {
             fileHandler = new FileHandler("Concerto/player.log", false);

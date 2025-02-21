@@ -13,7 +13,7 @@ public class ConcertoHotkeys {
 
     public static String CATEGORY = "concerto.hotkey";
 
-    public static KeyBinding GENERAL_PLAYLIST, INDEX_SCREEN, NEXT_MUSIC;
+    public static KeyBinding GENERAL_PLAYLIST, INDEX_SCREEN, NEXT_MUSIC, PAUSE_RESUME;
 
     public static void register() {
         GENERAL_PLAYLIST = KeyBindingHelper.registerKeyBinding(new KeyBinding(
@@ -34,6 +34,12 @@ public class ConcertoHotkeys {
                 GLFW.GLFW_KEY_N,
                 CATEGORY
         ));
+        PAUSE_RESUME = KeyBindingHelper.registerKeyBinding(new KeyBinding(
+                "concerto.screen.pause_resume",
+                InputUtil.Type.KEYSYM,
+                GLFW.GLFW_KEY_P,
+                CATEGORY
+        ));
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
             if (GENERAL_PLAYLIST.wasPressed()) {
                 client.setScreen(new GeneralPlaylistScreen(null));
@@ -42,6 +48,11 @@ public class ConcertoHotkeys {
             } else if (NEXT_MUSIC.wasPressed()) {
                 if (!MusicPlayer.INSTANCE.started) MusicPlayer.INSTANCE.start();
                 else if (!MusicPlayer.INSTANCE.playNextLock) MusicPlayer.INSTANCE.playNext(1);
+            } else if (PAUSE_RESUME.wasPressed()) {
+                if (MusicPlayer.INSTANCE.started) {
+                    if (MusicPlayer.INSTANCE.forcePaused) MusicPlayer.INSTANCE.forceResume();
+                    else MusicPlayer.INSTANCE.forcePause();
+                }
             }
         });
     }

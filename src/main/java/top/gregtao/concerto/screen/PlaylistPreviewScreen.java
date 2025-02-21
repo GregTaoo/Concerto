@@ -5,6 +5,7 @@ import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.text.Text;
+import top.gregtao.concerto.config.PresetRadioConfig;
 import top.gregtao.concerto.music.Music;
 import top.gregtao.concerto.music.list.Playlist;
 import top.gregtao.concerto.player.MusicPlayer;
@@ -37,30 +38,36 @@ public class PlaylistPreviewScreen extends ConcertoScreen {
         MusicPlayer.run(() -> this.widget.reset(this.playlist.getList(), null));
 
         this.addDrawableChild(ButtonWidget.builder(Text.translatable("concerto.screen.playlist.add"), button ->
-            MusicPlayer.INSTANCE.addMusic(this.playlist.getList(), () ->
-                    MusicPlayer.INSTANCE.skipTo(MusicPlayerHandler.INSTANCE.getMusicList().size() - this.playlist.getList().size())
-        )).position(this.width / 2 - 160, this.height - 30).size(50, 20).build());
+                MusicPlayer.INSTANCE.addMusic(this.playlist.getList(), () ->
+                        MusicPlayer.INSTANCE.skipTo(MusicPlayerHandler.INSTANCE.getMusicList().size() - this.playlist.getList().size())
+                )).position(20, this.height - 30).size(60, 20).build());
 
         this.addDrawableChild(ButtonWidget.builder(Text.translatable("concerto.screen.play"), button -> {
             ConcertoListWidget<Music>.Entry entry = this.widget.getSelectedOrNull();
             if (entry != null) {
                 MusicPlayer.INSTANCE.addMusicHere(entry.item, true);
             }
-        }).position(this.width / 2 - 105, this.height - 30).size(50, 20).build());
+        }).position(85, this.height - 30).size(60, 20).build());
 
         this.addDrawableChild(ButtonWidget.builder(Text.translatable("concerto.screen.add"), button -> {
             ConcertoListWidget<Music>.Entry entry = this.widget.getSelectedOrNull();
             if (entry != null) {
                 MusicPlayer.INSTANCE.addMusic(entry.item);
             }
-        }).position(this.width / 2 - 50, this.height - 30).size(50, 20).build());
+        }).position(150, this.height - 30).size(60, 20).build());
 
         this.addDrawableChild(ButtonWidget.builder(Text.translatable("concerto.screen.info"), button -> {
             ConcertoListWidget<Music>.Entry entry = this.widget.getSelectedOrNull();
             if (entry != null) {
                 MinecraftClient.getInstance().setScreen(new MusicInfoScreen(entry.item, this));
             }
-        }).position(this.width / 2 + 5, this.height - 30).size(50, 20).build());
+        }).position(215, this.height - 30).size(60, 20).build());
+
+        this.addDrawableChild(ButtonWidget.builder(Text.translatable("concerto.playlist.export"), button -> {
+            Text text = PresetRadioConfig.saveToTmpFile(this.playlist) ? Text.translatable("concerto.playlist.export.success") :
+                    Text.translatable("concerto.playlist.export.fail");
+            this.displayAlert(text);
+        }).position(280, this.height - 30).size(60, 20).build());
     }
 
     @Override

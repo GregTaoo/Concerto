@@ -24,5 +24,6 @@ public class ServerConfig extends ConfigFile {
 
     public static class ServerConfigOptions {
         public boolean auditionRequired = true;
+        public int musicRoomCommandPermission = 2;
     }
 }

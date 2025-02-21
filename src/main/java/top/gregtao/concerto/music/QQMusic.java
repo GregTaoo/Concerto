@@ -86,13 +86,14 @@ public class QQMusic extends Music implements CacheableMusic, DynamicPath {
     @Override
     public InputStream getMusicSource() throws MusicSourceNotFoundException {
         try {
-            return FileUtil.createBuffered(new HttpURLInputStream(new URL(this.getRawPath())));
+            return FileUtil.createBuffered(new HttpURLInputStream(new URL(this.getRawPath()), this::getRawPath));
         } catch (Exception e) {
             throw new MusicSourceNotFoundException(e);
         }
     }
 
     public String getRawPath() {
+        if (this.rawPath == null) return this.getRawPath();
         return this.rawPath = QQMusicApiClient.INSTANCE.getMusicLink(this.mid, this.mediaMid);
     }
 

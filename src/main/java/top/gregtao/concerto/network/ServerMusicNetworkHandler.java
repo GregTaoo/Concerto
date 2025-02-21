@@ -13,7 +13,8 @@ import net.minecraft.text.Text;
 import org.jetbrains.annotations.Nullable;
 import top.gregtao.concerto.ConcertoServer;
 import top.gregtao.concerto.api.MusicJsonParsers;
-import top.gregtao.concerto.command.AuditCommand;
+import top.gregtao.concerto.command.ConcertoServerCommand;
+import top.gregtao.concerto.config.PresetRadioConfig;
 import top.gregtao.concerto.config.ServerConfig;
 import top.gregtao.concerto.music.meta.music.MusicMetaData;
 import top.gregtao.concerto.util.TextUtil;
@@ -105,6 +106,12 @@ public class ServerMusicNetworkHandler {
         WAIT_AUDITION.forEach((uuid, packet) -> sendAuditionSyncPacket(uuid, player, packet, false));
     }
 
+    public static void sendS2CPresetRadiosPacket(ServerPlayerEntity player) {
+        PacketByteBuf packetByteBuf = PacketByteBufs.create();
+        packetByteBuf.writeString(PresetRadioConfig.INSTANCE.toString());
+        ServerPlayNetworking.send(player, MusicNetworkChannels.CHANNEL_PRESET_RADIOS, packetByteBuf);
+    }
+
     public static boolean sendS2CMusicData(MusicDataPacket packet, boolean audit) {
         if (!packet.isS2C) {
             throw new RuntimeException("Not an S2C music data packet");
@@ -158,7 +165,7 @@ public class ServerMusicNetworkHandler {
                         for (ServerPlayerEntity player1 : playerManager.getPlayerList()) {
                             if (player1.hasPermissionLevel(server.getOpPermissionLevel())) {
                                 player1.sendMessage(TextUtil.PAGE_SPLIT);
-                                player1.sendMessage(AuditCommand.chatMessageBuilder(
+                                player1.sendMessage(ConcertoServerCommand.chatMessageBuilder(
                                         uuid, packet.from, packet.music.getMeta().title()
                                 ));
                                 player1.sendMessage(TextUtil.PAGE_SPLIT);
@@ -193,6 +200,7 @@ public class ServerMusicNetworkHandler {
         packetByteBuf.writeString(MusicNetworkChannels.HANDSHAKE_STRING + "CallJoin:" + player.getEntityName());
         ServerPlayNetworking.send(player, MusicNetworkChannels.CHANNEL_HANDSHAKE, packetByteBuf);
         sendS2CAllAuditionData(player);
+        sendS2CPresetRadiosPacket(player);
     }
 
     public static boolean playerExist(PlayerManager manager, String name) {

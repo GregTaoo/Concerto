@@ -14,9 +14,12 @@ import top.gregtao.concerto.ConcertoClient;
 import top.gregtao.concerto.api.MusicJsonParsers;
 import top.gregtao.concerto.command.ShareMusicCommand;
 import top.gregtao.concerto.config.ClientConfig;
+import top.gregtao.concerto.config.PresetRadioConfig;
 import top.gregtao.concerto.music.Music;
 import top.gregtao.concerto.player.MusicPlayer;
+import top.gregtao.concerto.player.MusicPlayerHandler;
 import top.gregtao.concerto.screen.MusicAuditionScreen;
+import top.gregtao.concerto.screen.PresetRadiosScreen;
 import top.gregtao.concerto.util.JsonUtil;
 import top.gregtao.concerto.util.TextUtil;
 
@@ -30,6 +33,7 @@ public class ClientMusicNetworkHandler {
         ClientPlayNetworking.registerGlobalReceiver(MusicNetworkChannels.CHANNEL_HANDSHAKE, ClientMusicNetworkHandler::playerJoinHandshake);
         ClientPlayNetworking.registerGlobalReceiver(MusicNetworkChannels.CHANNEL_AUDITION_SYNC, ClientMusicNetworkHandler::auditionDataSyncReceiver);
         ClientPlayNetworking.registerGlobalReceiver(MusicNetworkChannels.CHANNEL_MUSIC_ROOM, MusicRoom::clientReceiver);
+        ClientPlayNetworking.registerGlobalReceiver(MusicNetworkChannels.CHANNEL_PRESET_RADIOS, ClientMusicNetworkHandler::presetRadiosReceiver);
     }
 
     public static final Map<UUID, MusicDataPacket> WAIT_CONFIRMATION = new HashMap<>();
@@ -173,6 +177,18 @@ public class ClientMusicNetworkHandler {
         } catch (IllegalArgumentException e) {
             ConcertoClient.LOGGER.error("Received an AuditionSyncDataPacket with illegal UUID: {}", args[1]);
         }
+    }
+
+    public static void presetRadiosReceiver(MinecraftClient client, ClientPlayNetworkHandler handler,
+                                            PacketByteBuf buf, PacketSender packetSender) {
+        String str = buf.readString(Short.MAX_VALUE << 4);
+        MusicPlayer.run(() -> ConcertoClient.presetRadios = PresetRadioConfig.fromJson(str).stream().filter(playlist ->
+                        playlist.getList().stream().allMatch(MusicDataPacket::isMusicSafe))
+                .peek(playlist -> MusicPlayerHandler.loadInThreadPool(playlist.getList())).toList(), () -> {
+            if (client != null && client.currentScreen instanceof PresetRadiosScreen screen) {
+                screen.reset();
+            }
+        });
     }
 
 }

@@ -9,6 +9,7 @@ public class MusicNetworkChannels {
     public static final Identifier CHANNEL_HANDSHAKE = createChannel("1");
     public static final Identifier CHANNEL_AUDITION_SYNC = createChannel("2");
     public static final Identifier CHANNEL_MUSIC_ROOM = createChannel("3");
+    public static final Identifier CHANNEL_PRESET_RADIOS = createChannel("4");
 
     public static final String HANDSHAKE_STRING = "CONCERTO:";
 

@@ -1,7 +1,7 @@
 package top.gregtao.concerto.config;
 
-import com.mojang.datafixers.util.Pair;
 import top.gregtao.concerto.player.MusicPlayer;
+import top.gregtao.concerto.util.Pair;
 
 import java.io.File;
 import java.io.FileOutputStream;

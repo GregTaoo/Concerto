@@ -2,7 +2,6 @@ package top.gregtao.concerto.http.qq;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
-import com.mojang.datafixers.util.Pair;
 import org.apache.commons.lang3.RandomStringUtils;
 import top.gregtao.concerto.enums.SearchType;
 import top.gregtao.concerto.enums.Sources;
@@ -11,11 +10,10 @@ import top.gregtao.concerto.http.HttpRequestBuilder;
 import top.gregtao.concerto.music.Music;
 import top.gregtao.concerto.music.QQMusic;
 import top.gregtao.concerto.music.list.QQMusicPlaylist;
-import top.gregtao.concerto.music.lyrics.DefaultFormatLyrics;
-import top.gregtao.concerto.music.lyrics.Lyrics;
 import top.gregtao.concerto.music.meta.music.list.PlaylistMetaData;
 import top.gregtao.concerto.util.JsonUtil;
 import top.gregtao.concerto.util.MathUtil;
+import top.gregtao.concerto.util.Pair;
 import top.gregtao.concerto.util.TextUtil;
 
 import java.io.IOException;

@@ -1,6 +1,5 @@
 package top.gregtao.concerto.music;
 
-import com.mojang.datafixers.util.Pair;
 import top.gregtao.concerto.api.JsonParser;
 import top.gregtao.concerto.api.MusicJsonParsers;
 import top.gregtao.concerto.http.HttpURLInputStream;
@@ -8,6 +7,7 @@ import top.gregtao.concerto.music.lyrics.DefaultFormatLyrics;
 import top.gregtao.concerto.music.lyrics.Lyrics;
 import top.gregtao.concerto.music.meta.music.MusicMetaData;
 import top.gregtao.concerto.util.FileUtil;
+import top.gregtao.concerto.util.Pair;
 
 import java.io.InputStream;
 import java.net.URI;

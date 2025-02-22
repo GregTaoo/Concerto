@@ -6,7 +6,6 @@ import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.ArgumentBuilder;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.tree.LiteralCommandNode;
-import com.mojang.datafixers.util.Pair;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandManager;
 import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;
 import net.minecraft.client.network.ClientPlayerEntity;
@@ -28,6 +27,7 @@ import top.gregtao.concerto.music.Music;
 import top.gregtao.concerto.music.meta.music.list.PlaylistMetaData;
 import top.gregtao.concerto.player.MusicPlayer;
 import top.gregtao.concerto.player.MusicPlayerHandler;
+import top.gregtao.concerto.util.Pair;
 import top.gregtao.concerto.util.TextUtil;
 
 import javax.sound.sampled.UnsupportedAudioFileException;
@@ -123,7 +123,7 @@ public class MusicCommand {
                         ClientCommandManager.argument("mode", OrderTypeArgumentType.orderType()).executes((context -> {
                             OrderType type = OrderTypeArgumentType.getOrderType(context, "mode");
                             MusicPlayerHandler.INSTANCE.setOrderType(type);
-                            TextUtil.commandMessageClient(context, Text.translatable("concerto.player.mode", type.getName()));
+                            TextUtil.commandMessageClient(context, Text.translatable("concerto.player.mode", type.getName().getString()));
                             return 0;
                         }))
                 )

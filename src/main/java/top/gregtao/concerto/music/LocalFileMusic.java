@@ -1,6 +1,5 @@
 package top.gregtao.concerto.music;
 
-import com.mojang.datafixers.util.Pair;
 import org.jaudiotagger.audio.AudioFile;
 import org.jaudiotagger.audio.AudioFileIO;
 import org.jaudiotagger.audio.exceptions.CannotReadException;
@@ -21,6 +20,7 @@ import top.gregtao.concerto.player.streamplayer.enums.AudioType;
 import top.gregtao.concerto.player.streamplayer.tools.TimeTool;
 import top.gregtao.concerto.util.FileUtil;
 import top.gregtao.concerto.util.HttpUtil;
+import top.gregtao.concerto.util.Pair;
 import top.gregtao.concerto.util.TextUtil;
 
 import javax.sound.sampled.UnsupportedAudioFileException;

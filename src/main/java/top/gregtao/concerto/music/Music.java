@@ -1,6 +1,5 @@
 package top.gregtao.concerto.music;
 
-import com.mojang.datafixers.util.Pair;
 import top.gregtao.concerto.api.CacheableMusic;
 import top.gregtao.concerto.api.JsonParsable;
 import top.gregtao.concerto.api.LazyLoadable;
@@ -9,6 +8,7 @@ import top.gregtao.concerto.config.MusicCacheManager;
 import top.gregtao.concerto.music.lyrics.Lyrics;
 import top.gregtao.concerto.music.meta.music.MusicMetaData;
 import top.gregtao.concerto.util.FileUtil;
+import top.gregtao.concerto.util.Pair;
 
 import java.io.*;
 

@@ -1,6 +1,5 @@
 package top.gregtao.concerto.screen;
 
-import com.mojang.datafixers.util.Pair;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
@@ -11,6 +10,7 @@ import top.gregtao.concerto.music.Music;
 import top.gregtao.concerto.network.ClientMusicNetworkHandler;
 import top.gregtao.concerto.screen.widget.ConcertoListWidget;
 import top.gregtao.concerto.screen.widget.MusicWithUUIDListWidget;
+import top.gregtao.concerto.util.Pair;
 
 import java.util.UUID;
 

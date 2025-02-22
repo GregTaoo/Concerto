@@ -1,6 +1,5 @@
 package top.gregtao.concerto.screen.netease;
 
-import com.mojang.datafixers.util.Pair;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
@@ -10,6 +9,7 @@ import top.gregtao.concerto.screen.ConcertoScreen;
 import top.gregtao.concerto.screen.login.CaptchaLoginScreen;
 import top.gregtao.concerto.screen.login.PasswordLoginScreen;
 import top.gregtao.concerto.screen.login.QRCodeLoginScreen;
+import top.gregtao.concerto.util.Pair;
 import top.gregtao.concerto.util.TextUtil;
 
 public class NeteaseCloudLoginScreens extends ConcertoScreen {

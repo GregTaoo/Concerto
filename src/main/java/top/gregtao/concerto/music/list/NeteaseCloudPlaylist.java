@@ -1,11 +1,11 @@
 package top.gregtao.concerto.music.list;
 
 import com.google.gson.JsonObject;
-import com.mojang.datafixers.util.Pair;
 import top.gregtao.concerto.http.netease.NeteaseCloudApiClient;
 import top.gregtao.concerto.music.Music;
 import top.gregtao.concerto.music.NeteaseCloudMusic;
 import top.gregtao.concerto.music.meta.music.list.PlaylistMetaData;
+import top.gregtao.concerto.util.Pair;
 
 import java.util.ArrayList;
 

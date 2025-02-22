@@ -1,6 +1,5 @@
 package top.gregtao.concerto.player;
 
-import com.mojang.datafixers.util.Pair;
 import net.minecraft.text.Text;
 import net.minecraft.util.math.MathHelper;
 import top.gregtao.concerto.ConcertoClient;
@@ -13,6 +12,7 @@ import top.gregtao.concerto.music.meta.music.MusicMetaData;
 import top.gregtao.concerto.enums.OrderType;
 import top.gregtao.concerto.music.Music;
 import top.gregtao.concerto.music.MusicTimestamp;
+import top.gregtao.concerto.util.Pair;
 import top.gregtao.concerto.util.TextUtil;
 
 import java.io.*;
@@ -171,7 +171,7 @@ public class MusicPlayerHandler {
         if (this.currentLyrics != null) {
             this.displayTexts[0] = this.currentLyrics.stayOrNext(millisecond).getString();
         } else if (millisecond < 5000) {
-            this.displayTexts[0] = Text.translatable("concerto.no_caption").getString();
+            this.displayTexts[0] = Text.translatable("concerto.no_subtitle").getString();
         } else {
             this.displayTexts[0] = "";
         }

@@ -2,7 +2,6 @@ package top.gregtao.concerto.http.netease;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
-import com.mojang.datafixers.util.Pair;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.text.Text;
 import top.gregtao.concerto.ConcertoClient;
@@ -21,6 +20,7 @@ import top.gregtao.concerto.screen.QRCodeRenderer;
 import top.gregtao.concerto.util.HashUtil;
 import top.gregtao.concerto.util.JsonUtil;
 import top.gregtao.concerto.util.MathUtil;
+import top.gregtao.concerto.util.Pair;
 
 import java.net.http.HttpResponse;
 import java.util.ArrayList;

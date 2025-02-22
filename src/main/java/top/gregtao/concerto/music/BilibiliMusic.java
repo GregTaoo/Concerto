@@ -1,7 +1,6 @@
 package top.gregtao.concerto.music;
 
 import com.google.gson.JsonObject;
-import com.mojang.datafixers.util.Pair;
 import top.gregtao.concerto.api.CacheableMusic;
 import top.gregtao.concerto.api.JsonParser;
 import top.gregtao.concerto.api.MusicJsonParsers;
@@ -13,6 +12,7 @@ import top.gregtao.concerto.music.lyrics.Lyrics;
 import top.gregtao.concerto.music.meta.music.BasicMusicMetaData;
 import top.gregtao.concerto.music.meta.music.UnknownMusicMeta;
 import top.gregtao.concerto.util.FileUtil;
+import top.gregtao.concerto.util.Pair;
 
 import javax.sound.sampled.UnsupportedAudioFileException;
 import java.io.IOException;

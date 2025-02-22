@@ -1,12 +1,12 @@
 package top.gregtao.concerto.command.builder;
 
 import com.mojang.brigadier.context.CommandContext;
-import com.mojang.datafixers.util.Pair;
 import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.text.Text;
 import top.gregtao.concerto.music.Music;
 import top.gregtao.concerto.player.MusicPlayer;
+import top.gregtao.concerto.util.Pair;
 
 import java.util.List;
 import java.util.function.Supplier;

@@ -23,10 +23,7 @@ import top.gregtao.concerto.util.MathUtil;
 import top.gregtao.concerto.util.Pair;
 
 import java.net.http.HttpResponse;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 
 public class NeteaseCloudApiClient extends HttpApiClient {
@@ -126,9 +123,21 @@ public class NeteaseCloudApiClient extends HttpApiClient {
         ArrayList<Music> music = new ArrayList<>();
         String createTime = "";
         if (!simply) {
+            HashSet<String> ids = new HashSet<>();
             JsonArray array = object.getAsJsonArray("tracks");
-            array.forEach(element -> music.add(new NeteaseCloudMusic(element.getAsJsonObject(), level)));
+            array.forEach(element -> {
+                NeteaseCloudMusic nm = new NeteaseCloudMusic(element.getAsJsonObject(), level);
+                ids.add(nm.getId());
+                music.add(nm);
+            });
+            JsonArray array1 = object.getAsJsonArray("trackIds");
+            array1.forEach(element -> {
+                String id = element.getAsJsonObject().get("id").getAsString();
+                if (!ids.contains(id)) music.add(new NeteaseCloudMusic(id, level));
+            });
+            System.out.println(music.size());
             createTime = MathUtil.formattedTime(object.get("createTime").getAsString());
+            MusicPlayerHandler.loadInThreadPool(music);
         }
         String name = object.get("name").getAsString();
         JsonObject creator = object.getAsJsonObject("creator");

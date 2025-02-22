@@ -180,7 +180,7 @@ public class MusicCommand {
         ).then(
                 ClientCommandManager.literal("like").executes(context -> {
                     ClientPlayerEntity clientPlayer = context.getSource().getPlayer();
-                    Music music = MusicPlayerHandler.INSTANCE.currentMusic;
+                    Music music = MusicPlayerHandler.INSTANCE.getCurrentMusic();
                     if (music instanceof Likeable likeable) {
                         CompletableFuture.supplyAsync(likeable::likeIt, MusicPlayer.RUNNERS_POOL).thenAcceptAsync(success ->
                                 clientPlayer.sendMessage(success ? Text.translatable("concerto.like",
@@ -194,7 +194,7 @@ public class MusicCommand {
         ).then(
                 ClientCommandManager.literal("unlike").executes(context -> {
                     ClientPlayerEntity clientPlayer = context.getSource().getPlayer();
-                    Music music = MusicPlayerHandler.INSTANCE.currentMusic;
+                    Music music = MusicPlayerHandler.INSTANCE.getCurrentMusic();
                     if (music instanceof Likeable likeable) {
                         CompletableFuture.supplyAsync(likeable::dislikeIt, MusicPlayer.RUNNERS_POOL).thenAcceptAsync(success ->
                                 clientPlayer.sendMessage(success ? Text.translatable("concerto.dislike",
@@ -206,8 +206,13 @@ public class MusicCommand {
                     return 0;
                 })
         ).then(
+                ClientCommandManager.literal("download-current").executes(context -> {
+                    MusicPlayerHandler.downloadMusics(List.of(MusicPlayerHandler.INSTANCE.getCurrentMusic()));
+                    return 0;
+                })
+        ).then(
                 ClientCommandManager.literal("download-all").executes(context -> {
-                    MusicPlayerHandler.downloadPlaylist(MusicPlayerHandler.INSTANCE.getMusicList());
+                    MusicPlayerHandler.downloadMusics(MusicPlayerHandler.INSTANCE.getMusicList());
                     return 0;
                 })
         ).then(

@@ -287,7 +287,7 @@ public class MusicPlayerHandler {
         return ILLEGAL_CHARS.matcher(str).replaceAll(" ");
     }
 
-    public static void downloadPlaylist(List<Music> musics) {
+    public static void downloadMusics(List<Music> musics) {
         MusicPlayer.run(() -> {
             File file = new File("Concerto/Downloads");
             if (!file.exists() || !file.isDirectory()) {

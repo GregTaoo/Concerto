@@ -12,6 +12,7 @@ import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.command.CommandRegistryAccess;
 import net.minecraft.text.Text;
 import top.gregtao.concerto.api.CacheableMusic;
+import top.gregtao.concerto.api.Likeable;
 import top.gregtao.concerto.config.MusicCacheManager;
 import top.gregtao.concerto.config.PresetRadioConfig;
 import top.gregtao.concerto.music.list.FixedPlaylist;
@@ -35,6 +36,7 @@ import java.io.File;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 public class MusicCommand {
 
@@ -172,6 +174,34 @@ public class MusicCommand {
                         });
                     } else {
                         clientPlayer.sendMessage(Text.translatable("concerto.not_cacheable"), false);
+                    }
+                    return 0;
+                })
+        ).then(
+                ClientCommandManager.literal("like").executes(context -> {
+                    ClientPlayerEntity clientPlayer = context.getSource().getPlayer();
+                    Music music = MusicPlayerHandler.INSTANCE.currentMusic;
+                    if (music instanceof Likeable likeable) {
+                        CompletableFuture.supplyAsync(likeable::likeIt, MusicPlayer.RUNNERS_POOL).thenAcceptAsync(success ->
+                                clientPlayer.sendMessage(success ? Text.translatable("concerto.like",
+                                        music.getMeta().title(), music.getMeta().getSource()) :
+                                        Text.translatable("concerto.fail"), false), MusicPlayer.RUNNERS_POOL);
+                    } else {
+                        clientPlayer.sendMessage(Text.translatable("concerto.error.unsupported_operation"), false);
+                    }
+                    return 0;
+                })
+        ).then(
+                ClientCommandManager.literal("unlike").executes(context -> {
+                    ClientPlayerEntity clientPlayer = context.getSource().getPlayer();
+                    Music music = MusicPlayerHandler.INSTANCE.currentMusic;
+                    if (music instanceof Likeable likeable) {
+                        CompletableFuture.supplyAsync(likeable::dislikeIt, MusicPlayer.RUNNERS_POOL).thenAcceptAsync(success ->
+                                clientPlayer.sendMessage(success ? Text.translatable("concerto.dislike",
+                                        music.getMeta().title(), music.getMeta().getSource()) :
+                                        Text.translatable("concerto.fail"), false), MusicPlayer.RUNNERS_POOL);
+                    } else {
+                        clientPlayer.sendMessage(Text.translatable("concerto.error.unsupported_operation"), false);
                     }
                     return 0;
                 })

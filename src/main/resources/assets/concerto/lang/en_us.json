@@ -183,5 +183,9 @@
   "concerto.room.op": "Set %s to op of music room",
   "concerto.room.members": "Owner: %s; Members: %s.",
 
-  "concerto.error.invalid_path": "Invalid path or file format"
+  "concerto.like": "Liked music %s from %s",
+  "concerto.dislike": "Disliked music %s from %s",
+
+  "concerto.error.invalid_path": "Invalid path or file format",
+  "concerto.error.unsupported_operation": "Unsupported Operation!"
 }

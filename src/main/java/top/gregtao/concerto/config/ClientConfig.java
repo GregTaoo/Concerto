@@ -9,6 +9,10 @@ public class ClientConfig extends ConfigFile {
 
     public ClientConfigOptions options = new ClientConfigOptions();
 
+    public PositionXYSupplier lyricsPosSupplier, subLyricsPosSupplier, musicDetailsPosSupplier, timeProgressPosSupplier;
+
+    public HexSupplier timeProgressColor, timeProgressBgColor;
+
     public ClientConfig() {
         super("Concerto/client_config.json");
     }
@@ -21,6 +25,14 @@ public class ClientConfig extends ConfigFile {
 
         MusicCacheManager.INSTANCE = new MusicCacheManager(this.options.maxCacheSize);
         CacheManager.IMAGE_CACHE_MANAGER = new CacheManager("images", this.options.maxCacheSize);
+
+        this.lyricsPosSupplier = new PositionXYSupplier(this.options.lyricsPosition);
+        this.subLyricsPosSupplier = new PositionXYSupplier(this.options.subLyricsPosition);
+        this.musicDetailsPosSupplier = new PositionXYSupplier(this.options.musicDetailsPosition);
+        this.timeProgressPosSupplier = new PositionXYSupplier(this.options.timeProgressPosition);
+
+        this.timeProgressColor = new HexSupplier(this.options.timeProgressColor);
+        this.timeProgressBgColor = new HexSupplier(this.options.timeProgressBgColor);
     }
 
     public void writeOptions() {
@@ -44,32 +56,75 @@ public class ClientConfig extends ConfigFile {
         public boolean displayTimeProgress = true;
         public String timeProgressPosition = "1-5,0+15";
         public TextAlignment timeProgressAlignment = TextAlignment.RIGHT;
+        public String timeProgressColor = "#ff0155bc";
+        public String timeProgressBgColor = "#ffa1c7f6";
     }
 
-    public static Vector2i parsePosition(String str, int width, int height) {
-        String[] xy = str.split(",");
-        if (xy.length != 2) return new Vector2i(0, 0);
-        int x = parsePositionXY(xy[0], width), y = parsePositionXY(xy[1], height);
-        return new Vector2i(x, y);
+    public static class PositionXYSupplier {
+        private final PositionSupplier x, y;
+
+        public PositionXYSupplier(String str) {
+            String[] strings = str.split(",");
+            this.x = new PositionSupplier(strings[0]);
+            this.y = new PositionSupplier(strings[1]);
+        }
+
+        public int getX(int width) {
+            return this.x.getPosition(width);
+        }
+
+        public int getY(int height) {
+            return this.y.getPosition(height);
+        }
+
+        public Vector2i getPos(int width, int height) {
+            return new Vector2i(this.getX(width), this.getY(height));
+        }
     }
 
-    private static int parsePositionXY(String str, int widthOrHeight) {
-        if (str.contains("+")) {
-            String[] strings = str.split("\\+");
+    public static class PositionSupplier {
+        private float percentage;
+        private int delta = 0;
+
+        public PositionSupplier(String str) {
             try {
-                return strings.length != 2 ? 0 : (int) (Float.parseFloat(strings[0]) * widthOrHeight + Integer.parseInt(strings[1]));
-            } catch (NumberFormatException e) {
-                return 0;
+                if (str.contains("+")) {
+                    String[] strings = str.split("\\+");
+                    this.percentage = Float.parseFloat(strings[0]);
+                    this.delta = Integer.parseInt(strings[1]);
+                } else if (str.contains("-")) {
+                    String[] strings = str.split("-");
+                    this.percentage = Float.parseFloat(strings[0]);
+                    this.delta = -Integer.parseInt(strings[1]);
+                } else {
+                    this.percentage = Float.parseFloat(str);
+                }
+            } catch (NumberFormatException | IndexOutOfBoundsException e) {
+                this.percentage = this.delta = 0;
             }
-        } else if (str.contains("-")) {
-            String[] strings = str.split("-");
+        }
+
+        public int getPosition(int total) {
+            return (int) (total * this.percentage) + this.delta;
+        }
+    }
+
+    public static class HexSupplier {
+        public long number;
+
+        public HexSupplier(String str) {
             try {
-                return strings.length != 2 ? 0 : (int) (Float.parseFloat(strings[0]) * widthOrHeight - Integer.parseInt(strings[1]));
+                str = str.toLowerCase();
+                str = str.startsWith("0x") ? str.substring(2) : str;
+                str = str.startsWith("#") ? str.substring(1) : str;
+                this.number = Long.parseLong(str, 16);
             } catch (NumberFormatException e) {
-                return 0;
+                this.number = 0;
             }
-        } else {
-            return (int) (Float.parseFloat(str) * widthOrHeight);
+        }
+
+        public long getNumber() {
+            return this.number;
         }
     }
 }

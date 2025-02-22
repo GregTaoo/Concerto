@@ -22,7 +22,7 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 
-public class NeteaseCloudMusic extends Music implements CacheableMusic, DynamicPath {
+public class NeteaseCloudMusic extends Music implements CacheableMusic, DynamicPath, Likeable {
     private final String id;
     private final Level level;
     private String rawPath, rawLyrics, rawSubLyrics;
@@ -132,6 +132,16 @@ public class NeteaseCloudMusic extends Music implements CacheableMusic, DynamicP
     @Override
     public Music getMusic() {
         return this;
+    }
+
+    @Override
+    public boolean likeIt() {
+        return NeteaseCloudApiClient.LOCAL_USER.likeMusic(this);
+    }
+
+    @Override
+    public boolean dislikeIt() {
+        return NeteaseCloudApiClient.LOCAL_USER.dislikeMusic(this);
     }
 
     public enum Level implements SimpleStringIdentifiable {

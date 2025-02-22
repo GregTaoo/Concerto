@@ -135,7 +135,6 @@ public class NeteaseCloudApiClient extends HttpApiClient {
                 String id = element.getAsJsonObject().get("id").getAsString();
                 if (!ids.contains(id)) music.add(new NeteaseCloudMusic(id, level));
             });
-            System.out.println(music.size());
             createTime = MathUtil.formattedTime(object.get("createTime").getAsString());
             MusicPlayerHandler.loadInThreadPool(music);
         }

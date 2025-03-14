@@ -2,23 +2,72 @@ package top.gregtao.concerto.http.qq;
 
 import top.gregtao.concerto.util.HashUtil;
 
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 public class QQMusicApiEncrypt {
 
-    //    // Original source by: https://blog.csdn.net/qq_23594799/article/details/111477320, https://blog.csdn.net/qq_37438485/article/details/124420854
-    //
-    //    private static final String ENCRYPT_STATIC = "CJBPACrRuNy7";
-    //    private static final String PREFIX = "zzb";
-    //
-    //    /**
-    //     * @param body 需要加密的参数，这是一段请求体数据，为json字符串格式，例如下面的格式，可以抓包获取
-    //     *                 {"comm":{"ct":24,"cv":0},"vip":{"module":"userInfo…baseinfo_v2","param":{"vec_uin":["3011429848"]}}}
-    //     * @return 加密的方式为固定字串 zza + 10-16位的随机字符串 + (CJBPACrRuNy7 + 请求数据)的MD5值
-    //     */
-    //    public static String getSign(String body){
-    //        return PREFIX + UUID.randomUUID().toString().replaceAll("-", "") + HashUtil.md5(ENCRYPT_STATIC + body);
-    //    }
+    // Code by: https://github.com/jixunmoe/qmweb-sign, MIT license
+    public static class ZzcSign {
+        private static final int[] PART_1_INDEXES = {23, 14, 6, 36, 16, 40, 7, 19};
+        private static final int[] PART_2_INDEXES = {16, 1, 32, 12, 19, 27, 8, 5};
+        private static final int[] SCRAMBLE_VALUES = {89, 39, 179, 150, 218, 82, 58, 252, 177, 52, 186, 123, 120, 64, 242, 133, 143, 161, 121, 179};
+
+        public static String getSign(String payload) {
+            String hash = HashUtil.sha1(payload);
+
+            StringBuilder part1 = new StringBuilder();
+            for (int index : PART_1_INDEXES) {
+                if (index < hash.length()) {
+                    part1.append(hash.charAt(index));
+                }
+            }
+
+            StringBuilder part2 = new StringBuilder();
+            for (int index : PART_2_INDEXES) {
+                if (index < hash.length()) {
+                    part2.append(hash.charAt(index));
+                }
+            }
+
+            StringBuilder part3 = new StringBuilder();
+
+            for (int i = 0; i < SCRAMBLE_VALUES.length; i++) {
+                int scramble = SCRAMBLE_VALUES[i];
+                int value = Integer.parseInt(hash.substring(i * 2, i * 2 + 2), 16);
+                part3.append((char) (scramble ^ value));
+            }
+
+            String b64Part = Base64.getEncoder().encodeToString(part3.toString().getBytes(StandardCharsets.UTF_8));
+            b64Part = b64Part.replaceAll("[/+=]", "");
+
+//            byte[] part3 = new byte[20];
+//            for (int i = 0; i < SCRAMBLE_VALUES.length; i++) {
+//                int value = SCRAMBLE_VALUES[i] ^ Integer.parseInt(hash.substring(i * 2, i * 2 + 2), 16);
+//                part3[i] = (byte) value;
+//            }
+//
+//            String b64Part = Base64.getEncoder().encodeToString(part3)
+//                    .replaceAll("[/+=]", "")
+//                    .toLowerCase();
+
+            return "zzc" + (part1 + b64Part + part2).toLowerCase();
+        }
+    }
+
+    /**
+     * Original source by: https://blog.csdn.net/qq_23594799/article/details/111477320, https://blog.csdn.net/qq_37438485/article/details/124420854
+     * private static final String ENCRYPT_STATIC = "CJBPACrRuNy7";
+     * private static final String PREFIX = "zzb";
+     * <p>
+     *     * @param body 需要加密的参数，这是一段请求体数据，为json字符串格式，例如下面的格式，可以抓包获取
+     *     *                 {"comm":{"ct":24,"cv":0},"vip":{"module":"userInfo…baseinfo_v2","param":{"vec_uin":["3011429848"]}}}
+     *     * @return 加密的方式为固定字串 zza + 10-16位的随机字符串 + (CJBPACrRuNy7 + 请求数据)的MD5值
+     * <p>
+     *    public static String getSign(String body){
+     *        return PREFIX + UUID.randomUUID().toString().replaceAll("-", "") + HashUtil.md5(ENCRYPT_STATIC + body);
+     *    }
+     */
     public static class Sign {
 
         private static void test(List<Integer> resNum, int a, int b, int c) {

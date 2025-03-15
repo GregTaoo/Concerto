@@ -92,6 +92,11 @@ public class QQMusic extends Music implements CacheableMusic, DynamicPath {
         }
     }
 
+    @Override
+    public String getLink() {
+        return "https://y.qq.com/n/ryqq/songDetail/" + this.mid;
+    }
+
     public String getRawPath() {
         return this.rawPath = QQMusicApiClient.INSTANCE.getMusicLink(this.mid, this.mediaMid);
     }

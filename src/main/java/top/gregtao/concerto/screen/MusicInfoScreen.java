@@ -10,7 +10,7 @@ import top.gregtao.concerto.player.MusicPlayer;
 import top.gregtao.concerto.screen.widget.URLImageWidget;
 
 import java.net.MalformedURLException;
-import java.net.URL;
+import java.net.URI;
 
 public class MusicInfoScreen extends ConcertoScreen {
 
@@ -35,19 +35,28 @@ public class MusicInfoScreen extends ConcertoScreen {
         this.addDrawableChild(ButtonWidget.builder(
                 Text.translatable("concerto.screen.play"),
                 button -> MusicPlayer.INSTANCE.addMusicHere(this.music, true)
-        ).position(this.width / 2 + 65, this.height - 30).size(50, 20).build());
+        ).position(this.width - 190, this.height - 30).size(50, 20).build());
 
         this.addDrawableChild(ButtonWidget.builder(
                 Text.translatable("concerto.screen.add"),
                 button -> MusicPlayer.INSTANCE.addMusic(this.music)
-        ).position(this.width / 2 + 120, this.height - 30).size(50, 20).build());
+        ).position(this.width - 135, this.height - 30).size(50, 20).build());
+
+        this.addDrawableChild(ButtonWidget.builder(
+                Text.translatable("concerto.screen.copy_link"),
+                button -> {
+                    if (this.client != null) {
+                        this.client.keyboard.setClipboard(this.music.getLink());
+                    }
+                }
+        ).position(this.width - 80, this.height - 30).size(50, 20).build());
     }
 
     private void initInfo() {
         MusicMetaData meta = this.music.getMeta();
         try {
             if (!meta.headPictureUrl().isEmpty()) {
-                this.headPicture.setUrl(new URL(meta.headPictureUrl()));
+                this.headPicture.setUrl(URI.create(meta.headPictureUrl()).toURL());
                 this.headPicture.loadImage();
             }
         } catch (MalformedURLException e) {

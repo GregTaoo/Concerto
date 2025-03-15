@@ -47,6 +47,11 @@ public class NeteaseCloudMusic extends Music implements CacheableMusic, DynamicP
         }
     }
 
+    @Override
+    public String getLink() {
+        return "https://music.163.com/song?id=" + this.getId();
+    }
+
     public String getRawPath() {
         JsonObject object = NeteaseCloudApiClient.INSTANCE.getMusicLink(this.id, this.level)
                 .getAsJsonArray("data").get(0).getAsJsonObject();

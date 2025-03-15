@@ -41,6 +41,11 @@ public class BilibiliMusic extends Music implements CacheableMusic {
         }
     }
 
+    @Override
+    public String getLink() {
+        return "https://www.bilibili.com/video/" + this.bvid;
+    }
+
     public String getRawPath() {
         return BilibiliApiClient.INSTANCE.getDirectAudioUrl(this.aid, this.cid);
     }

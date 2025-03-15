@@ -60,4 +60,6 @@ public abstract class Music implements JsonParsable<Music>, LazyLoadable, WithMe
     }
 
     public abstract InputStream getMusicSource() throws MusicSourceNotFoundException;
+
+    public abstract String getLink();
 }

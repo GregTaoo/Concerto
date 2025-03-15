@@ -93,6 +93,7 @@
   "concerto.screen.confirmation": "Accepted shared musics",
   "concerto.screen.audition.permission_denied": "You don't have such permissions",
   "concerto.screen.daily_recommendation": "Daily Recommendation",
+  "concerto.screen.copy_link": "Copy link",
 
   "concerto.screen.add.local_file": "Local File:",
   "concerto.screen.add.local_file.folder": "Local File Path:",

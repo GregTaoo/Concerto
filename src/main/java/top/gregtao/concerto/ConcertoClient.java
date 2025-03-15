@@ -66,7 +66,7 @@ public class ConcertoClient implements ClientModInitializer {
 					ClientConfig.INSTANCE.readOptions();
 					MusicPlayer.INSTANCE.reloadConfig(() -> LOGGER.info("Loaded general music playlist"));
 					NeteaseCloudApiClient.LOCAL_USER.updateLoginStatus();
-					QQMusicApiClient.LOCAL_USER.logout(); // TODO: Fix cookies of QQ Music
+					QQMusicApiClient.LOCAL_USER.updateLoginStatus();
 				});
 			}
 		});

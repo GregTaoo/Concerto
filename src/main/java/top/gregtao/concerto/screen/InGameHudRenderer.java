@@ -6,6 +6,7 @@ import net.minecraft.client.gui.screen.ChatScreen;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import org.joml.Vector2i;
+import top.gregtao.concerto.ConcertoClient;
 import top.gregtao.concerto.config.ClientConfig;
 import top.gregtao.concerto.player.MusicPlayer;
 import top.gregtao.concerto.player.MusicPlayerHandler;
@@ -34,7 +35,9 @@ public class InGameHudRenderer {
                 }
                 if (options.displayMusicDetails) {
                     Vector2i pos = ClientConfig.INSTANCE.musicDetailsPosSupplier.getPos(scaledWidth, scaledHeight);
-                    TextUtil.renderText(Text.literal(texts[2]), options.musicDetailsAlignment,
+                    String state = ConcertoClient.clientState == ConcertoClient.ClientState.MUSIC_AGENT ? " | AGENT" :
+                            (ConcertoClient.clientState == ConcertoClient.ClientState.MUSIC_ROOM ? " | ROOM" : "");
+                    TextUtil.renderText(Text.literal(texts[2] + state), options.musicDetailsAlignment,
                             pos.x, pos.y, context, client.textRenderer, 0xffffffff);
                 }
                 if (options.displayTimeProgress) {

@@ -44,6 +44,7 @@ public class ClientMusicNetworkHandler {
             case AUDITION_SYNC -> auditionDataSyncReceiver(payload, context);
             case MUSIC_ROOM -> MusicRoom.clientReceiver(payload, context);
             case PRESET_RADIOS -> presetRadiosReceiver(payload, context);
+            case MUSIC_AGENT -> musicAgentMusicReceiver(payload, context);
         }
     }
 
@@ -188,6 +189,50 @@ public class ClientMusicNetworkHandler {
             if (client != null && client.currentScreen instanceof PresetRadiosScreen screen) {
                 screen.reset();
             }
+        });
+    }
+
+    public static void musicAgentJoin() {
+        ClientPlayNetworking.send(new ConcertoPayload(ConcertoPayload.Channel.MUSIC_AGENT, "Join"));
+        ConcertoClient.clientState = ConcertoClient.ClientState.MUSIC_AGENT;
+    }
+
+    public static void musicAgentQuit() {
+        ClientPlayNetworking.send(new ConcertoPayload(ConcertoPayload.Channel.MUSIC_AGENT, "Quit"));
+        ConcertoClient.clientState = ConcertoClient.ClientState.LOCAL;
+    }
+
+    public static void musicAgentNewVote() {
+        ClientPlayNetworking.send(new ConcertoPayload(ConcertoPayload.Channel.MUSIC_AGENT, "Vote:New"));
+    }
+
+    public static void musicAgentQuery() {
+        ClientPlayNetworking.send(new ConcertoPayload(ConcertoPayload.Channel.MUSIC_AGENT, "Query"));
+    }
+
+    public static void musicAgentVote(boolean vote) {
+        ClientPlayNetworking.send(new ConcertoPayload(ConcertoPayload.Channel.MUSIC_AGENT, "Vote:" + (vote ? "1" : "0")));
+    }
+
+    public static boolean musicAgentAddCurrentMusic() {
+        return MusicPlayerHandler.INSTANCE.getCurrentMusic() != null &&
+                musicAgentAddMusic(MusicPlayerHandler.INSTANCE.getCurrentMusic());
+    }
+
+    public static boolean musicAgentAddMusic(Music music) {
+        JsonObject object = MusicJsonParsers.to(music);
+        if (object == null) return false;
+        ClientPlayNetworking.send(new ConcertoPayload(ConcertoPayload.Channel.MUSIC_AGENT,
+                "Add:" +  TextUtil.toBase64(object.toString())));
+        return true;
+    }
+
+    public static void musicAgentMusicReceiver(ConcertoPayload payload, ClientPlayNetworking.Context context) {
+        String[] args = payload.string.split(":");
+        if (args.length < 2 || ConcertoClient.clientState != ConcertoClient.ClientState.MUSIC_AGENT) return;
+        MusicPlayer.run(() -> {
+            Music music = MusicJsonParsers.from(TextUtil.fromBase64(args[0]));
+            if (music != null) MusicPlayer.INSTANCE.playTempMusic(music);
         });
     }
 }

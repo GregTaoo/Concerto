@@ -1,17 +1,20 @@
 package top.gregtao.concerto.network;
 
+import com.google.gson.JsonObject;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.PlayerManager;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
+import net.minecraft.util.Formatting;
 import org.jetbrains.annotations.Nullable;
 import top.gregtao.concerto.ConcertoServer;
 import top.gregtao.concerto.api.MusicJsonParsers;
 import top.gregtao.concerto.command.ConcertoServerCommand;
 import top.gregtao.concerto.config.PresetRadioConfig;
 import top.gregtao.concerto.config.ServerConfig;
+import top.gregtao.concerto.music.Music;
 import top.gregtao.concerto.music.meta.music.MusicMetaData;
 import top.gregtao.concerto.util.TextUtil;
 
@@ -36,6 +39,7 @@ public class ServerMusicNetworkHandler {
         switch (payload.channel) {
             case MUSIC_DATA -> musicDataReceiver(payload, context);
             case MUSIC_ROOM -> MusicRoom.serverReceiver(payload, context);
+            case MUSIC_AGENT -> musicAgentReceiver(payload, context);
         }
     }
 
@@ -199,7 +203,8 @@ public class ServerMusicNetworkHandler {
     }
 
     public static void playerJoinHandshake(ServerPlayerEntity player) {
-        ConcertoPayload payload = new ConcertoPayload(ConcertoPayload.Channel.HANDSHAKE, ConcertoNetworking.HANDSHAKE_STRING + "CallJoin:" + player.getName().getString());
+        ConcertoPayload payload = new ConcertoPayload(ConcertoPayload.Channel.HANDSHAKE,
+                ConcertoNetworking.HANDSHAKE_STRING + "CallJoin:" + player.getName().getString());
         ServerPlayNetworking.send(player, payload);
         sendS2CAllAuditionData(player);
         sendS2CPresetRadiosPacket(player);
@@ -207,5 +212,74 @@ public class ServerMusicNetworkHandler {
 
     public static boolean playerExist(PlayerManager manager, String name) {
         return name.equals("@a") || (manager.getPlayer(name) != null);
+    }
+
+    public static void musicAgentSendMusic(ServerPlayerEntity player, Music music, long time) {
+        JsonObject object = MusicJsonParsers.to(music, true);
+        if (object == null) return;
+        musicAgentSendMusic(player, object.toString(), time);
+    }
+
+    public static void musicAgentSendMusic(ServerPlayerEntity player, String music, long time) {
+        ConcertoPayload payload = new ConcertoPayload(ConcertoPayload.Channel.MUSIC_AGENT,
+                TextUtil.toBase64(music) + ":" + time);
+        ServerPlayNetworking.send(player, payload);
+    }
+
+    public static void musicAgentSendMusic(List<ServerPlayerEntity> players, Music music, long time) {
+        JsonObject object = MusicJsonParsers.to(music, true);
+        if (object == null) return;
+        players.forEach(player -> musicAgentSendMusic(player, object.toString(), time));
+    }
+
+    public static void musicAgentReceiver(ConcertoPayload payload, ServerPlayNetworking.Context context) {
+        String[] args = payload.string.split(":");
+        if (args[0].equals("Join")) {
+            ServerMusicAgent.INSTANCE.playerJoin(context.player());
+            context.player().sendMessage(Text.translatable("concerto.agent.join"));
+        } else if (args[0].equals("Quit")) {
+            ServerMusicAgent.INSTANCE.playerQuit(context.player());
+            context.player().sendMessage(Text.translatable("concerto.agent.quit"));
+        } else if (args[0].equals("Query")) {
+            List<Music> list = ServerMusicAgent.INSTANCE.getMusicQueue();
+            context.player().sendMessage(TextUtil.PAGE_SPLIT);
+            list.forEach(music -> context.player().sendMessage(Text.literal(music.getMeta().title())));
+            context.player().sendMessage(TextUtil.PAGE_SPLIT);
+        } else if (args.length < 2 || !ServerMusicAgent.INSTANCE.isMember(context.player())) {
+            context.player().sendMessage(Text.translatable("concerto.agent.error"));
+        } else if (args[0].equals("Vote")) {
+            if (args[1].equals("New")) {
+                if (ServerMusicAgent.INSTANCE.receiveVoteRequest()) {
+                    ServerMusicAgent.INSTANCE.getMembers().forEach(ServerMusicNetworkHandler::sendVote2Member);
+                } else {
+                    context.player().sendMessage(Text.translatable("concerto.agent.error"));
+                }
+            } else if (args[1].length() == 1) {
+                ServerMusicAgent.INSTANCE.receiveVote(context.player(), args[1].equals("1"));
+            } else {
+                context.player().sendMessage(Text.translatable("concerto.agent.error"));
+            }
+        } else if (args[0].equals("Add")) {
+            Music music = MusicJsonParsers.from(TextUtil.fromBase64(args[1]));
+            if (music != null && music.isLoaded()) {
+                ServerMusicAgent.INSTANCE.addMusic(music);
+            } else {
+                context.player().sendMessage(Text.translatable("concerto.agent.error"));
+            }
+        }
+    }
+
+    public static void sendVote2Member(ServerPlayerEntity player) {
+        player.sendMessage(TextUtil.PAGE_SPLIT);
+        player.sendMessage(Text.translatable("concerto.agent.vote")
+                .append(Text.literal("  ["))
+                .append(Text.translatable("concerto.accept").setStyle(
+                        TextUtil.getRunCommandStyle("/musicroom agent vote true").withColor(Formatting.GREEN)))
+                .append(Text.literal("]"))
+                .append(Text.literal("  ["))
+                .append(Text.translatable("concerto.reject").setStyle(
+                        TextUtil.getRunCommandStyle("/musicroom agent vote false").withColor(Formatting.RED)))
+                .append(Text.literal("]")));
+        player.sendMessage(TextUtil.PAGE_SPLIT);
     }
 }

@@ -22,6 +22,7 @@ public class MinecraftClientMixin {
         MusicAuditionScreen.WAIT_AUDITION.clear();
         MusicPlayer.INSTANCE.pause();
         MusicRoom.CLIENT_ROOM = null;
+        ConcertoClient.clientState = ConcertoClient.ClientState.LOCAL;
         ConcertoClient.LOGGER.info("Exited from server. Functions of server side are unavailable now.");
     }
 }

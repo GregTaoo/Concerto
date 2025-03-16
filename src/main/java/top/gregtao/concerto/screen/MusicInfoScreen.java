@@ -6,6 +6,7 @@ import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.text.Text;
 import top.gregtao.concerto.music.Music;
 import top.gregtao.concerto.music.meta.music.MusicMetaData;
+import top.gregtao.concerto.network.ClientMusicNetworkHandler;
 import top.gregtao.concerto.player.MusicPlayer;
 import top.gregtao.concerto.screen.widget.URLImageWidget;
 
@@ -31,6 +32,11 @@ public class MusicInfoScreen extends ConcertoScreen {
             this.music.getMeta();
             this.initInfo();
         });
+
+        this.addDrawableChild(ButtonWidget.builder(
+                Text.translatable("concerto.screen.request"),
+                button -> ClientMusicNetworkHandler.musicAgentAddMusic(this.music)
+        ).position(this.width - 245, this.height - 30).size(50, 20).build());
 
         this.addDrawableChild(ButtonWidget.builder(
                 Text.translatable("concerto.screen.play"),

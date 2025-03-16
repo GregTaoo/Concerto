@@ -263,6 +263,7 @@ public class MusicRoom {
         switch (args[0]) {
             case "REM": {
                 CLIENT_ROOM = null;
+                ConcertoClient.clientState = ConcertoClient.ClientState.LOCAL;
                 break;
             }
             case "JOI": {
@@ -287,6 +288,7 @@ public class MusicRoom {
                             if (CLIENT_ROOM.pause) MusicPlayer.INSTANCE.pause();
                         });
                     }
+                    ConcertoClient.clientState = ConcertoClient.ClientState.MUSIC_ROOM;
                     player.sendMessage(Text.translatable("concerto.room.join", uuid1.toString()), false);
                 } catch (NullPointerException | IllegalArgumentException e) {
                     ConcertoClient.LOGGER.warn(e.toString());
@@ -299,6 +301,7 @@ public class MusicRoom {
                 try {
                     UUID uuid1 = UUID.fromString(args[1]);
                     if (CLIENT_ROOM.uuid.compareTo(uuid1) == 0) CLIENT_ROOM = null;
+                    ConcertoClient.clientState = ConcertoClient.ClientState.LOCAL;
                     player.sendMessage(Text.translatable("concerto.room.quit", uuid1.toString()), false);
                 } catch (NullPointerException | IllegalArgumentException e) {
                     ConcertoClient.LOGGER.warn(e.toString());

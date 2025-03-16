@@ -36,6 +36,8 @@ public class ConcertoClient implements ClientModInitializer {
 	// ======================================================
 	// Server States
 
+	public static ClientState clientState = ClientState.LOCAL;
+
 	public static boolean serverAvailable = false;
 
 	public static List<Playlist> presetRadios = List.of();
@@ -43,6 +45,12 @@ public class ConcertoClient implements ClientModInitializer {
 	public static boolean isServerAvailable() {
 		return serverAvailable || MinecraftClient.getInstance().isInSingleplayer();
 //		return serverAvailable; // DEBUG
+	}
+
+	public enum ClientState {
+		LOCAL,
+		MUSIC_ROOM,
+		MUSIC_AGENT
 	}
 
 	// ======================================================

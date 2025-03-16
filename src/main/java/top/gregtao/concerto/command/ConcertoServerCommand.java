@@ -11,6 +11,7 @@ import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import top.gregtao.concerto.ConcertoServer;
 import top.gregtao.concerto.network.MusicDataPacket;
+import top.gregtao.concerto.network.ServerMusicAgent;
 import top.gregtao.concerto.network.ServerMusicNetworkHandler;
 import top.gregtao.concerto.player.MusicPlayer;
 import top.gregtao.concerto.util.TextUtil;
@@ -75,10 +76,16 @@ public class ConcertoServerCommand {
                 ).then(
                         CommandManager.literal("fetch-radios")
                                 .requires(source -> source.hasPermissionLevel(0)).executes(context -> {
-                            ServerPlayerEntity player = context.getSource().getPlayer();
-                            if (player != null) ServerMusicNetworkHandler.sendS2CPresetRadiosPacket(player);
-                            return 0;
-                        })
+                                    ServerPlayerEntity player = context.getSource().getPlayer();
+                                    if (player != null) ServerMusicNetworkHandler.sendS2CPresetRadiosPacket(player);
+                                    return 0;
+                                })
+                ).then(
+                        CommandManager.literal("reset-agent")
+                                .requires(source -> source.hasPermissionLevel(2)).executes(context -> {
+                                    ServerMusicAgent.INSTANCE.reset();
+                                    return 0;
+                                })
                 )
         );
     }
@@ -87,11 +94,11 @@ public class ConcertoServerCommand {
         return Text.translatable("concerto.audit.message", name, title)
                 .append(Text.literal("  ["))
                 .append(Text.translatable("concerto.accept").setStyle(
-                        TextUtil.getRunCommandStyle("/audit " + uuid).withColor(Formatting.GREEN)))
+                        TextUtil.getRunCommandStyle("/concerto-server audit " + uuid).withColor(Formatting.GREEN)))
                 .append(Text.literal("]"))
                 .append(Text.literal("  ["))
                 .append(Text.translatable("concerto.reject").setStyle(
-                        TextUtil.getRunCommandStyle("/audit reject " + uuid).withColor(Formatting.RED)))
+                        TextUtil.getRunCommandStyle("/concerto-server audit reject " + uuid).withColor(Formatting.RED)))
                 .append(Text.literal("]"));
     }
 }

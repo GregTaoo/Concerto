@@ -22,6 +22,7 @@ public class ServerMusicAgent {
     private volatile boolean isVoting = false;
     private final List<ServerPlayerEntity> yesVoters = new ArrayList<>();
     private final List<ServerPlayerEntity> noVoters = new ArrayList<>();
+    private ScheduledFuture<?> voteFuture;
 
     private final ScheduledExecutorService musicScheduler = Executors.newScheduledThreadPool(1);
     private ScheduledFuture<?> playNextFuture;
@@ -39,7 +40,7 @@ public class ServerMusicAgent {
             this.isVoting = true;
             this.yesVoters.clear();
             this.noVoters.clear();
-            this.voteScheduler.schedule(this::endVoting, 15, TimeUnit.SECONDS);
+            this.voteFuture = this.voteScheduler.schedule(this::endVoting, 15, TimeUnit.SECONDS);
 
             this.voteLock.unlock();
 
@@ -61,6 +62,10 @@ public class ServerMusicAgent {
             }
             this.voteLock.lock();
             (vote ? this.yesVoters : this.noVoters).add(player);
+            if (this.yesVoters.size() + this.noVoters.size() == this.members.size() &&
+                    this.voteFuture.cancel(false)) {
+                this.endVoting();
+            }
             this.voteLock.unlock();
             player.sendMessage(Text.translatable("concerto.agent.vote", vote ?
                     Text.translatable("concerto.accept") : Text.translatable("concerto.reject")));

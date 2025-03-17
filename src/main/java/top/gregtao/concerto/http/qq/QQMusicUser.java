@@ -39,7 +39,7 @@ public class QQMusicUser {
 
     public List<QQMusicPlaylist> getUserPlaylists() {
         try {
-            JsonObject object = QQMusicApiClient.parseJson(this.apiClient.openCApi().url("https://c.y.qq.com/rsc/fcgi-bin/fcg_get_profile_homepage.fcg?_=" + QQMusicApiClient.getQQLoginTimestamp() + "&cv=4747474&ct=20&format=json&inCharset=utf-8&outCharset=utf-8&notice=0&platform=yqq.json&uin=" + this.apiClient.getQQUin() + "&g_tk_new_20200303=" + this.apiClient.getQQLoginGTK() + "&mesh_devops=DevopsBase&cid=205360838&userid=0&reqfrom=1&reqtype=0")
+            JsonObject object = QQMusicApiClient.parseJson(this.apiClient.openCApi().url("https://c.y.qq.com/rsc/fcgi-bin/fcg_get_profile_homepage.fcg?_=" + QQMusicApiClient.getQQLoginTimestamp() + "&cv=4747474&ct=20&format=json&inCharset=utf-8&outCharset=utf-8&notice=0&platform=yqq.json&uin=" + this.apiClient.getQQUin() + "&g_tk_new_20200303=" + this.apiClient.getQQLoginGTK() + "&g_tk=" + this.apiClient.getQQLoginGTK() + "&mesh_devops=DevopsBase&cid=205360838&userid=0&reqfrom=1&reqtype=0")
                     .setFixedReferer("https://y.qq.com/").get());
             List<QQMusicPlaylist> playlists = new ArrayList<>();
             if (object != null) {

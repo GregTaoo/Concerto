@@ -191,7 +191,7 @@ public class QQMusicApiClient extends HttpApiClient {
     }
 
     public static String getQQLoginTimestamp() {
-        return String.valueOf(Math.floor(System.currentTimeMillis() * 1000));
+        return String.valueOf((long) Math.floor(System.currentTimeMillis() * 1000));
     }
 
     private final Pattern QQ_QRKEY_UPDATE_PATTERN = Pattern.compile("ptuiCB\\('([0-9]+)','0','([0-9a-zA-Z:/&=?_.%]*)'");
@@ -302,7 +302,9 @@ public class QQMusicApiClient extends HttpApiClient {
         data = data.substring(13, data.length() - 1);
         JsonObject object = JsonUtil.from(data).getAsJsonArray("cdlist").get(0).getAsJsonObject();
         ArrayList<Music> musics = new ArrayList<>();
-        object.get("songlist").getAsJsonArray().forEach(element -> musics.add(new QQMusic(element.getAsJsonObject(), 2)));
+        object.get("songlist").getAsJsonArray().forEach(element -> {
+            if (element.getAsJsonObject().has("songmid")) musics.add(new QQMusic(element.getAsJsonObject(), 2));
+        });
         PlaylistMetaData metaData = new PlaylistMetaData(object.get("nickname").getAsString(), object.get("dissname").getAsString(), object.get("ctime").getAsString(), object.get("desc").getAsString());
         return Pair.of(musics, metaData);
     }

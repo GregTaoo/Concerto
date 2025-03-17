@@ -6,7 +6,6 @@ import top.gregtao.concerto.ConcertoClient;
 import top.gregtao.concerto.api.CacheableMusic;
 import top.gregtao.concerto.api.LazyLoadable;
 import top.gregtao.concerto.api.MusicJsonParsers;
-import top.gregtao.concerto.music.SharedMusic;
 import top.gregtao.concerto.music.lyrics.Lyrics;
 import top.gregtao.concerto.music.meta.music.MusicMetaData;
 import top.gregtao.concerto.enums.OrderType;
@@ -154,8 +153,7 @@ public class MusicPlayerHandler {
     public void updateDisplayTexts() {
         if (this.currentMeta != null) {
             this.displayTexts[2] = TextUtil.cutIfTooLong(this.currentMeta.title(), 50) + " | " +
-                    TextUtil.cutIfTooLong(this.currentMeta.author(), 40) + " | " + this.currentMeta.getSource() +
-                    (this.currentMusic instanceof SharedMusic ? ", " + Text.translatable("concerto.room").getString() : "");
+                    TextUtil.cutIfTooLong(this.currentMeta.author(), 40) + " | " + this.currentMeta.getSource();
             MusicTimestamp timestamp = this.currentMeta.getDuration();
             this.timeFormat = "%s" + (timestamp == null ? "" : " ".repeat(30) + this.currentMeta.getDuration().toShortString());
         } else {

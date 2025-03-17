@@ -204,7 +204,8 @@ public class ServerMusicNetworkHandler {
 
     public static void playerJoinHandshake(ServerPlayerEntity player) {
         ConcertoPayload payload = new ConcertoPayload(ConcertoPayload.Channel.HANDSHAKE,
-                ConcertoNetworking.HANDSHAKE_STRING + "CallJoin:" + player.getName().getString());
+                ConcertoNetworking.HANDSHAKE_STRING + "CallJoin:" + player.getName().getString()
+                        + (ServerConfig.INSTANCE.options.agentInviteWhenJoin ? ":Invite" : ""));
         ServerPlayNetworking.send(player, payload);
         sendS2CAllAuditionData(player);
         sendS2CPresetRadiosPacket(player);
@@ -233,6 +234,10 @@ public class ServerMusicNetworkHandler {
     }
 
     public static void musicAgentReceiver(ConcertoPayload payload, ServerPlayNetworking.Context context) {
+        if (!ServerConfig.INSTANCE.options.serverMusicAgent) {
+            context.player().sendMessage(Text.translatable("concerto.agent.not_available"));
+            return;
+        }
         String[] args = payload.string.split(":");
         if (args[0].equals("Join")) {
             ServerMusicAgent.INSTANCE.playerJoin(context.player());
@@ -243,7 +248,8 @@ public class ServerMusicNetworkHandler {
         } else if (args[0].equals("Query")) {
             List<Music> list = ServerMusicAgent.INSTANCE.getMusicQueue();
             context.player().sendMessage(TextUtil.PAGE_SPLIT);
-            list.forEach(music -> context.player().sendMessage(Text.literal(music.getMeta().title())));
+            list.forEach(music -> context.player().sendMessage(Text.literal(
+                    music.getMeta().title() + " - " + music.getMeta().author())));
             context.player().sendMessage(TextUtil.PAGE_SPLIT);
         } else if (args.length < 2 || !ServerMusicAgent.INSTANCE.isMember(context.player())) {
             context.player().sendMessage(Text.translatable("concerto.agent.error"));
@@ -260,8 +266,8 @@ public class ServerMusicNetworkHandler {
                 context.player().sendMessage(Text.translatable("concerto.agent.error"));
             }
         } else if (args[0].equals("Add")) {
-            Music music = MusicJsonParsers.from(TextUtil.fromBase64(args[1]));
-            if (music != null && music.isLoaded()) {
+            Music music = MusicJsonParsers.from(TextUtil.fromBase64(args[1]), false);
+            if (music != null) {
                 ServerMusicAgent.INSTANCE.addMusic(music);
             } else {
                 context.player().sendMessage(Text.translatable("concerto.agent.error"));

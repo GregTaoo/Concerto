@@ -45,6 +45,7 @@ public class ClientConfig extends ConfigFile {
         public boolean printRequestResults = false;
         public int maxCacheSize = 1000 * 1000 * 100;
         public boolean displayLyrics = true;
+        public boolean joinAgentWhenInvited = false;
         public String lyricsPosition = "0.5,1-70";
         public TextAlignment lyricsAlignment = TextAlignment.CENTER;
         public boolean displaySubLyrics = true;

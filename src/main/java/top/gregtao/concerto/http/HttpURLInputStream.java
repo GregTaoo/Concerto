@@ -6,6 +6,7 @@ import top.gregtao.concerto.ConcertoClient;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
 import java.util.function.Supplier;
@@ -43,6 +44,24 @@ public class HttpURLInputStream extends InputStream {
 
     public HttpURLInputStream(URL url) throws IOException {
         this(url, 0, null);
+    }
+
+    public static int getTotalBytes(URL url) {
+        try(HttpURLInputStream stream = new HttpURLInputStream(url)) {
+            return stream.szBytes;
+        } catch (IOException e) {
+            ConcertoClient.LOGGER.error(e.getMessage());
+            return 0;
+        }
+    }
+
+    public static int getTotalBytes(String url) {
+        try {
+            return getTotalBytes(URI.create(url).toURL());
+        } catch (MalformedURLException e) {
+            ConcertoClient.LOGGER.error(e.getMessage());
+            return 0;
+        }
     }
 
     private HttpURLConnection openNewConnection() throws IOException {

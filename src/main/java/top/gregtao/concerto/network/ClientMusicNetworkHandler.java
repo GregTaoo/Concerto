@@ -6,7 +6,9 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.text.Style;
 import net.minecraft.text.Text;
+import net.minecraft.util.Formatting;
 import top.gregtao.concerto.ConcertoClient;
 import top.gregtao.concerto.api.MusicJsonParsers;
 import top.gregtao.concerto.command.ShareMusicCommand;
@@ -161,6 +163,19 @@ public class ClientMusicNetworkHandler {
             if (player != null && playerName.equals(player.getName().getString())) {
                 ConcertoClient.serverAvailable = true;
                 ConcertoClient.LOGGER.info("Concerto has been installed in this server");
+                if (args.length > 3 && args[3].equals("Invite")) {
+                    if (ClientConfig.INSTANCE.options.joinAgentWhenInvited) {
+                        player.networkHandler.sendChatCommand("/musicroom agent join");
+                    } else {
+                        player.sendMessage(TextUtil.PAGE_SPLIT, false);
+                        player.sendMessage(Text.translatable("concerto.agent.invite")
+                                .append(Text.literal("  ["))
+                                .append(Text.translatable("concerto.accept").setStyle(
+                                        TextUtil.getRunCommandStyle("/musicroom agent join").withColor(Formatting.GREEN)))
+                                .append(Text.literal("]")), false);
+                        player.sendMessage(TextUtil.PAGE_SPLIT, false);
+                    }
+                }
             }
         }
     }

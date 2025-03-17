@@ -215,22 +215,22 @@ public class ServerMusicNetworkHandler {
         return name.equals("@a") || (manager.getPlayer(name) != null);
     }
 
-    public static void musicAgentSendMusic(ServerPlayerEntity player, Music music, long time) {
+    public static void musicAgentSendMusic(ServerPlayerEntity player, Music music) {
         JsonObject object = MusicJsonParsers.to(music, true);
         if (object == null) return;
-        musicAgentSendMusic(player, object.toString(), time);
+        musicAgentSendMusic(player, object.toString());
     }
 
-    public static void musicAgentSendMusic(ServerPlayerEntity player, String music, long time) {
+    public static void musicAgentSendMusic(ServerPlayerEntity player, String music) {
         ConcertoPayload payload = new ConcertoPayload(ConcertoPayload.Channel.MUSIC_AGENT,
-                TextUtil.toBase64(music) + ":" + time);
+                TextUtil.toBase64(music));
         ServerPlayNetworking.send(player, payload);
     }
 
-    public static void musicAgentSendMusic(List<ServerPlayerEntity> players, Music music, long time) {
+    public static void musicAgentSendMusic(List<ServerPlayerEntity> players, Music music) {
         JsonObject object = MusicJsonParsers.to(music, true);
         if (object == null) return;
-        players.forEach(player -> musicAgentSendMusic(player, object.toString(), time));
+        players.forEach(player -> musicAgentSendMusic(player, object.toString()));
     }
 
     public static void musicAgentReceiver(ConcertoPayload payload, ServerPlayNetworking.Context context) {
@@ -268,7 +268,7 @@ public class ServerMusicNetworkHandler {
         } else if (args[0].equals("Add")) {
             Music music = MusicJsonParsers.from(TextUtil.fromBase64(args[1]), false);
             if (music != null) {
-                ServerMusicAgent.INSTANCE.addMusic(music);
+                ServerMusicAgent.INSTANCE.addMusic(context.player(), music);
             } else {
                 context.player().sendMessage(Text.translatable("concerto.agent.error"));
             }

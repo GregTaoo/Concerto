@@ -187,6 +187,22 @@
   "concerto.like": "喜欢了歌曲 %s，来自 %s",
   "concerto.dislike": "取消喜欢了歌曲 %s，来自 %s",
 
+  "concerto.agent": "服务器点歌",
+  "concerto.agent.invite": "是否加入服务器点歌？",
+  "concerto.agent.join": "加入了服务器点歌",
+  "concerto.agent.quit": "退出了服务器点歌",
+  "concerto.screen.request": "服务器点歌",
+  "concerto.agent.add": "%s 点歌了 %s - %s.",
+  "concerto.agent.vote": "请投票：是否切歌？",
+  "concerto.agent.vote_for": "你投了 %s",
+  "concerto.agent.vote.duplicate": "当前投票未结束",
+  "concerto.agent.vote.ended": "没有投票进行中",
+  "concerto.agent.vote.success": "投票已结束，结果为%s:%s，决定切歌",
+  "concerto.agent.vote.failed": "投票已结束，结果为%s:%s，决定继续播放",
+  "concerto.agent.play.failed": "无法播放音乐 %s - %s，可能是由于服务器内部错误或无VIP权限",
+  "concerto.agent.not_available": "点歌服务不可用",
+  "concerto.agent.error": "使用点歌服务时遇到错误",
+
   "concerto.error.invalid_path": "不可用的路径或文件格式",
   "concerto.error.unsupported_operation": "不支持的操作！"
 }

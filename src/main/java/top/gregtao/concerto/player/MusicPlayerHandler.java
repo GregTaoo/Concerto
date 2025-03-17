@@ -52,6 +52,8 @@ public class MusicPlayerHandler {
 
     public float progressPercentage = 0;
 
+    private long startTime = 0;
+
     private final Random random = new Random();
 
     public MusicPlayerHandler() {}
@@ -94,6 +96,7 @@ public class MusicPlayerHandler {
         this.displayTexts = new String[]{ "", "", "", ""};
         this.timeFormat = "%s" + " ".repeat(30) + "%s";
         this.progressPercentage = 0;
+        this.startTime = 0;
     }
 
     public void clear() {
@@ -162,6 +165,7 @@ public class MusicPlayerHandler {
     }
 
     public void updateDisplayTexts(long millisecond) {
+        millisecond += this.startTime;
         MusicTimestamp duration = this.currentMeta.getDuration();
         this.progressPercentage = duration == null ? 0 : ((float) millisecond / duration.asMilliseconds());
         this.currentTime = MusicTimestamp.ofMilliseconds(millisecond);
@@ -193,6 +197,11 @@ public class MusicPlayerHandler {
         this.updateDisplayTexts();
         this.writeConfig();
         return this.currentMusic;
+    }
+
+    public void initMusicStatus(long startTime) {
+        this.initMusicStatus();
+        this.startTime = startTime;
     }
 
     public void initMusicStatus() {

@@ -66,6 +66,7 @@ public class NeteaseCloudMusic extends Music implements CacheableMusic, DynamicP
 
     @Override
     public String getLastLyrics() {
+        if (this.rawLyrics == null) this.getLyrics();
         return this.rawLyrics;
     }
 

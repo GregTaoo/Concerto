@@ -109,6 +109,7 @@ public class QQMusic extends Music implements CacheableMusic, DynamicPath {
 
     @Override
     public String getLastLyrics() {
+        if (this.rawLyrics == null) this.getLyrics();
         return this.rawLyrics;
     }
 
@@ -119,7 +120,7 @@ public class QQMusic extends Music implements CacheableMusic, DynamicPath {
 
     @Override
     public String getSuffix() {
-        return "mp3";
+        return "ogg";
     }
 
     @Override

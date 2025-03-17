@@ -6,7 +6,6 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.text.Style;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import top.gregtao.concerto.ConcertoClient;
@@ -243,11 +242,12 @@ public class ClientMusicNetworkHandler {
     }
 
     public static void musicAgentMusicReceiver(ConcertoPayload payload, ClientPlayNetworking.Context context) {
-        String[] args = payload.string.split(":");
-        if (args.length < 2 || ConcertoClient.clientState != ConcertoClient.ClientState.MUSIC_AGENT) return;
+        if (ConcertoClient.clientState != ConcertoClient.ClientState.MUSIC_AGENT) return;
         MusicPlayer.run(() -> {
-            Music music = MusicJsonParsers.from(TextUtil.fromBase64(args[0]));
-            if (music != null) MusicPlayer.INSTANCE.playTempMusic(music);
+            Music music = MusicJsonParsers.from(TextUtil.fromBase64(payload.string));
+            if (music != null) {
+                MusicPlayer.INSTANCE.playTempMusic(music);
+            }
         });
     }
 }

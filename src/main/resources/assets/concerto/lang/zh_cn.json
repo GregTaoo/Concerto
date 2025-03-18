@@ -192,6 +192,7 @@
   "concerto.agent.join": "加入了服务器点歌",
   "concerto.agent.quit": "退出了服务器点歌",
   "concerto.screen.request": "服务器点歌",
+  "concerto.agent.occupied": "加入新的音乐室前请先退出当前音乐室",
   "concerto.agent.add": "%s 点歌了 %s - %s.",
   "concerto.agent.vote": "请投票：是否切歌？",
   "concerto.agent.vote_for": "你投了 %s",

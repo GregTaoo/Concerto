@@ -27,7 +27,7 @@ public class AcknowledgmentScreen extends ConcertoScreen {
                 button -> Util.getOperatingSystem().open("https://ko-fi.com/gregtao")
         ).position(this.width / 2 - 75, 90).size(150, 20).build());
         this.addDrawableChild(ButtonWidget.builder(Text.translatable("concerto.donate.supporters"),
-                button -> Util.getOperatingSystem().open("https://afdian.com/p/06224458e91511ef9f375254001e7c00")
+                button -> Util.getOperatingSystem().open("https://github.com/GregTaoo/Concerto/blob/dev/supporters.md")
         ).position(this.width / 2 - 75, 115).size(150, 20).build());
     }
 

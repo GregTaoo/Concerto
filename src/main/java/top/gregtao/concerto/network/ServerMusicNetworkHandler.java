@@ -267,7 +267,7 @@ public class ServerMusicNetworkHandler {
             }
         } else if (args[0].equals("Add")) {
             Music music = MusicJsonParsers.from(TextUtil.fromBase64(args[1]), false);
-            if (music != null) {
+            if (music != null && MusicDataPacket.isMusicSafe(music)) {
                 ServerMusicAgent.INSTANCE.addMusic(context.player(), music);
             } else {
                 context.player().sendMessage(Text.translatable("concerto.agent.error"));

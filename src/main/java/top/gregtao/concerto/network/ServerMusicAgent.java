@@ -97,7 +97,7 @@ public class ServerMusicAgent {
         this.isVoting = false;
     }
 
-    private synchronized void playNextMusic() {
+    public synchronized void playNextMusic() {
         this.currentMusic = this.musicQueue.poll();
         this.currentSharedMusic = null;
         this.totalBytes = 0;
@@ -169,8 +169,6 @@ public class ServerMusicAgent {
     }
 
     public synchronized void reset() {
-        this.members.clear();
-
         this.voteLock.lock();
         this.isVoting = false;
         this.yesVoters.clear();

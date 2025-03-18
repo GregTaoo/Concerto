@@ -81,11 +81,17 @@ public class ConcertoServerCommand {
                                     return 0;
                                 })
                 ).then(
-                        CommandManager.literal("reset-agent")
-                                .requires(source -> source.hasPermissionLevel(2)).executes(context -> {
+                        CommandManager.literal("agent").requires(source -> source.hasPermissionLevel(2)).then(
+                                CommandManager.literal("reset").executes(context -> {
                                     ServerMusicAgent.INSTANCE.reset();
                                     return 0;
                                 })
+                        ).then(
+                                CommandManager.literal("cut").executes(context -> {
+                                    ServerMusicAgent.INSTANCE.playNextMusic();
+                                    return 0;
+                                })
+                        )
                 )
         );
     }

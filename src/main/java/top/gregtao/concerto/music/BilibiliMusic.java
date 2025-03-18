@@ -1,7 +1,6 @@
 package top.gregtao.concerto.music;
 
 import com.google.gson.JsonObject;
-import com.mojang.datafixers.util.Pair;
 import top.gregtao.concerto.api.CacheableMusic;
 import top.gregtao.concerto.api.JsonParser;
 import top.gregtao.concerto.api.MusicJsonParsers;
@@ -13,11 +12,12 @@ import top.gregtao.concerto.music.lyrics.Lyrics;
 import top.gregtao.concerto.music.meta.music.BasicMusicMetaData;
 import top.gregtao.concerto.music.meta.music.UnknownMusicMeta;
 import top.gregtao.concerto.util.FileUtil;
+import top.gregtao.concerto.util.Pair;
 
 import javax.sound.sampled.UnsupportedAudioFileException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URL;
+import java.net.URI;
 
 public class BilibiliMusic extends Music implements CacheableMusic {
     private final String bvid;
@@ -35,10 +35,15 @@ public class BilibiliMusic extends Music implements CacheableMusic {
     @Override
     public InputStream getMusicSource() throws MusicSourceNotFoundException {
         try {
-            return FileUtil.createBuffered(new HttpURLInputStream(new URL(this.getRawPath())));
+            return FileUtil.createBuffered(new HttpURLInputStream(URI.create(this.getRawPath()).toURL()));
         } catch (Exception e) {
             throw new MusicSourceNotFoundException(e);
         }
+    }
+
+    @Override
+    public String getLink() {
+        return "https://www.bilibili.com/video/" + this.bvid;
     }
 
     public String getRawPath() {

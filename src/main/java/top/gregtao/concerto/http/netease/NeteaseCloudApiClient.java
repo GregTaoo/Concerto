@@ -2,7 +2,6 @@ package top.gregtao.concerto.http.netease;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
-import com.mojang.datafixers.util.Pair;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.text.Text;
 import top.gregtao.concerto.ConcertoClient;
@@ -21,12 +20,10 @@ import top.gregtao.concerto.screen.QRCodeRenderer;
 import top.gregtao.concerto.util.HashUtil;
 import top.gregtao.concerto.util.JsonUtil;
 import top.gregtao.concerto.util.MathUtil;
+import top.gregtao.concerto.util.Pair;
 
 import java.net.http.HttpResponse;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 
 public class NeteaseCloudApiClient extends HttpApiClient {
@@ -126,9 +123,20 @@ public class NeteaseCloudApiClient extends HttpApiClient {
         ArrayList<Music> music = new ArrayList<>();
         String createTime = "";
         if (!simply) {
+            HashSet<String> ids = new HashSet<>();
             JsonArray array = object.getAsJsonArray("tracks");
-            array.forEach(element -> music.add(new NeteaseCloudMusic(element.getAsJsonObject(), level)));
+            array.forEach(element -> {
+                NeteaseCloudMusic nm = new NeteaseCloudMusic(element.getAsJsonObject(), level);
+                ids.add(nm.getId());
+                music.add(nm);
+            });
+            JsonArray array1 = object.getAsJsonArray("trackIds");
+            array1.forEach(element -> {
+                String id = element.getAsJsonObject().get("id").getAsString();
+                if (!ids.contains(id)) music.add(new NeteaseCloudMusic(id, level));
+            });
             createTime = MathUtil.formattedTime(object.get("createTime").getAsString());
+            MusicPlayerHandler.loadInThreadPool(music);
         }
         String name = object.get("name").getAsString();
         JsonObject creator = object.getAsJsonObject("creator");
@@ -272,7 +280,7 @@ public class NeteaseCloudApiClient extends HttpApiClient {
                         wait = -1;
                         break;
                     } else if (code == 803) {
-                        player.sendMessage(Text.translatable("concerto.login.163.qrcode.success"));
+                        player.sendMessage(Text.translatable("concerto.login.163.qrcode.success"), false);
                         LOCAL_USER.updateLoginStatus();
                         break;
                     } else {
@@ -280,10 +288,10 @@ public class NeteaseCloudApiClient extends HttpApiClient {
                         break;
                     }
                 }
-                if (wait <= 0) player.sendMessage(Text.translatable("concerto.login.163.qrcode.expired"));
+                if (wait <= 0) player.sendMessage(Text.translatable("concerto.login.163.qrcode.expired"), false);
                 QRCodeRenderer.clear();
             } catch (Exception e) {
-                player.sendMessage(Text.translatable("concerto.login.163.qrcode.error"));
+                player.sendMessage(Text.translatable("concerto.login.163.qrcode.error"), false);
                 ConcertoClient.LOGGER.error("Error occurs while checking QR code scanning status.");
                 QRCodeRenderer.clear();
                 throw new RuntimeException(e);

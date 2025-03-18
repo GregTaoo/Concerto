@@ -2,7 +2,7 @@ package top.gregtao.concerto.network;
 
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 
-public class MusicNetworkChannels {
+public class ConcertoNetworking {
 
     public static final String HANDSHAKE_STRING = "CONCERTO:";
 

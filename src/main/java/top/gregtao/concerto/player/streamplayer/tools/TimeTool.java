@@ -61,14 +61,6 @@ public final class TimeTool {
 	 */
 	public static String millisecondsToTime(final long ms) {
 		final int millis = (int) ((ms % 1000) / 100);
-		// int seconds = (int) ((ms / 1000) % 60);
-		// int minutes = (int) ((ms / (1000 * 60)) % 60);
-		// int hours = (int) ((ms / (1000 * 60 * 60)) % 24);
-
-		// if (minutes > 60)
-		// return String.format("%02d:%02d:%02d.%d", hours, minutes, seconds, millis);
-		// else
-		// return String.format("%02d:%02d.%d", minutes, seconds, millis);
 
 		return String.format(".%d", millis);
 
@@ -89,13 +81,6 @@ public final class TimeTool {
 		final long time = TimeTool.durationInMilliseconds(name, type);
 
 		return (int) ((time == 0 || time == -1) ? time : time / 1000);
-
-		// Long microseconds = (Long)AudioSystem.getAudioFileFormat(new
-		// File(audio)).properties().get("duration") int mili = (int)(microseconds /
-		// 1000L);
-		// int sec = milli / 1000 % 60;
-		// int min = milli / 1000 / 60;
-
 	}
 
 	/**
@@ -150,20 +135,9 @@ public final class TimeTool {
 						double frameLengthInMilliseconds =  (((double) samplesPerFrame / header.getSampleRateAsNumber()) * 1000);
 						milliseconds = (long) (header.getNumberOfFrames() * frameLengthInMilliseconds);						
 					}
-
-					// milliseconds = (int) ( (Long)
-					// AudioSystem.getAudioFileFormat(file).properties().get("duration") / 1000 );
-
-					// Get the result of mp3agic if the duration is bigger than 6 minutes
-					// if (milliseconds / 1000 > 60 * 9) {
-					// System.out.println("Entered..");
-					// milliseconds = tryWithMp3Agic(file);
-					// }
-
 				} catch (final Exception ex) {
 					System.err.println("Problem getting the time of-> " + file.getAbsolutePath());
 				}
-				// }
 			}
 			// WAVE || OGG?
 			else if ("ogg".equals(extension) || "wav".equals(extension)) {
@@ -192,7 +166,6 @@ public final class TimeTool {
 			}
 		}
 
-		// System.out.println("Passed with error")
 		return milliseconds < 0 ? -1 : milliseconds;
 	}
 

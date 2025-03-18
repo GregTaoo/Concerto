@@ -1,6 +1,5 @@
 package top.gregtao.concerto.screen;
 
-import com.mojang.datafixers.util.Pair;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
@@ -10,6 +9,7 @@ import net.minecraft.text.Text;
 import top.gregtao.concerto.music.Music;
 import top.gregtao.concerto.screen.widget.ConcertoListWidget;
 import top.gregtao.concerto.screen.widget.MusicWithUUIDListWidget;
+import top.gregtao.concerto.util.Pair;
 
 import java.util.HashMap;
 import java.util.List;
@@ -45,30 +45,30 @@ public class MusicAuditionScreen extends ConcertoScreen {
             ClientPlayerEntity player = MinecraftClient.getInstance().player;
             ConcertoListWidget<Pair<Music, UUID>>.Entry entry = this.widget.getSelectedOrNull();
             if (player != null && entry != null) {
-                player.networkHandler.sendChatCommand("audit " + entry.item.getSecond());
+                player.networkHandler.sendChatCommand("concerto-server audit " + entry.item.getSecond());
                 this.widget.removeEntryWithoutScrolling(entry);
             }
-        }).position(this.width / 2 - 160, this.height - 30).size(50, 20).build());
+        }).position(20, this.height - 30).size(60, 20).build());
 
         this.addDrawableChild(ButtonWidget.builder(Text.translatable("concerto.reject"), button -> {
             ClientPlayerEntity player = MinecraftClient.getInstance().player;
             ConcertoListWidget<Pair<Music, UUID>>.Entry entry = this.widget.getSelectedOrNull();
             if (player != null && entry != null) {
-                player.networkHandler.sendChatCommand("audit reject " + entry.item.getSecond());
+                player.networkHandler.sendChatCommand("concerto-server audit reject " + entry.item.getSecond());
                 this.widget.removeEntryWithoutScrolling(entry);
             }
-        }).position(this.width / 2 - 105, this.height - 30).size(50, 20).build());
+        }).position(85, this.height - 30).size(60, 20).build());
 
         this.addDrawableChild(ButtonWidget.builder(Text.translatable("concerto.reject.all"), button -> {
             ClientPlayerEntity player = MinecraftClient.getInstance().player;
             if (player != null) {
-                player.networkHandler.sendChatCommand("audit reject all");
+                player.networkHandler.sendChatCommand("concerto-server audit reject all");
                 this.widget.clear();
             }
-        }).position(this.width / 2 - 50, this.height - 30).size(50, 20).build());
+        }).position(150, this.height - 30).size(60, 20).build());
 
         this.addDrawableChild(ButtonWidget.builder(Text.translatable("concerto.refresh"), button -> this.refresh())
-                .position(this.width / 2 + 5, this.height - 30).size(50, 20).build());
+                .position(215, this.height - 30).size(60, 20).build());
     }
 
     @Override

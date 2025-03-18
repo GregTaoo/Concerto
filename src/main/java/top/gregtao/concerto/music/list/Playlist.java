@@ -1,10 +1,10 @@
 package top.gregtao.concerto.music.list;
 
-import com.mojang.datafixers.util.Pair;
 import top.gregtao.concerto.api.LazyLoadable;
 import top.gregtao.concerto.api.WithMetaData;
 import top.gregtao.concerto.music.Music;
 import top.gregtao.concerto.music.meta.music.list.PlaylistMetaData;
+import top.gregtao.concerto.util.Pair;
 
 import java.util.ArrayList;
 
@@ -14,7 +14,7 @@ public abstract class Playlist implements LazyLoadable, WithMetaData {
 
     protected PlaylistMetaData meta;
 
-    protected boolean loaded = false, isAlbum = false;
+    protected boolean loaded = false, isAlbum;
 
     public Playlist(boolean isAlbum) {
         this.isAlbum = isAlbum;

@@ -4,6 +4,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import top.gregtao.concerto.http.HttpApiClient;
 import top.gregtao.concerto.http.HttpRequestBuilder;
+import top.gregtao.concerto.music.NeteaseCloudMusic;
 import top.gregtao.concerto.music.list.NeteaseCloudPlaylist;
 
 import java.net.http.HttpResponse;
@@ -63,6 +64,21 @@ public class NeteaseCloudUser {
             array.forEach(element -> lists.add(new NeteaseCloudPlaylist(element.getAsJsonObject(), false, true)));
         }
         return lists;
+    }
+
+    public boolean likeMusic(String id, boolean like) {
+        JsonObject object = HttpApiClient.parseJson(this.apiClient.open().url("http://music.163.com/api/radio/like", Map.of(
+                "alg", "itembased", "trackId", id, "like", like
+        )).post());
+        return object != null && object.get("code").getAsInt() == 200;
+    }
+
+    public boolean likeMusic(NeteaseCloudMusic music) {
+        return this.likeMusic(music.getId(), true);
+    }
+
+    public boolean dislikeMusic(NeteaseCloudMusic music) {
+        return this.likeMusic(music.getId(), false);
     }
 
 }

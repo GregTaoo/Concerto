@@ -11,6 +11,7 @@ import top.gregtao.concerto.ConcertoClient;
 import top.gregtao.concerto.ConcertoServer;
 import top.gregtao.concerto.api.DynamicPath;
 import top.gregtao.concerto.api.MusicJsonParsers;
+import top.gregtao.concerto.config.ServerConfig;
 import top.gregtao.concerto.music.Music;
 import top.gregtao.concerto.music.SharedMusic;
 import top.gregtao.concerto.player.MusicPlayer;
@@ -25,7 +26,7 @@ public class MusicRoom {
     public static final Map<UUID, MusicRoom> ROOMS = new HashMap<>(); // Server side
 
     public final UUID uuid;
-    public String admin;
+    public String owner;
     public Music music;
     public boolean pause = true;
     public Map<String, Integer> members = new HashMap<>();
@@ -34,7 +35,7 @@ public class MusicRoom {
 
     public MusicRoom(String creator) {
         this.uuid = UUID.randomUUID();
-        this.admin = creator;
+        this.owner = creator;
         this.members.put(creator, 3); // 0: banned, 1: common, 2: admin, 3:super_admin
     }
 
@@ -43,7 +44,7 @@ public class MusicRoom {
     }
 
     public String buildArgs(boolean withMusic) {
-        return this.uuid + ":" + this.admin + ":" + (this.pause ? "1" : "0") + ":"
+        return this.uuid + ":" + this.owner + ":" + (this.pause ? "1" : "0") + ":"
                 + String.join(",", this.members.entrySet().stream().map(entry -> entry.getKey() + "+" + entry.getValue()).toList())
                 + ":" + (!withMusic || this.music == null ? "null" : TextUtil.toBase64(MusicJsonParsers.to(music).toString()));
     }
@@ -86,16 +87,16 @@ public class MusicRoom {
     }
 
     public void serverOnSetOp(String name, ServerPlayerEntity player, String target, MinecraftServer server) throws IllegalAccessException {
-        if (this.members.get(name) < 3) throw new IllegalAccessException("No permission");
+        if (this.members.get(name) < 3 || name.equals(target)) throw new IllegalAccessException("No permission");
         Integer permission = this.members.get(target);
         if (permission == null) {
             player.sendMessage(Text.translatable("concerto.room.update.fail"));
         } else if (permission == 2) {
             this.members.put(target, 1);
-            player.sendMessage(Text.translatable("concerto.room.de_op"));
+            player.sendMessage(Text.translatable("concerto.room.de_op", target));
         } else {
             this.members.put(target, 2);
-            player.sendMessage(Text.translatable("concerto.room.op"));
+            player.sendMessage(Text.translatable("concerto.room.op", target));
         }
         this.send2EachMember("UPD", this.buildArgs(false), name, server);
     }
@@ -110,9 +111,12 @@ public class MusicRoom {
         ServerPlayerEntity player = context.player();
         MinecraftServer server = context.player().getServer();
         String[] args = payload.string.split(":");
-        // System.out.println(payload.string);
         switch (args[0]) {
             case "CRE": {
+                if (!player.hasPermissionLevel(ServerConfig.INSTANCE.options.musicRoomCommandPermission)) {
+                    player.sendMessage(Text.translatable("concerto.room.permission_denied"));
+                    break;
+                }
                 MusicRoom room = new MusicRoom(player.getName().getString());
                 ROOMS.put(room.uuid, room);
                 serverSender("JOI", room.buildArgs(false), player);
@@ -219,9 +223,9 @@ public class MusicRoom {
 
     public static void clientUpdate(Music music) {
         if (CLIENT_ROOM == null || CLIENT_ROOM.permission < 2) return;
-        if (!MusicDataPacket.ALLOWED_SOURCES.contains(music.getJsonParser().name())) {
+        if (!MusicDataPacket.isMusicSafe(music)) {
             if (MinecraftClient.getInstance().player != null) {
-                MinecraftClient.getInstance().player.sendMessage(Text.translatable("concerto.share.unsafe"));
+                MinecraftClient.getInstance().player.sendMessage(Text.translatable("concerto.share.unsafe"), false);
             }
             return;
         }
@@ -256,10 +260,10 @@ public class MusicRoom {
         if (client.player == null) return;
         ClientPlayerEntity player = client.player;
         String[] args = payload.string.split(":");
-        // System.out.println(payload.string);
         switch (args[0]) {
             case "REM": {
                 CLIENT_ROOM = null;
+                ConcertoClient.clientState = ConcertoClient.ClientState.LOCAL;
                 break;
             }
             case "JOI": {
@@ -267,7 +271,7 @@ public class MusicRoom {
                     UUID uuid1 = UUID.fromString(args[1]);
                     CLIENT_ROOM = new MusicRoom(uuid1);
                     client.keyboard.setClipboard(uuid1.toString());
-                    CLIENT_ROOM.admin = args[2];
+                    CLIENT_ROOM.owner = args[2];
                     CLIENT_ROOM.members = new HashMap<>();
                     Arrays.stream(args[4].split(",")).forEach(str -> {
                         String[] strings = str.split("\\+");
@@ -284,10 +288,11 @@ public class MusicRoom {
                             if (CLIENT_ROOM.pause) MusicPlayer.INSTANCE.pause();
                         });
                     }
-                    player.sendMessage(Text.translatable("concerto.room.join", uuid1.toString()));
+                    ConcertoClient.clientState = ConcertoClient.ClientState.MUSIC_ROOM;
+                    player.sendMessage(Text.translatable("concerto.room.join", uuid1.toString()), false);
                 } catch (NullPointerException | IllegalArgumentException e) {
                     ConcertoClient.LOGGER.warn(e.toString());
-                    player.sendMessage(Text.translatable("concerto.room.join.fail"));
+                    player.sendMessage(Text.translatable("concerto.room.join.fail"), false);
                 }
                 break;
             }
@@ -296,10 +301,11 @@ public class MusicRoom {
                 try {
                     UUID uuid1 = UUID.fromString(args[1]);
                     if (CLIENT_ROOM.uuid.compareTo(uuid1) == 0) CLIENT_ROOM = null;
-                    player.sendMessage(Text.translatable("concerto.room.quit", uuid1.toString()));
+                    ConcertoClient.clientState = ConcertoClient.ClientState.LOCAL;
+                    player.sendMessage(Text.translatable("concerto.room.quit", uuid1.toString()), false);
                 } catch (NullPointerException | IllegalArgumentException e) {
                     ConcertoClient.LOGGER.warn(e.toString());
-                    player.sendMessage(Text.translatable("concerto.room.join.fail"));
+                    player.sendMessage(Text.translatable("concerto.room.join.fail"), false);
                 }
                 break;
             }
@@ -308,7 +314,7 @@ public class MusicRoom {
                 try {
                     UUID uuid1 = UUID.fromString(args[1]);
                     if (CLIENT_ROOM.uuid.compareTo(uuid1) != 0) break;
-                    CLIENT_ROOM.admin = args[2];
+                    CLIENT_ROOM.owner = args[2];
                     CLIENT_ROOM.members = new HashMap<>();
                     Arrays.stream(args[4].split(",")).forEach(str -> {
                         String[] strings = str.split("\\+");
@@ -331,7 +337,7 @@ public class MusicRoom {
                     }
                 } catch (NullPointerException | IllegalArgumentException e) {
                     ConcertoClient.LOGGER.warn(e.toString());
-                    player.sendMessage(Text.translatable("concerto.room.update.fail"));
+                    player.sendMessage(Text.translatable("concerto.room.update.fail"), false);
                 }
                 break;
             }

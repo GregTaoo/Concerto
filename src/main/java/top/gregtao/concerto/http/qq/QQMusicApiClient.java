@@ -2,7 +2,6 @@ package top.gregtao.concerto.http.qq;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
-import com.mojang.datafixers.util.Pair;
 import org.apache.commons.lang3.RandomStringUtils;
 import top.gregtao.concerto.enums.SearchType;
 import top.gregtao.concerto.enums.Sources;
@@ -11,11 +10,10 @@ import top.gregtao.concerto.http.HttpRequestBuilder;
 import top.gregtao.concerto.music.Music;
 import top.gregtao.concerto.music.QQMusic;
 import top.gregtao.concerto.music.list.QQMusicPlaylist;
-import top.gregtao.concerto.music.lyrics.DefaultFormatLyrics;
-import top.gregtao.concerto.music.lyrics.Lyrics;
 import top.gregtao.concerto.music.meta.music.list.PlaylistMetaData;
 import top.gregtao.concerto.util.JsonUtil;
 import top.gregtao.concerto.util.MathUtil;
+import top.gregtao.concerto.util.Pair;
 import top.gregtao.concerto.util.TextUtil;
 
 import java.io.IOException;
@@ -55,6 +53,10 @@ public class QQMusicApiClient extends HttpApiClient {
         return "M800" + mid + mediaMid + ".mp3";
     }
 
+    public String getOggFilename(String mid, String mediaMid) {
+        return "O400" + mid + mediaMid + ".ogg";
+    }
+
     public String getQQUin() throws IOException, URISyntaxException {
         String uin = this.getCookie("https://u.y.qq.com", "wxuin");
         if (!uin.isEmpty()) return uin;
@@ -91,7 +93,7 @@ public class QQMusicApiClient extends HttpApiClient {
     public String getMusicLink(String mid, String mediaMid) {
         try {
             String uin = this.getQQUin(), guid = this.generateGuid();
-            String url = "https://u.y.qq.com/cgi-bin/musicu.fcg?-=getplaysongvkey&format=json&loginUin=" + uin + "&hostUin=0&inCharset=utf-8&needNewCode=0&outCharset=utf-8&platform=yqq.json&data=%7B%22req_0%22%3A%7B%22module%22%3A%22vkey.GetVkeyServer%22%2C%22method%22%3A%22CgiGetVkey%22%2C%22param%22%3A%7B%22filename%22%3A%5B%22" + this.getMP3Filename(mid, mediaMid) + "%22%5D%2C%22guid%22%3A%22" + guid + "%22%2C%22songmid%22%3A%5B%22" + mid + "%22%5D%2C%22songtype%22%3A%5B0%5D%2C%22uin%22%3A%22" + uin + "%22%2C%22loginflag%22%3A1%2C%22platform%22%3A%2220%22%7D%7D%2C%22comm%22%3A%7B%22uin%22%3A" + uin + "%2C%22format%22%3A%22json%22%2C%22ct%22%3A24%2C%22cv%22%3A0%7D%7D";
+            String url = "https://u.y.qq.com/cgi-bin/musicu.fcg?-=getplaysongvkey&format=json&loginUin=" + uin + "&hostUin=0&inCharset=utf-8&needNewCode=0&outCharset=utf-8&platform=yqq.json&data=%7B%22req_0%22%3A%7B%22module%22%3A%22vkey.GetVkeyServer%22%2C%22method%22%3A%22CgiGetVkey%22%2C%22param%22%3A%7B%22filename%22%3A%5B%22" + this.getOggFilename(mid, mediaMid) + "%22%5D%2C%22guid%22%3A%22" + guid + "%22%2C%22songmid%22%3A%5B%22" + mid + "%22%5D%2C%22songtype%22%3A%5B0%5D%2C%22uin%22%3A%22" + uin + "%22%2C%22loginflag%22%3A1%2C%22platform%22%3A%2220%22%7D%7D%2C%22comm%22%3A%7B%22uin%22%3A" + uin + "%2C%22format%22%3A%22json%22%2C%22ct%22%3A24%2C%22cv%22%3A0%7D%7D";
             JsonObject object = parseJson(this.openUApi().url(url).get());
             if (object == null) return "";
             JsonObject data = object.getAsJsonObject("req_0").getAsJsonObject("data");
@@ -189,7 +191,7 @@ public class QQMusicApiClient extends HttpApiClient {
     }
 
     public static String getQQLoginTimestamp() {
-        return String.valueOf(Math.floor(System.currentTimeMillis() * 1000));
+        return String.valueOf((long) Math.floor(System.currentTimeMillis() * 1000));
     }
 
     private final Pattern QQ_QRKEY_UPDATE_PATTERN = Pattern.compile("ptuiCB\\('([0-9]+)','0','([0-9a-zA-Z:/&=?_.%]*)'");
@@ -280,9 +282,9 @@ public class QQMusicApiClient extends HttpApiClient {
     }
 
     public JsonObject requestSignedApi(String module, String method, String params) throws IOException, URISyntaxException {
-        String data = "{\"comm\":{\"cv\":4747474,\"ct\":24,\"format\":\"json\",\"inCharset\":\"utf-8\",\"outCharset\":\"utf-8\",\"notice\":0,\"platform\":\"yqq.json\",\"uin\":\"" + this.getQQUin() + "\",\"g_tk_new_20200303\":" + this.getQQLoginGTK() + ",\"g_tk\":" + this.getQQLoginGTK() + ",\"mesh_devops\":\"DevopsBase\"},\"req_1\":{\"module\":\"" + module + "\",\"method\":\"" + method + "\",\"param\":{" + params + "}}}";
+        String data = "{\"comm\":{\"cv\":4747474,\"ct\":24,\"format\":\"json\",\"needNewCode\":1,\"inCharset\":\"utf-8\",\"outCharset\":\"utf-8\",\"notice\":0,\"platform\":\"yqq.json\",\"uin\":\"" + this.getQQUin() + "\",\"g_tk_new_20200303\":" + this.getQQLoginGTK() + ",\"g_tk\":" + this.getQQLoginGTK() + ",\"mesh_devops\":\"DevopsBase\"},\"req_1\":{\"module\":\"" + module + "\",\"method\":\"" + method + "\",\"param\":{" + params + "}}}";
         String url = "https://u.y.qq.com/cgi-bin/musics.fcg?_=" + TextUtil.getCurrentTime() + "&sign=" + QQMusicApiEncrypt.Sign.getSign(data);
-        JsonObject object = parseJson(this.openUApi().setFixedReferer("https://y.qq.com/").url(url).post(
+        JsonObject object = parseJson(this.openUApi().setFixedReferer("https://y.qq.com/").setHeader("Origin", "https://y.qq.com").url(url).post(
                 HttpResponse.BodyHandlers.ofString(),
                 HttpRequestBuilder.ContentType.FORM,
                 data
@@ -291,7 +293,8 @@ public class QQMusicApiClient extends HttpApiClient {
     }
 
     public JsonObject requestSignedApi(String module, String method, Map<?, ?> params) throws IOException, URISyntaxException {
-        return this.requestSignedApi(module, method, HttpRequestBuilder.ContentType.toJson(params));
+        String param = HttpRequestBuilder.ContentType.toJson(params);
+        return this.requestSignedApi(module, method, param.substring(1, param.length() - 1));
     }
 
     public Pair<ArrayList<Music>, PlaylistMetaData> getPlayList(String id) throws IOException, URISyntaxException {
@@ -299,7 +302,9 @@ public class QQMusicApiClient extends HttpApiClient {
         data = data.substring(13, data.length() - 1);
         JsonObject object = JsonUtil.from(data).getAsJsonArray("cdlist").get(0).getAsJsonObject();
         ArrayList<Music> musics = new ArrayList<>();
-        object.get("songlist").getAsJsonArray().forEach(element -> musics.add(new QQMusic(element.getAsJsonObject(), 2)));
+        object.get("songlist").getAsJsonArray().forEach(element -> {
+            if (element.getAsJsonObject().has("songmid")) musics.add(new QQMusic(element.getAsJsonObject(), 2));
+        });
         PlaylistMetaData metaData = new PlaylistMetaData(object.get("nickname").getAsString(), object.get("dissname").getAsString(), object.get("ctime").getAsString(), object.get("desc").getAsString());
         return Pair.of(musics, metaData);
     }

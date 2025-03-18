@@ -1,9 +1,9 @@
 package top.gregtao.concerto.screen.widget;
 
-import com.mojang.datafixers.util.Pair;
 import net.minecraft.text.Text;
 import top.gregtao.concerto.music.Music;
 import top.gregtao.concerto.music.meta.music.MusicMetaData;
+import top.gregtao.concerto.util.Pair;
 
 import java.util.UUID;
 

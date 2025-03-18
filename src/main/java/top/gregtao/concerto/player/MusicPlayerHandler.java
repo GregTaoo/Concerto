@@ -1,18 +1,17 @@
 package top.gregtao.concerto.player;
 
-import com.mojang.datafixers.util.Pair;
 import net.minecraft.text.Text;
 import net.minecraft.util.math.MathHelper;
 import top.gregtao.concerto.ConcertoClient;
 import top.gregtao.concerto.api.CacheableMusic;
 import top.gregtao.concerto.api.LazyLoadable;
 import top.gregtao.concerto.api.MusicJsonParsers;
-import top.gregtao.concerto.music.SharedMusic;
 import top.gregtao.concerto.music.lyrics.Lyrics;
 import top.gregtao.concerto.music.meta.music.MusicMetaData;
 import top.gregtao.concerto.enums.OrderType;
 import top.gregtao.concerto.music.Music;
 import top.gregtao.concerto.music.MusicTimestamp;
+import top.gregtao.concerto.util.Pair;
 import top.gregtao.concerto.util.TextUtil;
 
 import java.io.*;
@@ -52,6 +51,8 @@ public class MusicPlayerHandler {
     private OrderType orderType = OrderType.NORMAL;
 
     public float progressPercentage = 0;
+
+    private long startTime = 0;
 
     private final Random random = new Random();
 
@@ -95,6 +96,7 @@ public class MusicPlayerHandler {
         this.displayTexts = new String[]{ "", "", "", ""};
         this.timeFormat = "%s" + " ".repeat(30) + "%s";
         this.progressPercentage = 0;
+        this.startTime = 0;
     }
 
     public void clear() {
@@ -154,8 +156,7 @@ public class MusicPlayerHandler {
     public void updateDisplayTexts() {
         if (this.currentMeta != null) {
             this.displayTexts[2] = TextUtil.cutIfTooLong(this.currentMeta.title(), 50) + " | " +
-                    TextUtil.cutIfTooLong(this.currentMeta.author(), 40) + " | " + this.currentMeta.getSource() +
-                    (this.currentMusic instanceof SharedMusic ? ", " + Text.translatable("concerto.room").getString() : "");
+                    TextUtil.cutIfTooLong(this.currentMeta.author(), 40) + " | " + this.currentMeta.getSource();
             MusicTimestamp timestamp = this.currentMeta.getDuration();
             this.timeFormat = "%s" + (timestamp == null ? "" : " ".repeat(30) + this.currentMeta.getDuration().toShortString());
         } else {
@@ -164,6 +165,7 @@ public class MusicPlayerHandler {
     }
 
     public void updateDisplayTexts(long millisecond) {
+        millisecond += this.startTime;
         MusicTimestamp duration = this.currentMeta.getDuration();
         this.progressPercentage = duration == null ? 0 : ((float) millisecond / duration.asMilliseconds());
         this.currentTime = MusicTimestamp.ofMilliseconds(millisecond);
@@ -171,7 +173,7 @@ public class MusicPlayerHandler {
         if (this.currentLyrics != null) {
             this.displayTexts[0] = this.currentLyrics.stayOrNext(millisecond).getString();
         } else if (millisecond < 5000) {
-            this.displayTexts[0] = Text.translatable("concerto.no_caption").getString();
+            this.displayTexts[0] = Text.translatable("concerto.no_subtitle").getString();
         } else {
             this.displayTexts[0] = "";
         }
@@ -195,6 +197,11 @@ public class MusicPlayerHandler {
         this.updateDisplayTexts();
         this.writeConfig();
         return this.currentMusic;
+    }
+
+    public void initMusicStatus(long startTime) {
+        this.initMusicStatus();
+        this.startTime = startTime;
     }
 
     public void initMusicStatus() {
@@ -287,7 +294,7 @@ public class MusicPlayerHandler {
         return ILLEGAL_CHARS.matcher(str).replaceAll(" ");
     }
 
-    public static void downloadPlaylist(List<Music> musics) {
+    public static void downloadMusics(List<Music> musics) {
         MusicPlayer.run(() -> {
             File file = new File("Concerto/Downloads");
             if (!file.exists() || !file.isDirectory()) {

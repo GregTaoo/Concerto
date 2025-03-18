@@ -13,10 +13,14 @@ More music platforms and more features will be supported in the future.
 ### Q & A
 - Q: Why some musics from NeteaseCloud stop playing at 00:30?
 - -- A: You don't have the privilege of NeteaseCloud VIP, or the musics require extra payments.
-- Q: How to play audios of Bilibili?
-- -- A: Download ffmpeg.exe and put it into root folder of Minecraft. (Certain skills required)
 
 Illegal behaviours through this mod are not allowed!
 
 Acknowledgement:
 [java-stream-player](https://github.com/goxr3plus/java-stream-player)
+
+### Thank you for donating! (Not in any particular order)：
+
+**2025.2: 藏; 凯岩城の冰原狼**
+
+**2025.3: 明天的我的世界**

@@ -10,4 +10,9 @@ public abstract class PathFileMusic extends Music {
     public String getRawPath() {
         return this.rawPath;
     }
+
+    @Override
+    public String getLink() {
+        return this.getRawPath();
+    }
 }

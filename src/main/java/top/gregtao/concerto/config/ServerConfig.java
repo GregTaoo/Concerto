@@ -24,5 +24,8 @@ public class ServerConfig extends ConfigFile {
 
     public static class ServerConfigOptions {
         public boolean auditionRequired = true;
+        public boolean serverMusicAgent = true;
+        public boolean agentInviteWhenJoin = true;
+        public int musicRoomCommandPermission = 2;
     }
 }

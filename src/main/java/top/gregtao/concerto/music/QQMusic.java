@@ -1,7 +1,6 @@
 package top.gregtao.concerto.music;
 
 import com.google.gson.JsonObject;
-import com.mojang.datafixers.util.Pair;
 import top.gregtao.concerto.api.CacheableMusic;
 import top.gregtao.concerto.api.DynamicPath;
 import top.gregtao.concerto.api.JsonParser;
@@ -15,9 +14,10 @@ import top.gregtao.concerto.music.meta.music.BasicMusicMetaData;
 import top.gregtao.concerto.music.meta.music.MusicMetaData;
 import top.gregtao.concerto.music.meta.music.UnknownMusicMeta;
 import top.gregtao.concerto.util.FileUtil;
+import top.gregtao.concerto.util.Pair;
 
 import java.io.InputStream;
-import java.net.URL;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -86,10 +86,15 @@ public class QQMusic extends Music implements CacheableMusic, DynamicPath {
     @Override
     public InputStream getMusicSource() throws MusicSourceNotFoundException {
         try {
-            return FileUtil.createBuffered(new HttpURLInputStream(new URL(this.getRawPath())));
+            return FileUtil.createBuffered(new HttpURLInputStream(URI.create(this.getRawPath()).toURL(), this::getRawPath));
         } catch (Exception e) {
             throw new MusicSourceNotFoundException(e);
         }
+    }
+
+    @Override
+    public String getLink() {
+        return "https://y.qq.com/n/ryqq/songDetail/" + this.mid;
     }
 
     public String getRawPath() {
@@ -104,6 +109,7 @@ public class QQMusic extends Music implements CacheableMusic, DynamicPath {
 
     @Override
     public String getLastLyrics() {
+        if (this.rawLyrics == null) this.getLyrics();
         return this.rawLyrics;
     }
 
@@ -114,7 +120,7 @@ public class QQMusic extends Music implements CacheableMusic, DynamicPath {
 
     @Override
     public String getSuffix() {
-        return "mp3";
+        return "ogg";
     }
 
     @Override

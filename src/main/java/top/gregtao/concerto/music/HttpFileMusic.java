@@ -11,7 +11,7 @@ import top.gregtao.concerto.util.HttpUtil;
 import top.gregtao.concerto.util.TextUtil;
 
 import java.io.InputStream;
-import java.net.URL;
+import java.net.URI;
 
 public class HttpFileMusic extends PathFileMusic implements CacheableMusic {
 
@@ -22,7 +22,7 @@ public class HttpFileMusic extends PathFileMusic implements CacheableMusic {
     @Override
     public InputStream getMusicSource() throws MusicSourceNotFoundException {
         try {
-            return FileUtil.createBuffered(new HttpURLInputStream(new URL(this.getRawPath())));
+            return FileUtil.createBuffered(new HttpURLInputStream(URI.create(this.getRawPath()).toURL()));
         } catch (Exception e) {
             throw new MusicSourceNotFoundException(e);
         }

@@ -1,6 +1,5 @@
 package top.gregtao.concerto.screen.qq;
 
-import com.mojang.datafixers.util.Pair;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
@@ -8,6 +7,7 @@ import net.minecraft.text.Text;
 import top.gregtao.concerto.http.qq.QQMusicApiClient;
 import top.gregtao.concerto.screen.ConcertoScreen;
 import top.gregtao.concerto.screen.login.QRCodeLoginScreen;
+import top.gregtao.concerto.util.Pair;
 
 import java.net.http.HttpResponse;
 

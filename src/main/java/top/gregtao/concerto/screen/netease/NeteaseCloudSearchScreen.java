@@ -3,7 +3,6 @@ package top.gregtao.concerto.screen.netease;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.screen.TitleScreen;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.gui.widget.CyclingButtonWidget;
 import net.minecraft.client.gui.widget.TextFieldWidget;
@@ -71,7 +70,7 @@ public class NeteaseCloudSearchScreen extends PageScreen {
                 case PLAYLIST -> this.playlistList.reset(NeteaseCloudApiClient.INSTANCE.searchPlaylist(keyword, page), null);
                 case ALBUM -> this.albumList.reset(NeteaseCloudApiClient.INSTANCE.searchAlbum(keyword, page), null);
             }
-            this.listWidgetsMap.get(this.searchType).setScrollAmount(0);
+            this.listWidgetsMap.get(this.searchType).setScrollY(0);
         });
     }
 

@@ -6,6 +6,7 @@ import net.minecraft.client.gui.screen.ChatScreen;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import org.joml.Vector2i;
+import top.gregtao.concerto.ConcertoClient;
 import top.gregtao.concerto.config.ClientConfig;
 import top.gregtao.concerto.player.MusicPlayer;
 import top.gregtao.concerto.player.MusicPlayerHandler;
@@ -23,22 +24,28 @@ public class InGameHudRenderer {
 
                 ClientConfig.ClientConfigOptions options = ClientConfig.INSTANCE.options;
                 if (options.displayLyrics) {
-                    Vector2i pos = ClientConfig.parsePosition(options.lyricsPosition, scaledWidth, scaledHeight);
+                    Vector2i pos = ClientConfig.INSTANCE.lyricsPosSupplier.getPos(scaledWidth, scaledHeight);
                     TextUtil.renderText(Text.literal(texts[0]).formatted(Formatting.DARK_AQUA), options.lyricsAlignment,
                             pos.x, pos.y, context, client.textRenderer, 0xffffffff);
                 }
                 if (options.displaySubLyrics) {
-                    Vector2i pos = ClientConfig.parsePosition(options.subLyricsPosition, scaledWidth, scaledHeight);
+                    Vector2i pos = ClientConfig.INSTANCE.subLyricsPosSupplier.getPos(scaledWidth, scaledHeight);
                     TextUtil.renderText(Text.literal(texts[1]).formatted(Formatting.GOLD), options.subLyricsAlignment,
                             pos.x, pos.y, context, client.textRenderer, 0xffffffff);
                 }
                 if (options.displayMusicDetails) {
-                    Vector2i pos = ClientConfig.parsePosition(options.musicDetailsPosition, scaledWidth, scaledHeight);
-                    TextUtil.renderText(Text.literal(texts[2]), options.musicDetailsAlignment,
+                    Vector2i pos = ClientConfig.INSTANCE.musicDetailsPosSupplier.getPos(scaledWidth, scaledHeight);
+
+                    String state = ConcertoClient.clientState == ConcertoClient.ClientState.MUSIC_AGENT ?
+                            " | " + Text.translatable("concerto.agent").getString() :
+                            (ConcertoClient.clientState == ConcertoClient.ClientState.MUSIC_ROOM ?
+                                    " | " + Text.translatable("concerto.room").getString() : "");
+
+                    TextUtil.renderText(Text.literal(texts[2] + state), options.musicDetailsAlignment,
                             pos.x, pos.y, context, client.textRenderer, 0xffffffff);
                 }
                 if (options.displayTimeProgress) {
-                    Vector2i pos = ClientConfig.parsePosition(options.timeProgressPosition, scaledWidth, scaledHeight);
+                    Vector2i pos = ClientConfig.INSTANCE.timeProgressPosSupplier.getPos(scaledWidth, scaledHeight);
                     TextUtil.renderText(Text.literal(texts[3]), options.timeProgressAlignment,
                             pos.x, pos.y, context, client.textRenderer, 0xffffffff);
                     int blankWidth = client.textRenderer.getWidth("                              "); // 兼容不同字体
@@ -50,9 +57,10 @@ public class InGameHudRenderer {
                             case CENTER -> x = pos.x - blankWidth / 2 - 10;
                             default -> x = pos.x - blankWidth - 15;
                         }
-                        context.fill(x, pos.y + 3, x + blankWidth - 20, pos.y + 5, 0xffa1c7f6);
+                        context.fill(x, pos.y + 3, x + blankWidth - 20, pos.y + 5,
+                                (int) ClientConfig.INSTANCE.timeProgressBgColor.getNumber());
                         context.fill(x, pos.y + 3, (int) (x + (blankWidth - 20) * MusicPlayerHandler.INSTANCE.progressPercentage),
-                                pos.y + 5, 0xff0155bc);
+                                pos.y + 5, (int) ClientConfig.INSTANCE.timeProgressColor.getNumber());
                     }
                 }
             }

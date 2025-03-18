@@ -18,9 +18,12 @@ import top.gregtao.concerto.config.ClientConfig;
 import top.gregtao.concerto.config.ConfigFile;
 import top.gregtao.concerto.http.netease.NeteaseCloudApiClient;
 import top.gregtao.concerto.http.qq.QQMusicApiClient;
+import top.gregtao.concerto.music.list.Playlist;
 import top.gregtao.concerto.network.ClientMusicNetworkHandler;
 import top.gregtao.concerto.player.MusicPlayer;
 import top.gregtao.concerto.util.ConcertoHotkeys;
+
+import java.util.List;
 
 public class ConcertoClient implements ClientModInitializer {
 
@@ -30,12 +33,27 @@ public class ConcertoClient implements ClientModInitializer {
 
 	public static final ConfigFile MUSIC_CONFIG = new ConfigFile("Concerto/musics.json");
 
+	// ======================================================
+	// Server States
+
+	public static ClientState clientState = ClientState.LOCAL;
+
 	public static boolean serverAvailable = false;
+
+	public static List<Playlist> presetRadios = List.of();
 
 	public static boolean isServerAvailable() {
 		return serverAvailable || MinecraftClient.getInstance().isInSingleplayer();
 //		return serverAvailable; // DEBUG
 	}
+
+	public enum ClientState {
+		LOCAL,
+		MUSIC_ROOM,
+		MUSIC_AGENT
+	}
+
+	// ======================================================
 
 	@Override
 	public void onInitializeClient() {
@@ -56,7 +74,7 @@ public class ConcertoClient implements ClientModInitializer {
 					ClientConfig.INSTANCE.readOptions();
 					MusicPlayer.INSTANCE.reloadConfig(() -> LOGGER.info("Loaded general music playlist"));
 					NeteaseCloudApiClient.LOCAL_USER.updateLoginStatus();
-					QQMusicApiClient.LOCAL_USER.logout(); // TODO: Fix cookies of QQ Music
+					QQMusicApiClient.LOCAL_USER.updateLoginStatus();
 				});
 			}
 		});

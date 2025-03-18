@@ -5,7 +5,6 @@ import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.ArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
-import com.mojang.datafixers.util.Pair;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandManager;
 import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;
 import net.minecraft.command.CommandRegistryAccess;
@@ -20,6 +19,7 @@ import top.gregtao.concerto.screen.QRCodeRenderer;
 import top.gregtao.concerto.music.Music;
 import top.gregtao.concerto.music.NeteaseCloudMusic;
 import top.gregtao.concerto.player.MusicPlayer;
+import top.gregtao.concerto.util.Pair;
 import top.gregtao.concerto.util.TextUtil;
 
 public class NeteaseCloudMusicCommand {
@@ -59,7 +59,7 @@ public class NeteaseCloudMusicCommand {
                                 QRCodeRenderer.load(NeteaseCloudApiClient.INSTANCE.getQRCodeLoginLink(key));
                                 NeteaseCloudApiClient.checkQRCodeStatusProgress(player, key);
                             } catch (Exception e) {
-                                player.sendMessage(Text.translatable("concerto.login.163.qrcode.error"));
+                                player.sendMessage(Text.translatable("concerto.login.163.qrcode.error"), false);
                                 throw new RuntimeException(e);
                             }
                             return 0;

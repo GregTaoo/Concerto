@@ -1,9 +1,9 @@
 package top.gregtao.concerto.music.lyrics;
 
-import com.mojang.datafixers.util.Pair;
 import net.minecraft.text.Text;
 import top.gregtao.concerto.music.MusicTimestamp;
 import top.gregtao.concerto.util.MathUtil;
+import top.gregtao.concerto.util.Pair;
 
 import java.util.ArrayList;
 import java.util.Collections;

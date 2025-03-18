@@ -9,6 +9,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import top.gregtao.concerto.network.MusicRoom;
+import top.gregtao.concerto.network.ServerMusicAgent;
 import top.gregtao.concerto.network.ServerMusicNetworkHandler;
 
 import java.util.ArrayList;
@@ -28,7 +29,7 @@ public class PlayerManagerMixin {
     public void removeInject(ServerPlayerEntity player, CallbackInfo ci) {
         List<UUID> removeList = new ArrayList<>();
         for (Map.Entry<UUID, MusicRoom> entry : MusicRoom.ROOMS.entrySet()) {
-            if (entry.getValue().admin.equals(player.getName().getString())) {
+            if (entry.getValue().owner.equals(player.getName().getString())) {
                 removeList.add(entry.getKey());
                 try {
                     entry.getValue().serverOnRemove(player.getName().getString(), player.server);
@@ -43,5 +44,6 @@ public class PlayerManagerMixin {
             }
         }
         removeList.forEach(MusicRoom.ROOMS::remove);
+        if (ServerMusicAgent.INSTANCE.isMember(player)) ServerMusicAgent.INSTANCE.playerQuit(player);
     }
 }

@@ -1,5 +1,6 @@
 package top.gregtao.concerto.player;
 
+import top.gregtao.concerto.music.SharedMusic;
 import top.gregtao.concerto.player.streamplayer.enums.Status;
 import top.gregtao.concerto.player.streamplayer.stream.StreamPlayer;
 import top.gregtao.concerto.player.streamplayer.stream.StreamPlayerEvent;
@@ -15,6 +16,7 @@ import top.gregtao.concerto.api.MusicJsonParsers;
 import top.gregtao.concerto.music.Music;
 import top.gregtao.concerto.network.MusicRoom;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
@@ -36,6 +38,10 @@ public class MusicPlayer extends StreamPlayer implements StreamPlayerListener {
 
     static {
         PLAYER_LOGGER = Logger.getLogger(MusicPlayer.class.getName());
+        File file = new File("Concerto");
+        if (!file.exists() && !file.isDirectory() && !file.mkdir()) {
+            throw new RuntimeException("Cannot mkdir!");
+        }
         FileHandler fileHandler;
         try {
             fileHandler = new FileHandler("Concerto/player.log", false);
@@ -218,7 +224,11 @@ public class MusicPlayer extends StreamPlayer implements StreamPlayerListener {
             status.resetInfo();
             status.currentMusic = music;
             status.currentSource = source;
-            status.initMusicStatus();
+            long startTime = 0;
+            if (music instanceof SharedMusic shared) {
+                startTime = shared.getStartTime();
+            }
+            status.initMusicStatus(startTime);
             status.updateDisplayTexts();
             try {
                 this.open(source);
@@ -262,7 +272,7 @@ public class MusicPlayer extends StreamPlayer implements StreamPlayerListener {
                         ConcertoClient.LOGGER.error("Unable to play music: '{}' of '{}'", music.getMeta().title(), music.getMeta().author());
                         if (player != null) {
                             player.sendMessage(Text.translatable(
-                                    "concerto.player.unable", music.getMeta().title(), music.getMeta().author()));
+                                    "concerto.player.unable", music.getMeta().title(), music.getMeta().author()), false);
                         }
                         MusicPlayerHandler.INSTANCE.setCurrentIndex((MusicPlayerHandler.INSTANCE.getCurrentIndex() + 1)
                                 % MusicPlayerHandler.INSTANCE.getMusicList().size());

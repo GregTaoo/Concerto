@@ -5,7 +5,8 @@
   "concerto.source.local_file": "Local File",
   "concerto.source.internet": "Internet Resources",
 
-  "concerto.no_caption": "No Captions",
+  "concerto.donate": "Donate",
+  "concerto.no_subtitle": "No Subtitles",
   "concerto.loading": "Loading",
   "concerto.unknown": "Unknown",
   "concerto.reject": "Reject",
@@ -13,8 +14,10 @@
   "concerto.accept": "Accept",
   "concerto.refresh": "Refresh",
   "concerto.success": "Success",
+  "concerto.fail": "Fail",
   "concerto.not_cacheable": "Not cacheable",
   "concerto.drag_confirm": "Do you want to add the following files/folders to Concerto?",
+  "concerto.thank_you": "Thank you! Your support keeps me going always!",
 
   "concerto.playlist": "Playlist",
   "concerto.album": "Album",
@@ -90,6 +93,7 @@
   "concerto.screen.confirmation": "Accepted shared musics",
   "concerto.screen.audition.permission_denied": "You don't have such permissions",
   "concerto.screen.daily_recommendation": "Daily Recommendation",
+  "concerto.screen.copy_link": "Copy link",
 
   "concerto.screen.add.local_file": "Local File:",
   "concerto.screen.add.local_file.folder": "Local File Path:",
@@ -131,6 +135,18 @@
   "concerto.screen.login.type.qrcode.qq": "QQ QR Code",
   "concerto.screen.login.type.qrcode.wechat": "WeChat QR Code",
   "concerto.screen.general_list": "General Playlist",
+  "concerto.screen.preset_radios": "Server Preset Radios",
+  "concerto.screen.acknowledgement": "Thank you for supporting!",
+  "concerto.screen.pause_resume": "Pause/Resume",
+
+  "concerto.donate.afdian": "Afdian",
+  "concerto.donate.bilibili": "Bilibili",
+  "concerto.donate.ko-fi": "Ko-fi",
+  "concerto.donate.supporters": "Supporters List",
+
+  "concerto.playlist.export": "Export as JSON",
+  "concerto.playlist.export.fail": "Failed to export playlist to JSON",
+  "concerto.playlist.export.success": "Successfully exported playlist to JSON in concerto_playlist_export.json",
 
   "concerto.search_type": "Type",
   "concerto.search_type.music": "Music",
@@ -156,6 +172,7 @@
   "concerto.hotkey.index": "Open Concerto Index Page",
 
   "concerto.room": "MusicRoom",
+  "concerto.room.permission_denied": "Permission Denied. Please contact the operators.",
   "concerto.room.create": "Created a music room. The UUID %s has been copied to your clipboard",
   "concerto.room.remove": "Removed the music room: %s",
   "concerto.room.remove.fail": "Failed to remove the music room",
@@ -164,8 +181,30 @@
   "concerto.room.quit": "Quited the music room: %s",
   "concerto.room.quit.fail": "Failed to quit the music room",
   "concerto.room.update.fail": "Failed to update information of music room",
-  "concerto.room.de_op": "Cancelled {}'s op permissions of music room",
-  "concerto.room.op": "Set {} to op of music room",
+  "concerto.room.de_op": "Cancelled %s's op permissions of music room",
+  "concerto.room.op": "Set %s to op of music room",
+  "concerto.room.members": "Owner: %s; Members: %s.",
 
-  "concerto.error.invalid_path": "Invalid path or file format"
+  "concerto.like": "Liked music %s from %s",
+  "concerto.dislike": "Disliked music %s from %s",
+
+  "concerto.agent": "Server Agent",
+  "concerto.agent.invite": "Join the server music agent?",
+  "concerto.agent.join": "Joined the server music agent.",
+  "concerto.agent.quit": "Quited the server music agent.",
+  "concerto.screen.request": "Request(Server)",
+  "concerto.agent.occupied": "Please quit the current music room before joining a new one.",
+  "concerto.agent.add": "%s requested for music: %s - %s.",
+  "concerto.agent.vote": "Please vote for whether to CUT the current music",
+  "concerto.agent.vote_for": "You have voted for %s.",
+  "concerto.agent.vote.duplicate": "A vote is still processing.",
+  "concerto.agent.vote.ended": "No votes available now.",
+  "concerto.agent.vote.success": "The vote has ended with %s:%s, and the current music will be CUT",
+  "concerto.agent.vote.failed": "The vote has ended with %s:%s, and the current music will keep playing.",
+  "concerto.agent.play.failed": "Cannot play music %s - %s, it may be caused by interal server error or no VIP permissions.",
+  "concerto.agent.not_available": "The music agent service is not available!",
+  "concerto.agent.error": "Error occurs in server music agent.",
+
+  "concerto.error.invalid_path": "Invalid path or file format",
+  "concerto.error.unsupported_operation": "Unsupported Operation!"
 }

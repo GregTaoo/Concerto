@@ -6,20 +6,27 @@ import top.gregtao.concerto.ConcertoClient;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URI;
 import java.net.URL;
+import java.util.function.Supplier;
 
 public class HttpURLInputStream extends InputStream {
 
-    private final URL url;
+    private URL url;
     private HttpURLConnection connection;
     private InputStream in;
     private final int szBytes;
     private int readBytesTotal;
     private int retryCount = 0;
+    private boolean closed = false;
 
-    public HttpURLInputStream(URL url, int startBytePos) throws IOException {
+    private final Supplier<String> urlSupplier;
+
+    public HttpURLInputStream(URL url, int startBytePos, Supplier<String> urlSupplier) throws IOException {
         this.readBytesTotal = startBytePos;
         this.url = url;
+        this.urlSupplier = urlSupplier;
         this.connection = this.openNewConnection();
         if (this.connection.getResponseCode() == 200) {
             this.szBytes = this.connection.getContentLength();
@@ -31,8 +38,30 @@ public class HttpURLInputStream extends InputStream {
         }
     }
 
+    public HttpURLInputStream(URL url, Supplier<String> urlSupplier) throws IOException {
+        this(url, 0, urlSupplier);
+    }
+
     public HttpURLInputStream(URL url) throws IOException {
-        this(url, 0);
+        this(url, 0, null);
+    }
+
+    public static int getTotalBytes(URL url) {
+        try(HttpURLInputStream stream = new HttpURLInputStream(url)) {
+            return stream.szBytes;
+        } catch (IOException e) {
+            ConcertoClient.LOGGER.error(e.getMessage());
+            return 0;
+        }
+    }
+
+    public static int getTotalBytes(String url) {
+        try {
+            return getTotalBytes(URI.create(url).toURL());
+        } catch (MalformedURLException e) {
+            ConcertoClient.LOGGER.error(e.getMessage());
+            return 0;
+        }
     }
 
     private HttpURLConnection openNewConnection() throws IOException {
@@ -56,6 +85,10 @@ public class HttpURLInputStream extends InputStream {
         } else {
             String message = this.connection.getResponseCode() + " - cannot access to url: " + url;
             ConcertoClient.LOGGER.error(message);
+            if (this.connection.getResponseCode() == 403 && this.urlSupplier != null) {
+                this.url = URI.create(this.urlSupplier.get()).toURL();
+                ConcertoClient.LOGGER.warn("Trying to request for a new url.");
+            }
             throw new IOException(message);
         }
     }
@@ -68,13 +101,15 @@ public class HttpURLInputStream extends InputStream {
         } catch (IOException e) {
             ConcertoClient.LOGGER.error("Failed to reconnect!");
             if (++this.retryCount > 10) {
+                ConcertoClient.LOGGER.error("Failed to reconnect for 10 times! Closing...");
                 this.close();
             }
         }
     }
 
     public int read() throws IOException {
-        if (this.readBytesTotal >= this.szBytes) {
+        if (this.closed) return -1;
+        if (this.readBytesTotal >= this.szBytes - 1) {
             this.close();
             return -1;
         }
@@ -96,7 +131,8 @@ public class HttpURLInputStream extends InputStream {
     }
 
     public int read(byte @NotNull [] b, int off, int len) throws IOException {
-        if (this.readBytesTotal >= this.szBytes) {
+        if (this.closed) return -1;
+        if (this.readBytesTotal >= this.szBytes - 1) {
             this.close();
             return -1;
         }
@@ -109,20 +145,19 @@ public class HttpURLInputStream extends InputStream {
     }
 
     public long skip(long n) throws IOException {
+        if (this.closed) return -1;
         int k = 0;
         while (--n >= 0 && this.read() != -1) ++k;
         return k;
     }
 
     public int available() {
-        return this.szBytes - this.readBytesTotal;
+        return this.closed ? 0 : this.szBytes - this.readBytesTotal;
     }
 
     public void close() throws IOException {
+        this.closed = true;
         this.disconnect();
     }
 
-    public boolean markSupported() {
-        return false;
-    }
 }

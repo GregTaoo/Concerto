@@ -13,6 +13,7 @@ import top.gregtao.concerto.screen.QRCodeRenderer;
 import top.gregtao.concerto.screen.widget.URLImageWidget;
 
 import java.net.MalformedURLException;
+import java.net.URI;
 import java.net.URL;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -68,7 +69,7 @@ public class QRCodeLoginScreen extends ConcertoScreen {
                 case SUCCESS -> {
                     ClientPlayerEntity player = MinecraftClient.getInstance().player;
                     if (player != null) {
-                        player.sendMessage(Text.translatable("concerto.screen.login.qrcode.success"));
+                        player.sendMessage(Text.translatable("concerto.screen.login.qrcode.success"), false);
                     }
                     MinecraftClient.getInstance().setScreen(null);
                     QRCodeRenderer.clear();
@@ -92,7 +93,7 @@ public class QRCodeLoginScreen extends ConcertoScreen {
             if (this.isSpecificImage) {
                 String link = this.qrKeySupplier.get();
                 try {
-                    this.urlImageWidget.setUrl(new URL(link));
+                    this.urlImageWidget.setUrl(URI.create(link).toURL());
                     if (this.imageUpdater != null) this.urlImageWidget.loadImage(this.imageUpdater, false);
                     else this.urlImageWidget.loadImage();
                     this.status = Status.WAITING;

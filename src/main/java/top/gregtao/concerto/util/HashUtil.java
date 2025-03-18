@@ -18,4 +18,16 @@ public class HashUtil {
             throw new RuntimeException("No such md5 algorithm");
         }
     }
+
+    public static String sha1(String text) {
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-1");
+            digest.update(text.getBytes(StandardCharsets.UTF_8));
+            String sha1 = new BigInteger(1, digest.digest()).toString(16);
+            if (sha1.length() < 40) sha1 = "0".repeat(40 - sha1.length()) + sha1;
+            return sha1;
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException("No such sha1 algorithm");
+        }
+    }
 }

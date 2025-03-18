@@ -1,6 +1,5 @@
 package top.gregtao.concerto.music;
 
-import com.mojang.datafixers.util.Pair;
 import top.gregtao.concerto.api.JsonParser;
 import top.gregtao.concerto.api.MusicJsonParsers;
 import top.gregtao.concerto.http.HttpURLInputStream;
@@ -8,12 +7,14 @@ import top.gregtao.concerto.music.lyrics.DefaultFormatLyrics;
 import top.gregtao.concerto.music.lyrics.Lyrics;
 import top.gregtao.concerto.music.meta.music.MusicMetaData;
 import top.gregtao.concerto.util.FileUtil;
+import top.gregtao.concerto.util.Pair;
 
 import java.io.InputStream;
-import java.net.URL;
+import java.net.URI;
 
 public class SharedMusic extends PathFileMusic {
     private final String rawLyrics, rawSubLyrics;
+    public long startTime = 0, startByte = 0;
 
     public SharedMusic(String rawPath, MusicMetaData metaData, String lyrics, String subLyrics) {
         super(rawPath);
@@ -22,10 +23,12 @@ public class SharedMusic extends PathFileMusic {
         this.setMusicMeta(metaData);
     }
 
-    public SharedMusic(String rawPath, String lyrics, String subLyrics) {
+    public SharedMusic(String rawPath, String lyrics, String subLyrics, long startTime, long startByte) {
         super(rawPath);
         this.rawLyrics = lyrics;
         this.rawSubLyrics = subLyrics;
+        this.startTime = startTime;
+        this.startByte = startByte;
     }
 
     public String getRawLyrics() {
@@ -36,10 +39,19 @@ public class SharedMusic extends PathFileMusic {
         return this.rawSubLyrics == null ? "" : this.rawSubLyrics;
     }
 
+    public long getStartTime() {
+        return this.startTime;
+    }
+
+    public long getStartByte() {
+        return this.startByte;
+    }
+
     @Override
     public InputStream getMusicSource() throws MusicSourceNotFoundException {
         try {
-            return FileUtil.createBuffered(new HttpURLInputStream(new URL(this.getRawPath())));
+            return FileUtil.createBuffered(new HttpURLInputStream(URI.create(this.getRawPath()).toURL(),
+                    (int) this.startByte, null));
         } catch (Exception e) {
             throw new MusicSourceNotFoundException(e);
         }

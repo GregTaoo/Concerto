@@ -23,7 +23,7 @@ public abstract class ApplyDraggedFileScreen extends ConcertoScreen {
     }
 
     @Override
-    public void filesDragged(List<Path> paths) {
+    public void onFilesDropped(List<Path> paths) {
         if (this.client == null) return;
         String message = paths.stream().map(Path::getFileName).map(Path::toString).collect(Collectors.joining(", "));
         this.client.setScreen(new ConfirmScreen(confirmed -> {

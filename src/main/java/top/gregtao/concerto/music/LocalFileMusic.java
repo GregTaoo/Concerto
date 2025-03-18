@@ -1,10 +1,13 @@
 package top.gregtao.concerto.music;
 
-import com.mojang.datafixers.util.Pair;
 import org.jaudiotagger.audio.AudioFile;
 import org.jaudiotagger.audio.AudioFileIO;
+import org.jaudiotagger.audio.exceptions.CannotReadException;
+import org.jaudiotagger.audio.exceptions.InvalidAudioFrameException;
+import org.jaudiotagger.audio.exceptions.ReadOnlyFileException;
 import org.jaudiotagger.tag.FieldKey;
 import org.jaudiotagger.tag.Tag;
+import org.jaudiotagger.tag.TagException;
 import org.jflac.sound.spi.FlacAudioFileReader;
 import top.gregtao.concerto.ConcertoClient;
 import top.gregtao.concerto.api.*;
@@ -17,11 +20,13 @@ import top.gregtao.concerto.player.streamplayer.enums.AudioType;
 import top.gregtao.concerto.player.streamplayer.tools.TimeTool;
 import top.gregtao.concerto.util.FileUtil;
 import top.gregtao.concerto.util.HttpUtil;
+import top.gregtao.concerto.util.Pair;
 import top.gregtao.concerto.util.TextUtil;
 
 import javax.sound.sampled.UnsupportedAudioFileException;
 import java.io.*;
 import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
@@ -57,8 +62,19 @@ public class LocalFileMusic extends PathFileMusic {
 
     @Override
     public Pair<Lyrics, Lyrics> getLyrics() throws IOException {
-        return Pair.of(new DefaultFormatLyrics().load(String.join("\n",
-                Files.readAllLines(Path.of(HttpUtil.getRawPathWithoutSuffix(this.getRawPath()) + ".lrc")))), null);
+        Lyrics lyrics = null;
+        try {
+            lyrics = new DefaultFormatLyrics().load(String.join("\n",
+                    Files.readAllLines(Path.of(HttpUtil.getRawPathWithoutSuffix(this.getRawPath()) + ".lrc"))));
+        } catch (NoSuchFileException e) {
+            try {
+                lyrics = new DefaultFormatLyrics().load(FileUtil.getLocalAudioLyrics(
+                        AudioFileIO.read(new File(this.getRawPath()))));
+            } catch (IOException | CannotReadException | TagException | InvalidAudioFrameException | ReadOnlyFileException e1) {
+                ConcertoClient.LOGGER.warn("Error occurs while loading file: '{}'", this.getRawPath());
+            }
+        }
+        return Pair.of(lyrics, null);
     }
 
     @Override

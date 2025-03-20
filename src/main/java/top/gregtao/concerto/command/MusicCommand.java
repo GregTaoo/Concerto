@@ -42,11 +42,13 @@ public class MusicCommand {
 
     public static void register() {
         LiteralCommandNode<FabricClientCommandSource> node = ClientCommandManager.DISPATCHER.register(registerPlayerControllers(
-                ClientCommandManager.literal("music")
+                ClientCommandManager.literal("concerto")
                         .then(addMusicCommand())
                         .then(insertMusicCommand())
         ));
-        ClientCommandManager.DISPATCHER.register(ClientCommandManager.literal("concerto").redirect(node));
+        if (ClientConfig.INSTANCE.options.registerMusicCommand) {
+            ClientCommandManager.DISPATCHER.register(ClientCommandManager.literal("music").redirect(node));
+        }
     }
 
     private static final List<MusicAdderBuilder.MusicGetter<Music>> GETTERS = List.of(

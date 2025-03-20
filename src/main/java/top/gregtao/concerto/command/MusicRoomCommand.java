@@ -14,7 +14,7 @@ import top.gregtao.concerto.network.room.MusicRoom;
 public class MusicRoomCommand {
 
     public static void register() {
-        LiteralCommandNode<FabricClientCommandSource> node = ClientCommandManager.DISPATCHER.register(
+        ClientCommandManager.DISPATCHER.register(
                 ClientCommandManager.literal("musicroom")
                         .then(ClientCommandManager.literal("create").executes(context -> {
                             ClientPlayerEntity player = context.getSource().getPlayer();
@@ -100,7 +100,6 @@ public class MusicRoomCommand {
                                 )
                         )
         );
-        ClientCommandManager.DISPATCHER.register(ClientCommandManager.literal("concerto").redirect(node));
     }
 
     public static boolean checkServerAvailable(ClientPlayerEntity player) {

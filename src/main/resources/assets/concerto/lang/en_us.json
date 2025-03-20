@@ -16,6 +16,7 @@
   "concerto.success": "Success",
   "concerto.fail": "Fail",
   "concerto.not_cacheable": "Not cacheable",
+  "concerto.not_available": "Concerto not available in this server!",
   "concerto.drag_confirm": "Do you want to add the following files/folders to Concerto?",
   "concerto.thank_you": "Thank you! Your support keeps me going always!",
 

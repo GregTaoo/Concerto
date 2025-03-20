@@ -1,7 +1,6 @@
 package top.gregtao.concerto;
 
 import net.fabricmc.api.ClientModInitializer;
-import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback;
 import net.fabricmc.fabric.api.resource.ResourceManagerHelper;
 import net.fabricmc.fabric.api.resource.SimpleSynchronousResourceReloadListener;
 import net.minecraft.client.MinecraftClient;
@@ -57,15 +56,15 @@ public class ConcertoClient implements ClientModInitializer {
 
 	@Override
 	public void onInitializeClient() {
-		ClientCommandRegistrationCallback.EVENT.register(MusicCommand::register);
-		ClientCommandRegistrationCallback.EVENT.register(ShareMusicCommand::register);
-		ClientCommandRegistrationCallback.EVENT.register(NeteaseCloudMusicCommand::register);
-		ClientCommandRegistrationCallback.EVENT.register(MusicRoomCommand::register);
+		MusicCommand.register();
+		ShareMusicCommand.register();
+		NeteaseCloudMusicCommand.register();
+		MusicRoomCommand.register();
 
 		ResourceManagerHelper.get(ResourceType.CLIENT_RESOURCES).registerReloadListener(new SimpleSynchronousResourceReloadListener() {
 			@Override
 			public Identifier getFabricId() {
-				return Identifier.of(ConcertoClient.MOD_ID, "music");
+				return new Identifier(ConcertoClient.MOD_ID, "music");
 			}
 
 			@Override

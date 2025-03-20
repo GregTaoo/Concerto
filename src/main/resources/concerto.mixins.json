@@ -9,7 +9,6 @@
   "client": [
     "ChatHudMixin",
     "MinecraftClientMixin",
-    "GameMenuScreenMixin",
     "MusicTrackerMixin",
     "SoundManagerMixin"
   ],

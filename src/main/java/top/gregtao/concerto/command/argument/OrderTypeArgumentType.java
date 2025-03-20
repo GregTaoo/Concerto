@@ -1,8 +1,7 @@
 package top.gregtao.concerto.command.argument;
 
 import com.mojang.brigadier.context.CommandContext;
-import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;
-import net.minecraft.command.argument.EnumArgumentType;
+import net.fabricmc.fabric.api.client.command.v1.FabricClientCommandSource;
 import top.gregtao.concerto.enums.OrderType;
 
 public class OrderTypeArgumentType extends EnumArgumentType<OrderType> {

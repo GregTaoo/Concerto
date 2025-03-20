@@ -4,12 +4,10 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.Drawable;
 import net.minecraft.client.gui.DrawableHelper;
-import net.minecraft.client.gui.widget.ClickableWidget;
-import net.minecraft.client.gui.widget.Widget;
 import net.minecraft.client.texture.NativeImage;
 import net.minecraft.client.texture.NativeImageBackedTexture;
 import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.text.Text;
+import net.minecraft.text.TranslatableText;
 import net.minecraft.util.Identifier;
 import top.gregtao.concerto.ConcertoClient;
 import top.gregtao.concerto.config.CacheManager;
@@ -20,10 +18,9 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.*;
 import java.net.URL;
-import java.util.function.Consumer;
 import java.util.function.Function;
 
-public class URLImageWidget implements Drawable, Widget, Closeable {
+public class URLImageWidget implements Drawable, Closeable {
 
     protected int width;
     protected int height;
@@ -41,7 +38,7 @@ public class URLImageWidget implements Drawable, Widget, Closeable {
         this.y = y;
         this.url = url;
         this.texture = new NativeImageBackedTexture(width << 3, height << 3, false);
-        this.textureId = Identifier.of(ConcertoClient.MOD_ID, "image");
+        this.textureId = new Identifier(ConcertoClient.MOD_ID, "image");
         MinecraftClient.getInstance().getTextureManager().registerTexture(this.textureId, this.texture);
     }
 
@@ -141,7 +138,7 @@ public class URLImageWidget implements Drawable, Widget, Closeable {
         DrawableHelper.drawBorder(matrices, this.x, this.y, this.width, this.height, 0xffffffff);
         if (this.url == null) {
             DrawableHelper.drawCenteredTextWithShadow(matrices, MinecraftClient.getInstance().textRenderer,
-                    Text.translatable("concerto.screen.url_image.empty"), this.x + this.width / 2, this.y + this.height / 2, 0xffffffff);
+                    new TranslatableText("concerto.screen.url_image.empty").asOrderedText(), this.x + this.width / 2, this.y + this.height / 2, 0xffffffff);
         } else {
             NativeImage image = this.texture.getImage();
             if (image != null && !this.loading) {
@@ -154,41 +151,41 @@ public class URLImageWidget implements Drawable, Widget, Closeable {
                 RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f);
             } else {
                 DrawableHelper.drawCenteredTextWithShadow(matrices, MinecraftClient.getInstance().textRenderer,
-                        Text.translatable("concerto.screen.loading"), this.x + this.width / 2, this.y + this.height / 2, 0xffffffff);
+                        new TranslatableText("concerto.screen.loading").asOrderedText(), this.x + this.width / 2, this.y + this.height / 2, 0xffffffff);
             }
         }
     }
 
-    @Override
-    public void setX(int x) {
-        this.x = x;
-    }
+//    @Override
+//    public void setX(int x) {
+//        this.x = x;
+//    }
+//
+//    @Override
+//    public void setY(int y) {
+//        this.y = y;
+//    }
+//
+//    @Override
+//    public int getX() {
+//        return this.x;
+//    }
+//
+//    @Override
+//    public int getY() {
+//        return this.y;
+//    }
 
-    @Override
-    public void setY(int y) {
-        this.y = y;
-    }
-
-    @Override
-    public int getX() {
-        return this.x;
-    }
-
-    @Override
-    public int getY() {
-        return this.y;
-    }
-
-    @Override
+//    @Override
     public int getWidth() {
         return this.width;
     }
 
-    @Override
+//    @Override
     public int getHeight() {
         return this.height;
     }
 
-    @Override
-    public void forEachChild(Consumer<ClickableWidget> consumer) {}
+//    @Override
+//    public void forEachChild(Consumer<ClickableWidget> consumer) {}
 }

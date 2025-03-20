@@ -1,9 +1,6 @@
 package top.gregtao.concerto.music;
 
-import top.gregtao.concerto.api.CacheableMusic;
-import top.gregtao.concerto.api.JsonParsable;
-import top.gregtao.concerto.api.LazyLoadable;
-import top.gregtao.concerto.api.WithMetaData;
+import top.gregtao.concerto.api.*;
 import top.gregtao.concerto.config.MusicCacheManager;
 import top.gregtao.concerto.music.lyrics.Lyrics;
 import top.gregtao.concerto.music.meta.music.MusicMetaData;

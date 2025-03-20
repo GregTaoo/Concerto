@@ -14,6 +14,7 @@ import top.gregtao.concerto.command.ShareMusicCommand;
 import top.gregtao.concerto.config.ClientConfig;
 import top.gregtao.concerto.config.PresetRadioConfig;
 import top.gregtao.concerto.music.Music;
+import top.gregtao.concerto.network.room.MusicRoom;
 import top.gregtao.concerto.player.MusicPlayer;
 import top.gregtao.concerto.player.MusicPlayerHandler;
 import top.gregtao.concerto.screen.MusicAuditionScreen;
@@ -162,7 +163,7 @@ public class ClientMusicNetworkHandler {
             if (player != null && playerName.equals(player.getName().getString())) {
                 ConcertoClient.serverAvailable = true;
                 ConcertoClient.LOGGER.info("Concerto has been installed in this server");
-                if (args.length > 3 && args[3].equals("Invite")) {
+                if (args.length > 3 && !MinecraftClient.getInstance().isInSingleplayer() && args[3].equals("Invite")) {
                     if (ClientConfig.INSTANCE.options.joinAgentWhenInvited) {
                         player.networkHandler.sendChatCommand("/musicroom agent join");
                     } else {

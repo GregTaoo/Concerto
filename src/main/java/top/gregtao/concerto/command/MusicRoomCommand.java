@@ -11,7 +11,7 @@ import net.minecraft.command.CommandRegistryAccess;
 import net.minecraft.text.Text;
 import top.gregtao.concerto.ConcertoClient;
 import top.gregtao.concerto.network.ClientMusicNetworkHandler;
-import top.gregtao.concerto.network.MusicRoom;
+import top.gregtao.concerto.network.room.MusicRoom;
 
 public class MusicRoomCommand {
 

@@ -8,8 +8,8 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import top.gregtao.concerto.network.MusicRoom;
-import top.gregtao.concerto.network.ServerMusicAgent;
+import top.gregtao.concerto.network.room.MusicRoom;
+import top.gregtao.concerto.network.room.ServerMusicAgent;
 import top.gregtao.concerto.network.ServerMusicNetworkHandler;
 
 import java.util.ArrayList;

@@ -3,7 +3,7 @@ package top.gregtao.concerto.network;
 import com.google.gson.JsonObject;
 import net.minecraft.server.MinecraftServer;
 import top.gregtao.concerto.api.MusicJsonParsers;
-import top.gregtao.concerto.music.UnsafeMusicException;
+import top.gregtao.concerto.api.UnsafeMusicException;
 import top.gregtao.concerto.enums.Sources;
 import top.gregtao.concerto.music.Music;
 import top.gregtao.concerto.util.JsonUtil;

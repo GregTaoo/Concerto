@@ -9,7 +9,7 @@ import net.minecraft.command.CommandRegistryAccess;
 import net.minecraft.command.argument.UuidArgumentType;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
-import top.gregtao.concerto.music.UnsafeMusicException;
+import top.gregtao.concerto.api.UnsafeMusicException;
 import top.gregtao.concerto.command.argument.ShareMusicTargetArgumentType;
 import top.gregtao.concerto.music.Music;
 import top.gregtao.concerto.network.ClientMusicNetworkHandler;

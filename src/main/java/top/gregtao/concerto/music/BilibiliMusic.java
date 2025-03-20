@@ -4,6 +4,7 @@ import com.google.gson.JsonObject;
 import top.gregtao.concerto.api.CacheableMusic;
 import top.gregtao.concerto.api.JsonParser;
 import top.gregtao.concerto.api.MusicJsonParsers;
+import top.gregtao.concerto.api.MusicSourceNotFoundException;
 import top.gregtao.concerto.config.MusicCacheManager;
 import top.gregtao.concerto.enums.Sources;
 import top.gregtao.concerto.http.HttpURLInputStream;

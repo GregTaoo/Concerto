@@ -1,4 +1,4 @@
-package top.gregtao.concerto.network;
+package top.gregtao.concerto.network.room;
 
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
@@ -14,6 +14,8 @@ import top.gregtao.concerto.api.MusicJsonParsers;
 import top.gregtao.concerto.config.ServerConfig;
 import top.gregtao.concerto.music.Music;
 import top.gregtao.concerto.music.SharedMusic;
+import top.gregtao.concerto.network.ConcertoPayload;
+import top.gregtao.concerto.network.MusicDataPacket;
 import top.gregtao.concerto.player.MusicPlayer;
 import top.gregtao.concerto.util.TextUtil;
 

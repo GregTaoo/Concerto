@@ -3,7 +3,6 @@ package top.gregtao.concerto.command;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.BoolArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
-import com.mojang.brigadier.tree.LiteralCommandNode;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandManager;
 import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;
 import net.minecraft.client.network.ClientPlayerEntity;
@@ -16,7 +15,7 @@ import top.gregtao.concerto.network.room.MusicRoom;
 public class MusicRoomCommand {
 
     public static void register(CommandDispatcher<FabricClientCommandSource> dispatcher, CommandRegistryAccess access) {
-        LiteralCommandNode<FabricClientCommandSource> node = dispatcher.register(
+        dispatcher.register(
                 ClientCommandManager.literal("musicroom")
                         .then(ClientCommandManager.literal("create").executes(context -> {
                             ClientPlayerEntity player = context.getSource().getPlayer();
@@ -102,7 +101,6 @@ public class MusicRoomCommand {
                                 )
                         )
         );
-        dispatcher.register(ClientCommandManager.literal("concerto").redirect(node));
     }
 
     public static boolean checkServerAvailable(ClientPlayerEntity player) {

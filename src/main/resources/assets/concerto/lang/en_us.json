@@ -91,7 +91,7 @@
   "concerto.screen.url_image.empty": "No Image",
   "concerto.screen.playlist.add": "Add all",
   "concerto.screen.audition": "Audit shared musics",
-  "concerto.screen.confirmation": "Accepted shared musics",
+  "concerto.screen.confirmation": "Accept shared musics",
   "concerto.screen.audition.permission_denied": "You don't have such permissions",
   "concerto.screen.daily_recommendation": "Daily Recommendation",
   "concerto.screen.copy_link": "Copy link",

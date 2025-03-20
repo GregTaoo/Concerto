@@ -38,7 +38,7 @@ public class URLImageWidget implements Drawable, Closeable {
         this.y = y;
         this.url = url;
         this.texture = new NativeImageBackedTexture(width << 3, height << 3, false);
-        this.textureId = new Identifier(ConcertoClient.MOD_ID, "image");
+        this.textureId = new Identifier(ConcertoClient.MOD_ID, "image_" + System.nanoTime());
         MinecraftClient.getInstance().getTextureManager().registerTexture(this.textureId, this.texture);
     }
 
@@ -135,7 +135,7 @@ public class URLImageWidget implements Drawable, Closeable {
 
     @Override
     public void render(MatrixStack matrices, int mouseX, int mouseY, float delta) {
-        DrawableHelper.drawBorder(matrices, this.x, this.y, this.width, this.height, 0xffffffff);
+        drawBorder(matrices, this.x, this.y, this.width, this.height, 0xffffffff);
         if (this.url == null) {
             DrawableHelper.drawCenteredTextWithShadow(matrices, MinecraftClient.getInstance().textRenderer,
                     new TranslatableText("concerto.screen.url_image.empty").asOrderedText(), this.x + this.width / 2, this.y + this.height / 2, 0xffffffff);
@@ -154,6 +154,13 @@ public class URLImageWidget implements Drawable, Closeable {
                         new TranslatableText("concerto.screen.loading").asOrderedText(), this.x + this.width / 2, this.y + this.height / 2, 0xffffffff);
             }
         }
+    }
+
+    public static void drawBorder(MatrixStack matrices, int x, int y, int width, int height, int color) {
+        DrawableHelper.fill(matrices, x, y, x + width, y + 1, color);
+        DrawableHelper.fill(matrices, x, y + height - 1, x + width, y + height, color);
+        DrawableHelper.fill(matrices, x, y + 1, x + 1, y + height - 1, color);
+        DrawableHelper.fill(matrices, x + width - 1, y + 1, x + width, y + height - 1, color);
     }
 
 //    @Override

@@ -5,7 +5,9 @@ import net.minecraft.client.gui.DrawableHelper;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.text.LiteralText;
 import net.minecraft.text.Text;
+import net.minecraft.text.TranslatableText;
 import top.gregtao.concerto.config.PresetRadioConfig;
 import top.gregtao.concerto.music.Music;
 import top.gregtao.concerto.music.list.Playlist;
@@ -19,7 +21,7 @@ public class PlaylistPreviewScreen extends ConcertoScreen {
     private MetadataListWidget<Music> widget;
 
     public PlaylistPreviewScreen(Playlist playlist, Screen parent) {
-        super(Text.literal(Text.translatable("concerto." + (playlist.isAlbum() ? "album" : "playlist")).getString() +
+        super(new LiteralText(new TranslatableText("concerto." + (playlist.isAlbum() ? "album" : "playlist")).getString() +
                 ": " + playlist.getMeta().title() + " - " + playlist.getMeta().author()), parent);
         this.playlist = playlist;
     }
@@ -27,7 +29,7 @@ public class PlaylistPreviewScreen extends ConcertoScreen {
     @Override
     protected void init() {
         super.init();
-        this.widget = new MetadataListWidget<>(this.width, 0, 18, this.height - 35, 18) {
+        this.widget = new MetadataListWidget<>(this.width, 0, 30, this.height - 40, 18) {
             @Override
             public void onDoubleClicked(ConcertoListWidget<Music>.Entry entry) {
                 MusicPlayer.INSTANCE.addMusicHere(entry.item, true);
@@ -38,43 +40,48 @@ public class PlaylistPreviewScreen extends ConcertoScreen {
         this.addSelectableChild(this.widget);
         MusicPlayer.run(() -> this.widget.reset(this.playlist.getList(), null));
 
-        this.addDrawableChild(ButtonWidget.builder(Text.translatable("concerto.screen.playlist.add"), button ->
+        this.addDrawableChild(new ButtonWidget(20, this.height - 30, 60, 20,
+                new TranslatableText("concerto.screen.playlist.add"), button ->
             MusicPlayer.INSTANCE.addMusic(this.playlist.getList(), () ->
                     MusicPlayer.INSTANCE.skipTo(MusicPlayerHandler.INSTANCE.getMusicList().size() - this.playlist.getList().size())
-        )).position(20, this.height - 30).size(60, 20).build());
+        )));
 
-        this.addDrawableChild(ButtonWidget.builder(Text.translatable("concerto.screen.play"), button -> {
+        this.addDrawableChild(new ButtonWidget(85, this.height - 30, 60, 20,
+                new TranslatableText("concerto.screen.play"), button -> {
             ConcertoListWidget<Music>.Entry entry = this.widget.getSelectedOrNull();
             if (entry != null) {
                 MusicPlayer.INSTANCE.addMusicHere(entry.item, true);
             }
-        }).position(85, this.height - 30).size(60, 20).build());
+        }));
 
-        this.addDrawableChild(ButtonWidget.builder(Text.translatable("concerto.screen.add"), button -> {
+        this.addDrawableChild(new ButtonWidget(150, this.height - 30, 60, 20,
+                new TranslatableText("concerto.screen.add"), button -> {
             ConcertoListWidget<Music>.Entry entry = this.widget.getSelectedOrNull();
             if (entry != null) {
                 MusicPlayer.INSTANCE.addMusic(entry.item);
             }
-        }).position(150, this.height - 30).size(60, 20).build());
+        }));
 
-        this.addDrawableChild(ButtonWidget.builder(Text.translatable("concerto.screen.info"), button -> {
+        this.addDrawableChild(new ButtonWidget(215, this.height - 30, 60, 20,
+                new TranslatableText("concerto.screen.info"), button -> {
             ConcertoListWidget<Music>.Entry entry = this.widget.getSelectedOrNull();
             if (entry != null) {
                 MinecraftClient.getInstance().setScreen(new MusicInfoScreen(entry.item, this));
             }
-        }).position(215, this.height - 30).size(60, 20).build());
+        }));
 
-        this.addDrawableChild(ButtonWidget.builder(Text.translatable("concerto.playlist.export"), button -> {
-            Text text = PresetRadioConfig.saveToTmpFile(this.playlist) ? Text.translatable("concerto.playlist.export.success") :
-                    Text.translatable("concerto.playlist.export.fail");
+        this.addDrawableChild(new ButtonWidget(280, this.height - 30, 60, 20,
+                new TranslatableText("concerto.playlist.export"), button -> {
+            Text text = PresetRadioConfig.saveToTmpFile(this.playlist) ? new TranslatableText("concerto.playlist.export.success") :
+                    new TranslatableText("concerto.playlist.export.fail");
             this.displayAlert(text);
-        }).position(280, this.height - 30).size(60, 20).build());
+        }));
     }
 
     @Override
     public void render(MatrixStack matrices, int mouseX, int mouseY, float delta) {
         super.render(matrices, mouseX, mouseY, delta);
-        DrawableHelper.drawCenteredTextWithShadow(matrices, this.textRenderer, this.title, this.width / 2, 5, 0xffffffff);
+        DrawableHelper.drawCenteredTextWithShadow(matrices, this.textRenderer, this.title.asOrderedText(), this.width / 2, 5, 0xffffffff);
         this.widget.render(matrices, mouseX, mouseY, delta);
     }
 }

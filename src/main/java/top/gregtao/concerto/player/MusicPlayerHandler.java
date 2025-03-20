@@ -1,6 +1,6 @@
 package top.gregtao.concerto.player;
 
-import net.minecraft.text.Text;
+import net.minecraft.text.TranslatableText;
 import net.minecraft.util.math.MathHelper;
 import top.gregtao.concerto.ConcertoClient;
 import top.gregtao.concerto.api.CacheableMusic;
@@ -172,7 +172,7 @@ public class MusicPlayerHandler {
         if (this.currentLyrics != null) {
             this.displayTexts[0] = this.currentLyrics.stayOrNext(millisecond).getString();
         } else if (millisecond < 5000) {
-            this.displayTexts[0] = Text.translatable("concerto.no_subtitle").getString();
+            this.displayTexts[0] = new TranslatableText("concerto.no_subtitle").getString();
         } else {
             this.displayTexts[0] = "";
         }
@@ -185,7 +185,7 @@ public class MusicPlayerHandler {
 
     public Music playNext(int forward) {
         if (this.musicList.isEmpty()) return null;
-        this.displayTexts[2] = Text.translatable("concerto.loading").getString();
+        this.displayTexts[2] = new TranslatableText("concerto.loading").getString();
         this.currentIndex = this.getNext(forward);
         try {
             this.currentMusic = this.musicList.get(this.currentIndex);

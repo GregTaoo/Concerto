@@ -1,5 +1,6 @@
 package top.gregtao.concerto.music.lyrics;
 
+import net.minecraft.text.LiteralText;
 import net.minecraft.text.Text;
 import top.gregtao.concerto.music.MusicTimestamp;
 import top.gregtao.concerto.util.MathUtil;
@@ -19,7 +20,7 @@ public abstract class Lyrics {
         if (this.index + delta < 0 || this.index + delta >= this.lyricBody.size()) {
             throw new UnsupportedOperationException("Out of bound");
         }
-        return Text.literal(this.lyricBody.get(this.index + delta).getSecond());
+        return new LiteralText(this.lyricBody.get(this.index + delta).getSecond());
     }
 
     public Text getCurrent() {

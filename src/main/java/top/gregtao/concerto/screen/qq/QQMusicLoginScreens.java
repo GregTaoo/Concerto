@@ -3,7 +3,9 @@ package top.gregtao.concerto.screen.qq;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
+import net.minecraft.text.LiteralText;
 import net.minecraft.text.Text;
+import net.minecraft.text.TranslatableText;
 import top.gregtao.concerto.http.qq.QQMusicApiClient;
 import top.gregtao.concerto.screen.ConcertoScreen;
 import top.gregtao.concerto.screen.login.QRCodeLoginScreen;
@@ -13,21 +15,23 @@ import java.net.http.HttpResponse;
 
 public class QQMusicLoginScreens extends ConcertoScreen {
 
-    public static Text SOURCE_TEXT = Text.translatable("concerto.source.qq_music");
+    public static Text SOURCE_TEXT = new TranslatableText("concerto.source.qq_music");
 
     public QQMusicLoginScreens(Screen parent) {
-        super(Text.literal(Text.translatable("concerto.screen.login").getString() + SOURCE_TEXT.getString()), parent);
+        super(new LiteralText(new TranslatableText("concerto.screen.login").getString() + SOURCE_TEXT.getString()), parent);
     }
 
     @Override
     protected void init() {
         super.init();
-        this.addDrawableChild(ButtonWidget.builder(Text.translatable("concerto.screen.login.type.qrcode.wechat"),
+        this.addDrawableChild(new ButtonWidget(this.width / 2 - 50, 40, 100, 20,
+                new TranslatableText("concerto.screen.login.type.qrcode.wechat"),
                 button -> MinecraftClient.getInstance().setScreen(this.weChatQRLogin())
-        ).size(100, 20).position(this.width / 2 - 50, 40).build());
-        this.addDrawableChild(ButtonWidget.builder(Text.translatable("concerto.screen.login.type.qrcode.qq"),
+        ));
+        this.addDrawableChild(new ButtonWidget(this.width / 2 - 50, 70, 100, 20,
+                new TranslatableText("concerto.screen.login.type.qrcode.qq"),
                 button -> MinecraftClient.getInstance().setScreen(this.qqQRLogin())
-        ).size(100, 20).position(this.width / 2 - 50, 70).build());
+        ));
     }
 
     private static boolean loginChecker() {

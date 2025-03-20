@@ -6,7 +6,7 @@ import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.gui.widget.CyclingButtonWidget;
 import net.minecraft.client.gui.widget.TextFieldWidget;
 import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.text.Text;
+import net.minecraft.text.TranslatableText;
 import org.lwjgl.glfw.GLFW;
 import top.gregtao.concerto.ConcertoClient;
 import top.gregtao.concerto.api.WithMetaData;
@@ -36,7 +36,7 @@ public class NeteaseCloudSearchScreen extends PageScreen {
     private SearchType searchType = SearchType.MUSIC;
 
     private <T extends WithMetaData> MetadataListWidget<T> initListsWidget() {
-        MetadataListWidget<T> widget = new MetadataListWidget<>(this.width, this.height, 38, this.height - 35, 18) {
+        MetadataListWidget<T> widget = new MetadataListWidget<>(this.width, this.height, 50, this.height - 40, 18) {
             @Override
             public void onDoubleClicked(ConcertoListWidget<T>.Entry entry) {
                 try {
@@ -61,7 +61,7 @@ public class NeteaseCloudSearchScreen extends PageScreen {
     }
 
     public NeteaseCloudSearchScreen(Screen parent) {
-        super(Text.translatable("concerto.screen.search.163"), parent);
+        super(new TranslatableText("concerto.screen.search.163"), parent);
     }
 
     private void search(String keyword, int page) {
@@ -111,29 +111,31 @@ public class NeteaseCloudSearchScreen extends PageScreen {
         );
 
         this.searchBox = new TextFieldWidget(this.textRenderer, this.width / 2 - 155, 17, 200, 20,
-                this.searchBox, Text.translatable("concerto.screen.search"));
+                this.searchBox, new TranslatableText("concerto.screen.search"));
         this.addSelectableChild(this.searchBox);
         this.addDrawableChild(this.searchBox);
         this.searchBox.setText(DEFAULT_KEYWORD);
 
-        this.infoButton = ButtonWidget.builder(Text.translatable("concerto.screen.info"), button -> {
+        this.infoButton = new ButtonWidget(this.width / 2 + 120, this.height - 30, 50, 20,
+                new TranslatableText("concerto.screen.info"), button -> {
             ConcertoListWidget<Music>.Entry entry = this.musicList.getSelectedOrNull();
             if (entry != null) {
                 MinecraftClient.getInstance().setScreen(new MusicInfoScreen(entry.item, this));
             }
-        }).position(this.width / 2 + 120, this.height - 30).size(50, 20).build();
+        });
         this.addDrawableChild(this.infoButton);
 
         this.updateSearchType(this.searchType);
 
-        this.addDrawableChild(ButtonWidget.builder(Text.translatable("concerto.screen.search"),
-                button -> this.toggleSearch()).position(this.width / 2 + 50, 17).size(52, 20).build());
+        this.addDrawableChild(new ButtonWidget(this.width / 2 + 50, 17, 52, 20,
+                new TranslatableText("concerto.screen.search"), button -> this.toggleSearch()));
 
         this.addDrawableChild(CyclingButtonWidget.builder(SearchType::getName).values(SearchType.values()).initially(this.searchType).build(
-                this.width / 2 + 105, 17, 65, 20, Text.translatable("concerto.search_type"),
+                this.width / 2 + 105, 17, 65, 20, new TranslatableText("concerto.search_type"),
                 (widget, type) -> this.updateSearchType(type)));
 
-        this.addDrawableChild(ButtonWidget.builder(Text.translatable("concerto.screen.play"), button -> {
+        this.addDrawableChild(new ButtonWidget(this.width / 2 + 65, this.height - 30, 50, 20,
+                new TranslatableText("concerto.screen.play"), button -> {
             switch (this.searchType) {
                 case MUSIC: {
                     ConcertoListWidget<Music>.Entry entry = this.musicList.getSelectedOrNull();
@@ -154,9 +156,10 @@ public class NeteaseCloudSearchScreen extends PageScreen {
                     }
                 }
             }
-        }).position(this.width / 2 + 65, this.height - 30).size(50, 20).build());
+        }));
 
-        this.addDrawableChild(ButtonWidget.builder(Text.translatable("concerto.screen.add"), button -> {
+        this.addDrawableChild(new ButtonWidget(this.width / 2 + 10, this.height - 30, 50, 20,
+                new TranslatableText("concerto.screen.add"), button -> {
             switch (this.searchType) {
                 case MUSIC: {
                     ConcertoListWidget<Music>.Entry entry = this.musicList.getSelectedOrNull();
@@ -177,7 +180,7 @@ public class NeteaseCloudSearchScreen extends PageScreen {
                     }
                 }
             }
-        }).position(this.width / 2 + 10, this.height - 30).size(50, 20).build());
+        }));
     }
 
     @Override
@@ -195,7 +198,7 @@ public class NeteaseCloudSearchScreen extends PageScreen {
         if (super.keyPressed(keyCode, scanCode, modifiers)) {
             return true;
         }
-        if (keyCode == GLFW.GLFW_KEY_ENTER && this.searchBox.isSelected()) {
+        if (keyCode == GLFW.GLFW_KEY_ENTER && this.searchBox.isActive()) {
             this.toggleSearch();
             return true;
         }

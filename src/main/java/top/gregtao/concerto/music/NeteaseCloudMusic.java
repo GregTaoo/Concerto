@@ -157,6 +157,7 @@ public class NeteaseCloudMusic extends Music implements CacheableMusic, DynamicP
         LOSSLESS,
         HIRES;
 
-        public static final Codec<Level> CODEC = StringIdentifiable.createCodec(Level::values);
+        public static final Codec<Level> CODEC = StringIdentifiable.createCodec(Level::values,
+                s -> SimpleStringIdentifiable.fromString(Level.class, s));
     }
 }

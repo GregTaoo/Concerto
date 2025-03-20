@@ -2,6 +2,7 @@ package top.gregtao.concerto.screen;
 
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawableHelper;
+import net.minecraft.client.gui.Element;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.PressableTextWidget;
 import net.minecraft.client.util.math.MatrixStack;
@@ -10,6 +11,8 @@ import net.minecraft.text.Text;
 import net.minecraft.text.TranslatableText;
 import net.minecraft.util.Formatting;
 
+import java.io.Closeable;
+import java.io.IOException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
@@ -52,6 +55,15 @@ public class ConcertoScreen extends Screen {
 
     @Override
     public void close() {
+        for (Element element : this.children()) {
+            if (element instanceof Closeable closeable) {
+                try {
+                    closeable.close();
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        }
         super.close();
         MinecraftClient.getInstance().setScreen(this.parent);
     }

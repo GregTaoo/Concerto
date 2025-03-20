@@ -1,5 +1,6 @@
 package top.gregtao.concerto.player;
 
+import net.minecraft.text.TranslatableText;
 import top.gregtao.concerto.music.SharedMusic;
 import top.gregtao.concerto.player.streamplayer.enums.Status;
 import top.gregtao.concerto.player.streamplayer.stream.StreamPlayer;
@@ -10,7 +11,6 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.option.GameOptions;
 import net.minecraft.sound.SoundCategory;
-import net.minecraft.text.Text;
 import top.gregtao.concerto.ConcertoClient;
 import top.gregtao.concerto.api.MusicJsonParsers;
 import top.gregtao.concerto.music.Music;
@@ -272,7 +272,7 @@ public class MusicPlayer extends StreamPlayer implements StreamPlayerListener {
                     while ((source = music.getMusicSourceOrNull()) == null) {
                         ConcertoClient.LOGGER.error("Unable to play music: '{}' of '{}'", music.getMeta().title(), music.getMeta().author());
                         if (player != null) {
-                            player.sendMessage(Text.translatable(
+                            player.sendMessage(new TranslatableText(
                                     "concerto.player.unable", music.getMeta().title(), music.getMeta().author()), false);
                         }
                         MusicPlayerHandler.INSTANCE.setCurrentIndex((MusicPlayerHandler.INSTANCE.getCurrentIndex() + 1)

@@ -5,7 +5,7 @@ import net.minecraft.client.gui.DrawableHelper;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.text.Text;
+import net.minecraft.text.TranslatableText;
 import top.gregtao.concerto.api.WithMetaData;
 import top.gregtao.concerto.http.netease.NeteaseCloudApiClient;
 import top.gregtao.concerto.music.list.NeteaseCloudPlaylist;
@@ -22,7 +22,7 @@ public class NeteaseCloudUserScreen extends PageScreen {
     private MetadataListWidget<NeteaseCloudPlaylist> playlistList;
 
     private <T extends WithMetaData> MetadataListWidget<T> initWidget() {
-        MetadataListWidget<T> widget =  new MetadataListWidget<>(this.width, 0, 15, this.height - 35, 18) {
+        MetadataListWidget<T> widget = new MetadataListWidget<>(this.width, 0, 25, this.height - 45, 18) {
             @Override
             public void onDoubleClicked(ConcertoListWidget<T>.Entry entry) {
                 MinecraftClient.getInstance().setScreen(new PlaylistPreviewScreen((Playlist) entry.item, NeteaseCloudUserScreen.this));
@@ -34,7 +34,7 @@ public class NeteaseCloudUserScreen extends PageScreen {
     }
 
     public NeteaseCloudUserScreen(Screen parent) {
-        super(Text.translatable("concerto.screen.user"), parent);
+        super(new TranslatableText("concerto.screen.user"), parent);
     }
 
     @Override
@@ -61,28 +61,31 @@ public class NeteaseCloudUserScreen extends PageScreen {
         this.onPageTurned(0);
         this.addSelectableChild(this.playlistList);
 
-        this.addDrawableChild(ButtonWidget.builder(Text.translatable("concerto.screen.daily_recommendation"),
+        this.addDrawableChild(new ButtonWidget(this.width / 2 + 10, this.height - 30, 50, 20,
+                new TranslatableText("concerto.screen.daily_recommendation"),
                 button -> CompletableFuture.supplyAsync(
                         () -> NeteaseCloudApiClient.INSTANCE.getDailyRecommendation()
                 ).thenAccept(playlist -> MinecraftClient.getInstance().submitAndJoin(
                         () -> MinecraftClient.getInstance().setScreen(new PlaylistPreviewScreen(playlist, this)))
-                )).position(this.width / 2 + 10, this.height - 30).size(50, 20).build()
+                ))
         );
 
-        this.addDrawableChild(ButtonWidget.builder(Text.translatable("concerto.screen.play"), button -> {
+        this.addDrawableChild(new ButtonWidget(this.width / 2 + 65, this.height - 30, 50, 20,
+                new TranslatableText("concerto.screen.play"), button -> {
             ConcertoListWidget<NeteaseCloudPlaylist>.Entry entry = this.playlistList.getSelectedOrNull();
             if (entry != null) {
                 MinecraftClient.getInstance().setScreen(new PlaylistPreviewScreen(entry.item, this));
             }
-        }).position(this.width / 2 + 65, this.height - 30).size(50, 20).build());
+        }));
 
-        this.addDrawableChild(ButtonWidget.builder(Text.translatable("concerto.screen.logout"), button -> {
+        this.addDrawableChild(new ButtonWidget(this.width / 2 + 120, this.height - 30, 50, 20,
+                new TranslatableText("concerto.screen.logout"), button -> {
             if (this.loggedIn()) {
                 NeteaseCloudApiClient.LOCAL_USER.logout();
             } else {
                 MinecraftClient.getInstance().setScreen(new NeteaseCloudLoginScreens(this));
             }
-        }).position(this.width / 2 + 120, this.height - 30).size(50, 20).build());
+        }));
     }
 
     @Override
@@ -91,7 +94,8 @@ public class NeteaseCloudUserScreen extends PageScreen {
         if (this.loggedIn()) {
             this.playlistList.render(matrices, mouseX, mouseY, delta);
         } else {
-            DrawableHelper.drawCenteredTextWithShadow(matrices, this.textRenderer, Text.translatable("concerto.screen.163.not_login"),
+            DrawableHelper.drawCenteredTextWithShadow(matrices, this.textRenderer,
+                    new TranslatableText("concerto.screen.163.not_login").asOrderedText(),
                     this.width / 2, this.height / 2, 0xffffffff);
         }
     }

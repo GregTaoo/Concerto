@@ -2,6 +2,7 @@ package top.gregtao.concerto.enums;
 
 import com.mojang.serialization.Codec;
 import net.minecraft.text.Text;
+import net.minecraft.text.TranslatableText;
 import net.minecraft.util.StringIdentifiable;
 import top.gregtao.concerto.api.SimpleStringIdentifiable;
 
@@ -11,9 +12,10 @@ public enum OrderType implements SimpleStringIdentifiable {
     REVERSED,
     LOOP;
 
-    public static final Codec<OrderType> CODEC = StringIdentifiable.createCodec(OrderType::values);
+    public static final Codec<OrderType> CODEC = StringIdentifiable.createCodec(OrderType::values,
+            s -> SimpleStringIdentifiable.fromString(OrderType.class, s));
 
     public Text getName() {
-        return Text.translatable("concerto.order." + this.asString());
+        return new TranslatableText("concerto.order." + this.asString());
     }
 }

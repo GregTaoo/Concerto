@@ -34,7 +34,7 @@ public class QRCodeRenderer {
             }
         }
         TEXTURE = new NativeImageBackedTexture(image);
-        IDENTIFIER = Identifier.of(ConcertoClient.MOD_ID, "qrcode");
+        IDENTIFIER = new Identifier(ConcertoClient.MOD_ID, "qrcode");
         MinecraftClient.getInstance().getTextureManager().registerTexture(IDENTIFIER, TEXTURE);
     }
 

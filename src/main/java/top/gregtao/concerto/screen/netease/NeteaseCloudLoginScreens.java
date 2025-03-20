@@ -3,7 +3,9 @@ package top.gregtao.concerto.screen.netease;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
+import net.minecraft.text.LiteralText;
 import net.minecraft.text.Text;
+import net.minecraft.text.TranslatableText;
 import top.gregtao.concerto.http.netease.NeteaseCloudApiClient;
 import top.gregtao.concerto.screen.ConcertoScreen;
 import top.gregtao.concerto.screen.login.CaptchaLoginScreen;
@@ -14,24 +16,27 @@ import top.gregtao.concerto.util.TextUtil;
 
 public class NeteaseCloudLoginScreens extends ConcertoScreen {
 
-    public static Text SOURCE_TEXT = Text.translatable("concerto.source.netease_cloud");
+    public static Text SOURCE_TEXT = new TranslatableText("concerto.source.netease_cloud");
 
     public NeteaseCloudLoginScreens(Screen parent) {
-        super(Text.literal(Text.translatable("concerto.screen.login").getString() + SOURCE_TEXT.getString()), parent);
+        super(new LiteralText(new TranslatableText("concerto.screen.login").getString() + SOURCE_TEXT.getString()), parent);
     }
 
     @Override
     protected void init() {
         super.init();
-        this.addDrawableChild(ButtonWidget.builder(Text.translatable("concerto.screen.login.type.password"),
+        this.addDrawableChild(new ButtonWidget(this.width / 2 - 50, 40, 100, 20, 
+                new TranslatableText("concerto.screen.login.type.password"),
                 button -> MinecraftClient.getInstance().setScreen(this.passwordLogin())
-        ).size(100, 20).position(this.width / 2 - 50, 40).build());
-        this.addDrawableChild(ButtonWidget.builder(Text.translatable("concerto.screen.login.type.captcha"),
+        ));
+        this.addDrawableChild(new ButtonWidget(this.width / 2 - 50, 70, 100, 20, 
+                new TranslatableText("concerto.screen.login.type.captcha"),
                 button -> MinecraftClient.getInstance().setScreen(this.captchaLogin())
-        ).size(100, 20).position(this.width / 2 - 50, 70).build());
-        this.addDrawableChild(ButtonWidget.builder(Text.translatable("concerto.screen.login.type.qrcode"),
+        ));
+        this.addDrawableChild(new ButtonWidget(this.width / 2 - 50, 100, 100, 20, 
+                new TranslatableText("concerto.screen.login.type.qrcode"),
                 button -> MinecraftClient.getInstance().setScreen(this.qrCodeLogin())
-        ).size(100, 20).position(this.width / 2 - 50, 100).build());
+        ));
     }
 
     private static boolean loginChecker() {
@@ -47,12 +52,12 @@ public class NeteaseCloudLoginScreens extends ConcertoScreen {
                                 NeteaseCloudApiClient.INSTANCE.cellphoneLogin(username, false, password) :
                                 NeteaseCloudApiClient.INSTANCE.emailPasswordLogin(username, password);
                         if (message.getFirst() == 200) {
-                            return Text.translatable("concerto.login.163.success");
+                            return new TranslatableText("concerto.login.163.success");
                         } else {
-                            return Text.translatable("concerto.login.163.failed", message.getSecond());
+                            return new TranslatableText("concerto.login.163.failed", message.getSecond());
                         }
                     } catch (Exception e) {
-                        return Text.translatable("concerto.login.163.error");
+                        return new TranslatableText("concerto.login.163.error");
                     }
                 },
                 SOURCE_TEXT,
@@ -74,12 +79,12 @@ public class NeteaseCloudLoginScreens extends ConcertoScreen {
                     try {
                         Pair<Integer, String> message = NeteaseCloudApiClient.INSTANCE.cellphoneLogin(username, true, password);
                         if (message.getFirst() == 200) {
-                            return Text.translatable("concerto.login.163.success");
+                            return new TranslatableText("concerto.login.163.success");
                         } else {
-                            return Text.translatable("concerto.login.163.failed", message.getSecond());
+                            return new TranslatableText("concerto.login.163.failed", message.getSecond());
                         }
                     } catch (Exception e) {
-                        return Text.translatable("concerto.login.163.error");
+                        return new TranslatableText("concerto.login.163.error");
                     }
                 },
                 SOURCE_TEXT,

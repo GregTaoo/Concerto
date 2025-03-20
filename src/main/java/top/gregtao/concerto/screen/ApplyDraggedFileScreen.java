@@ -2,7 +2,9 @@ package top.gregtao.concerto.screen;
 
 import net.minecraft.client.gui.screen.ConfirmScreen;
 import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.text.LiteralText;
 import net.minecraft.text.Text;
+import net.minecraft.text.TranslatableText;
 import top.gregtao.concerto.music.LocalFileMusic;
 import top.gregtao.concerto.music.Music;
 import top.gregtao.concerto.api.UnsafeMusicException;
@@ -40,7 +42,7 @@ public abstract class ApplyDraggedFileScreen extends ConcertoScreen {
                                 list.add(new LocalFileMusic(file.getAbsolutePath()));
                             }
                         } catch (UnsafeMusicException e) {
-                            this.displayAlert(Text.translatable("concerto.error.invalid_path"));
+                            this.displayAlert(new TranslatableText("concerto.error.invalid_path"));
                         }
                     });
                     integer.set(list.size());
@@ -53,6 +55,6 @@ public abstract class ApplyDraggedFileScreen extends ConcertoScreen {
                 });
             }
             this.client.setScreen(this);
-        }, Text.translatable("concerto.drag_confirm"), Text.literal(message)));
+        }, new TranslatableText("concerto.drag_confirm"), new LiteralText(message)));
     }
 }

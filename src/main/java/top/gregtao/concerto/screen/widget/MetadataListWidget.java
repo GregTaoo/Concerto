@@ -1,5 +1,6 @@
 package top.gregtao.concerto.screen.widget;
 
+import net.minecraft.text.LiteralText;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import top.gregtao.concerto.api.WithMetaData;
@@ -18,6 +19,6 @@ public class MetadataListWidget<T extends WithMetaData> extends ConcertoListWidg
     @Override
     public Text getNarration(int index, T t) {
         MetaData meta = t.getMeta();
-        return Text.literal(meta.title()).append("  ").append(Text.literal(meta.author()).formatted(Formatting.BOLD, Formatting.GRAY));
+        return new LiteralText(meta.title()).append("  ").append(new LiteralText(meta.author()).formatted(Formatting.BOLD, Formatting.GRAY));
     }
 }

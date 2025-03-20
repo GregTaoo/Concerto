@@ -3,7 +3,7 @@ package top.gregtao.concerto.http.netease;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.text.Text;
+import net.minecraft.text.TranslatableText;
 import top.gregtao.concerto.ConcertoClient;
 import top.gregtao.concerto.enums.SearchType;
 import top.gregtao.concerto.enums.Sources;
@@ -255,8 +255,8 @@ public class NeteaseCloudApiClient extends HttpApiClient {
          JsonArray songs = object.getAsJsonObject("data").getAsJsonArray("dailySongs");
          ArrayList<Music> musics = new ArrayList<>();
          songs.forEach(element -> musics.add(new NeteaseCloudMusic(element.getAsJsonObject(), NeteaseCloudMusic.Level.HIRES)));
-         return new FixedPlaylist(musics, new PlaylistMetaData(Text.translatable("concerto.source.netease_cloud").getString(),
-                 Text.translatable("concerto.screen.daily_recommendation").getString(), "", ""), false);
+         return new FixedPlaylist(musics, new PlaylistMetaData(new TranslatableText("concerto.source.netease_cloud").getString(),
+                 new TranslatableText("concerto.screen.daily_recommendation").getString(), "", ""), false);
     }
 
     public static CompletableFuture<Void> CURRENT_THREAD = null;
@@ -280,7 +280,7 @@ public class NeteaseCloudApiClient extends HttpApiClient {
                         wait = -1;
                         break;
                     } else if (code == 803) {
-                        player.sendMessage(Text.translatable("concerto.login.163.qrcode.success"), false);
+                        player.sendMessage(new TranslatableText("concerto.login.163.qrcode.success"), false);
                         LOCAL_USER.updateLoginStatus();
                         break;
                     } else {
@@ -288,10 +288,10 @@ public class NeteaseCloudApiClient extends HttpApiClient {
                         break;
                     }
                 }
-                if (wait <= 0) player.sendMessage(Text.translatable("concerto.login.163.qrcode.expired"), false);
+                if (wait <= 0) player.sendMessage(new TranslatableText("concerto.login.163.qrcode.expired"), false);
                 QRCodeRenderer.clear();
             } catch (Exception e) {
-                player.sendMessage(Text.translatable("concerto.login.163.qrcode.error"), false);
+                player.sendMessage(new TranslatableText("concerto.login.163.qrcode.error"), false);
                 ConcertoClient.LOGGER.error("Error occurs while checking QR code scanning status.");
                 QRCodeRenderer.clear();
                 throw new RuntimeException(e);

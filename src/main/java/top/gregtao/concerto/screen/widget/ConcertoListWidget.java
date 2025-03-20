@@ -3,6 +3,7 @@ package top.gregtao.concerto.screen.widget;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.widget.AlwaysSelectedEntryListWidget;
 import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.text.LiteralText;
 import net.minecraft.text.Text;
 import net.minecraft.util.Util;
 
@@ -22,7 +23,7 @@ public class ConcertoListWidget<T> extends AlwaysSelectedEntryListWidget<Concert
     }
 
     public Text getNarration(int index, T t) {
-        return Text.literal(String.valueOf(index));
+        return new LiteralText(String.valueOf(index));
     }
 
     public void onDoubleClicked(Entry entry) {}
@@ -57,13 +58,13 @@ public class ConcertoListWidget<T> extends AlwaysSelectedEntryListWidget<Concert
         super.clearEntries();
     }
 
-    @Override
     public boolean removeEntryWithoutScrolling(Entry entry) {
         ListIterator<Entry> iterator = this.children().listIterator(entry.entryIndex + 1);
         while (iterator.hasNext()) {
             iterator.next().index--;
         }
-        return super.removeEntryWithoutScrolling(entry);
+        this.setScrollAmount(entry.entryIndex * this.itemHeight + this.headerHeight);
+        return super.removeEntry(entry);
     }
 
     @Override

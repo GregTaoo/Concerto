@@ -1,6 +1,7 @@
 package top.gregtao.concerto.enums;
 
 import net.minecraft.text.Text;
+import net.minecraft.text.TranslatableText;
 import top.gregtao.concerto.api.SimpleStringIdentifiable;
 
 public enum Sources implements SimpleStringIdentifiable {
@@ -13,7 +14,7 @@ public enum Sources implements SimpleStringIdentifiable {
     ;
 
     public Text getName() {
-        return Text.translatable(this.getKey("source"));
+        return new TranslatableText(this.getKey("source"));
     }
 
     public String getKey(String main) {

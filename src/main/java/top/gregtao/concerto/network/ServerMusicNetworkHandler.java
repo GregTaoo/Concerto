@@ -10,7 +10,8 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.PlayerManager;
 import net.minecraft.server.network.ServerPlayNetworkHandler;
 import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.text.Text;
+import net.minecraft.text.LiteralText;
+import net.minecraft.text.TranslatableText;
 import net.minecraft.util.Formatting;
 import org.jetbrains.annotations.Nullable;
 import top.gregtao.concerto.ConcertoServer;
@@ -50,9 +51,9 @@ public class ServerMusicNetworkHandler {
             boolean success = sendS2CMusicData(packet, true);
             if (auditor != null) {
                 if (success) {
-                    auditor.sendMessage(Text.translatable("concerto.audit.pass", packet.from, packet.music.getMeta().title()), false);
+                    auditor.sendMessage(new TranslatableText("concerto.audit.pass", packet.from, packet.music.getMeta().title()), false);
                 } else {
-                    auditor.sendMessage(Text.translatable("concerto.share.s2c_failed", uuid.toString()), false);
+                    auditor.sendMessage(new TranslatableText("concerto.share.s2c_failed", uuid.toString()), false);
                 }
                 ConcertoServer.LOGGER.info("Auditor {} passed request from {}: {} to {}",
                         auditor.getName().getString(), packet.from, packet.music.getMeta().title(), packet.to);
@@ -61,7 +62,7 @@ public class ServerMusicNetworkHandler {
                     packet.from, packet.music.getMeta().title(), packet.to);
             sendS2CAuditionSyncData(uuid, packet, true);
         } else if (auditor != null) {
-            auditor.sendMessage(Text.translatable("concerto.audit.uuid_not_found"), false);
+            auditor.sendMessage(new TranslatableText("concerto.audit.uuid_not_found"), false);
         }
     }
 
@@ -69,10 +70,10 @@ public class ServerMusicNetworkHandler {
         WAIT_AUDITION.forEach((uuid, packet) -> {
             PlayerEntity player = packet.server.getPlayerManager().getPlayer(packet.from);
             String title = packet.music.getMeta().title();
-            if (player != null) player.sendMessage(Text.translatable("concerto.share.rejected", title), false);
+            if (player != null) player.sendMessage(new TranslatableText("concerto.share.rejected", title), false);
         });
         WAIT_AUDITION.clear();
-        if (auditor != null) auditor.sendMessage(Text.translatable("concerto.audit.reject", "ALL", "ALL"), false);
+        if (auditor != null) auditor.sendMessage(new TranslatableText("concerto.audit.reject", "ALL", "ALL"), false);
         ConcertoServer.LOGGER.info("Auditor {} rejected all request", auditor == null ? "?" : auditor.getName().getString());
     }
 
@@ -82,14 +83,14 @@ public class ServerMusicNetworkHandler {
             WAIT_AUDITION.remove(uuid);
             PlayerEntity player = packet.server.getPlayerManager().getPlayer(packet.from);
             String title = packet.music.getMeta().title();
-            if (player != null) player.sendMessage(Text.translatable("concerto.share.rejected", title), false);
-            if (auditor != null) auditor.sendMessage(Text.translatable(
+            if (player != null) player.sendMessage(new TranslatableText("concerto.share.rejected", title), false);
+            if (auditor != null) auditor.sendMessage(new TranslatableText(
                     "concerto.audit.reject", player == null ? "an unknown player" : player.getName().getString(), title), false);
             ConcertoServer.LOGGER.info("Auditor {} rejected request from {}: {} to {}",
                     auditor == null ? "???" : auditor.getName().getString(), packet.from, title, packet.to);
             sendS2CAuditionSyncData(uuid, packet, true);
         } else if (auditor != null) {
-            auditor.sendMessage(Text.translatable("concerto.audit.uuid_not_found"), false);
+            auditor.sendMessage(new TranslatableText("concerto.audit.uuid_not_found"), false);
         }
     }
 
@@ -136,15 +137,15 @@ public class ServerMusicNetworkHandler {
             ServerPlayerEntity from = playerManager.getPlayer(packet.from);
             if (target == null) {
                 if (from != null) {
-                    from.sendMessage(Text.translatable("concerto.share.s2c_player_not_found", packet.to));
+                    from.sendMessage(new TranslatableText("concerto.share.s2c_player_not_found", packet.to), false);
                 }
                 ConcertoServer.LOGGER.warn("Target not found, failed to send.");
                 return false;
             } else {
                 ServerPlayNetworking.send(target, ConcertoNetworking.MUSIC_DATA, buf);
                 if (audit && from != null) {
-                    from.sendMessage(Text.translatable("concerto.share.audition_passed",
-                            packet.to, packet.music.getMeta().title()));
+                    from.sendMessage(new TranslatableText("concerto.share.audition_passed",
+                            packet.to, packet.music.getMeta().title()), false);
                 }
             }
         }
@@ -159,7 +160,7 @@ public class ServerMusicNetworkHandler {
             if (packet != null && packet.music != null && server != null) {
                 PlayerManager playerManager = server.getPlayerManager();
                 if (!playerExist(playerManager, packet.to)) {
-                    player.sendMessage(Text.translatable("concerto.share.c2s_player_not_found", packet.to));
+                    player.sendMessage(new TranslatableText("concerto.share.c2s_player_not_found", packet.to), false);
                     ConcertoServer.LOGGER.info("Received a music request from {} to an unknown player", player.getName().getString());
                 } else {
                     packet.from = player.getName().getString();
@@ -171,11 +172,11 @@ public class ServerMusicNetworkHandler {
                         UUID uuid = UUID.randomUUID();
                         for (ServerPlayerEntity player1 : playerManager.getPlayerList()) {
                             if (player1.hasPermissionLevel(server.getOpPermissionLevel())) {
-                                player1.sendMessage(TextUtil.PAGE_SPLIT);
+                                player1.sendMessage(TextUtil.PAGE_SPLIT, false);
                                 player1.sendMessage(ConcertoServerCommand.chatMessageBuilder(
                                         uuid, packet.from, packet.music.getMeta().title()
-                                ));
-                                player1.sendMessage(TextUtil.PAGE_SPLIT);
+                                ), false);
+                                player1.sendMessage(TextUtil.PAGE_SPLIT, false);
                                 sendAuditionSyncPacket(uuid, player1, packet, false);
                             }
                         }
@@ -186,14 +187,14 @@ public class ServerMusicNetworkHandler {
                     } else {
                         success = sendS2CMusicData(packet, false);
                     }
-                    player.sendMessage(Text.translatable("concerto.share." + (success ? "success" : "failed")
-                            + (audit ? "_audit" : ""), packet.music.getMeta().title()));
+                    player.sendMessage(new TranslatableText("concerto.share." + (success ? "success" : "failed")
+                            + (audit ? "_audit" : ""), packet.music.getMeta().title()), false);
                     MusicMetaData meta = packet.music.getMeta();
                     ConcertoServer.LOGGER.info("Received a music request {} - {} from {} to {}",
                             meta.getSource(), meta.title(), player.getName().getString(), packet.to);
                 }
             } else {
-                player.sendMessage(Text.translatable("concerto.share.error"));
+                player.sendMessage(new TranslatableText("concerto.share.error"), false);
                 ConcertoServer.LOGGER.warn("Received an unknown music data packet from {}", player.getName().getString());
             }
         } catch (Exception e) {
@@ -236,58 +237,58 @@ public class ServerMusicNetworkHandler {
     public static void musicAgentReceiver(MinecraftServer server, ServerPlayerEntity player,
                                           ServerPlayNetworkHandler handler, PacketByteBuf buf, PacketSender sender) {
         if (!ServerConfig.INSTANCE.options.serverMusicAgent) {
-            player.sendMessage(Text.translatable("concerto.agent.not_available"));
+            player.sendMessage(new TranslatableText("concerto.agent.not_available"), false);
             return;
         }
         String str = buf.readString(Short.MAX_VALUE << 4);
         String[] args = str.split(":");
         if (args[0].equals("Join")) {
             ServerMusicAgent.INSTANCE.playerJoin(player);
-            player.sendMessage(Text.translatable("concerto.agent.join"));
+            player.sendMessage(new TranslatableText("concerto.agent.join"), false);
         } else if (args[0].equals("Quit")) {
             ServerMusicAgent.INSTANCE.playerQuit(player);
-            player.sendMessage(Text.translatable("concerto.agent.quit"));
+            player.sendMessage(new TranslatableText("concerto.agent.quit"), false);
         } else if (args[0].equals("Query")) {
             List<Music> list = ServerMusicAgent.INSTANCE.getMusicQueue();
-            player.sendMessage(TextUtil.PAGE_SPLIT);
-            list.forEach(music -> player.sendMessage(Text.literal(
-                    music.getMeta().title() + " - " + music.getMeta().author())));
-            player.sendMessage(TextUtil.PAGE_SPLIT);
+            player.sendMessage(TextUtil.PAGE_SPLIT, false);
+            list.forEach(music -> player.sendMessage(new LiteralText(
+                    music.getMeta().title() + " - " + music.getMeta().author()), false));
+            player.sendMessage(TextUtil.PAGE_SPLIT, false);
         } else if (args.length < 2 || !ServerMusicAgent.INSTANCE.isMember(player)) {
-            player.sendMessage(Text.translatable("concerto.agent.error"));
+            player.sendMessage(new TranslatableText("concerto.agent.error"), false);
         } else if (args[0].equals("Vote")) {
             if (args[1].equals("New")) {
                 if (ServerMusicAgent.INSTANCE.receiveVoteRequest()) {
                     ServerMusicAgent.INSTANCE.getMembers().forEach(ServerMusicNetworkHandler::sendVote2Member);
                 } else {
-                    player.sendMessage(Text.translatable("concerto.agent.error"));
+                    player.sendMessage(new TranslatableText("concerto.agent.error"), false);
                 }
             } else if (args[1].length() == 1) {
                 ServerMusicAgent.INSTANCE.receiveVote(player, args[1].equals("1"));
             } else {
-                player.sendMessage(Text.translatable("concerto.agent.error"));
+                player.sendMessage(new TranslatableText("concerto.agent.error"), false);
             }
         } else if (args[0].equals("Add")) {
             Music music = MusicJsonParsers.from(TextUtil.fromBase64(args[1]), false);
             if (music != null && MusicDataPacket.isMusicSafe(music)) {
                 ServerMusicAgent.INSTANCE.addMusic(player, music);
             } else {
-                player.sendMessage(Text.translatable("concerto.agent.error"));
+                player.sendMessage(new TranslatableText("concerto.agent.error"), false);
             }
         }
     }
 
     public static void sendVote2Member(ServerPlayerEntity player) {
-        player.sendMessage(TextUtil.PAGE_SPLIT);
-        player.sendMessage(Text.translatable("concerto.agent.vote")
-                .append(Text.literal("  ["))
-                .append(Text.translatable("concerto.accept").setStyle(
+        player.sendMessage(TextUtil.PAGE_SPLIT, false);
+        player.sendMessage(new TranslatableText("concerto.agent.vote")
+                .append(new LiteralText("  ["))
+                .append(new TranslatableText("concerto.accept").setStyle(
                         TextUtil.getRunCommandStyle("/musicroom agent vote true").withColor(Formatting.GREEN)))
-                .append(Text.literal("]"))
-                .append(Text.literal("  ["))
-                .append(Text.translatable("concerto.reject").setStyle(
+                .append(new LiteralText("]"))
+                .append(new LiteralText("  ["))
+                .append(new TranslatableText("concerto.reject").setStyle(
                         TextUtil.getRunCommandStyle("/musicroom agent vote false").withColor(Formatting.RED)))
-                .append(Text.literal("]")));
-        player.sendMessage(TextUtil.PAGE_SPLIT);
+                .append(new LiteralText("]")), false);
+        player.sendMessage(TextUtil.PAGE_SPLIT, false);
     }
 }

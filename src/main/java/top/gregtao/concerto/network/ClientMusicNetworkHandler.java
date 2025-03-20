@@ -10,7 +10,8 @@ import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.text.Text;
+import net.minecraft.text.LiteralText;
+import net.minecraft.text.TranslatableText;
 import net.minecraft.util.Formatting;
 import top.gregtao.concerto.ConcertoClient;
 import top.gregtao.concerto.api.MusicJsonParsers;
@@ -18,6 +19,8 @@ import top.gregtao.concerto.command.ShareMusicCommand;
 import top.gregtao.concerto.config.ClientConfig;
 import top.gregtao.concerto.config.PresetRadioConfig;
 import top.gregtao.concerto.music.Music;
+import top.gregtao.concerto.music.meta.music.BasicMusicMetaData;
+import top.gregtao.concerto.music.meta.music.MusicMetaData;
 import top.gregtao.concerto.network.room.MusicRoom;
 import top.gregtao.concerto.player.MusicPlayer;
 import top.gregtao.concerto.player.MusicPlayerHandler;
@@ -56,9 +59,9 @@ public class ClientMusicNetworkHandler {
                 String code = "Concerto:Share:" +
                         Base64.getEncoder().encodeToString(object.toString().getBytes(StandardCharsets.UTF_8));
                 if (packet.to.equals("@a")) {
-                    player.networkHandler.sendChatMessage(code);
+                    player.sendChatMessage(code);
                 } else {
-                    player.networkHandler.sendChatCommand("msg " + packet.to + " \"" + code + "\"");
+                    player.sendChatMessage("msg " + packet.to + " \"" + code + "\"");
                 }
             }
             return;
@@ -77,17 +80,17 @@ public class ClientMusicNetworkHandler {
 
     public static void accept(PlayerEntity player, UUID uuid, MinecraftClient client) {
         if (!WAIT_CONFIRMATION.containsKey(uuid)) {
-            player.sendMessage(Text.translatable("concerto.confirm.not_found"), false);
+            player.sendMessage(new TranslatableText("concerto.confirm.not_found"), false);
         } else {
             MusicDataPacket packet = WAIT_CONFIRMATION.get(uuid);
             MinecraftServer server = client.getServer();
             if (server != null) {
                 PlayerEntity from = server.getPlayerManager().getPlayer(packet.from);
-                if (from != null) from.sendMessage(Text.translatable("concerto.confirm.accept_response", player.getName().getString()), false);
+                if (from != null) from.sendMessage(new TranslatableText("concerto.confirm.accept_response", player.getName().getString()), false);
             }
             MusicPlayer.INSTANCE.playTempMusic(packet.music);
             WAIT_CONFIRMATION.remove(uuid);
-            player.sendMessage(Text.translatable("concerto.confirm.accept"), false);
+            player.sendMessage(new TranslatableText("concerto.confirm.accept"), false);
         }
     }
 
@@ -96,25 +99,25 @@ public class ClientMusicNetworkHandler {
         WAIT_CONFIRMATION.forEach((uuid, packet) -> {
             if (server != null) {
                 PlayerEntity from = server.getPlayerManager().getPlayer(packet.from);
-                if (from != null) from.sendMessage(Text.translatable("concerto.confirm.reject_response", player.getName().getString()), false);
+                if (from != null) from.sendMessage(new TranslatableText("concerto.confirm.reject_response", player.getName().getString()), false);
             }
         });
         WAIT_CONFIRMATION.clear();
-        player.sendMessage(Text.translatable("concerto.confirm.reject"), false);
+        player.sendMessage(new TranslatableText("concerto.confirm.reject"), false);
     }
 
     public static void reject(PlayerEntity player, UUID uuid, MinecraftClient client) {
         if (!WAIT_CONFIRMATION.containsKey(uuid)) {
-            player.sendMessage(Text.translatable("concerto.confirm.not_found"), false);
+            player.sendMessage(new TranslatableText("concerto.confirm.not_found"), false);
         } else {
             MusicDataPacket packet = WAIT_CONFIRMATION.get(uuid);
             MinecraftServer server = client.getServer();
             if (server != null) {
                 PlayerEntity from = server.getPlayerManager().getPlayer(packet.from);
-                if (from != null) from.sendMessage(Text.translatable("concerto.confirm.reject_response", player.getName().getString()), false);
+                if (from != null) from.sendMessage(new TranslatableText("concerto.confirm.reject_response", player.getName().getString()), false);
             }
             WAIT_CONFIRMATION.remove(uuid);
-            player.sendMessage(Text.translatable("concerto.confirm.reject"), false);
+            player.sendMessage(new TranslatableText("concerto.confirm.reject"), false);
         }
     }
 
@@ -165,14 +168,14 @@ public class ClientMusicNetworkHandler {
                 ConcertoClient.LOGGER.info("Concerto has been installed in this server");
                 if (args.length > 3 && !client.isInSingleplayer() && args[3].equals("Invite")) {
                     if (ClientConfig.INSTANCE.options.joinAgentWhenInvited) {
-                        player.networkHandler.sendChatCommand("/musicroom agent join");
+                        player.sendChatMessage("/musicroom agent join");
                     } else {
                         player.sendMessage(TextUtil.PAGE_SPLIT, false);
-                        player.sendMessage(Text.translatable("concerto.agent.invite")
-                                .append(Text.literal("  ["))
-                                .append(Text.translatable("concerto.accept").setStyle(
+                        player.sendMessage(new TranslatableText("concerto.agent.invite")
+                                .append(new LiteralText("  ["))
+                                .append(new TranslatableText("concerto.accept").setStyle(
                                         TextUtil.getRunCommandStyle("/musicroom agent join").withColor(Formatting.GREEN)))
-                                .append(Text.literal("]")), false);
+                                .append(new LiteralText("]")), false);
                         player.sendMessage(TextUtil.PAGE_SPLIT, false);
                     }
                 }
@@ -256,6 +259,9 @@ public class ClientMusicNetworkHandler {
         MusicPlayer.run(() -> {
             Music music = MusicJsonParsers.from(TextUtil.fromBase64(str));
             if (music != null) {
+                MusicMetaData meta = music.getMeta();
+                music.setMusicMeta(new BasicMusicMetaData(meta.author(), meta.title(), new TranslatableText(meta.getSource()).getString(),
+                        meta.getDuration().asMilliseconds(), meta.headPictureUrl()));
                 MusicPlayer.INSTANCE.playTempMusic(music);
             }
         });

@@ -6,7 +6,7 @@ import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.text.Text;
+import net.minecraft.text.TranslatableText;
 import top.gregtao.concerto.music.Music;
 import top.gregtao.concerto.screen.widget.ConcertoListWidget;
 import top.gregtao.concerto.screen.widget.MusicWithUUIDListWidget;
@@ -24,7 +24,7 @@ public class MusicAuditionScreen extends ConcertoScreen {
     private MusicWithUUIDListWidget widget;
 
     public MusicAuditionScreen(Screen parent) {
-        super(Text.translatable("concerto.screen.audition"), parent);
+        super(new TranslatableText("concerto.screen.audition"), parent);
     }
 
     private static List<Pair<Music, UUID>> toPairList(Map<UUID, Music> map) {
@@ -44,34 +44,37 @@ public class MusicAuditionScreen extends ConcertoScreen {
         this.refresh();
         this.addSelectableChild(this.widget);
 
-        this.addDrawableChild(ButtonWidget.builder(Text.translatable("concerto.accept"), button -> {
+        this.addDrawableChild(new ButtonWidget(20, this.height - 30, 60, 20,
+                new TranslatableText("concerto.accept"), button -> {
             ClientPlayerEntity player = MinecraftClient.getInstance().player;
             ConcertoListWidget<Pair<Music, UUID>>.Entry entry = this.widget.getSelectedOrNull();
             if (player != null && entry != null) {
-                player.networkHandler.sendChatCommand("concerto-server audit " + entry.item.getSecond());
+                player.sendChatMessage("concerto-server audit " + entry.item.getSecond());
                 this.widget.removeEntryWithoutScrolling(entry);
             }
-        }).position(20, this.height - 30).size(60, 20).build());
+        }));
 
-        this.addDrawableChild(ButtonWidget.builder(Text.translatable("concerto.reject"), button -> {
+        this.addDrawableChild(new ButtonWidget(85, this.height - 30, 60, 20,
+                new TranslatableText("concerto.reject"), button -> {
             ClientPlayerEntity player = MinecraftClient.getInstance().player;
             ConcertoListWidget<Pair<Music, UUID>>.Entry entry = this.widget.getSelectedOrNull();
             if (player != null && entry != null) {
-                player.networkHandler.sendChatCommand("concerto-server audit reject " + entry.item.getSecond());
+                player.sendChatMessage("concerto-server audit reject " + entry.item.getSecond());
                 this.widget.removeEntryWithoutScrolling(entry);
             }
-        }).position(85, this.height - 30).size(60, 20).build());
+        }));
 
-        this.addDrawableChild(ButtonWidget.builder(Text.translatable("concerto.reject.all"), button -> {
+        this.addDrawableChild(new ButtonWidget(150, this.height - 30, 60, 20,
+                new TranslatableText("concerto.reject.all"), button -> {
             ClientPlayerEntity player = MinecraftClient.getInstance().player;
             if (player != null) {
-                player.networkHandler.sendChatCommand("concerto-server audit reject all");
+                player.sendChatMessage("concerto-server audit reject all");
                 this.widget.clear();
             }
-        }).position(150, this.height - 30).size(60, 20).build());
+        }));
 
-        this.addDrawableChild(ButtonWidget.builder(Text.translatable("concerto.refresh"), button -> this.refresh())
-                .position(215, this.height - 30).size(60, 20).build());
+        this.addDrawableChild(new ButtonWidget(215, this.height - 30, 60, 20,
+                new TranslatableText("concerto.refresh"), button -> this.refresh()));
     }
 
     @Override
@@ -80,7 +83,8 @@ public class MusicAuditionScreen extends ConcertoScreen {
         this.widget.render(matrices, mouseX, mouseY, delta);
         ClientPlayerEntity player = MinecraftClient.getInstance().player;
         if (player == null || !player.hasPermissionLevel(2)) {
-            DrawableHelper.drawCenteredTextWithShadow(matrices, this.textRenderer, Text.translatable("concerto.screen.audition.permission_denied"),
+            DrawableHelper.drawCenteredTextWithShadow(matrices, this.textRenderer,
+                    new TranslatableText("concerto.screen.audition.permission_denied").asOrderedText(),
                     this.width / 2, this.height / 2, 0xffffffff);
         }
     }

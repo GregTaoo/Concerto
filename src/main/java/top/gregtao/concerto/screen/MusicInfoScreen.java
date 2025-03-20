@@ -3,7 +3,7 @@ package top.gregtao.concerto.screen;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.text.Text;
+import net.minecraft.text.TranslatableText;
 import top.gregtao.concerto.music.Music;
 import top.gregtao.concerto.music.meta.music.MusicMetaData;
 import top.gregtao.concerto.network.ClientMusicNetworkHandler;
@@ -19,7 +19,7 @@ public class MusicInfoScreen extends ConcertoScreen {
     private final Music music;
 
     public MusicInfoScreen(Music music, Screen parent) {
-        super(Text.translatable("concerto.screen.info"), parent);
+        super(new TranslatableText("concerto.screen.info"), parent);
         this.music = music;
     }
 
@@ -33,29 +33,29 @@ public class MusicInfoScreen extends ConcertoScreen {
             this.initInfo();
         });
 
-        this.addDrawableChild(ButtonWidget.builder(
-                Text.translatable("concerto.screen.request"),
+        this.addDrawableChild(new ButtonWidget(this.width - 245, this.height - 30, 50, 20,
+                new TranslatableText("concerto.screen.request"),
                 button -> ClientMusicNetworkHandler.musicAgentAddMusic(this.music)
-        ).position(this.width - 245, this.height - 30).size(50, 20).build());
+        ));
 
-        this.addDrawableChild(ButtonWidget.builder(
-                Text.translatable("concerto.screen.play"),
+        this.addDrawableChild(new ButtonWidget(this.width - 190, this.height - 30, 50, 20,
+                new TranslatableText("concerto.screen.play"),
                 button -> MusicPlayer.INSTANCE.addMusicHere(this.music, true)
-        ).position(this.width - 190, this.height - 30).size(50, 20).build());
+        ));
 
-        this.addDrawableChild(ButtonWidget.builder(
-                Text.translatable("concerto.screen.add"),
+        this.addDrawableChild(new ButtonWidget(this.width - 135, this.height - 30, 50, 20,
+                new TranslatableText("concerto.screen.add"),
                 button -> MusicPlayer.INSTANCE.addMusic(this.music)
-        ).position(this.width - 135, this.height - 30).size(50, 20).build());
+        ));
 
-        this.addDrawableChild(ButtonWidget.builder(
-                Text.translatable("concerto.screen.copy_link"),
+        this.addDrawableChild(new ButtonWidget(this.width - 80, this.height - 30, 50, 20,
+                new TranslatableText("concerto.screen.copy_link"),
                 button -> {
                     if (this.client != null) {
                         this.client.keyboard.setClipboard(this.music.getLink());
                     }
                 }
-        ).position(this.width - 80, this.height - 30).size(50, 20).build());
+        ));
     }
 
     private void initInfo() {

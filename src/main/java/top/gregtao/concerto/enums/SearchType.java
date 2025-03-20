@@ -1,6 +1,7 @@
 package top.gregtao.concerto.enums;
 
 import net.minecraft.text.Text;
+import net.minecraft.text.TranslatableText;
 import top.gregtao.concerto.api.SimpleStringIdentifiable;
 
 public enum SearchType implements SimpleStringIdentifiable {
@@ -19,6 +20,6 @@ public enum SearchType implements SimpleStringIdentifiable {
     }
 
     public Text getName() {
-        return Text.translatable("concerto.search_type." + this.asString());
+        return new TranslatableText("concerto.search_type." + this.asString());
     }
 }

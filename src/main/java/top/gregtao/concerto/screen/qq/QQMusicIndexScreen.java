@@ -6,6 +6,7 @@ import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.Text;
+import net.minecraft.text.TranslatableText;
 import top.gregtao.concerto.http.qq.QQMusicApiClient;
 import top.gregtao.concerto.player.MusicPlayer;
 import top.gregtao.concerto.screen.ConcertoScreen;
@@ -18,18 +19,18 @@ public class QQMusicIndexScreen extends ConcertoScreen {
     private URLImageWidget avatar;
 
     public QQMusicIndexScreen(Screen parent) {
-        super(Text.translatable("concerto.screen.index.qq"), parent);
+        super(new TranslatableText("concerto.screen.index.qq"), parent);
     }
 
     @Override
     protected void init() {
         super.init();
-        this.addDrawableChild(ButtonWidget.builder(Text.translatable("concerto.screen.user"),
+        this.addDrawableChild(new ButtonWidget(this.width / 2 - 50, 40, 100, 20, new TranslatableText("concerto.screen.user"),
                 button -> MinecraftClient.getInstance().setScreen(this.loggedIn() ? new QQMusicUserScreen(this) : new QQMusicLoginScreens(this))
-        ).size(100, 20).position(this.width / 2 - 50, 40).build());
-        this.addDrawableChild(ButtonWidget.builder(Text.translatable("concerto.screen.search"),
+        ));
+        this.addDrawableChild(new ButtonWidget(this.width / 2 - 50, 65, 100, 20, new TranslatableText("concerto.screen.search"),
                 button -> MinecraftClient.getInstance().setScreen(new QQMusicSearchScreen(this))
-        ).size(100, 20).position(this.width / 2 - 50, 65).build());
+        ));
 
         URL avatarUrl;
         try {
@@ -55,9 +56,9 @@ public class QQMusicIndexScreen extends ConcertoScreen {
     @Override
     public void render(MatrixStack matrices, int mouseX, int mouseY, float delta) {
         super.render(matrices, mouseX, mouseY, delta);
-        Text text = this.loggedIn() ? Text.translatable("concerto.screen.qq.welcome", QQMusicApiClient.LOCAL_USER.nickname) :
-                Text.translatable("concerto.screen.qq.not_login");
-        DrawableHelper.drawCenteredTextWithShadow(matrices, this.textRenderer, text, this.width / 2, 90, 0xffffffff);
+        Text text = this.loggedIn() ? new TranslatableText("concerto.screen.qq.welcome", QQMusicApiClient.LOCAL_USER.nickname) :
+                new TranslatableText("concerto.screen.qq.not_login");
+        DrawableHelper.drawCenteredTextWithShadow(matrices, this.textRenderer, text.asOrderedText(), this.width / 2, 90, 0xffffffff);
         this.avatar.render(matrices, mouseX, mouseY, delta);
     }
 }

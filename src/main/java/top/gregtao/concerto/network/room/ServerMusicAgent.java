@@ -2,6 +2,7 @@ package top.gregtao.concerto.network.room;
 
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
+import net.minecraft.text.TranslatableText;
 import top.gregtao.concerto.ConcertoServer;
 import top.gregtao.concerto.api.DynamicPath;
 import top.gregtao.concerto.http.HttpURLInputStream;
@@ -59,13 +60,13 @@ public class ServerMusicAgent {
 
     public void receiveVote(ServerPlayerEntity player, boolean vote) {
         if (!this.isVoting) {
-            player.sendMessage(Text.translatable("concerto.agent.vote.ended"));
+            player.sendMessage(new TranslatableText("concerto.agent.vote.ended"), false);
             return;
         }
 
         synchronized (this) {
             if (this.yesVoters.contains(player) || this.noVoters.contains(player)) {
-                player.sendMessage(Text.translatable("concerto.agent.vote.duplicate"));
+                player.sendMessage(new TranslatableText("concerto.agent.vote.duplicate"), false);
                 return;
             }
             this.voteLock.lock();
@@ -75,8 +76,8 @@ public class ServerMusicAgent {
                 this.endVoting();
             }
             this.voteLock.unlock();
-            player.sendMessage(Text.translatable("concerto.agent.vote_for", vote ?
-                    Text.translatable("concerto.accept") : Text.translatable("concerto.reject")));
+            player.sendMessage(new TranslatableText("concerto.agent.vote_for", vote ?
+                    new TranslatableText("concerto.accept") : new TranslatableText("concerto.reject")), false);
             ConcertoServer.LOGGER.info("Player {} voted {}", player.getName().getString(), vote);
         }
     }
@@ -91,7 +92,7 @@ public class ServerMusicAgent {
         } else {
             ConcertoServer.LOGGER.info("Vote: Keep current music");
         }
-        Text text = Text.translatable(success ? "concerto.agent.vote.success" : "concerto.agent.vote.failed",
+        Text text = new TranslatableText(success ? "concerto.agent.vote.success" : "concerto.agent.vote.failed",
                 this.yesVoters.size(), this.noVoters.size());
         this.broadcast(text);
 
@@ -113,7 +114,7 @@ public class ServerMusicAgent {
                 if (path != null) this.totalBytes = HttpURLInputStream.getTotalBytes(path);
                 else {
                     ConcertoServer.LOGGER.warn("Cannot play music {}", this.currentMusic.getMeta().title());
-                    this.broadcast(Text.translatable("concerto.agent.play.failed"));
+                    this.broadcast(new TranslatableText("concerto.agent.play.failed"));
                     this.playNextFuture = this.musicScheduler.schedule(this::playNextMusic, 1, TimeUnit.SECONDS);
                     return;
                 }
@@ -142,8 +143,8 @@ public class ServerMusicAgent {
         MusicPlayer.run(() -> {
             ConcertoServer.LOGGER.info("Added music {}", music.getMeta().title());
             this.musicQueue.offer(music);
-            this.broadcast(Text.translatable("concerto.agent.add",
-                    player == null ? Text.translatable("concerto.unknown") : player.getName().getString(),
+            this.broadcast(new TranslatableText("concerto.agent.add",
+                    player == null ? new TranslatableText("concerto.unknown") : player.getName().getString(),
                     music.getMeta().title(), music.getMeta().author()));
             if (!this.isPlaying.get()) {
                 this.playNextFuture = this.musicScheduler.schedule(this::playNextMusic, 1, TimeUnit.SECONDS);

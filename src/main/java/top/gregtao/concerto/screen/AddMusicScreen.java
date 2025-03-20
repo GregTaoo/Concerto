@@ -11,6 +11,7 @@ import top.gregtao.concerto.music.*;
 import top.gregtao.concerto.music.list.NeteaseCloudPlaylist;
 import top.gregtao.concerto.player.MusicPlayer;
 import top.gregtao.concerto.player.MusicPlayerHandler;
+import top.gregtao.concerto.screen.widget.TextWidget;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -29,8 +30,8 @@ public class AddMusicScreen extends ApplyDraggedFileScreen {
         textWidget.alignLeft();
         this.addDrawableChild(widget);
         this.addDrawableChild(textWidget);
-        this.addDrawableChild(ButtonWidget.builder(new TranslatableText("concerto.screen.add"),
-                button -> onClick.accept(widget.getText())).position(centerX + 65, y).size(60, 20).build());
+        this.addDrawableChild(new ButtonWidget(centerX + 65, y, 60, 20, new TranslatableText("concerto.screen.add"),
+                button -> onClick.accept(widget.getText())));
         this.addSelectableChild(widget);
     }
 

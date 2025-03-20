@@ -24,16 +24,18 @@ public class InGameHudRenderer {
                 int scaledWidth = client.getWindow().getScaledWidth(), scaledHeight = client.getWindow().getScaledHeight();
                 String[] texts = MusicPlayerHandler.INSTANCE.getDisplayTexts();
 
+                MatrixStack matrixStack = new MatrixStack();
+                matrixStack.push();
                 ClientConfig.ClientConfigOptions options = ClientConfig.INSTANCE.options;
                 if (options.displayLyrics) {
                     Vector2f pos = ClientConfig.INSTANCE.lyricsPosSupplier.getPos(scaledWidth, scaledHeight);
                     TextUtil.renderText(new LiteralText(texts[0]).formatted(Formatting.DARK_AQUA), options.lyricsAlignment,
-                            (int) pos.getX(), (int) pos.getY(), matrices, client.textRenderer, 0xffffffff);
+                            (int) pos.getX(), (int) pos.getY(), matrixStack, client.textRenderer, 0xffffffff);
                 }
                 if (options.displaySubLyrics) {
                     Vector2f pos = ClientConfig.INSTANCE.subLyricsPosSupplier.getPos(scaledWidth, scaledHeight);
                     TextUtil.renderText(new LiteralText(texts[1]).formatted(Formatting.GOLD), options.subLyricsAlignment,
-                            (int) pos.getX(), (int) pos.getY(), matrices, client.textRenderer, 0xffffffff);
+                            (int) pos.getX(), (int) pos.getY(), matrixStack, client.textRenderer, 0xffffffff);
                 }
                 if (options.displayMusicDetails) {
                     Vector2f pos = ClientConfig.INSTANCE.musicDetailsPosSupplier.getPos(scaledWidth, scaledHeight);
@@ -44,12 +46,12 @@ public class InGameHudRenderer {
                                     " | " + new TranslatableText("concerto.room").getString() : "");
 
                     TextUtil.renderText(new LiteralText(texts[2] + state), options.musicDetailsAlignment,
-                            (int) pos.getX(), (int) pos.getY(), matrices, client.textRenderer, 0xffffffff);
+                            (int) pos.getX(), (int) pos.getY(), matrixStack, client.textRenderer, 0xffffffff);
                 }
                 if (options.displayTimeProgress) {
                     Vector2f pos = ClientConfig.INSTANCE.timeProgressPosSupplier.getPos(scaledWidth, scaledHeight);
                     TextUtil.renderText(new LiteralText(texts[3]), options.timeProgressAlignment,
-                            (int) pos.getX(), (int) pos.getY(), matrices, client.textRenderer, 0xffffffff);
+                            (int) pos.getX(), (int) pos.getY(), matrixStack, client.textRenderer, 0xffffffff);
                     int blankWidth = client.textRenderer.getWidth("                              "); // 兼容不同字体
                     int timeWidth = (client.textRenderer.getWidth(new LiteralText(texts[3])) - blankWidth) / 2;
                     if (MusicPlayerHandler.INSTANCE.currentMeta != null && MusicPlayerHandler.INSTANCE.currentMeta.getDuration() != null) {
@@ -59,12 +61,13 @@ public class InGameHudRenderer {
                             case CENTER -> x = (int) (pos.getX() - (float) blankWidth / 2 - 10);
                             default -> x = (int) (pos.getX() - blankWidth - 15);
                         }
-                        DrawableHelper.fill(matrices, x, (int) pos.getY() + 3, x + blankWidth - 20, (int) pos.getY() + 5,
+                        DrawableHelper.fill(matrixStack, x, (int) pos.getY() + 3, x + blankWidth - 20, (int) pos.getY() + 5,
                                 (int) ClientConfig.INSTANCE.timeProgressBgColor.getNumber());
-                        DrawableHelper.fill(matrices, x, (int) pos.getY() + 3, (int) (x + (blankWidth - 20) * MusicPlayerHandler.INSTANCE.progressPercentage),
+                        DrawableHelper.fill(matrixStack, x, (int) pos.getY() + 3, (int) (x + (blankWidth - 20) * MusicPlayerHandler.INSTANCE.progressPercentage),
                                 (int) pos.getY() + 5, (int) ClientConfig.INSTANCE.timeProgressColor.getNumber());
                     }
                 }
+                matrixStack.pop();
             }
         }
         if (client.currentScreen == null || client.currentScreen instanceof ChatScreen) {

@@ -1,21 +1,20 @@
 package top.gregtao.concerto.command;
 
-import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.BoolArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
-import net.fabricmc.fabric.api.client.command.v2.ClientCommandManager;
-import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;
+import com.mojang.brigadier.tree.LiteralCommandNode;
+import net.fabricmc.fabric.api.client.command.v1.ClientCommandManager;
+import net.fabricmc.fabric.api.client.command.v1.FabricClientCommandSource;
 import net.minecraft.client.network.ClientPlayerEntity;
-import net.minecraft.command.CommandRegistryAccess;
-import net.minecraft.text.Text;
+import net.minecraft.text.TranslatableText;
 import top.gregtao.concerto.ConcertoClient;
 import top.gregtao.concerto.network.ClientMusicNetworkHandler;
 import top.gregtao.concerto.network.room.MusicRoom;
 
 public class MusicRoomCommand {
 
-    public static void register(CommandDispatcher<FabricClientCommandSource> dispatcher, CommandRegistryAccess access) {
-        dispatcher.register(
+    public static void register() {
+        ClientCommandManager.DISPATCHER.register(
                 ClientCommandManager.literal("musicroom")
                         .then(ClientCommandManager.literal("create").executes(context -> {
                             ClientPlayerEntity player = context.getSource().getPlayer();
@@ -36,7 +35,7 @@ public class MusicRoomCommand {
                             return 0;
                         })).then(ClientCommandManager.literal("members").executes(context -> {
                             if (MusicRoom.CLIENT_ROOM != null) {
-                                context.getSource().getPlayer().sendMessage(Text.translatable(
+                                context.getSource().getPlayer().sendMessage(new TranslatableText(
                                         "concerto.room.members", MusicRoom.CLIENT_ROOM.owner,
                                         String.join(",", MusicRoom.CLIENT_ROOM.members.keySet())
                                 ), false);
@@ -77,7 +76,7 @@ public class MusicRoomCommand {
                                             ClientPlayerEntity player = context.getSource().getPlayer();
                                             if (checkServerAvailable(player) && checkAgent(player)) {
                                                 if (!ClientMusicNetworkHandler.musicAgentAddCurrentMusic()) {
-                                                    player.sendMessage(Text.translatable("concerto.not_playing_music"), false);
+                                                    player.sendMessage(new TranslatableText("concerto.not_playing_music"), false);
                                                 }
                                             }
                                             return 0;
@@ -105,7 +104,7 @@ public class MusicRoomCommand {
 
     public static boolean checkServerAvailable(ClientPlayerEntity player) {
         if (!ConcertoClient.serverAvailable) {
-            player.sendMessage(Text.translatable("concerto.not_available"), false);
+            player.sendMessage(new TranslatableText("concerto.not_available"), false);
             return false;
         }
         return true;
@@ -115,7 +114,7 @@ public class MusicRoomCommand {
         if (ConcertoClient.clientState == ConcertoClient.ClientState.LOCAL) {
             return true;
         } else {
-            player.sendMessage(Text.translatable("concerto.agent.occupied"), false);
+            player.sendMessage(new TranslatableText("concerto.agent.occupied"), false);
             return false;
         }
     }
@@ -124,7 +123,7 @@ public class MusicRoomCommand {
         if (ConcertoClient.clientState == ConcertoClient.ClientState.MUSIC_AGENT) {
             return true;
         } else {
-            player.sendMessage(Text.translatable("concerto.not_available"), false);
+            player.sendMessage(new TranslatableText("concerto.not_available"), false);
             return false;
         }
     }

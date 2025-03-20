@@ -1,13 +1,12 @@
 package top.gregtao.concerto.command;
 
-import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
-import net.fabricmc.fabric.api.client.command.v2.ClientCommandManager;
-import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;
+import net.fabricmc.fabric.api.client.command.v1.ClientCommandManager;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.command.CommandRegistryAccess;
 import net.minecraft.command.argument.UuidArgumentType;
+import net.minecraft.text.LiteralText;
 import net.minecraft.text.Text;
+import net.minecraft.text.TranslatableText;
 import net.minecraft.util.Formatting;
 import top.gregtao.concerto.api.UnsafeMusicException;
 import top.gregtao.concerto.command.argument.ShareMusicTargetArgumentType;
@@ -24,8 +23,8 @@ import java.util.UUID;
 
 public class ShareMusicCommand {
 
-    public static void register(CommandDispatcher<FabricClientCommandSource> dispatcher, CommandRegistryAccess registryAccess) {
-        dispatcher.register(
+    public static void register() {
+        ClientCommandManager.DISPATCHER.register(
                 ClientCommandManager.literal("sharemusic").then(
                         ClientCommandManager.literal("to").then(
                                 ClientCommandManager.argument("target", ShareMusicTargetArgumentType.create()).executes(context -> {
@@ -33,14 +32,14 @@ public class ShareMusicCommand {
                                     MusicPlayer.run(() -> {
                                         Music current = MusicPlayerHandler.INSTANCE.getCurrentMusic();
                                         if (current != null) {
-                                            TextUtil.commandMessageClient(context, Text.translatable("concerto.share.sent"));
+                                            TextUtil.commandMessageClient(context, new TranslatableText("concerto.share.sent"));
                                             try {
                                                 ClientMusicNetworkHandler.sendC2SMusicData(new MusicDataPacket(current, target, false));
                                             } catch (UnsafeMusicException e) {
-                                                TextUtil.commandMessageClient(context, Text.translatable("concerto.share.unsafe"));
+                                                TextUtil.commandMessageClient(context, new TranslatableText("concerto.share.unsafe"));
                                             }
                                         } else {
-                                            TextUtil.commandMessageClient(context, Text.translatable("concerto.share.no_music"));
+                                            TextUtil.commandMessageClient(context, new TranslatableText("concerto.share.no_music"));
                                         }
                                     });
                                     return 0;
@@ -80,7 +79,7 @@ public class ShareMusicCommand {
                                         for (int i = 10 * (page - 1); i < Math.min(10 * page, map.size()) && iterator.hasNext(); ++i) {
                                             Map.Entry<UUID, MusicDataPacket> entry = iterator.next();
                                             MusicDataPacket packet = entry.getValue();
-                                            TextUtil.commandMessageClient(context, Text.literal((i + 1) + ". ").append(chatMessageBuilder(
+                                            TextUtil.commandMessageClient(context, new LiteralText((i + 1) + ". ").append(chatMessageBuilder(
                                                     entry.getKey(), packet.from, packet.music.getMeta().title()
                                             )));
                                         }
@@ -94,14 +93,14 @@ public class ShareMusicCommand {
     }
 
     public static Text chatMessageBuilder(UUID uuid, String name, String title) {
-        return Text.translatable("concerto.share.wait_confirmation", name, title)
-                .append(Text.literal("  ["))
-                .append(Text.translatable("concerto.accept").setStyle(
+        return new TranslatableText("concerto.share.wait_confirmation", name, title)
+                .append(new LiteralText("  ["))
+                .append(new TranslatableText("concerto.accept").setStyle(
                         TextUtil.getRunCommandStyle("/sharemusic accept " + uuid).withColor(Formatting.GREEN)))
-                .append(Text.literal("]"))
-                .append(Text.literal("  ["))
-                .append(Text.translatable("concerto.reject").setStyle(
+                .append(new LiteralText("]"))
+                .append(new LiteralText("  ["))
+                .append(new TranslatableText("concerto.reject").setStyle(
                         TextUtil.getRunCommandStyle("/sharemusic reject " + uuid).withColor(Formatting.RED)))
-                .append(Text.literal("]"));
+                .append(new LiteralText("]"));
     }
 }

@@ -1,10 +1,12 @@
 package top.gregtao.concerto.util;
 
 import com.mojang.brigadier.context.CommandContext;
-import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;
+import com.mojang.brigadier.exceptions.CommandSyntaxException;
+import net.fabricmc.fabric.api.client.command.v1.FabricClientCommandSource;
 import net.minecraft.client.font.TextRenderer;
-import net.minecraft.client.gui.DrawContext;
+import net.minecraft.client.gui.DrawableHelper;
 import net.minecraft.client.network.ClientPlayerEntity;
+import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.*;
@@ -17,10 +19,10 @@ import java.util.Base64;
 
 public class TextUtil {
 
-    public static Text PAGE_SPLIT = Text.literal("==============================================").formatted(Formatting.DARK_AQUA);
+    public static Text PAGE_SPLIT = new LiteralText("==============================================").formatted(Formatting.DARK_AQUA);
 
     public static String getTranslatable(String key) {
-        return Text.translatable(key).getString();
+        return new TranslatableText(key).getString();
     }
 
     public static void commandMessageClient(CommandContext<FabricClientCommandSource> context, Text text) {
@@ -29,24 +31,25 @@ public class TextUtil {
     }
 
     public static void commandMessageServer(CommandContext<ServerCommandSource> context, Text text) {
-        ServerPlayerEntity player = context.getSource().getPlayer();
-        if (player != null) player.sendMessage(text);
+        try {
+            ServerPlayerEntity player = context.getSource().getPlayer();
+            if (player != null) player.sendMessage(text, false);
+        } catch (CommandSyntaxException ignored) {}
     }
 
-    public static void renderText(Text text, TextAlignment align, int x, int y, DrawContext matrices, TextRenderer renderer, int color) {
-        OrderedText orderedText = text.asOrderedText();
-        int realX = x, textWidth = renderer.getWidth(orderedText);
+    public static void renderText(Text text, TextAlignment align, int x, int y, MatrixStack matrices, TextRenderer renderer, int color) {
+        int realX = x, textWidth = renderer.getWidth(text);
         if (align == TextAlignment.CENTER) {
             realX -= textWidth / 2;
         } else if (align == TextAlignment.RIGHT) {
             realX -= textWidth;
         }
-        matrices.drawTextWithShadow(renderer, orderedText, realX, y, color);
+        DrawableHelper.drawTextWithShadow(matrices, renderer, text, realX, y, color);
     }
 
     public static Style getRunCommandStyle(String command) {
         return Style.EMPTY.withClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, command))
-                .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, Text.literal(command).formatted(Formatting.AQUA)));
+                .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new LiteralText(command).formatted(Formatting.AQUA)));
     }
 
     public static boolean isDigit(String str) {

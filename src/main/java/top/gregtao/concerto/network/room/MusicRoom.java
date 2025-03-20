@@ -1,10 +1,15 @@
 package top.gregtao.concerto.network.room;
 
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
+import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
+import net.fabricmc.fabric.api.networking.v1.PacketSender;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.client.network.ClientPlayerEntity;
+import net.minecraft.network.PacketByteBuf;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.network.ServerPlayNetworkHandler;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
 import top.gregtao.concerto.ConcertoClient;
@@ -14,7 +19,7 @@ import top.gregtao.concerto.api.MusicJsonParsers;
 import top.gregtao.concerto.config.ServerConfig;
 import top.gregtao.concerto.music.Music;
 import top.gregtao.concerto.music.SharedMusic;
-import top.gregtao.concerto.network.ConcertoPayload;
+import top.gregtao.concerto.network.ConcertoNetworking;
 import top.gregtao.concerto.network.MusicDataPacket;
 import top.gregtao.concerto.player.MusicPlayer;
 import top.gregtao.concerto.util.TextUtil;
@@ -105,14 +110,14 @@ public class MusicRoom {
 
 
     public static void serverSender(String command, String args, ServerPlayerEntity player) {
-        ConcertoPayload payload = new ConcertoPayload(ConcertoPayload.Channel.MUSIC_ROOM, command + ":" + args);
-        ServerPlayNetworking.send(player, payload);
+        PacketByteBuf buf = PacketByteBufs.create();
+        buf.writeString(command + ":" + args);
+        ServerPlayNetworking.send(player, ConcertoNetworking.MUSIC_ROOM, buf);
     }
 
-    public static void serverReceiver(ConcertoPayload payload, ServerPlayNetworking.Context context) {
-        ServerPlayerEntity player = context.player();
-        MinecraftServer server = context.player().getServer();
-        String[] args = payload.string.split(":");
+    public static void serverReceiver(MinecraftServer server, ServerPlayerEntity player,
+                                      ServerPlayNetworkHandler handler, PacketByteBuf buf, PacketSender sender) {
+        String[] args = buf.readString().split(":");
         switch (args[0]) {
             case "CRE": {
                 if (!player.hasPermissionLevel(ServerConfig.INSTANCE.options.musicRoomCommandPermission)) {
@@ -253,15 +258,16 @@ public class MusicRoom {
     }
 
     public static void clientSender(String command, String args) {
-        ConcertoPayload payload = new ConcertoPayload(ConcertoPayload.Channel.MUSIC_ROOM, command + ":" + args);
-        ClientPlayNetworking.send(payload);
+        PacketByteBuf buf = PacketByteBufs.create();
+        buf.writeString(command + ":" + args);
+        ClientPlayNetworking.send(ConcertoNetworking.MUSIC_ROOM, buf);
     }
 
-    public static void clientReceiver(ConcertoPayload payload, ClientPlayNetworking.Context context) {
-        MinecraftClient client = context.client();
+    public static void clientReceiver(MinecraftClient client, ClientPlayNetworkHandler handler,
+                                      PacketByteBuf buf, PacketSender packetSender) {
         if (client.player == null) return;
         ClientPlayerEntity player = client.player;
-        String[] args = payload.string.split(":");
+        String[] args = buf.readString().split(":");
         switch (args[0]) {
             case "REM": {
                 CLIENT_ROOM = null;

@@ -6,8 +6,8 @@ import top.gregtao.concerto.player.MusicPlayerHandler;
 
 public class GeneralPlaylistWidget extends MetadataListWidget<Music> {
 
-    public GeneralPlaylistWidget(int width, int height, int top, int itemHeight) {
-        super(width, height, top, itemHeight);
+    public GeneralPlaylistWidget(int width, int height, int top, int bottom, int itemHeight) {
+        super(width, height, top, bottom, itemHeight);
         this.reset();
     }
 

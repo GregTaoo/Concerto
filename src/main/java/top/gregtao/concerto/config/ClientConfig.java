@@ -1,7 +1,7 @@
 package top.gregtao.concerto.config;
 
 import com.google.gson.GsonBuilder;
-import org.joml.Vector2i;
+import net.minecraft.client.util.math.Vector2f;
 import top.gregtao.concerto.enums.TextAlignment;
 
 public class ClientConfig extends ConfigFile {
@@ -79,8 +79,8 @@ public class ClientConfig extends ConfigFile {
             return this.y.getPosition(height);
         }
 
-        public Vector2i getPos(int width, int height) {
-            return new Vector2i(this.getX(width), this.getY(height));
+        public Vector2f getPos(int width, int height) {
+            return new Vector2f(this.getX(width), this.getY(height));
         }
     }
 

@@ -5,11 +5,11 @@ import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.ArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
-import net.fabricmc.fabric.api.client.command.v2.ClientCommandManager;
-import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;
-import net.minecraft.command.CommandRegistryAccess;
+import net.fabricmc.fabric.api.client.command.v1.ClientCommandManager;
+import net.fabricmc.fabric.api.client.command.v1.FabricClientCommandSource;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.text.Text;
+import net.minecraft.text.TranslatableText;
 import top.gregtao.concerto.ConcertoClient;
 import top.gregtao.concerto.command.argument.NeteaseLevelArgumentType;
 import top.gregtao.concerto.command.builder.MusicAdderBuilder;
@@ -25,8 +25,8 @@ import top.gregtao.concerto.util.TextUtil;
 public class NeteaseCloudMusicCommand {
 
 
-    public static void register(CommandDispatcher<FabricClientCommandSource> dispatcher, CommandRegistryAccess access) {
-        dispatcher.register(ClientCommandManager.literal("neteasecloud").then(
+    public static void register() {
+        ClientCommandManager.DISPATCHER.register(ClientCommandManager.literal("neteasecloud").then(
                 ClientCommandManager.literal("login").then(
                         ClientCommandManager.literal("phone").then(
                                 ClientCommandManager.argument("phone", StringArgumentType.string()).then(
@@ -59,7 +59,7 @@ public class NeteaseCloudMusicCommand {
                                 QRCodeRenderer.load(NeteaseCloudApiClient.INSTANCE.getQRCodeLoginLink(key));
                                 NeteaseCloudApiClient.checkQRCodeStatusProgress(player, key);
                             } catch (Exception e) {
-                                player.sendMessage(Text.translatable("concerto.login.163.qrcode.error"), false);
+                                player.sendMessage(new TranslatableText("concerto.login.163.qrcode.error"), false);
                                 throw new RuntimeException(e);
                             }
                             return 0;
@@ -79,13 +79,13 @@ public class NeteaseCloudMusicCommand {
                     message = NeteaseCloudApiClient.INSTANCE.sendPhoneCaptcha(phoneNumber[0], phoneNumber[1]);
                 }
                 if (message.getFirst() == 200) {
-                    TextUtil.commandMessageClient(context, Text.translatable("concerto.captcha.163.success"));
+                    TextUtil.commandMessageClient(context, new TranslatableText("concerto.captcha.163.success"));
                 } else {
-                    TextUtil.commandMessageClient(context, Text.translatable(
+                    TextUtil.commandMessageClient(context, new TranslatableText(
                             "concerto.captcha.163.failed", message.getSecond()));
                 }
             } catch (Exception e) {
-                TextUtil.commandMessageClient(context, Text.translatable("concerto.captcha.163.error"));
+                TextUtil.commandMessageClient(context, new TranslatableText("concerto.captcha.163.error"));
             }
         });
         return 0;
@@ -103,13 +103,13 @@ public class NeteaseCloudMusicCommand {
                     message = NeteaseCloudApiClient.INSTANCE.cellphoneLogin(phoneNumber[0], phoneNumber[1], captcha, password);
                 }
                 if (message.getFirst() == 200) {
-                    TextUtil.commandMessageClient(context, Text.translatable("concerto.login.163.success"));
+                    TextUtil.commandMessageClient(context, new TranslatableText("concerto.login.163.success"));
                 } else {
-                    TextUtil.commandMessageClient(context, Text.translatable(
+                    TextUtil.commandMessageClient(context, new TranslatableText(
                             "concerto.login.163.failed." + message.getFirst()));
                 }
             } catch (Exception e) {
-                TextUtil.commandMessageClient(context, Text.translatable("concerto.login.163.error"));
+                TextUtil.commandMessageClient(context, new TranslatableText("concerto.login.163.error"));
                 ConcertoClient.LOGGER.error(e.getMessage());
             }
         });
@@ -123,13 +123,13 @@ public class NeteaseCloudMusicCommand {
             try {
                 Pair<Integer, String> message = NeteaseCloudApiClient.INSTANCE.emailPasswordLogin(phoneNumber, password);
                 if (message.getFirst() == 200) {
-                    TextUtil.commandMessageClient(context, Text.translatable("concerto.login.163.success"));
+                    TextUtil.commandMessageClient(context, new TranslatableText("concerto.login.163.success"));
                 } else {
-                    TextUtil.commandMessageClient(context, Text.translatable(
+                    TextUtil.commandMessageClient(context, new TranslatableText(
                             "concerto.login.163.failed", message.getSecond()));
                 }
             } catch (Exception e) {
-                TextUtil.commandMessageClient(context, Text.translatable("concerto.login.163.error"));
+                TextUtil.commandMessageClient(context, new TranslatableText("concerto.login.163.error"));
                 ConcertoClient.LOGGER.error(e.getMessage());
             }
         });
@@ -139,7 +139,7 @@ public class NeteaseCloudMusicCommand {
     public static Pair<Music, Text> musicGetter(CommandContext<FabricClientCommandSource> context) {
         NeteaseCloudMusic music = new NeteaseCloudMusic(StringArgumentType.getString(context, "id"),
                 NeteaseLevelArgumentType.getOrderType(context, "level"));
-        return Pair.of(music, Text.translatable(Sources.NETEASE_CLOUD.getKey("add"), music.getId()));
+        return Pair.of(music, new TranslatableText(Sources.NETEASE_CLOUD.getKey("add"), music.getId()));
     }
 
     public static ArgumentBuilder<FabricClientCommandSource, ?> builderWithIdAndLevel(Command<FabricClientCommandSource> command) {
@@ -152,7 +152,7 @@ public class NeteaseCloudMusicCommand {
         return MusicAdderBuilder.executePlayList(context, Pair.of(
                 () -> NeteaseCloudApiClient.INSTANCE.getPlayList(id,
                         NeteaseLevelArgumentType.getOrderType(context, "level")).getFirst(),
-                Text.translatable("concerto.playlist.netease_cloud.add", id)
+                new TranslatableText("concerto.playlist.netease_cloud.add", id)
         ));
     }
 
@@ -161,7 +161,7 @@ public class NeteaseCloudMusicCommand {
         return MusicAdderBuilder.executePlayList(context, Pair.of(
                 () -> NeteaseCloudApiClient.INSTANCE.getAlbum(id,
                         NeteaseLevelArgumentType.getOrderType(context, "level")).getFirst(),
-                Text.translatable("concerto.playlist.netease_cloud.add", id)
+                new TranslatableText("concerto.playlist.netease_cloud.add", id)
         ));
     }
 }

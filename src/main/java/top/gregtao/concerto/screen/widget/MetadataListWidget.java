@@ -7,12 +7,12 @@ import top.gregtao.concerto.music.meta.MetaData;
 
 public class MetadataListWidget<T extends WithMetaData> extends ConcertoListWidget<T> {
 
-    public MetadataListWidget(int width, int height, int top, int itemHeight) {
-        this(width, height, top, itemHeight, 0xffffffff);
+    public MetadataListWidget(int width, int height, int top, int bottom, int itemHeight) {
+        this(width, height, top, bottom, itemHeight, 0xffffffff);
     }
 
-    public MetadataListWidget(int width, int height, int top, int itemHeight, int color) {
-        super(width, height, top, itemHeight, color);
+    public MetadataListWidget(int width, int height, int top, int bottom, int itemHeight, int color) {
+        super(width, height, top, bottom, itemHeight, color);
     }
 
     @Override

@@ -1,10 +1,10 @@
 package top.gregtao.concerto.screen;
 
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.network.ClientPlayerEntity;
+import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.Text;
 import top.gregtao.concerto.music.Music;
 import top.gregtao.concerto.network.ClientMusicNetworkHandler;
@@ -30,7 +30,9 @@ public class MusicConfirmationScreen extends ConcertoScreen {
     @Override
     protected void init() {
         super.init();
-        this.widget = new MusicWithUUIDListWidget(this.width, this.height - 55, 20, 18);
+        this.widget = new MusicWithUUIDListWidget(this.width, 0, 18, this.height - 35, 18);
+        this.widget.setRenderBackground(false);
+        this.widget.setRenderHorizontalShadows(false);
         this.refresh();
         this.addSelectableChild(this.widget);
 
@@ -65,7 +67,7 @@ public class MusicConfirmationScreen extends ConcertoScreen {
     }
 
     @Override
-    public void render(DrawContext matrices, int mouseX, int mouseY, float delta) {
+    public void render(MatrixStack matrices, int mouseX, int mouseY, float delta) {
         super.render(matrices, mouseX, mouseY, delta);
         this.widget.render(matrices, mouseX, mouseY, delta);
     }

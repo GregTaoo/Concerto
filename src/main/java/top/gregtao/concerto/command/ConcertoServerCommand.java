@@ -2,12 +2,13 @@ package top.gregtao.concerto.command;
 
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
-import net.minecraft.command.CommandRegistryAccess;
 import net.minecraft.command.argument.UuidArgumentType;
 import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.text.LiteralText;
 import net.minecraft.text.Text;
+import net.minecraft.text.TranslatableText;
 import net.minecraft.util.Formatting;
 import top.gregtao.concerto.ConcertoServer;
 import top.gregtao.concerto.network.MusicDataPacket;
@@ -22,8 +23,7 @@ import java.util.UUID;
 
 public class ConcertoServerCommand {
 
-    public static void register(CommandDispatcher<ServerCommandSource> dispatcher, CommandRegistryAccess access,
-                                CommandManager.RegistrationEnvironment environment) {
+    public static void register(CommandDispatcher<ServerCommandSource> dispatcher, boolean dedicated) {
         dispatcher.register(
                 CommandManager.literal("concerto-server").then(
                         CommandManager.literal("audit").requires(source -> source.hasPermissionLevel(2)).then(
@@ -58,7 +58,7 @@ public class ConcertoServerCommand {
                                                 for (int i = 10 * (page - 1); i < Math.min(10 * page, map.size()) && iterator.hasNext(); ++i) {
                                                     Map.Entry<UUID, MusicDataPacket> entry = iterator.next();
                                                     MusicDataPacket packet = entry.getValue();
-                                                    TextUtil.commandMessageServer(context, Text.literal((i + 1) + ". ").append(chatMessageBuilder(
+                                                    TextUtil.commandMessageServer(context, new LiteralText((i + 1) + ". ").append(chatMessageBuilder(
                                                             entry.getKey(), packet.from, packet.music.getMeta().title()
                                                     )));
                                                 }
@@ -97,14 +97,14 @@ public class ConcertoServerCommand {
     }
 
     public static Text chatMessageBuilder(UUID uuid, String name, String title) {
-        return Text.translatable("concerto.audit.message", name, title)
-                .append(Text.literal("  ["))
-                .append(Text.translatable("concerto.accept").setStyle(
+        return new TranslatableText("concerto.audit.message", name, title)
+                .append(new LiteralText("  ["))
+                .append(new TranslatableText("concerto.accept").setStyle(
                         TextUtil.getRunCommandStyle("/concerto-server audit " + uuid).withColor(Formatting.GREEN)))
-                .append(Text.literal("]"))
-                .append(Text.literal("  ["))
-                .append(Text.translatable("concerto.reject").setStyle(
+                .append(new LiteralText("]"))
+                .append(new LiteralText("  ["))
+                .append(new TranslatableText("concerto.reject").setStyle(
                         TextUtil.getRunCommandStyle("/concerto-server audit reject " + uuid).withColor(Formatting.RED)))
-                .append(Text.literal("]"));
+                .append(new LiteralText("]"));
     }
 }

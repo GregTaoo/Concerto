@@ -1,10 +1,8 @@
 package top.gregtao.concerto.mixin;
 
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.hud.ChatHud;
-import net.minecraft.client.gui.hud.MessageIndicator;
-import net.minecraft.network.message.MessageSignatureData;
+import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.Text;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
@@ -51,18 +49,13 @@ public class ChatHudMixin {
         }
     }
 
-    @Inject(method = "addMessage(Lnet/minecraft/text/Text;)V", at = @At("HEAD"))
-    public void addMessageInject1(Text message, CallbackInfo ci){
+    @Inject(method = "addMessage(Lnet/minecraft/text/Text;IIZ)V", at = @At("HEAD"))
+    public void addMessageInject2(Text message, int messageId, int timestamp, boolean refresh, CallbackInfo ci){
         MusicPlayer.run(() -> handleMessage(message));
     }
 
-    @Inject(method = "addMessage(Lnet/minecraft/text/Text;Lnet/minecraft/network/message/MessageSignatureData;Lnet/minecraft/client/gui/hud/MessageIndicator;)V ", at = @At("HEAD"))
-    public void addMessageInject2(Text message, MessageSignatureData signature, MessageIndicator indicator, CallbackInfo ci){
-        MusicPlayer.run(() -> handleMessage(message));
-    }
-
-    @Inject(method = "render(Lnet/minecraft/client/gui/DrawContext;IIIZ)V", at = @At("HEAD"))
-    public void renderInject(DrawContext context, int currentTick, int mouseX, int mouseY, boolean focused, CallbackInfo ci) {
-        InGameHudRenderer.render(context);
+    @Inject(method = "render(Lnet/minecraft/client/util/math/MatrixStack;I)V", at = @At("HEAD"))
+    public void renderInject(MatrixStack matrices, int tickDelta, CallbackInfo ci) {
+        InGameHudRenderer.render(matrices);
     }
 }

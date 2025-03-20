@@ -1,8 +1,8 @@
 package top.gregtao.concerto.screen.widget;
 
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.widget.AlwaysSelectedEntryListWidget;
+import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.Text;
 import net.minecraft.util.Util;
 
@@ -12,12 +12,12 @@ import java.util.ListIterator;
 public class ConcertoListWidget<T> extends AlwaysSelectedEntryListWidget<ConcertoListWidget<T>.Entry> {
     private int color = 0xffffffff;
 
-    public ConcertoListWidget(int width, int height, int top, int itemHeight) {
-        super(MinecraftClient.getInstance(), width, height, top, itemHeight);
+    public ConcertoListWidget(int width, int height, int top, int bottom, int itemHeight) {
+        super(MinecraftClient.getInstance(), width, height, top, bottom, itemHeight);
     }
 
-    public ConcertoListWidget(int width, int height, int top, int itemHeight, int color) {
-        this(width, height, top, itemHeight);
+    public ConcertoListWidget(int width, int height, int top, int bottom, int itemHeight, int color) {
+        this(width, height, top, bottom, itemHeight);
         this.color = color;
     }
 
@@ -71,6 +71,11 @@ public class ConcertoListWidget<T> extends AlwaysSelectedEntryListWidget<Concert
         return this.width - 35;
     }
 
+    @Override
+    protected int getScrollbarPositionX() {
+        return this.width - 10;
+    }
+
     public class Entry extends AlwaysSelectedEntryListWidget.Entry<Entry> {
         public T item;
         public int index, entryIndex;
@@ -102,8 +107,8 @@ public class ConcertoListWidget<T> extends AlwaysSelectedEntryListWidget<Concert
         }
 
         @Override
-        public void render(DrawContext context, int index, int y, int x, int entryWidth, int entryHeight, int mouseX, int mouseY, boolean hovered, float tickDelta) {
-            context.drawText(MinecraftClient.getInstance().textRenderer, this.getNarration(), x, y + 3, ConcertoListWidget.this.color, false);
+        public void render(MatrixStack matrices, int index, int y, int x, int entryWidth, int entryHeight, int mouseX, int mouseY, boolean hovered, float tickDelta) {
+            MinecraftClient.getInstance().textRenderer.draw(matrices, this.getNarration(), x, y + 3, ConcertoListWidget.this.color);
         }
     }
 }

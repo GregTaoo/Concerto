@@ -5,7 +5,6 @@ import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.gui.widget.CyclingButtonWidget;
 import net.minecraft.client.gui.widget.TextFieldWidget;
-import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.TranslatableText;
 import org.lwjgl.glfw.GLFW;
 import top.gregtao.concerto.enums.OrderType;
@@ -34,10 +33,8 @@ public class GeneralPlaylistScreen extends ApplyDraggedFileScreen {
     @Override
     protected void init() {
         super.init();
-        this.widget = new GeneralPlaylistWidget(this.width, this.height, 50, this.height - 45, 18);
-        this.widget.setRenderHorizontalShadows(false);
-        this.widget.setRenderBackground(false);
-
+        this.widget = new GeneralPlaylistWidget(this.width, this.height, 40, this.height - 35, 18);
+        this.addDrawableChild(this.widget);
         this.addSelectableChild(this.widget);
 
         this.searchBox = new TextFieldWidget(this.textRenderer, this.width / 2 - 185, 18, 300, 18,
@@ -101,12 +98,6 @@ public class GeneralPlaylistScreen extends ApplyDraggedFileScreen {
             MusicPlayer.INSTANCE.clear();
             MinecraftClient.getInstance().setScreen(null);
         }));
-    }
-
-    @Override
-    public void render(MatrixStack matrices, int mouseX, int mouseY, float delta) {
-        super.render(matrices, mouseX, mouseY, delta);
-        this.widget.render(matrices, mouseX, mouseY, delta);
     }
 
     @Override

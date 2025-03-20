@@ -38,10 +38,9 @@ public class MusicAuditionScreen extends ConcertoScreen {
     @Override
     protected void init() {
         super.init();
-        this.widget = new MusicWithUUIDListWidget(this.width, 0, 18, this.height - 35, 18);
-        this.widget.setRenderBackground(false);
-        this.widget.setRenderHorizontalShadows(false);
+        this.widget = new MusicWithUUIDListWidget(this.width, this.height, 18, this.height - 35, 18);
         this.refresh();
+        this.addDrawableChild(this.widget);
         this.addSelectableChild(this.widget);
 
         this.addDrawableChild(new ButtonWidget(20, this.height - 30, 60, 20,
@@ -80,7 +79,6 @@ public class MusicAuditionScreen extends ConcertoScreen {
     @Override
     public void render(MatrixStack matrices, int mouseX, int mouseY, float delta) {
         super.render(matrices, mouseX, mouseY, delta);
-        this.widget.render(matrices, mouseX, mouseY, delta);
         ClientPlayerEntity player = MinecraftClient.getInstance().player;
         if (player == null || !player.hasPermissionLevel(2)) {
             DrawableHelper.drawCenteredTextWithShadow(matrices, this.textRenderer,

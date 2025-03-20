@@ -5,7 +5,6 @@ import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.gui.widget.CyclingButtonWidget;
 import net.minecraft.client.gui.widget.TextFieldWidget;
-import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.TranslatableText;
 import org.lwjgl.glfw.GLFW;
 import top.gregtao.concerto.ConcertoClient;
@@ -32,11 +31,12 @@ public class QQMusicSearchScreen extends PageScreen {
     private MetadataListWidget<QQMusicPlaylist> albumList;
     private Map<SearchType, ConcertoListWidget<?>> listWidgetsMap = new HashMap<>();
     protected TextFieldWidget searchBox;
-    private ButtonWidget infoButton;
+    private ButtonWidget infoButton, searchButton, playButton, addButton;
+    private CyclingButtonWidget<SearchType> typeButton;
     private SearchType searchType = SearchType.MUSIC;
 
     private <T extends WithMetaData> MetadataListWidget<T> initListsWidget() {
-        MetadataListWidget<T> widget =  new MetadataListWidget<>(this.width, this.height, 50, this.height - 40, 18) {
+        return new MetadataListWidget<>(QQMusicSearchScreen.this.width, QQMusicSearchScreen.this.height, 45, QQMusicSearchScreen.this.height - 35, 18) {
             @Override
             public void onDoubleClicked(ConcertoListWidget<T>.Entry entry) {
                 try {
@@ -55,9 +55,6 @@ public class QQMusicSearchScreen extends PageScreen {
                 }
             }
         };
-        widget.setRenderBackground(false);
-        widget.setRenderHorizontalShadows(false);
-        return widget;
     }
 
     public QQMusicSearchScreen(Screen parent) {
@@ -86,10 +83,32 @@ public class QQMusicSearchScreen extends PageScreen {
         try {
             this.remove(this.listWidgetsMap.get(this.searchType));
         } catch (NullPointerException ignored) {}
+        this.addDrawableChild(this.listWidgetsMap.get(type));
         this.addSelectableChild(this.listWidgetsMap.get(type));
+        this.refreshDrawable();
         this.searchType = type;
         this.infoButton.active = type == SearchType.MUSIC;
         this.toggleSearch();
+    }
+
+    @Override
+    public void refreshDrawable() {
+        try {
+            super.refreshDrawable();
+            this.remove(this.searchBox);
+            this.addDrawableChild(this.searchBox);
+            this.addSelectableChild(this.searchBox);
+            this.remove(this.infoButton);
+            this.addDrawableChild(this.infoButton);
+            this.remove(this.searchButton);
+            this.addDrawableChild(this.searchButton);
+            this.remove(this.typeButton);
+            this.addDrawableChild(this.typeButton);
+            this.remove(this.playButton);
+            this.addDrawableChild(this.playButton);
+            this.remove(this.addButton);
+            this.addDrawableChild(this.addButton);
+        } catch (NullPointerException ignored) {}
     }
 
     @Override
@@ -112,8 +131,6 @@ public class QQMusicSearchScreen extends PageScreen {
 
         this.searchBox = new TextFieldWidget(this.textRenderer, this.width / 2 - 155, 17, 200, 20,
                 this.searchBox, new TranslatableText("concerto.screen.search"));
-        this.addSelectableChild(this.searchBox);
-        this.addDrawableChild(this.searchBox);
         this.searchBox.setText(DEFAULT_KEYWORD);
 
         this.infoButton = new ButtonWidget(this.width / 2 + 120, this.height - 30, 50, 20,
@@ -123,18 +140,15 @@ public class QQMusicSearchScreen extends PageScreen {
                 MinecraftClient.getInstance().setScreen(new MusicInfoScreen(entry.item, this));
             }
         });
-        this.addDrawableChild(this.infoButton);
 
-        this.updateSearchType(this.searchType);
+        this.searchButton = new ButtonWidget(this.width / 2 + 50, 17, 52, 20,
+                new TranslatableText("concerto.screen.search"), button -> this.toggleSearch());
 
-        this.addDrawableChild(new ButtonWidget(this.width / 2 + 50, 17, 52, 20,
-                new TranslatableText("concerto.screen.search"), button -> this.toggleSearch()));
-
-        this.addDrawableChild(CyclingButtonWidget.builder(SearchType::getName).values(SearchType.values()).initially(this.searchType).build(
+        this.typeButton = CyclingButtonWidget.builder(SearchType::getName).values(SearchType.values()).initially(this.searchType).build(
                 this.width / 2 + 105, 17, 65, 20, new TranslatableText("concerto.search_type"),
-                (widget, type) -> this.updateSearchType(type)));
+                (widget, type) -> this.updateSearchType(type));
 
-        this.addDrawableChild(new ButtonWidget(this.width / 2 + 65, this.height - 30, 50, 20,
+        this.playButton = new ButtonWidget(this.width / 2 + 65, this.height - 30, 50, 20,
                 new TranslatableText("concerto.screen.play"), button -> {
             switch (this.searchType) {
                 case MUSIC: {
@@ -156,9 +170,9 @@ public class QQMusicSearchScreen extends PageScreen {
                     }
                 }
             }
-        }));
+        });
 
-        this.addDrawableChild(new ButtonWidget(this.width / 2 + 10, this.height - 30, 50, 20,
+        this.addButton = new ButtonWidget(this.width / 2 + 10, this.height - 30, 50, 20,
                 new TranslatableText("concerto.screen.add"), button -> {
             switch (this.searchType) {
                 case MUSIC: {
@@ -180,22 +194,8 @@ public class QQMusicSearchScreen extends PageScreen {
                     }
                 }
             }
-        }));
-    }
-
-    @Override
-    public void render(MatrixStack matrices, int mouseX, int mouseY, float delta) {
-        super.render(matrices, mouseX, mouseY, delta);
-        try {
-            switch (this.searchType) {
-                case PLAYLIST -> this.playlistList.render(matrices, mouseX, mouseY, delta);
-                case MUSIC -> this.musicList.render(matrices, mouseX, mouseY, delta);
-                case ALBUM -> this.albumList.render(matrices, mouseX, mouseY, delta);
-            }
-        } catch (IndexOutOfBoundsException e) {
-            ConcertoClient.LOGGER.error(e.getMessage());
-        }
-        this.searchBox.render(matrices, mouseX, mouseY, delta);
+        });
+        this.updateSearchType(this.searchType);
     }
 
     @Override

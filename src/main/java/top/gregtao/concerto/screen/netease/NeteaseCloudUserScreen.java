@@ -22,15 +22,12 @@ public class NeteaseCloudUserScreen extends PageScreen {
     private MetadataListWidget<NeteaseCloudPlaylist> playlistList;
 
     private <T extends WithMetaData> MetadataListWidget<T> initWidget() {
-        MetadataListWidget<T> widget = new MetadataListWidget<>(this.width, 0, 25, this.height - 45, 18) {
+        return new MetadataListWidget<>(NeteaseCloudUserScreen.this.width, NeteaseCloudUserScreen.this.height, 18, NeteaseCloudUserScreen.this.height - 35, 18) {
             @Override
             public void onDoubleClicked(ConcertoListWidget<T>.Entry entry) {
                 MinecraftClient.getInstance().setScreen(new PlaylistPreviewScreen((Playlist) entry.item, NeteaseCloudUserScreen.this));
             }
         };
-        widget.setRenderBackground(false);
-        widget.setRenderHorizontalShadows(false);
-        return widget;
     }
 
     public NeteaseCloudUserScreen(Screen parent) {
@@ -59,6 +56,7 @@ public class NeteaseCloudUserScreen extends PageScreen {
         this.playlistList = this.initWidget();
 
         this.onPageTurned(0);
+        this.addDrawableChild(this.playlistList);
         this.addSelectableChild(this.playlistList);
 
         this.addDrawableChild(new ButtonWidget(this.width / 2 + 10, this.height - 30, 50, 20,
@@ -86,14 +84,13 @@ public class NeteaseCloudUserScreen extends PageScreen {
                 MinecraftClient.getInstance().setScreen(new NeteaseCloudLoginScreens(this));
             }
         }));
+        this.refreshDrawable();
     }
 
     @Override
     public void render(MatrixStack matrices, int mouseX, int mouseY, float delta) {
         super.render(matrices, mouseX, mouseY, delta);
-        if (this.loggedIn()) {
-            this.playlistList.render(matrices, mouseX, mouseY, delta);
-        } else {
+        if (!this.loggedIn()) {
             DrawableHelper.drawCenteredTextWithShadow(matrices, this.textRenderer,
                     new TranslatableText("concerto.screen.163.not_login").asOrderedText(),
                     this.width / 2, this.height / 2, 0xffffffff);

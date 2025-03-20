@@ -29,14 +29,13 @@ public class PlaylistPreviewScreen extends ConcertoScreen {
     @Override
     protected void init() {
         super.init();
-        this.widget = new MetadataListWidget<>(this.width, 0, 30, this.height - 40, 18) {
+        this.widget = new MetadataListWidget<>(this.width, this.height, 20, this.height - 35, 18) {
             @Override
             public void onDoubleClicked(ConcertoListWidget<Music>.Entry entry) {
                 MusicPlayer.INSTANCE.addMusicHere(entry.item, true);
             }
         };
-        this.widget.setRenderBackground(false);
-        this.widget.setRenderHorizontalShadows(false);
+        this.addDrawableChild(this.widget);
         this.addSelectableChild(this.widget);
         MusicPlayer.run(() -> this.widget.reset(this.playlist.getList(), null));
 
@@ -82,6 +81,5 @@ public class PlaylistPreviewScreen extends ConcertoScreen {
     public void render(MatrixStack matrices, int mouseX, int mouseY, float delta) {
         super.render(matrices, mouseX, mouseY, delta);
         DrawableHelper.drawCenteredTextWithShadow(matrices, this.textRenderer, this.title.asOrderedText(), this.width / 2, 5, 0xffffffff);
-        this.widget.render(matrices, mouseX, mouseY, delta);
     }
 }

@@ -11,6 +11,7 @@ import net.minecraft.text.TranslatableText;
 
 public abstract class PageScreen extends ConcertoScreen {
     protected int page = 0, maxPage = Integer.MAX_VALUE, buttonX, buttonY, widgetWidth;
+    private ButtonWidget prevButton, nextButton;
 
     public PageScreen(Text title, Screen parent) {
         super(title, parent);
@@ -33,24 +34,39 @@ public abstract class PageScreen extends ConcertoScreen {
         this.buttonY = buttonY;
     }
 
+    public void refreshDrawable() {
+        try {
+            this.remove(this.prevButton);
+            this.remove(this.nextButton);
+            this.addDrawableChild(this.prevButton);
+            this.addDrawableChild(this.nextButton);
+            this.addSelectableChild(this.prevButton);
+            this.addSelectableChild(this.nextButton);
+        } catch (NullPointerException ignored) {}
+    }
+
     @Override
     protected void init() {
         this.configure(this.width / 2 - 120, this.height - 30);
         super.init();
-        this.addDrawableChild(new ButtonWidget(this.buttonX - this.widgetWidth / 2 - 22, this.buttonY, 20, 20,
+        this.prevButton = new ButtonWidget(this.buttonX - this.widgetWidth / 2 - 22, this.buttonY, 20, 20,
                 new TranslatableText("concerto.screen.previous_page"), button -> {
             if (this.page > 0) {
                 this.page -= 1;
                 this.onPageTurned(this.page);
             }
-        }));
-        this.addDrawableChild(new ButtonWidget(this.buttonX + this.widgetWidth / 2, this.buttonY, 20, 20,
+        });
+        this.nextButton = new ButtonWidget(this.buttonX + this.widgetWidth / 2, this.buttonY, 20, 20,
                 new TranslatableText("concerto.screen.next_page"), button -> {
             if (this.page < this.maxPage) {
                 this.page += 1;
                 this.onPageTurned(this.page);
             }
-        }));
+        });
+        this.addDrawableChild(this.prevButton);
+        this.addDrawableChild(this.nextButton);
+        this.addSelectableChild(this.prevButton);
+        this.addSelectableChild(this.nextButton);
     }
 
     @Override

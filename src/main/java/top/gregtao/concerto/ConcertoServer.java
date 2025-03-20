@@ -12,7 +12,6 @@ import org.slf4j.LoggerFactory;
 import top.gregtao.concerto.command.ConcertoServerCommand;
 import top.gregtao.concerto.config.PresetRadioConfig;
 import top.gregtao.concerto.config.ServerConfig;
-import top.gregtao.concerto.network.ConcertoNetworking;
 import top.gregtao.concerto.network.ServerMusicNetworkHandler;
 
 public class ConcertoServer implements ModInitializer {
@@ -22,7 +21,6 @@ public class ConcertoServer implements ModInitializer {
     @Override
     public void onInitialize() {
         CommandRegistrationCallback.EVENT.register(ConcertoServerCommand::register);
-        ConcertoNetworking.register();
         ServerMusicNetworkHandler.register();
 
         ResourceManagerHelper.get(ResourceType.SERVER_DATA).registerReloadListener(new SimpleSynchronousResourceReloadListener() {

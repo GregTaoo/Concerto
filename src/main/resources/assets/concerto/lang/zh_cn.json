@@ -16,6 +16,7 @@
   "concerto.success": "成功",
   "concerto.fail": "失败",
   "concerto.not_cacheable": "不是可缓存的",
+  "concerto.not_available": "Concerto 在该服务器不可用！",
   "concerto.drag_confirm": "确认将下列 文件/文件夹 添加到 Concerto?",
   "concerto.thank_you": "感谢支持！您的支持是我更新的最大动力",
 

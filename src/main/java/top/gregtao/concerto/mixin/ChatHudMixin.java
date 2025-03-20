@@ -1,9 +1,9 @@
 package top.gregtao.concerto.mixin;
 
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.hud.ChatHud;
 import net.minecraft.client.gui.hud.MessageIndicator;
+import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.network.message.MessageSignatureData;
 import net.minecraft.text.Text;
 import org.spongepowered.asm.mixin.Mixin;
@@ -61,8 +61,8 @@ public class ChatHudMixin {
         MusicPlayer.run(() -> handleMessage(message));
     }
 
-    @Inject(method = "render(Lnet/minecraft/client/gui/DrawContext;III)V", at = @At("HEAD"))
-    public void renderInject(DrawContext context, int currentTick, int mouseX, int mouseY, CallbackInfo ci) {
-        InGameHudRenderer.render(context);
+    @Inject(method = "render(Lnet/minecraft/client/util/math/MatrixStack;III)V", at = @At("HEAD"))
+    public void renderInject(MatrixStack matrices, int currentTick, int mouseX, int mouseY, CallbackInfo ci) {
+        InGameHudRenderer.render(matrices);
     }
 }

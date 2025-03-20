@@ -1,10 +1,11 @@
 package top.gregtao.concerto.screen;
 
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.DrawContext;
+import net.minecraft.client.gui.DrawableHelper;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.network.ClientPlayerEntity;
+import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.Text;
 import top.gregtao.concerto.music.Music;
 import top.gregtao.concerto.screen.widget.ConcertoListWidget;
@@ -74,12 +75,12 @@ public class MusicAuditionScreen extends ConcertoScreen {
     }
 
     @Override
-    public void render(DrawContext matrices, int mouseX, int mouseY, float delta) {
+    public void render(MatrixStack matrices, int mouseX, int mouseY, float delta) {
         super.render(matrices, mouseX, mouseY, delta);
         this.widget.render(matrices, mouseX, mouseY, delta);
         ClientPlayerEntity player = MinecraftClient.getInstance().player;
         if (player == null || !player.hasPermissionLevel(2)) {
-            matrices.drawCenteredTextWithShadow(this.textRenderer, Text.translatable("concerto.screen.audition.permission_denied"),
+            DrawableHelper.drawCenteredTextWithShadow(matrices, this.textRenderer, Text.translatable("concerto.screen.audition.permission_denied"),
                     this.width / 2, this.height / 2, 0xffffffff);
         }
     }

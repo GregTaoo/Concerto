@@ -2,10 +2,11 @@ package top.gregtao.concerto.screen.login;
 
 import com.google.zxing.WriterException;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.DrawContext;
+import net.minecraft.client.gui.DrawableHelper;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.network.ClientPlayerEntity;
+import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.Text;
 import top.gregtao.concerto.player.MusicPlayer;
 import top.gregtao.concerto.screen.ConcertoScreen;
@@ -119,14 +120,14 @@ public class QRCodeLoginScreen extends ConcertoScreen {
     }
 
     @Override
-    public void render(DrawContext matrices, int mouseX, int mouseY, float delta) {
+    public void render(MatrixStack matrices, int mouseX, int mouseY, float delta) {
         super.render(matrices, mouseX, mouseY, delta);
         if (this.isSpecificImage) {
             this.urlImageWidget.render(matrices, mouseX, mouseY, delta);
         } else {
             QRCodeRenderer.drawQRCode(matrices, this.width / 2 - this.qrWidth / 2, 30);
         }
-        matrices.drawCenteredTextWithShadow(this.textRenderer, this.message, this.width / 2, 120, 0xffffffff);
+        DrawableHelper.drawCenteredTextWithShadow(matrices, this.textRenderer, this.message, this.width / 2, 120, 0xffffffff);
     }
 
     @Override

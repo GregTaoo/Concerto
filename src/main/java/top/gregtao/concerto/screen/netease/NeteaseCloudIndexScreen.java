@@ -1,9 +1,10 @@
 package top.gregtao.concerto.screen.netease;
 
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.DrawContext;
+import net.minecraft.client.gui.DrawableHelper;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
+import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.Text;
 import top.gregtao.concerto.http.netease.NeteaseCloudApiClient;
 import top.gregtao.concerto.player.MusicPlayer;
@@ -52,11 +53,11 @@ public class NeteaseCloudIndexScreen extends ConcertoScreen {
     }
 
     @Override
-    public void render(DrawContext matrices, int mouseX, int mouseY, float delta) {
+    public void render(MatrixStack matrices, int mouseX, int mouseY, float delta) {
         super.render(matrices, mouseX, mouseY, delta);
         Text text = this.loggedIn() ? Text.translatable("concerto.screen.163.welcome", NeteaseCloudApiClient.LOCAL_USER.nickname) :
                 Text.translatable("concerto.screen.163.not_login");
-        matrices.drawCenteredTextWithShadow(this.textRenderer, text, this.width / 2, 90, 0xffffffff);
+        DrawableHelper.drawCenteredTextWithShadow(matrices, this.textRenderer, text, this.width / 2, 90, 0xffffffff);
         this.avatar.render(matrices, mouseX, mouseY, delta);
     }
 }

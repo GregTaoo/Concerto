@@ -70,7 +70,7 @@ public class QQMusicSearchScreen extends PageScreen {
                 case PLAYLIST -> this.playlistList.reset(QQMusicApiClient.INSTANCE.searchPlaylist(keyword, page), null);
                 case ALBUM -> this.albumList.reset(QQMusicApiClient.INSTANCE.searchAlbum(keyword, page), null);
             }
-            this.listWidgetsMap.get(this.searchType).setScrollY(0);
+            this.listWidgetsMap.get(this.searchType).setScrollAmount(0);
         });
     }
 

@@ -70,7 +70,7 @@ public class NeteaseCloudSearchScreen extends PageScreen {
                 case PLAYLIST -> this.playlistList.reset(NeteaseCloudApiClient.INSTANCE.searchPlaylist(keyword, page), null);
                 case ALBUM -> this.albumList.reset(NeteaseCloudApiClient.INSTANCE.searchAlbum(keyword, page), null);
             }
-            this.listWidgetsMap.get(this.searchType).setScrollY(0);
+            this.listWidgetsMap.get(this.searchType).setScrollAmount(0);
         });
     }
 

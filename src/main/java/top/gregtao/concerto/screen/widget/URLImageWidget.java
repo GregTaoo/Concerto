@@ -5,14 +5,12 @@ import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.Drawable;
 import net.minecraft.client.gui.widget.ClickableWidget;
 import net.minecraft.client.gui.widget.Widget;
-import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.texture.NativeImage;
 import net.minecraft.client.texture.NativeImageBackedTexture;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 import top.gregtao.concerto.ConcertoClient;
 import top.gregtao.concerto.config.CacheManager;
-import top.gregtao.concerto.mixin.DrawContextAccessor;
 import top.gregtao.concerto.util.HashUtil;
 
 import javax.imageio.ImageIO;
@@ -145,11 +143,10 @@ public class URLImageWidget implements Drawable, Widget, Closeable {
         } else {
             NativeImage image = this.texture.getImage();
             if (image != null && !this.loading) {
-                DrawContext drawContext = new DrawContext(MinecraftClient.getInstance(),
-                        ((DrawContextAccessor) context).getVertexConsumers());
+                DrawContext drawContext = new DrawContext(MinecraftClient.getInstance(), context.getVertexConsumers());
                 drawContext.getMatrices().scale(0.125f, 0.125f, 1);
                 drawContext.getMatrices().translate(7 * this.x, 7 * this.y, 0);
-                drawContext.drawTexture(RenderLayer::getGuiTextured, this.textureId, this.x, this.y, 0, 0, this.width << 3, this.height << 3, image.getWidth(), image.getHeight());
+                drawContext.drawTexture(this.textureId, this.x, this.y, 0, 0, this.width << 3, this.height << 3, image.getWidth(), image.getHeight());
             } else {
                 context.drawCenteredTextWithShadow(MinecraftClient.getInstance().textRenderer,
                         Text.translatable("concerto.screen.loading"), this.x + this.width / 2, this.y + this.height / 2, 0xffffffff);

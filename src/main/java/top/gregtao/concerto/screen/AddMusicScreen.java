@@ -6,6 +6,7 @@ import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.gui.widget.TextFieldWidget;
 import net.minecraft.client.gui.widget.TextWidget;
 import net.minecraft.text.Text;
+import top.gregtao.concerto.api.UnsafeMusicException;
 import top.gregtao.concerto.music.*;
 import top.gregtao.concerto.music.list.NeteaseCloudPlaylist;
 import top.gregtao.concerto.player.MusicPlayer;

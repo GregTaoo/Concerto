@@ -1,4 +1,4 @@
-package top.gregtao.concerto.network;
+package top.gregtao.concerto.network.room;
 
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
@@ -7,6 +7,7 @@ import top.gregtao.concerto.api.DynamicPath;
 import top.gregtao.concerto.http.HttpURLInputStream;
 import top.gregtao.concerto.music.Music;
 import top.gregtao.concerto.music.SharedMusic;
+import top.gregtao.concerto.network.ServerMusicNetworkHandler;
 import top.gregtao.concerto.player.MusicPlayer;
 
 import java.util.ArrayList;

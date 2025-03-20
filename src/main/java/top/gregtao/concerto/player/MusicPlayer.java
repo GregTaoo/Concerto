@@ -14,7 +14,7 @@ import net.minecraft.text.Text;
 import top.gregtao.concerto.ConcertoClient;
 import top.gregtao.concerto.api.MusicJsonParsers;
 import top.gregtao.concerto.music.Music;
-import top.gregtao.concerto.network.MusicRoom;
+import top.gregtao.concerto.network.room.MusicRoom;
 
 import java.io.File;
 import java.io.IOException;
@@ -233,6 +233,7 @@ public class MusicPlayer extends StreamPlayer implements StreamPlayerListener {
             try {
                 this.open(source);
                 this.play();
+                ConcertoClient.LOGGER.info("Start playing temporary music {} - {}", music.getMeta().title(), music.getMeta().author());
                 this.isPlayingTemp = true;
             } catch (StreamPlayerException e) {
                 this.started = this.isPlayingTemp = this.forcePaused = false;
@@ -285,7 +286,7 @@ public class MusicPlayer extends StreamPlayer implements StreamPlayerListener {
                     MusicPlayerHandler.INSTANCE.currentSource = source;
                     this.open(source);
                     this.play();
-                    ConcertoClient.LOGGER.info("Start playing music: {}", music.getMeta().title());
+                    ConcertoClient.LOGGER.info("Start playing music {} - {}", music.getMeta().title(), music.getMeta().author());
                     MusicRoom.clientUpdate(music);
                     callback.accept(MusicPlayerHandler.INSTANCE.getCurrentIndex());
                 }

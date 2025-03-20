@@ -3,7 +3,7 @@ package top.gregtao.concerto.config;
 import com.google.gson.JsonObject;
 import top.gregtao.concerto.api.CacheableMusic;
 import top.gregtao.concerto.api.MusicJsonParsers;
-import top.gregtao.concerto.music.MusicSourceNotFoundException;
+import top.gregtao.concerto.api.MusicSourceNotFoundException;
 import top.gregtao.concerto.util.HashUtil;
 
 import javax.sound.sampled.UnsupportedAudioFileException;

@@ -2,6 +2,7 @@ package top.gregtao.concerto.music;
 
 import top.gregtao.concerto.api.JsonParser;
 import top.gregtao.concerto.api.MusicJsonParsers;
+import top.gregtao.concerto.api.MusicSourceNotFoundException;
 import top.gregtao.concerto.http.HttpURLInputStream;
 import top.gregtao.concerto.music.lyrics.DefaultFormatLyrics;
 import top.gregtao.concerto.music.lyrics.Lyrics;

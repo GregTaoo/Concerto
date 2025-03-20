@@ -1,4 +1,4 @@
-package top.gregtao.concerto.music;
+package top.gregtao.concerto.api;
 
 public class MusicSourceNotFoundException extends UnsupportedOperationException {
 

@@ -1,4 +1,4 @@
-package top.gregtao.concerto.music;
+package top.gregtao.concerto.api;
 
 public class UnsafeMusicException extends UnsupportedOperationException {
 

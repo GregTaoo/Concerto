@@ -11,7 +11,7 @@ import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import top.gregtao.concerto.ConcertoServer;
 import top.gregtao.concerto.network.MusicDataPacket;
-import top.gregtao.concerto.network.ServerMusicAgent;
+import top.gregtao.concerto.network.room.ServerMusicAgent;
 import top.gregtao.concerto.network.ServerMusicNetworkHandler;
 import top.gregtao.concerto.player.MusicPlayer;
 import top.gregtao.concerto.util.TextUtil;

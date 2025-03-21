@@ -205,6 +205,7 @@
   "concerto.agent.play.failed": "Cannot play music %s - %s, it may be caused by interal server error or no VIP permissions.",
   "concerto.agent.not_available": "The music agent service is not available!",
   "concerto.agent.error": "Error occurs in server music agent.",
+  "concerto.agent.add.too_quick": "You are requesting too quickly! Please retry after %d seconds.",
 
   "concerto.error.invalid_path": "Invalid path or file format",
   "concerto.error.unsupported_operation": "Unsupported Operation!"

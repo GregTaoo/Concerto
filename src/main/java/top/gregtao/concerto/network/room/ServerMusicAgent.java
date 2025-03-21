@@ -5,6 +5,7 @@ import net.minecraft.text.Text;
 import net.minecraft.text.TranslatableText;
 import top.gregtao.concerto.ConcertoServer;
 import top.gregtao.concerto.api.DynamicPath;
+import top.gregtao.concerto.config.ServerConfig;
 import top.gregtao.concerto.http.HttpURLInputStream;
 import top.gregtao.concerto.music.Music;
 import top.gregtao.concerto.music.SharedMusic;
@@ -12,7 +13,9 @@ import top.gregtao.concerto.network.ServerMusicNetworkHandler;
 import top.gregtao.concerto.player.MusicPlayer;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.Lock;
@@ -21,7 +24,7 @@ import java.util.concurrent.locks.ReentrantLock;
 public class ServerMusicAgent {
     public static ServerMusicAgent INSTANCE = new ServerMusicAgent();
 
-    private final List<ServerPlayerEntity> members = new ArrayList<>();
+    private final Map<ServerPlayerEntity, Long> members = new HashMap<>();
     private final ScheduledExecutorService voteScheduler = Executors.newScheduledThreadPool(1);
 
     private final Lock voteLock = new ReentrantLock();
@@ -114,7 +117,8 @@ public class ServerMusicAgent {
                 if (path != null) this.totalBytes = HttpURLInputStream.getTotalBytes(path);
                 else {
                     ConcertoServer.LOGGER.warn("Cannot play music {}", this.currentMusic.getMeta().title());
-                    this.broadcast(new TranslatableText("concerto.agent.play.failed"));
+                    this.broadcast(new TranslatableText("concerto.agent.play.failed",
+                            this.currentMusic.getMeta().title(), this.currentMusic.getMeta().author()));
                     this.playNextFuture = this.musicScheduler.schedule(this::playNextMusic, 1, TimeUnit.SECONDS);
                     return;
                 }
@@ -125,24 +129,30 @@ public class ServerMusicAgent {
             }
             this.isPlaying.set(true);
             this.playTime = System.currentTimeMillis();
-            ServerMusicNetworkHandler.musicAgentSendMusic(this.members, this.currentSharedMusic);
+            ServerMusicNetworkHandler.musicAgentSendMusic(this.getMembers(), this.currentSharedMusic);
             this.playNextFuture = this.musicScheduler.schedule(this::playNextMusic,
                     this.currentMusic.getMeta().getDuration().asSeconds(), TimeUnit.SECONDS);
         }
     }
 
     public void broadcast(Text text) {
-        this.members.forEach(player -> player.sendMessage(text, false));
+        this.members.forEach((player, time) -> player.sendMessage(text, false));
     }
 
     public synchronized boolean isMember(ServerPlayerEntity player) {
-        return this.members.contains(player);
+        return this.members.containsKey(player);
     }
 
     public synchronized void addMusic(ServerPlayerEntity player, Music music) {
+        Long lastAddTime = this.members.get(player);
+        if (lastAddTime == null || System.currentTimeMillis() - lastAddTime < 1000L * ServerConfig.INSTANCE.options.musicAgentAddTimeLimit) {
+            player.sendMessage(new TranslatableText("concerto.agent.add.too_quick", ServerConfig.INSTANCE.options.musicAgentAddTimeLimit));
+            return;
+        }
         MusicPlayer.run(() -> {
             ConcertoServer.LOGGER.info("Added music {}", music.getMeta().title());
             this.musicQueue.offer(music);
+            this.members.put(player, System.currentTimeMillis());
             this.broadcast(new TranslatableText("concerto.agent.add",
                     player == null ? new TranslatableText("concerto.unknown") : player.getName().getString(),
                     music.getMeta().title(), music.getMeta().author()));
@@ -154,7 +164,7 @@ public class ServerMusicAgent {
 
     public synchronized void playerJoin(ServerPlayerEntity player) {
         ConcertoServer.LOGGER.info("Player {} joined music agent", player.getName().getString());
-        this.members.add(player);
+        this.members.put(player, -1L);
         if (this.isPlaying.get() && this.currentSharedMusic != null) {
             if (this.currentSharedMusic instanceof SharedMusic shared) {
                 shared.startTime = System.currentTimeMillis() - this.playTime;
@@ -190,7 +200,7 @@ public class ServerMusicAgent {
     }
 
     public List<ServerPlayerEntity> getMembers() {
-        return this.members;
+        return this.members.keySet().stream().toList();
     }
 
     public List<Music> getMusicQueue() {

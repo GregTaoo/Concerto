@@ -27,5 +27,6 @@ public class ServerConfig extends ConfigFile {
         public boolean serverMusicAgent = true;
         public boolean agentInviteWhenJoin = true;
         public int musicRoomCommandPermission = 2;
+        public int musicAgentAddTimeLimit = 60;
     }
 }

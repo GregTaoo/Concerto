@@ -46,7 +46,7 @@ public class QQMusicApiClient extends HttpApiClient {
     }
 
     public String generateGuid() {
-        return String.valueOf((new Random().nextLong(1000000000L, 9999999999L)));
+        return String.valueOf((new Random().longs(1000000000L, 9999999999L)));
     }
 
     public String getMP3Filename(String mid, String mediaMid) {
@@ -100,7 +100,7 @@ public class QQMusicApiClient extends HttpApiClient {
             JsonObject midUrlInfo = data.getAsJsonArray("midurlinfo").get(0).getAsJsonObject();
             String link = midUrlInfo.get("purl").getAsString();
             JsonArray sip = data.getAsJsonArray("sip");
-            if (sip.isJsonNull() || sip.isEmpty() || link.isEmpty()) {
+            if (sip.isJsonNull() || sip.isJsonNull() || link.isEmpty()) {
                 return "";
             } else {
                 return sip.get(0).getAsString() + link;
@@ -313,7 +313,7 @@ public class QQMusicApiClient extends HttpApiClient {
         JsonArray array = this.requestSignedApi("music.musichallAlbum.AlbumSongList", "GetAlbumSongList", "\"albumMid\":\"" + mid + "\",\"albumID\":0,\"begin\":0,\"num\":99999,\"order\":2").getAsJsonObject("data").getAsJsonArray("songList");
         ArrayList<Music> musics = new ArrayList<>();
         PlaylistMetaData metaData = PlaylistMetaData.EMPTY;
-        if (!array.isEmpty()) {
+        if (!array.isJsonNull() && array.size() > 0) {
             JsonObject object = array.get(0).getAsJsonObject().getAsJsonObject("songInfo"), album = object.getAsJsonObject("album");
             metaData = new PlaylistMetaData(
                     object.getAsJsonArray("singer").get(0).getAsJsonObject().get("name").getAsString(),

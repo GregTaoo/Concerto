@@ -11,7 +11,7 @@ public class JsonUtil {
     public static JsonObject from(String raw) {
         JsonReader reader = new JsonReader(new StringReader(raw));
         reader.setLenient(true);
-        return JsonParser.parseReader(reader).getAsJsonObject();
+        return new JsonParser().parse(reader).getAsJsonObject();
     }
 
     public static String getStringOrElse(JsonObject object, String name, String def) {

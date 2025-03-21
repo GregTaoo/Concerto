@@ -45,8 +45,8 @@ public class NeteaseCloudIndexScreen extends ConcertoScreen {
     }
 
     @Override
-    public void close() {
-        super.close();
+    public void onClose() {
+        super.onClose();
         this.avatar.close();
     }
 

@@ -4,12 +4,12 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawableHelper;
 import net.minecraft.client.gui.Element;
 import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.widget.PressableTextWidget;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.Style;
 import net.minecraft.text.Text;
 import net.minecraft.text.TranslatableText;
 import net.minecraft.util.Formatting;
+import top.gregtao.concerto.screen.widget.PressableTextWidget;
 
 import java.io.Closeable;
 import java.io.IOException;
@@ -54,7 +54,7 @@ public class ConcertoScreen extends Screen {
     }
 
     @Override
-    public void close() {
+    public void onClose() {
         for (Element element : this.children()) {
             if (element instanceof Closeable closeable) {
                 try {
@@ -64,7 +64,7 @@ public class ConcertoScreen extends Screen {
                 }
             }
         }
-        super.close();
+        super.onClose();
         MinecraftClient.getInstance().setScreen(this.parent);
     }
 

@@ -15,8 +15,6 @@ import top.gregtao.concerto.screen.PlaylistPreviewScreen;
 import top.gregtao.concerto.screen.widget.ConcertoListWidget;
 import top.gregtao.concerto.screen.widget.MetadataListWidget;
 
-import java.util.ListIterator;
-
 public class QQMusicUserScreen extends PageScreen {
     private MetadataListWidget<QQMusicPlaylist> playlistList;
 
@@ -57,6 +55,7 @@ public class QQMusicUserScreen extends PageScreen {
         this.playlistList = this.initWidget();
 
         this.onPageTurned(0);
+        this.addDrawableChild(this.playlistList);
         this.addSelectableChild(this.playlistList);
 
         this.addDrawableChild(ButtonWidget.builder(Text.translatable("concerto.screen.play"), button -> {
@@ -75,12 +74,7 @@ public class QQMusicUserScreen extends PageScreen {
     @Override
     public void render(DrawContext matrices, int mouseX, int mouseY, float delta) {
         super.render(matrices, mouseX, mouseY, delta);
-        if (this.loggedIn()) {
-            ListIterator<ConcertoListWidget<QQMusicPlaylist>.Entry> iterator = this.playlistList.children().listIterator();
-            while (iterator.hasNext() && iterator.next().item.isLoaded()) {
-                if (!iterator.hasNext()) this.playlistList.render(matrices, mouseX, mouseY, delta);
-            }
-        } else {
+        if (!this.loggedIn()) {
             matrices.drawCenteredTextWithShadow(this.textRenderer, Text.translatable("concerto.screen.qq.not_login"),
                     this.width / 2, this.height / 2, 0xffffffff);
         }

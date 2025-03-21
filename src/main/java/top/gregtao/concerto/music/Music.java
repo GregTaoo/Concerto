@@ -56,6 +56,10 @@ public abstract class Music implements JsonParsable<Music>, LazyLoadable, WithMe
         return this.isMetaLoaded;
     }
 
+    public boolean isMetaLoaded() {
+        return this.isMetaLoaded;
+    }
+
     public abstract InputStream getMusicSource() throws MusicSourceNotFoundException;
 
     public abstract String getLink();

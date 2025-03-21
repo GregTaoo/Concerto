@@ -35,6 +35,10 @@ public abstract class Playlist implements LazyLoadable, WithMetaData {
         return this.loaded;
     }
 
+    public boolean isMetaLoaded() {
+        return this.loaded;
+    }
+
     public boolean isAlbum() {
         return this.isAlbum;
     }

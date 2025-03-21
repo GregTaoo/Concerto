@@ -70,18 +70,17 @@ public class MusicPlayerHandler {
     }
 
     public static <T extends LazyLoadable> void loadInThreadPool(List<T> objects, boolean force) {
-        try (ExecutorService service = Executors.newFixedThreadPool(32)) {
-            objects.forEach(object -> {
-                if (force || !object.isLoaded()) service.submit(() -> object.load());
-            });
-            service.shutdown();
-            try {
-                if (!service.awaitTermination(Integer.MAX_VALUE, TimeUnit.SECONDS)) {
-                    throw new TimeoutException();
-                }
-            } catch (InterruptedException | TimeoutException e) {
-                throw new RuntimeException(e);
+        ExecutorService service = Executors.newFixedThreadPool(64);
+        objects.forEach(object -> {
+            if (force || !object.isLoaded()) service.submit(() -> object.load());
+        });
+        service.shutdown();
+        try {
+            if (!service.awaitTermination(Integer.MAX_VALUE, TimeUnit.SECONDS)) {
+                throw new Exception();
             }
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
     }
 
@@ -300,38 +299,37 @@ public class MusicPlayerHandler {
             if (!file.exists() || !file.isDirectory()) {
                 if (!file.mkdirs()) return;
             }
-            try (ExecutorService service = Executors.newFixedThreadPool(32)) {
-                musics.forEach(music -> {
-                    if (music instanceof CacheableMusic cacheableMusic) {
-                        service.submit(() -> {
-                            MusicMetaData metaData = music.getMeta();
-                            String filename = filenameFilter(metaData.title() + " - " + metaData.author());
-                            File file1 = file.toPath().resolve(filename + "." + cacheableMusic.getSuffix()).toFile();
-                            try {
-                                if (!file1.exists()) {
-                                    if (file1.createNewFile()) {
-                                        try (FileOutputStream stream = new FileOutputStream(file1)) {
-                                            stream.write(music.getMusicSource().readAllBytes());
-                                        }
+            ExecutorService service = Executors.newFixedThreadPool(32);
+            musics.forEach(music -> {
+                if (music instanceof CacheableMusic cacheableMusic) {
+                    service.submit(() -> {
+                        MusicMetaData metaData = music.getMeta();
+                        String filename = filenameFilter(metaData.title() + " - " + metaData.author());
+                        File file1 = file.toPath().resolve(filename + "." + cacheableMusic.getSuffix()).toFile();
+                        try {
+                            if (!file1.exists()) {
+                                if (file1.createNewFile()) {
+                                    try (FileOutputStream stream = new FileOutputStream(file1)) {
+                                        stream.write(music.getMusicSource().readAllBytes());
                                     }
-                                    ConcertoClient.LOGGER.info("Downloaded: {}", filename);
                                 }
-                            } catch (IOException e) {
-                                ConcertoClient.LOGGER.error("{} - {}", e, file1.getAbsolutePath());
+                                ConcertoClient.LOGGER.info("Downloaded: {}", filename);
                             }
-                        });
-                    } else {
-                        ConcertoClient.LOGGER.info("Detected non-cacheable music");
-                    }
-                });
-                service.shutdown();
-                try {
-                    if (!service.awaitTermination(Integer.MAX_VALUE, TimeUnit.SECONDS)) {
-                        throw new TimeoutException();
-                    }
-                } catch (InterruptedException | TimeoutException e) {
-                    throw new RuntimeException(e);
+                        } catch (IOException e) {
+                            ConcertoClient.LOGGER.error("{} - {}", e, file1.getAbsolutePath());
+                        }
+                    });
+                } else {
+                    ConcertoClient.LOGGER.info("Detected non-cacheable music");
                 }
+            });
+            service.shutdown();
+            try {
+                if (!service.awaitTermination(Integer.MAX_VALUE, TimeUnit.SECONDS)) {
+                    throw new TimeoutException();
+                }
+            } catch (InterruptedException | TimeoutException e) {
+                throw new RuntimeException(e);
             }
         });
     }

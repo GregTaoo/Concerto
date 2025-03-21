@@ -9,8 +9,8 @@ import java.util.UUID;
 
 public class MusicWithUUIDListWidget extends ConcertoListWidget<Pair<Music, UUID>> {
 
-    public MusicWithUUIDListWidget(int width, int height, int top, int itemHeight) {
-        this(width, height, top, itemHeight, 0xffffffff);
+    public MusicWithUUIDListWidget(int width, int height, int top, int bottom, int itemHeight) {
+        this(width, height, top, bottom, itemHeight, 0xffffffff);
     }
 
     @Override
@@ -23,7 +23,7 @@ public class MusicWithUUIDListWidget extends ConcertoListWidget<Pair<Music, UUID
         }
     }
 
-    public MusicWithUUIDListWidget(int width, int height, int top, int itemHeight, int color) {
-        super(width, height, top, itemHeight, color);
+    public MusicWithUUIDListWidget(int width, int height, int top, int bottom, int itemHeight, int color) {
+        super(width, height, top, bottom, itemHeight, color);
     }
 }

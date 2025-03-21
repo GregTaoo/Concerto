@@ -3,8 +3,9 @@ package top.gregtao.concerto.util;
 import com.mojang.brigadier.context.CommandContext;
 import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;
 import net.minecraft.client.font.TextRenderer;
-import net.minecraft.client.gui.DrawContext;
+import net.minecraft.client.gui.DrawableHelper;
 import net.minecraft.client.network.ClientPlayerEntity;
+import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.*;
@@ -33,7 +34,7 @@ public class TextUtil {
         if (player != null) player.sendMessage(text);
     }
 
-    public static void renderText(Text text, TextAlignment align, int x, int y, DrawContext matrices, TextRenderer renderer, int color) {
+    public static void renderText(Text text, TextAlignment align, int x, int y, MatrixStack matrices, TextRenderer renderer, int color) {
         OrderedText orderedText = text.asOrderedText();
         int realX = x, textWidth = renderer.getWidth(orderedText);
         if (align == TextAlignment.CENTER) {
@@ -41,7 +42,7 @@ public class TextUtil {
         } else if (align == TextAlignment.RIGHT) {
             realX -= textWidth;
         }
-        matrices.drawTextWithShadow(renderer, orderedText, realX, y, color);
+        DrawableHelper.drawTextWithShadow(matrices, renderer, orderedText, realX, y, color);
     }
 
     public static Style getRunCommandStyle(String command) {

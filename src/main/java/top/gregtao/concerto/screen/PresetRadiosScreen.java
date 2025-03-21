@@ -1,10 +1,10 @@
 package top.gregtao.concerto.screen;
 
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.network.ClientPlayerEntity;
+import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.Text;
 import top.gregtao.concerto.ConcertoClient;
 import top.gregtao.concerto.api.WithMetaData;
@@ -17,12 +17,15 @@ public class PresetRadiosScreen extends ConcertoScreen {
     private MetadataListWidget<Playlist> playlistList;
 
     private <T extends WithMetaData> MetadataListWidget<T> initWidget() {
-        return new MetadataListWidget<>(this.width, this.height - 55, 20, 18) {
+        MetadataListWidget<T> widget = new MetadataListWidget<>(this.width, 0, 15, this.height - 35, 18) {
             @Override
             public void onDoubleClicked(ConcertoListWidget<T>.Entry entry) {
                 MinecraftClient.getInstance().setScreen(new PlaylistPreviewScreen((Playlist) entry.item, PresetRadiosScreen.this));
             }
         };
+        widget.setRenderBackground(false);
+        widget.setRenderHorizontalShadows(false);
+        return widget;
     }
 
     public PresetRadiosScreen(Screen parent) {
@@ -57,7 +60,7 @@ public class PresetRadiosScreen extends ConcertoScreen {
     }
 
     @Override
-    public void render(DrawContext matrices, int mouseX, int mouseY, float delta) {
+    public void render(MatrixStack matrices, int mouseX, int mouseY, float delta) {
         super.render(matrices, mouseX, mouseY, delta);
         this.playlistList.render(matrices, mouseX, mouseY, delta);
     }

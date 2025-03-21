@@ -55,6 +55,7 @@ public class NeteaseCloudUserScreen extends PageScreen {
         this.playlistList = this.initWidget();
 
         this.onPageTurned(0);
+        this.addDrawableChild(this.playlistList);
         this.addSelectableChild(this.playlistList);
 
         this.addDrawableChild(ButtonWidget.builder(Text.translatable("concerto.screen.daily_recommendation"),
@@ -84,9 +85,7 @@ public class NeteaseCloudUserScreen extends PageScreen {
     @Override
     public void render(DrawContext matrices, int mouseX, int mouseY, float delta) {
         super.render(matrices, mouseX, mouseY, delta);
-        if (this.loggedIn()) {
-            this.playlistList.render(matrices, mouseX, mouseY, delta);
-        } else {
+        if (!this.loggedIn()) {
             matrices.drawCenteredTextWithShadow(this.textRenderer, Text.translatable("concerto.screen.163.not_login"),
                     this.width / 2, this.height / 2, 0xffffffff);
         }

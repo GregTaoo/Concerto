@@ -2,6 +2,7 @@ package top.gregtao.concerto.screen.widget;
 
 import net.minecraft.text.LiteralText;
 import net.minecraft.text.Text;
+import net.minecraft.text.TranslatableText;
 import net.minecraft.util.Formatting;
 import top.gregtao.concerto.api.WithMetaData;
 import top.gregtao.concerto.music.meta.MetaData;
@@ -18,7 +19,11 @@ public class MetadataListWidget<T extends WithMetaData> extends ConcertoListWidg
 
     @Override
     public Text getNarration(int index, T t) {
-        MetaData meta = t.getMeta();
-        return new LiteralText(meta.title()).append("  ").append(new LiteralText(meta.author()).formatted(Formatting.BOLD, Formatting.GRAY));
+        if (t.isMetaLoaded()) {
+            MetaData meta = t.getMeta();
+            return new LiteralText(meta.title()).append("  ").append(new LiteralText(meta.author()).formatted(Formatting.BOLD, Formatting.GRAY));
+        } else {
+            return new TranslatableText("concerto.loading");
+        }
     }
 }

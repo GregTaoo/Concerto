@@ -17,7 +17,11 @@ public class MetadataListWidget<T extends WithMetaData> extends ConcertoListWidg
 
     @Override
     public Text getNarration(int index, T t) {
-        MetaData meta = t.getMeta();
-        return Text.literal(meta.title()).append("  ").append(Text.literal(meta.author()).formatted(Formatting.BOLD, Formatting.GRAY));
+        if (t.isMetaLoaded()) {
+            MetaData meta = t.getMeta();
+            return Text.literal(meta.title()).append("  ").append(Text.literal(meta.author()).formatted(Formatting.BOLD, Formatting.GRAY));
+        } else {
+            return Text.translatable("concerto.loading");
+        }
     }
 }

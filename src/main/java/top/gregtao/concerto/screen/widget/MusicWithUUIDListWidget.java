@@ -15,8 +15,12 @@ public class MusicWithUUIDListWidget extends ConcertoListWidget<Pair<Music, UUID
 
     @Override
     public Text getNarration(int index, Pair<Music, UUID> t) {
-        MusicMetaData meta = t.getFirst().getMeta();
-        return Text.literal(meta.title() + " - " + meta.getSource());
+        if (t.getFirst().isMetaLoaded()) {
+            MusicMetaData meta = t.getFirst().getMeta();
+            return Text.literal(meta.title() + " - " + meta.getSource());
+        } else {
+            return Text.translatable("concerto.loading");
+        }
     }
 
     public MusicWithUUIDListWidget(int width, int height, int top, int itemHeight, int color) {

@@ -146,7 +146,7 @@ public class ServerMusicAgent {
     public synchronized void addMusic(ServerPlayerEntity player, Music music) {
         Long lastAddTime = this.members.get(player);
         if (lastAddTime == null || System.currentTimeMillis() - lastAddTime < 1000L * ServerConfig.INSTANCE.options.musicAgentAddTimeLimit) {
-            player.sendMessage(new TranslatableText("concerto.agent.add.too_quick", ServerConfig.INSTANCE.options.musicAgentAddTimeLimit));
+            player.sendMessage(new TranslatableText("concerto.agent.add.too_quick", ServerConfig.INSTANCE.options.musicAgentAddTimeLimit), false);
             return;
         }
         MusicPlayer.run(() -> {

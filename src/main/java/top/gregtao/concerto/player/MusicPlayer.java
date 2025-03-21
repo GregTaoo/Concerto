@@ -1,6 +1,5 @@
 package top.gregtao.concerto.player;
 
-import top.gregtao.concerto.music.SharedMusic;
 import top.gregtao.concerto.player.streamplayer.enums.Status;
 import top.gregtao.concerto.player.streamplayer.stream.StreamPlayer;
 import top.gregtao.concerto.player.streamplayer.stream.StreamPlayerEvent;
@@ -224,11 +223,7 @@ public class MusicPlayer extends StreamPlayer implements StreamPlayerListener {
             status.resetInfo();
             status.currentMusic = music;
             status.currentSource = source;
-            long startTime = 0;
-            if (music instanceof SharedMusic shared) {
-                startTime = shared.getStartTime();
-            }
-            status.initMusicStatus(startTime);
+            status.initMusicStatus();
             status.updateDisplayTexts();
             try {
                 this.open(source);

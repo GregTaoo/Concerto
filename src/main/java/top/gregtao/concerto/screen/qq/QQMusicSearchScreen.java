@@ -84,7 +84,6 @@ public class QQMusicSearchScreen extends PageScreen {
             this.remove(this.listWidgetsMap.get(this.searchType));
         } catch (NullPointerException ignored) {}
         this.addDrawableChild(this.listWidgetsMap.get(type));
-        this.addSelectableChild(this.listWidgetsMap.get(type));
         this.refreshDrawable();
         this.searchType = type;
         this.infoButton.active = type == SearchType.MUSIC;

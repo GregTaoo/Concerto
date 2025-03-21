@@ -2,6 +2,7 @@ package top.gregtao.concerto.screen.widget;
 
 import net.minecraft.text.LiteralText;
 import net.minecraft.text.Text;
+import net.minecraft.text.TranslatableText;
 import top.gregtao.concerto.music.Music;
 import top.gregtao.concerto.music.meta.music.MusicMetaData;
 import top.gregtao.concerto.util.Pair;
@@ -16,8 +17,12 @@ public class MusicWithUUIDListWidget extends ConcertoListWidget<Pair<Music, UUID
 
     @Override
     public Text getNarration(int index, Pair<Music, UUID> t) {
-        MusicMetaData meta = t.getFirst().getMeta();
-        return new LiteralText(meta.title() + " - " + meta.getSource());
+        if (t.getFirst().isMetaLoaded()) {
+            MusicMetaData meta = t.getFirst().getMeta();
+            return new LiteralText(meta.title() + " - " + meta.getSource());
+        } else {
+            return new TranslatableText("concerto.loading");
+        }
     }
 
     public MusicWithUUIDListWidget(int width, int height, int top, int bottom, int itemHeight, int color) {

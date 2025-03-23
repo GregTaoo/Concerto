@@ -194,7 +194,7 @@
   "concerto.agent.invite": "Join the server music agent?",
   "concerto.agent.join": "Joined the server music agent.",
   "concerto.agent.quit": "Quited the server music agent.",
-  "concerto.screen.request": "Request(Server)",
+  "concerto.screen.request": "Request in server",
   "concerto.agent.occupied": "Please quit the current music room before joining a new one.",
   "concerto.agent.add": "%s requested for music: %s - %s.",
   "concerto.agent.vote": "Please vote for whether to CUT the current music",

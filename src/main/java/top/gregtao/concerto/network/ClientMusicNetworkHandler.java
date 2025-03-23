@@ -245,9 +245,13 @@ public class ClientMusicNetworkHandler {
     public static void musicAgentMusicReceiver(ConcertoPayload payload, ClientPlayNetworking.Context context) {
         if (ConcertoClient.clientState != ConcertoClient.ClientState.MUSIC_AGENT) return;
         MusicPlayer.run(() -> {
-            Music music = MusicJsonParsers.from(TextUtil.fromBase64(payload.string));
-            if (music != null) {
-                MusicPlayer.INSTANCE.playTempMusic(music);
+            if (payload.string.equals("Stop")) {
+                MusicPlayer.INSTANCE.playNext(1);
+            } else {
+                Music music = MusicJsonParsers.from(TextUtil.fromBase64(payload.string));
+                if (music != null) {
+                    MusicPlayer.INSTANCE.playTempMusic(music);
+                }
             }
         });
     }

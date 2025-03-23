@@ -190,6 +190,7 @@
   "concerto.dislike": "Disliked music %s from %s",
 
   "concerto.agent": "Server Agent",
+  "concerto.agent.not_playing": "No music is playing",
   "concerto.agent.invite": "Join the server music agent?",
   "concerto.agent.join": "Joined the server music agent.",
   "concerto.agent.quit": "Quited the server music agent.",
@@ -198,7 +199,8 @@
   "concerto.agent.add": "%s requested for music: %s - %s.",
   "concerto.agent.vote": "Please vote for whether to CUT the current music",
   "concerto.agent.vote_for": "You have voted for %s.",
-  "concerto.agent.vote.duplicate": "A vote is still processing.",
+  "concerto.agent.vote.duplicate": "You can only vote for once.",
+  "concerto.agent.vote.voting": "A vote is still being processing",
   "concerto.agent.vote.ended": "No votes available now.",
   "concerto.agent.vote.success": "The vote has ended with %s:%s, and the current music will be CUT",
   "concerto.agent.vote.failed": "The vote has ended with %s:%s, and the current music will keep playing.",

@@ -229,6 +229,11 @@ public class ServerMusicNetworkHandler {
         ServerPlayNetworking.send(player, payload);
     }
 
+    public static void musicAgentSendStop(ServerPlayerEntity player) {
+        ConcertoPayload payload = new ConcertoPayload(ConcertoPayload.Channel.MUSIC_AGENT, "Stop");
+        ServerPlayNetworking.send(player, payload);
+    }
+
     public static void musicAgentSendMusic(List<ServerPlayerEntity> players, Music music) {
         JsonObject object = MusicJsonParsers.to(music, true);
         if (object == null) return;
@@ -257,11 +262,7 @@ public class ServerMusicNetworkHandler {
             context.player().sendMessage(Text.translatable("concerto.agent.error"));
         } else if (args[0].equals("Vote")) {
             if (args[1].equals("New")) {
-                if (ServerMusicAgent.INSTANCE.receiveVoteRequest()) {
-                    ServerMusicAgent.INSTANCE.getMembers().forEach(ServerMusicNetworkHandler::sendVote2Member);
-                } else {
-                    context.player().sendMessage(Text.translatable("concerto.agent.error"));
-                }
+                ServerMusicAgent.INSTANCE.receiveVoteRequest(context.player());
             } else if (args[1].length() == 1) {
                 ServerMusicAgent.INSTANCE.receiveVote(context.player(), args[1].equals("1"));
             } else {

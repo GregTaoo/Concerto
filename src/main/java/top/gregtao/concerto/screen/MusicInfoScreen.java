@@ -39,7 +39,7 @@ public class MusicInfoScreen extends ConcertoScreen {
                 button -> ClientMusicNetworkHandler.musicAgentAddMusic(this.music)
         ).position(this.width - 245, this.height - 30).size(50, 20).build();
         this.addDrawableChild(requestButton);
-        requestButton.active = ConcertoClient.serverAvailable;
+        requestButton.active = ConcertoClient.clientState == ConcertoClient.ClientState.MUSIC_AGENT;
 
         this.addDrawableChild(ButtonWidget.builder(
                 Text.translatable("concerto.screen.play"),

@@ -20,10 +20,15 @@ public class ConcertoScreen extends Screen {
     private final Screen parent;
     private Text message;
     private boolean messageVisible = false;
+    private boolean renderBg = true;
 
     public ConcertoScreen(Text title, Screen parent) {
         super(title.shallowCopy().formatted(Formatting.DARK_AQUA));
         this.parent = parent;
+    }
+
+    public void setRenderBg(boolean renderBg) {
+        this.renderBg = renderBg;
     }
 
     public void remove(Element element) {
@@ -74,7 +79,7 @@ public class ConcertoScreen extends Screen {
 
     @Override
     public void render(MatrixStack matrices, int mouseX, int mouseY, float delta) {
-        this.renderBackground(matrices);
+        if (this.renderBg) this.renderBackground(matrices);
         super.render(matrices, mouseX, mouseY, delta);
         ConcertoScreen.drawCenteredTextWithShadow(matrices, this.textRenderer, this.title.asOrderedText(), this.width / 2, 5, 0xffffffff);
         if (this.messageVisible) {

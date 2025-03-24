@@ -50,6 +50,8 @@ public class NeteaseCloudUserScreen extends PageScreen {
     @Override
     protected void init() {
         super.init();
+        this.setRenderBg(false);
+
         if (!this.loggedIn()) {
             MinecraftClient.getInstance().openScreen(new NeteaseCloudLoginScreens(null));
         }

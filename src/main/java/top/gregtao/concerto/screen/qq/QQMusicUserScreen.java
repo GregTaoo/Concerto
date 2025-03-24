@@ -47,6 +47,8 @@ public class QQMusicUserScreen extends PageScreen {
     @Override
     protected void init() {
         super.init();
+        this.setRenderBg(false);
+
         if (!this.loggedIn()) {
             MinecraftClient.getInstance().openScreen(new QQMusicLoginScreens(null));
         }

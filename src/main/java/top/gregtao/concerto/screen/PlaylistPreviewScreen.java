@@ -28,6 +28,8 @@ public class PlaylistPreviewScreen extends ConcertoScreen {
     @Override
     protected void init() {
         super.init();
+        this.setRenderBg(false);
+
         this.widget = new MetadataListWidget<>(this.width, this.height, 20, this.height - 35, 18) {
             @Override
             public void onDoubleClicked(ConcertoListWidget<Music>.Entry entry) {

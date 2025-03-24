@@ -14,7 +14,6 @@ import org.jetbrains.annotations.Nullable;
 
 public class CyclingButtonWidget<T> extends PressableWidget {
     static final BooleanSupplier HAS_ALT_DOWN = Screen::hasAltDown;
-    private static final List<Boolean> BOOLEAN_VALUES;
     private final Text optionText;
     private int index;
     private T value;
@@ -87,7 +86,7 @@ public class CyclingButtonWidget<T> extends PressableWidget {
     }
 
     private MutableText composeGenericOptionText(T value) {
-        return new LiteralText(this.optionText.getString() + this.valueToText.apply(value).getString());
+        return new LiteralText(this.optionText.getString() + ": " + this.valueToText.apply(value).getString());
     }
 
     public T getValue() {
@@ -98,10 +97,6 @@ public class CyclingButtonWidget<T> extends PressableWidget {
         return new Builder<>(valueToText);
     }
 
-    static {
-        BOOLEAN_VALUES = ImmutableList.of(Boolean.TRUE, Boolean.FALSE);
-    }
-
     @Environment(EnvType.CLIENT)
     interface Values<T> {
         List<T> getCurrent();
@@ -110,7 +105,7 @@ public class CyclingButtonWidget<T> extends PressableWidget {
 
         static <T> Values<T> of(List<T> values) {
             final List<T> list = ImmutableList.copyOf(values);
-            return new Values<T>() {
+            return new Values<>() {
                 public List<T> getCurrent() {
                     return list;
                 }
@@ -124,7 +119,7 @@ public class CyclingButtonWidget<T> extends PressableWidget {
         static <T> Values<T> of(final BooleanSupplier alternativeToggle, List<T> defaults, List<T> alternatives) {
             final List<T> list = ImmutableList.copyOf(defaults);
             final List<T> list2 = ImmutableList.copyOf(alternatives);
-            return new Values<T>() {
+            return new Values<>() {
                 public List<T> getCurrent() {
                     return alternativeToggle.getAsBoolean() ? list2 : list;
                 }
@@ -139,11 +134,6 @@ public class CyclingButtonWidget<T> extends PressableWidget {
     @Environment(EnvType.CLIENT)
     public interface UpdateCallback<T> {
         void onValueChange(CyclingButtonWidget<T> button, T value);
-    }
-
-    @FunctionalInterface
-    @Environment(EnvType.CLIENT)
-    public interface TooltipFactory<T> extends Function<T, List<OrderedText>> {
     }
 
     @Environment(EnvType.CLIENT)
@@ -195,8 +185,7 @@ public class CyclingButtonWidget<T> extends PressableWidget {
         }
 
         public CyclingButtonWidget<T> build(int x, int y, int width, int height, Text optionText) {
-            return this.build(x, y, width, height, optionText, (button, value) -> {
-            });
+            return this.build(x, y, width, height, optionText, (button, value) -> {});
         }
 
         public CyclingButtonWidget<T> build(int x, int y, int width, int height, Text optionText, UpdateCallback<T> callback) {
@@ -206,8 +195,8 @@ public class CyclingButtonWidget<T> extends PressableWidget {
             } else {
                 T object = this.value != null ? this.value : list.get(this.initialIndex);
                 Text text = this.valueToText.apply(object);
-                Text text2 = this.optionTextOmitted ? text : new LiteralText(optionText.getString() + text.getString());
-                return new CyclingButtonWidget<T>(x, y, width, height, (Text)text2, optionText, this.initialIndex, object, this.values, this.valueToText, callback, this.optionTextOmitted);
+                Text text2 = this.optionTextOmitted ? text : new LiteralText(optionText.getString() + ": " + text.getString());
+                return new CyclingButtonWidget<>(x, y, width, height, text2, optionText, this.initialIndex, object, this.values, this.valueToText, callback, this.optionTextOmitted);
             }
         }
     }

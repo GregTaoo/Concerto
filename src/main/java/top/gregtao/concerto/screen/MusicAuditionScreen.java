@@ -37,6 +37,8 @@ public class MusicAuditionScreen extends ConcertoScreen {
     @Override
     protected void init() {
         super.init();
+        this.setRenderBg(false);
+
         this.widget = new MusicWithUUIDListWidget(this.width, this.height, 18, this.height - 35, 18);
         this.refresh();
         this.addChild(this.widget);

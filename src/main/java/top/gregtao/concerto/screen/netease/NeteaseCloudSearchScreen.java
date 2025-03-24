@@ -98,6 +98,8 @@ public class NeteaseCloudSearchScreen extends PageScreen {
     @Override
     protected void init() {
         super.init();
+        this.setRenderBg(false);
+
         this.musicList = this.initListsWidget();
         this.playlistList = this.initListsWidget();
         this.albumList = this.initListsWidget();

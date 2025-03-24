@@ -34,6 +34,8 @@ public class GeneralPlaylistScreen extends ApplyDraggedFileScreen {
     @Override
     protected void init() {
         super.init();
+        this.setRenderBg(false);
+
         this.widget = new GeneralPlaylistWidget(this.width, this.height, 40, this.height - 35, 18);
         this.addChild(this.widget);
 

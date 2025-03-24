@@ -8,6 +8,7 @@
   ],
   "client": [
     "ChatHudMixin",
+    "InGameHudMixin",
     "MinecraftClientMixin",
     "MusicTrackerMixin",
     "SoundManagerMixin"

@@ -35,6 +35,8 @@ public class PresetRadiosScreen extends ConcertoScreen {
     @Override
     protected void init() {
         super.init();
+        this.setRenderBg(false);
+
         this.playlistList = this.initWidget();
         this.reset();
         this.addChild(this.playlistList);

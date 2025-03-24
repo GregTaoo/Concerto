@@ -143,7 +143,7 @@ public class URLImageWidget implements Drawable, Closeable {
         } else {
             NativeImage image = this.texture.getImage();
             if (image != null && !this.loading) {
-                RenderSystem.activeTexture(this.texture.getGlId());
+                RenderSystem.bindTexture(this.texture.getGlId());
                 MatrixStack matrixStack = new MatrixStack();
                 matrixStack.scale(0.125f, 0.125f, 1);
                 matrixStack.translate(7 * this.x, 7 * this.y, 0);

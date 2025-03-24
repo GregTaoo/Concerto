@@ -19,8 +19,6 @@ import top.gregtao.concerto.command.ShareMusicCommand;
 import top.gregtao.concerto.config.ClientConfig;
 import top.gregtao.concerto.config.PresetRadioConfig;
 import top.gregtao.concerto.music.Music;
-import top.gregtao.concerto.music.meta.music.BasicMusicMetaData;
-import top.gregtao.concerto.music.meta.music.MusicMetaData;
 import top.gregtao.concerto.network.room.MusicRoom;
 import top.gregtao.concerto.player.MusicPlayer;
 import top.gregtao.concerto.player.MusicPlayerHandler;
@@ -257,12 +255,13 @@ public class ClientMusicNetworkHandler {
         String str = buf.readString(Short.MAX_VALUE << 4);
         if (ConcertoClient.clientState != ConcertoClient.ClientState.MUSIC_AGENT) return;
         MusicPlayer.run(() -> {
-            Music music = MusicJsonParsers.from(TextUtil.fromBase64(str));
-            if (music != null) {
-                MusicMetaData meta = music.getMeta();
-                music.setMusicMeta(new BasicMusicMetaData(meta.author(), meta.title(), new TranslatableText(meta.getSource()).getString(),
-                        meta.getDuration().asMilliseconds(), meta.headPictureUrl()));
-                MusicPlayer.INSTANCE.playTempMusic(music);
+            if (str.equals("Stop")) {
+                MusicPlayer.INSTANCE.playNext(1);
+            } else {
+                Music music = MusicJsonParsers.from(TextUtil.fromBase64(str));
+                if (music != null) {
+                    MusicPlayer.INSTANCE.playTempMusic(music);
+                }
             }
         });
     }

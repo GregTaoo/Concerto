@@ -254,9 +254,13 @@ public class ClientMusicNetworkHandler {
         String str = buf.readString(Short.MAX_VALUE << 4);
         if (ConcertoClient.clientState != ConcertoClient.ClientState.MUSIC_AGENT) return;
         MusicPlayer.run(() -> {
-            Music music = MusicJsonParsers.from(TextUtil.fromBase64(str));
-            if (music != null) {
-                MusicPlayer.INSTANCE.playTempMusic(music);
+            if (str.equals("Stop")) {
+                MusicPlayer.INSTANCE.playNext(1);
+            } else {
+                Music music = MusicJsonParsers.from(TextUtil.fromBase64(str));
+                if (music != null) {
+                    MusicPlayer.INSTANCE.playTempMusic(music);
+                }
             }
         });
     }

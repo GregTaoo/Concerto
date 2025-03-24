@@ -37,10 +37,10 @@ public class InGameHudRenderer {
                 if (options.displayMusicDetails) {
                     Vector2i pos = ClientConfig.INSTANCE.musicDetailsPosSupplier.getPos(scaledWidth, scaledHeight);
 
-                    String state = ConcertoClient.clientState == ConcertoClient.ClientState.MUSIC_AGENT ?
-                            " | " + Text.translatable("concerto.agent").getString() :
-                            (ConcertoClient.clientState == ConcertoClient.ClientState.MUSIC_ROOM ?
-                                    " | " + Text.translatable("concerto.room").getString() : "");
+                    String state = MusicPlayer.INSTANCE.isPlayingTemp ?
+                            ConcertoClient.clientState == ConcertoClient.ClientState.MUSIC_AGENT ? " | " + Text.translatable("concerto.agent").getString() :
+                            (ConcertoClient.clientState == ConcertoClient.ClientState.MUSIC_ROOM ? " | " + Text.translatable("concerto.room").getString() : "")
+                            : "";
 
                     TextUtil.renderText(Text.literal(texts[2] + state), options.musicDetailsAlignment,
                             pos.x, pos.y, matrices, client.textRenderer, 0xffffffff);

@@ -17,38 +17,38 @@ public class ConcertoIndexScreen extends ConcertoScreen {
     @Override
     protected void init() {
         super.init();
-        this.addDrawableChild(new ButtonWidget(this.width / 2 - 120, 40, 115, 20, new TranslatableText("concerto.screen.general_list"),
-                button -> MinecraftClient.getInstance().setScreen(new GeneralPlaylistScreen(this))
+        this.addButton(new ButtonWidget(this.width / 2 - 120, 40, 115, 20, new TranslatableText("concerto.screen.general_list"),
+                button -> MinecraftClient.getInstance().openScreen(new GeneralPlaylistScreen(this))
         ));
 
         ButtonWidget widget = new ButtonWidget(this.width / 2 + 20, 40, 115, 20, new TranslatableText("concerto.screen.audition"),
-                button -> MinecraftClient.getInstance().setScreen(new MusicAuditionScreen(this))
+                button -> MinecraftClient.getInstance().openScreen(new MusicAuditionScreen(this))
         );
-        this.addDrawableChild(widget);
+        this.addButton(widget);
         ClientPlayerEntity player = MinecraftClient.getInstance().player;
         if (player == null || !player.hasPermissionLevel(2) || !ConcertoClient.isServerAvailable()) {
             widget.active = false;
         }
 
-        this.addDrawableChild(new ButtonWidget(this.width / 2 + 20, 70, 115, 20, new TranslatableText("concerto.screen.confirmation"),
-                button -> MinecraftClient.getInstance().setScreen(new MusicConfirmationScreen(this))
+        this.addButton(new ButtonWidget(this.width / 2 + 20, 70, 115, 20, new TranslatableText("concerto.screen.confirmation"),
+                button -> MinecraftClient.getInstance().openScreen(new MusicConfirmationScreen(this))
         ));
 
-        this.addDrawableChild(new ButtonWidget(this.width / 2 - 120, 130, 115, 20, new TranslatableText("concerto.screen.add"),
-                        button -> MinecraftClient.getInstance().setScreen(new AddMusicScreen(this))));
+        this.addButton(new ButtonWidget(this.width / 2 - 120, 130, 115, 20, new TranslatableText("concerto.screen.add"),
+                        button -> MinecraftClient.getInstance().openScreen(new AddMusicScreen(this))));
 
-        this.addDrawableChild(new ButtonWidget(this.width / 2 - 120, 70, 115, 20, new TranslatableText("concerto.screen.index.163"),
-                button -> MinecraftClient.getInstance().setScreen(new NeteaseCloudIndexScreen(this))
+        this.addButton(new ButtonWidget(this.width / 2 - 120, 70, 115, 20, new TranslatableText("concerto.screen.index.163"),
+                button -> MinecraftClient.getInstance().openScreen(new NeteaseCloudIndexScreen(this))
         ));
 
-        this.addDrawableChild(new ButtonWidget(this.width / 2 - 120, 100, 115, 20, new TranslatableText("concerto.screen.index.qq"),
-                button -> MinecraftClient.getInstance().setScreen(new QQMusicIndexScreen(this))
+        this.addButton(new ButtonWidget(this.width / 2 - 120, 100, 115, 20, new TranslatableText("concerto.screen.index.qq"),
+                button -> MinecraftClient.getInstance().openScreen(new QQMusicIndexScreen(this))
         ));
 
         ButtonWidget widget1 = new ButtonWidget(this.width / 2 + 20, 100, 115, 20, new TranslatableText("concerto.screen.preset_radios"),
-                button -> MinecraftClient.getInstance().setScreen(new PresetRadiosScreen(this))
+                button -> MinecraftClient.getInstance().openScreen(new PresetRadiosScreen(this))
         );
-        this.addDrawableChild(widget1);
+        this.addButton(widget1);
         if (player == null || !ConcertoClient.isServerAvailable()) {
             widget1.active = false;
         }

@@ -39,20 +39,20 @@ public class MusicInfoScreen extends ConcertoScreen {
                 new TranslatableText("concerto.screen.request"),
                 button -> ClientMusicNetworkHandler.musicAgentAddMusic(this.music)
         );
-        this.addDrawableChild(requestButton);
+        this.addButton(requestButton);
         requestButton.active = ConcertoClient.clientState == ConcertoClient.ClientState.MUSIC_AGENT;
 
-        this.addDrawableChild(new ButtonWidget(this.width - 190, this.height - 30, 50, 20,
+        this.addButton(new ButtonWidget(this.width - 190, this.height - 30, 50, 20,
                 new TranslatableText("concerto.screen.play"),
                 button -> MusicPlayer.INSTANCE.addMusicHere(this.music, true)
         ));
 
-        this.addDrawableChild(new ButtonWidget(this.width - 135, this.height - 30, 50, 20,
+        this.addButton(new ButtonWidget(this.width - 135, this.height - 30, 50, 20,
                 new TranslatableText("concerto.screen.add"),
                 button -> MusicPlayer.INSTANCE.addMusic(this.music)
         ));
 
-        this.addDrawableChild(new ButtonWidget(this.width - 80, this.height - 30, 50, 20,
+        this.addButton(new ButtonWidget(this.width - 80, this.height - 30, 50, 20,
                 new TranslatableText("concerto.screen.copy_link"),
                 button -> {
                     if (this.client != null) {

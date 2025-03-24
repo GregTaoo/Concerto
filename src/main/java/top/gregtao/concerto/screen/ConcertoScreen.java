@@ -1,11 +1,11 @@
 package top.gregtao.concerto.screen;
 
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.DrawableHelper;
+import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.Element;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.text.Style;
+import net.minecraft.text.OrderedText;
 import net.minecraft.text.Text;
 import net.minecraft.text.TranslatableText;
 import net.minecraft.util.Formatting;
@@ -22,8 +22,12 @@ public class ConcertoScreen extends Screen {
     private boolean messageVisible = false;
 
     public ConcertoScreen(Text title, Screen parent) {
-        super(title.getWithStyle(Style.EMPTY.withColor(Formatting.DARK_AQUA)).get(0));
+        super(title.shallowCopy().formatted(Formatting.DARK_AQUA));
         this.parent = parent;
+    }
+
+    public void remove(Element element) {
+        this.children.remove(element);
     }
 
     public void displayAlert(Text text) {
@@ -42,10 +46,10 @@ public class ConcertoScreen extends Screen {
         if (!(this instanceof AcknowledgmentScreen)) {
             Text text = new TranslatableText("concerto.donate");
             int width = this.textRenderer.getWidth(text);
-            this.addDrawableChild(
+            this.addButton(
                     new PressableTextWidget(this.width - 5 - width, this.height - 5 - this.textRenderer.fontHeight, width,
                             this.textRenderer.fontHeight,
-                            text, button -> MinecraftClient.getInstance().setScreen(new AcknowledgmentScreen(this)),
+                            text, button -> MinecraftClient.getInstance().openScreen(new AcknowledgmentScreen(this)),
                             this.textRenderer)
             );
         }
@@ -65,17 +69,21 @@ public class ConcertoScreen extends Screen {
             }
         }
         super.onClose();
-        MinecraftClient.getInstance().setScreen(this.parent);
+        MinecraftClient.getInstance().openScreen(this.parent);
     }
 
     @Override
     public void render(MatrixStack matrices, int mouseX, int mouseY, float delta) {
         this.renderBackground(matrices);
         super.render(matrices, mouseX, mouseY, delta);
-        DrawableHelper.drawCenteredTextWithShadow(matrices, this.textRenderer, this.title.asOrderedText(), this.width / 2, 5, 0xffffffff);
+        ConcertoScreen.drawCenteredTextWithShadow(matrices, this.textRenderer, this.title.asOrderedText(), this.width / 2, 5, 0xffffffff);
         if (this.messageVisible) {
             this.textRenderer.draw(matrices, this.message, (float) (this.width - this.textRenderer.getWidth(this.message)) / 2,
                     (float) this.height / 2 - 10, 0xffffffff);
         }
+    }
+
+    public static void drawCenteredTextWithShadow(MatrixStack matrices, TextRenderer textRenderer, OrderedText text, int centerX, int y, int color) {
+        textRenderer.drawWithShadow(matrices, text, (float)(centerX - textRenderer.getWidth(text) / 2), (float)y, color);
     }
 }

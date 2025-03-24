@@ -4,6 +4,7 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.network.ClientPlayerEntity;
+import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.TranslatableText;
 import top.gregtao.concerto.music.Music;
 import top.gregtao.concerto.network.ClientMusicNetworkHandler;
@@ -31,29 +32,28 @@ public class MusicConfirmationScreen extends ConcertoScreen {
         super.init();
         this.widget = new MusicWithUUIDListWidget(this.width, this.height, 18, this.height - 35, 18);
         this.refresh();
-        this.addDrawableChild(this.widget);
-        this.addSelectableChild(this.widget);
+        this.addChild(this.widget);
 
-        this.addDrawableChild(new ButtonWidget(20, this.height - 30, 60, 20,
+        this.addButton(new ButtonWidget(20, this.height - 30, 60, 20,
                 new TranslatableText("concerto.accept"), button -> {
             ClientPlayerEntity player = MinecraftClient.getInstance().player;
-            ConcertoListWidget<Pair<Music, UUID>>.Entry entry = this.widget.getSelectedOrNull();
+            ConcertoListWidget<Pair<Music, UUID>>.Entry entry = this.widget.getSelected();
             if (player != null && entry != null) {
                 player.sendChatMessage("sharemusic accept " + entry.item.getSecond());
                 this.widget.removeEntryWithoutScrolling(entry);
             }
         }));
 
-        this.addDrawableChild(new ButtonWidget(85, this.height - 30, 60, 20, new TranslatableText("concerto.reject"), button -> {
+        this.addButton(new ButtonWidget(85, this.height - 30, 60, 20, new TranslatableText("concerto.reject"), button -> {
             ClientPlayerEntity player = MinecraftClient.getInstance().player;
-            ConcertoListWidget<Pair<Music, UUID>>.Entry entry = this.widget.getSelectedOrNull();
+            ConcertoListWidget<Pair<Music, UUID>>.Entry entry = this.widget.getSelected();
             if (player != null && entry != null) {
                 player.sendChatMessage("sharemusic reject " + entry.item.getSecond());
                 this.widget.removeEntryWithoutScrolling(entry);
             }
         }));
 
-        this.addDrawableChild(new ButtonWidget(150, this.height - 30, 60, 20,
+        this.addButton(new ButtonWidget(150, this.height - 30, 60, 20,
                 new TranslatableText("concerto.reject.all"), button -> {
             ClientPlayerEntity player = MinecraftClient.getInstance().player;
             if (player != null) {
@@ -62,7 +62,13 @@ public class MusicConfirmationScreen extends ConcertoScreen {
             }
         }));
 
-        this.addDrawableChild(new ButtonWidget(215, this.height - 30, 60, 20,
+        this.addButton(new ButtonWidget(215, this.height - 30, 60, 20,
                 new TranslatableText("concerto.refresh"), button -> this.refresh()));
+    }
+
+    @Override
+    public void render(MatrixStack matrices, int mouseX, int mouseY, float delta) {
+        this.widget.render(matrices, mouseX, mouseY, delta);
+        super.render(matrices, mouseX, mouseY, delta);
     }
 }

@@ -35,11 +35,10 @@ public class CaptchaLoginScreen extends ConcertoScreen {
     protected void init() {
         super.init();
         this.usernameField = new TextFieldWidget(this.textRenderer, this.width / 2 - 30, 20, 90, 20, Text.of(""));
-        this.addSelectableChild(this.usernameField);
-        this.addDrawableChild(this.usernameField);
+        this.addButton(this.usernameField);
         TextWidget textWidget = new TextWidget(this.width / 2 - 120, 22, 90, 20, new TranslatableText("concerto.screen.login.username"), this.textRenderer);
         textWidget.alignLeft();
-        this.addDrawableChild(textWidget);
+        this.addButton(textWidget);
         this.captchaButton = new ButtonWidget(this.width / 2 + 65, 20, 60, 20,
                 new TranslatableText("concerto.screen.login.get_captcha"), button -> {
             if (this.usernameField.getText().isEmpty()) {
@@ -50,17 +49,16 @@ public class CaptchaLoginScreen extends ConcertoScreen {
                 this.callForCaptcha.accept(this.usernameField.getText());
             }
         });
-        this.addDrawableChild(this.captchaButton);
+        this.addButton(this.captchaButton);
 
         this.captchaField = new TextFieldWidget(this.textRenderer, this.width / 2 - 30, 50, 155, 20, Text.of(""));
-        this.addSelectableChild(this.captchaField);
-        this.addDrawableChild(this.captchaField);
+        this.addButton(this.captchaField);
         TextWidget textWidget1 = new TextWidget(this.width / 2 - 120, 52, 90, 20,
                 new TranslatableText("concerto.screen.login.captcha"), this.textRenderer);
         textWidget1.alignLeft();
-        this.addDrawableChild(textWidget1);
+        this.addButton(textWidget1);
 
-        this.addDrawableChild(new ButtonWidget(this.width / 2 - 32, 80, 157, 20,
+        this.addButton(new ButtonWidget(this.width / 2 - 32, 80, 157, 20,
                 new TranslatableText("concerto.screen.login.confirm"), button -> this.tryLogin()));
     }
 
@@ -81,7 +79,7 @@ public class CaptchaLoginScreen extends ConcertoScreen {
             if (player != null) {
                 player.sendMessage(new TranslatableText("concerto.screen.login.success"), false);
             }
-            MinecraftClient.getInstance().setScreen(null);
+            MinecraftClient.getInstance().openScreen(null);
         }
         if (this.captchaTimer > 0 && --this.captchaTimer == 0) {
             this.captchaButton.active = true;

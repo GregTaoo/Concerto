@@ -28,11 +28,10 @@ public class AddMusicScreen extends ApplyDraggedFileScreen {
         widget.setMaxLength(1024);
         TextWidget textWidget = new TextWidget(centerX - 120, y + 2, 90, 20, text, this.textRenderer);
         textWidget.alignLeft();
-        this.addDrawableChild(widget);
-        this.addDrawableChild(textWidget);
-        this.addDrawableChild(new ButtonWidget(centerX + 65, y, 60, 20, new TranslatableText("concerto.screen.add"),
+        this.addButton(widget);
+        this.addButton(textWidget);
+        this.addButton(new ButtonWidget(centerX + 65, y, 60, 20, new TranslatableText("concerto.screen.add"),
                 button -> onClick.accept(widget.getText())));
-        this.addSelectableChild(widget);
     }
 
     @Override
@@ -56,11 +55,11 @@ public class AddMusicScreen extends ApplyDraggedFileScreen {
                 str -> MusicPlayer.INSTANCE.addMusicHere(new NeteaseCloudMusic(str, NeteaseCloudMusic.Level.HIRES), true));
         this.addLabel(new TranslatableText("concerto.screen.add.netease_cloud.playlist"), this.width / 2, 120, str -> {
             NeteaseCloudPlaylist playlist = new NeteaseCloudPlaylist(str, false);
-            playlist.load(() -> MinecraftClient.getInstance().setScreen(new PlaylistPreviewScreen(playlist, this)));
+            playlist.load(() -> MinecraftClient.getInstance().openScreen(new PlaylistPreviewScreen(playlist, this)));
         });
         this.addLabel(new TranslatableText("concerto.screen.add.netease_cloud.album"), this.width / 2, 145, str -> {
             NeteaseCloudPlaylist playlist = new NeteaseCloudPlaylist(str, false);
-            playlist.load(() -> MinecraftClient.getInstance().setScreen(new PlaylistPreviewScreen(playlist, this)));
+            playlist.load(() -> MinecraftClient.getInstance().openScreen(new PlaylistPreviewScreen(playlist, this)));
         });
         this.addLabel(new TranslatableText("concerto.screen.add.qq"), this.width / 2, 170,
                 str -> MusicPlayer.INSTANCE.addMusicHere(new QQMusic(str), true, () -> {

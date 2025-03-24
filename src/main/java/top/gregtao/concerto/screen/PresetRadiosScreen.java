@@ -19,7 +19,7 @@ public class PresetRadiosScreen extends ConcertoScreen {
         return new MetadataListWidget<>(PresetRadiosScreen.this.width, this.height, 18, PresetRadiosScreen.this.height - 35, 18) {
             @Override
             public void onDoubleClicked(ConcertoListWidget<T>.Entry entry) {
-                MinecraftClient.getInstance().setScreen(new PlaylistPreviewScreen((Playlist) entry.item, PresetRadiosScreen.this));
+                MinecraftClient.getInstance().openScreen(new PlaylistPreviewScreen((Playlist) entry.item, PresetRadiosScreen.this));
             }
         };
     }
@@ -37,18 +37,17 @@ public class PresetRadiosScreen extends ConcertoScreen {
         super.init();
         this.playlistList = this.initWidget();
         this.reset();
-        this.addDrawableChild(this.playlistList);
-        this.addSelectableChild(this.playlistList);
+        this.addChild(this.playlistList);
 
-        this.addDrawableChild(new ButtonWidget(20, this.height - 30, 60, 20,
+        this.addButton(new ButtonWidget(20, this.height - 30, 60, 20,
                 new TranslatableText("concerto.screen.play"), button -> {
-            ConcertoListWidget<Playlist>.Entry entry = this.playlistList.getSelectedOrNull();
+            ConcertoListWidget<Playlist>.Entry entry = this.playlistList.getSelected();
             if (entry != null) {
-                MinecraftClient.getInstance().setScreen(new PlaylistPreviewScreen(entry.item, this));
+                MinecraftClient.getInstance().openScreen(new PlaylistPreviewScreen(entry.item, this));
             }
         }));
 
-        this.addDrawableChild(new ButtonWidget(85, this.height - 30, 60, 20,
+        this.addButton(new ButtonWidget(85, this.height - 30, 60, 20,
                 new TranslatableText("concerto.refresh"), button -> {
             ClientPlayerEntity player = MinecraftClient.getInstance().player;
             if (player != null) {

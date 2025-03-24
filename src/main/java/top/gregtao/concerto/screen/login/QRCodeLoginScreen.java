@@ -2,7 +2,6 @@ package top.gregtao.concerto.screen.login;
 
 import com.google.zxing.WriterException;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.DrawableHelper;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.network.ClientPlayerEntity;
@@ -52,7 +51,7 @@ public class QRCodeLoginScreen extends ConcertoScreen {
     @Override
     protected void init() {
         super.init();
-        this.addDrawableChild(new ButtonWidget(this.width / 2 - 50, this.height - 40, 100, 20,
+        this.addButton(new ButtonWidget(this.width / 2 - 50, this.height - 40, 100, 20,
                 new TranslatableText("concerto.screen.login.qrcode.refresh"), button -> {
             this.timer = 0;
             this.status = Status.EMPTY;
@@ -75,7 +74,7 @@ public class QRCodeLoginScreen extends ConcertoScreen {
                     if (player != null) {
                         player.sendMessage(new TranslatableText("concerto.screen.login.qrcode.success"), false);
                     }
-                    MinecraftClient.getInstance().setScreen(null);
+                    MinecraftClient.getInstance().openScreen(null);
                     QRCodeRenderer.clear();
                 }
                 case WAITING -> {
@@ -130,7 +129,7 @@ public class QRCodeLoginScreen extends ConcertoScreen {
         } else {
             QRCodeRenderer.drawQRCode(matrices, this.width / 2 - this.qrWidth / 2, 30);
         }
-        DrawableHelper.drawCenteredTextWithShadow(matrices, this.textRenderer, this.message.asOrderedText(), this.width / 2, 120, 0xffffffff);
+        ConcertoScreen.drawCenteredTextWithShadow(matrices, this.textRenderer, this.message.asOrderedText(), this.width / 2, 120, 0xffffffff);
     }
 
     @Override

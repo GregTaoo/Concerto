@@ -102,7 +102,6 @@ public class ConcertoListWidget<T> extends AlwaysSelectedEntryListWidget<Concert
             return false;
         }
 
-        @Override
         public Text getNarration() {
             return ConcertoListWidget.this.getNarration(this.index, this.item);
         }

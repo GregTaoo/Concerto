@@ -11,6 +11,7 @@ import net.minecraft.text.TranslatableText;
 import net.minecraft.util.Identifier;
 import top.gregtao.concerto.ConcertoClient;
 import top.gregtao.concerto.config.CacheManager;
+import top.gregtao.concerto.screen.ConcertoScreen;
 import top.gregtao.concerto.util.HashUtil;
 
 import javax.imageio.ImageIO;
@@ -137,20 +138,18 @@ public class URLImageWidget implements Drawable, Closeable {
     public void render(MatrixStack matrices, int mouseX, int mouseY, float delta) {
         drawBorder(matrices, this.x, this.y, this.width, this.height, 0xffffffff);
         if (this.url == null) {
-            DrawableHelper.drawCenteredTextWithShadow(matrices, MinecraftClient.getInstance().textRenderer,
+            ConcertoScreen.drawCenteredTextWithShadow(matrices, MinecraftClient.getInstance().textRenderer,
                     new TranslatableText("concerto.screen.url_image.empty").asOrderedText(), this.x + this.width / 2, this.y + this.height / 2, 0xffffffff);
         } else {
             NativeImage image = this.texture.getImage();
             if (image != null && !this.loading) {
-                RenderSystem.setShaderTexture(0, this.textureId);
-                RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f);
+                RenderSystem.activeTexture(this.texture.getGlId());
                 MatrixStack matrixStack = new MatrixStack();
                 matrixStack.scale(0.125f, 0.125f, 1);
                 matrixStack.translate(7 * this.x, 7 * this.y, 0);
                 DrawableHelper.drawTexture(matrixStack, this.x, this.y, 0, 0, this.width << 3, this.height << 3, image.getWidth(), image.getHeight());
-                RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f);
             } else {
-                DrawableHelper.drawCenteredTextWithShadow(matrices, MinecraftClient.getInstance().textRenderer,
+                ConcertoScreen.drawCenteredTextWithShadow(matrices, MinecraftClient.getInstance().textRenderer,
                         new TranslatableText("concerto.screen.loading").asOrderedText(), this.x + this.width / 2, this.y + this.height / 2, 0xffffffff);
             }
         }

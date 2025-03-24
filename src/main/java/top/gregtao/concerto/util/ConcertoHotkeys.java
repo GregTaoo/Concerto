@@ -42,9 +42,9 @@ public class ConcertoHotkeys {
         ));
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
             if (GENERAL_PLAYLIST.wasPressed()) {
-                client.setScreen(new GeneralPlaylistScreen(null));
+                client.openScreen(new GeneralPlaylistScreen(null));
             } else if (INDEX_SCREEN.wasPressed()) {
-                client.setScreen(new ConcertoIndexScreen(null));
+                client.openScreen(new ConcertoIndexScreen(null));
             } else if (NEXT_MUSIC.wasPressed()) {
                 if (!MusicPlayer.INSTANCE.started) MusicPlayer.INSTANCE.start();
                 else if (!MusicPlayer.INSTANCE.playNextLock) MusicPlayer.INSTANCE.playNext(1);

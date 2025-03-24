@@ -24,13 +24,13 @@ public class QQMusicLoginScreens extends ConcertoScreen {
     @Override
     protected void init() {
         super.init();
-        this.addDrawableChild(new ButtonWidget(this.width / 2 - 50, 40, 100, 20,
+        this.addButton(new ButtonWidget(this.width / 2 - 50, 40, 100, 20,
                 new TranslatableText("concerto.screen.login.type.qrcode.wechat"),
-                button -> MinecraftClient.getInstance().setScreen(this.weChatQRLogin())
+                button -> MinecraftClient.getInstance().openScreen(this.weChatQRLogin())
         ));
-        this.addDrawableChild(new ButtonWidget(this.width / 2 - 50, 70, 100, 20,
+        this.addButton(new ButtonWidget(this.width / 2 - 50, 70, 100, 20,
                 new TranslatableText("concerto.screen.login.type.qrcode.qq"),
-                button -> MinecraftClient.getInstance().setScreen(this.qqQRLogin())
+                button -> MinecraftClient.getInstance().openScreen(this.qqQRLogin())
         ));
     }
 

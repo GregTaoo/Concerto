@@ -25,17 +25,17 @@ public class NeteaseCloudLoginScreens extends ConcertoScreen {
     @Override
     protected void init() {
         super.init();
-        this.addDrawableChild(new ButtonWidget(this.width / 2 - 50, 40, 100, 20, 
+        this.addButton(new ButtonWidget(this.width / 2 - 50, 40, 100, 20, 
                 new TranslatableText("concerto.screen.login.type.password"),
-                button -> MinecraftClient.getInstance().setScreen(this.passwordLogin())
+                button -> MinecraftClient.getInstance().openScreen(this.passwordLogin())
         ));
-        this.addDrawableChild(new ButtonWidget(this.width / 2 - 50, 70, 100, 20, 
+        this.addButton(new ButtonWidget(this.width / 2 - 50, 70, 100, 20, 
                 new TranslatableText("concerto.screen.login.type.captcha"),
-                button -> MinecraftClient.getInstance().setScreen(this.captchaLogin())
+                button -> MinecraftClient.getInstance().openScreen(this.captchaLogin())
         ));
-        this.addDrawableChild(new ButtonWidget(this.width / 2 - 50, 100, 100, 20, 
+        this.addButton(new ButtonWidget(this.width / 2 - 50, 100, 100, 20, 
                 new TranslatableText("concerto.screen.login.type.qrcode"),
-                button -> MinecraftClient.getInstance().setScreen(this.qrCodeLogin())
+                button -> MinecraftClient.getInstance().openScreen(this.qrCodeLogin())
         ));
     }
 

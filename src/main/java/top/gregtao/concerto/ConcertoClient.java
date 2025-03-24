@@ -7,8 +7,8 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.resource.ResourceManager;
 import net.minecraft.resource.ResourceType;
 import net.minecraft.util.Identifier;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import top.gregtao.concerto.command.MusicCommand;
 import top.gregtao.concerto.command.MusicRoomCommand;
 import top.gregtao.concerto.command.NeteaseCloudMusicCommand;
@@ -28,7 +28,7 @@ public class ConcertoClient implements ClientModInitializer {
 
 	public static final String MOD_ID = "concerto";
 
-	public static final Logger LOGGER = LoggerFactory.getLogger("ConcertoClient");
+	public static final Logger LOGGER = LogManager.getLogger("ConcertoClient");
 
 	public static final ConfigFile MUSIC_CONFIG = new ConfigFile("Concerto/musics.json");
 

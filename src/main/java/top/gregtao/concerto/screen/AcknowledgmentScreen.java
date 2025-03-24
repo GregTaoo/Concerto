@@ -2,7 +2,6 @@ package top.gregtao.concerto.screen;
 
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
-import net.minecraft.client.gui.DrawableHelper;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.util.math.MatrixStack;
@@ -19,16 +18,16 @@ public class AcknowledgmentScreen extends ConcertoScreen {
     @Override
     protected void init() {
         super.init();
-        this.addDrawableChild(new ButtonWidget(this.width / 2 - 75, 40, 150, 20, new TranslatableText("concerto.donate.afdian"),
+        this.addButton(new ButtonWidget(this.width / 2 - 75, 40, 150, 20, new TranslatableText("concerto.donate.afdian"),
                 button -> Util.getOperatingSystem().open("https://afdian.com/a/gregtao")
         ));
-        this.addDrawableChild(new ButtonWidget(this.width / 2 - 75, 65, 150, 20, new TranslatableText("concerto.donate.bilibili"),
+        this.addButton(new ButtonWidget(this.width / 2 - 75, 65, 150, 20, new TranslatableText("concerto.donate.bilibili"),
                 button -> Util.getOperatingSystem().open("https://space.bilibili.com/491552285")
         ));
-        this.addDrawableChild(new ButtonWidget(this.width / 2 - 75, 90, 150, 20, new TranslatableText("concerto.donate.ko-fi"),
+        this.addButton(new ButtonWidget(this.width / 2 - 75, 90, 150, 20, new TranslatableText("concerto.donate.ko-fi"),
                 button -> Util.getOperatingSystem().open("https://ko-fi.com/gregtao")
         ));
-        this.addDrawableChild(new ButtonWidget(this.width / 2 - 75, 115, 150, 20, new TranslatableText("concerto.donate.supporters"),
+        this.addButton(new ButtonWidget(this.width / 2 - 75, 115, 150, 20, new TranslatableText("concerto.donate.supporters"),
                 button -> Util.getOperatingSystem().open("https://github.com/GregTaoo/Concerto/blob/dev/supporters.md")
         ));
     }
@@ -38,6 +37,6 @@ public class AcknowledgmentScreen extends ConcertoScreen {
         super.render(matrices, mouseX, mouseY, delta);
         TextRenderer renderer = MinecraftClient.getInstance().textRenderer;
         Text text = new TranslatableText("concerto.thank_you");
-        DrawableHelper.drawCenteredTextWithShadow(matrices, renderer, text.asOrderedText(), this.width / 2, 150, 0xffffffff);
+        ConcertoScreen.drawCenteredTextWithShadow(matrices, renderer, text.asOrderedText(), this.width / 2, 150, 0xffffffff);
     }
 }

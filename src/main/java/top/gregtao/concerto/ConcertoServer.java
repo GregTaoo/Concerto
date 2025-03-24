@@ -7,8 +7,8 @@ import net.fabricmc.fabric.api.resource.SimpleSynchronousResourceReloadListener;
 import net.minecraft.resource.ResourceManager;
 import net.minecraft.resource.ResourceType;
 import net.minecraft.util.Identifier;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import top.gregtao.concerto.command.ConcertoServerCommand;
 import top.gregtao.concerto.config.PresetRadioConfig;
 import top.gregtao.concerto.config.ServerConfig;
@@ -16,7 +16,7 @@ import top.gregtao.concerto.network.ServerMusicNetworkHandler;
 
 public class ConcertoServer implements ModInitializer {
 
-    public static Logger LOGGER = LoggerFactory.getLogger("ConcertoServer");
+    public static Logger LOGGER = LogManager.getLogger("ConcertoServer");
 
     @Override
     public void onInitialize() {

@@ -1,7 +1,6 @@
 package top.gregtao.concerto.screen.qq;
 
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.DrawableHelper;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.util.math.MatrixStack;
@@ -25,11 +24,11 @@ public class QQMusicIndexScreen extends ConcertoScreen {
     @Override
     protected void init() {
         super.init();
-        this.addDrawableChild(new ButtonWidget(this.width / 2 - 50, 40, 100, 20, new TranslatableText("concerto.screen.user"),
-                button -> MinecraftClient.getInstance().setScreen(this.loggedIn() ? new QQMusicUserScreen(this) : new QQMusicLoginScreens(this))
+        this.addButton(new ButtonWidget(this.width / 2 - 50, 40, 100, 20, new TranslatableText("concerto.screen.user"),
+                button -> MinecraftClient.getInstance().openScreen(this.loggedIn() ? new QQMusicUserScreen(this) : new QQMusicLoginScreens(this))
         ));
-        this.addDrawableChild(new ButtonWidget(this.width / 2 - 50, 65, 100, 20, new TranslatableText("concerto.screen.search"),
-                button -> MinecraftClient.getInstance().setScreen(new QQMusicSearchScreen(this))
+        this.addButton(new ButtonWidget(this.width / 2 - 50, 65, 100, 20, new TranslatableText("concerto.screen.search"),
+                button -> MinecraftClient.getInstance().openScreen(new QQMusicSearchScreen(this))
         ));
 
         URL avatarUrl;
@@ -58,7 +57,7 @@ public class QQMusicIndexScreen extends ConcertoScreen {
         super.render(matrices, mouseX, mouseY, delta);
         Text text = this.loggedIn() ? new TranslatableText("concerto.screen.qq.welcome", QQMusicApiClient.LOCAL_USER.nickname) :
                 new TranslatableText("concerto.screen.qq.not_login");
-        DrawableHelper.drawCenteredTextWithShadow(matrices, this.textRenderer, text.asOrderedText(), this.width / 2, 90, 0xffffffff);
+        ConcertoScreen.drawCenteredTextWithShadow(matrices, this.textRenderer, text.asOrderedText(), this.width / 2, 90, 0xffffffff);
         this.avatar.render(matrices, mouseX, mouseY, delta);
     }
 }

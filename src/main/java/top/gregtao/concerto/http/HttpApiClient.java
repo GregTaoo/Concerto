@@ -1,8 +1,8 @@
 package top.gregtao.concerto.http;
 
 import com.google.gson.JsonObject;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import top.gregtao.concerto.config.CookieFile;
 import top.gregtao.concerto.util.JsonUtil;
 
@@ -27,7 +27,7 @@ public class HttpApiClient {
 
     public HttpApiClient(String name, Map<String, String> defaultHeaders, Map<String, List<String>> initCookies) {
         this.name = name;
-        this.logger = LoggerFactory.getLogger(name.toUpperCase() + " HTTP Client");
+        this.logger = LogManager.getLogger(name.toUpperCase() + " HTTP Client");
         System.setProperty("jdk.httpclient.allowRestrictedHeaders", "Referer,User-Agent");
         this.cookieFile = new CookieFile(name);
         this.cookieManager = new CookieManager();

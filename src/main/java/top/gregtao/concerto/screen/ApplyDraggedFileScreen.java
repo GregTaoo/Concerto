@@ -28,7 +28,7 @@ public abstract class ApplyDraggedFileScreen extends ConcertoScreen {
     public void filesDragged(List<Path> paths) {
         if (this.client == null) return;
         String message = paths.stream().map(Path::getFileName).map(Path::toString).collect(Collectors.joining(", "));
-        this.client.setScreen(new ConfirmScreen(confirmed -> {
+        this.client.openScreen(new ConfirmScreen(confirmed -> {
             if (confirmed) {
                 AtomicInteger integer = new AtomicInteger(0);
                 MusicPlayer.INSTANCE.addMusic(() -> {
@@ -54,7 +54,7 @@ public abstract class ApplyDraggedFileScreen extends ConcertoScreen {
                     }
                 });
             }
-            this.client.setScreen(this);
+            this.client.openScreen(this);
         }, new TranslatableText("concerto.drag_confirm"), new LiteralText(message)));
     }
 }

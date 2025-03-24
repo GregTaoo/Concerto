@@ -1,7 +1,6 @@
 package top.gregtao.concerto.screen.qq;
 
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.DrawableHelper;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.util.math.MatrixStack;
@@ -11,6 +10,7 @@ import top.gregtao.concerto.http.qq.QQMusicApiClient;
 import top.gregtao.concerto.music.list.Playlist;
 import top.gregtao.concerto.music.list.QQMusicPlaylist;
 import top.gregtao.concerto.player.MusicPlayer;
+import top.gregtao.concerto.screen.ConcertoScreen;
 import top.gregtao.concerto.screen.PageScreen;
 import top.gregtao.concerto.screen.PlaylistPreviewScreen;
 import top.gregtao.concerto.screen.widget.ConcertoListWidget;
@@ -23,7 +23,7 @@ public class QQMusicUserScreen extends PageScreen {
         return new MetadataListWidget<>(QQMusicUserScreen.this.width, QQMusicUserScreen.this.height, 18, QQMusicUserScreen.this.height - 35, 18) {
             @Override
             public void onDoubleClicked(ConcertoListWidget<T>.Entry entry) {
-                MinecraftClient.getInstance().setScreen(new PlaylistPreviewScreen((Playlist) entry.item, QQMusicUserScreen.this));
+                MinecraftClient.getInstance().openScreen(new PlaylistPreviewScreen((Playlist) entry.item, QQMusicUserScreen.this));
             }
         };
     }
@@ -48,38 +48,38 @@ public class QQMusicUserScreen extends PageScreen {
     protected void init() {
         super.init();
         if (!this.loggedIn()) {
-            MinecraftClient.getInstance().setScreen(new QQMusicLoginScreens(null));
+            MinecraftClient.getInstance().openScreen(new QQMusicLoginScreens(null));
         }
         this.playlistList = this.initWidget();
 
         this.onPageTurned(0);
-        this.addDrawableChild(this.playlistList);
-        this.addSelectableChild(this.playlistList);
+        this.addChild(this.playlistList);
 
-        this.addDrawableChild(new ButtonWidget(this.width / 2 + 65, this.height - 30, 50, 20,
+        this.addButton(new ButtonWidget(this.width / 2 + 65, this.height - 30, 50, 20,
                 new TranslatableText("concerto.screen.play"), button -> {
-            ConcertoListWidget<QQMusicPlaylist>.Entry entry = this.playlistList.getSelectedOrNull();
+            ConcertoListWidget<QQMusicPlaylist>.Entry entry = this.playlistList.getSelected();
             if (entry != null) {
-                MinecraftClient.getInstance().setScreen(new PlaylistPreviewScreen(entry.item, this));
+                MinecraftClient.getInstance().openScreen(new PlaylistPreviewScreen(entry.item, this));
             }
         }));
 
-        this.addDrawableChild(new ButtonWidget(this.width / 2 + 120, this.height - 30, 50, 20,
+        this.addButton(new ButtonWidget(this.width / 2 + 120, this.height - 30, 50, 20,
                 new TranslatableText("concerto.screen.logout"), button -> {
             QQMusicApiClient.LOCAL_USER.logout();
-            MinecraftClient.getInstance().setScreen(new QQMusicLoginScreens(this));
+            MinecraftClient.getInstance().openScreen(new QQMusicLoginScreens(this));
         }));
-        this.refreshDrawable();
     }
 
     @Override
     public void render(MatrixStack matrices, int mouseX, int mouseY, float delta) {
-        super.render(matrices, mouseX, mouseY, delta);
         if (!this.loggedIn()) {
-            DrawableHelper.drawCenteredTextWithShadow(matrices, this.textRenderer,
+            ConcertoScreen.drawCenteredTextWithShadow(matrices, this.textRenderer,
                     new TranslatableText("concerto.screen.qq.not_login").asOrderedText(),
                     this.width / 2, this.height / 2, 0xffffffff);
+        } else {
+            this.playlistList.render(matrices, mouseX, mouseY, delta);
         }
+        super.render(matrices, mouseX, mouseY, delta);
     }
 
 }

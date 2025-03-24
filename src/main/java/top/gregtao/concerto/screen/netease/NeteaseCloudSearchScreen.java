@@ -3,8 +3,8 @@ package top.gregtao.concerto.screen.netease;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
-import net.minecraft.client.gui.widget.CyclingButtonWidget;
 import net.minecraft.client.gui.widget.TextFieldWidget;
+import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.TranslatableText;
 import org.lwjgl.glfw.GLFW;
 import top.gregtao.concerto.ConcertoClient;
@@ -19,6 +19,7 @@ import top.gregtao.concerto.screen.MusicInfoScreen;
 import top.gregtao.concerto.screen.PageScreen;
 import top.gregtao.concerto.screen.PlaylistPreviewScreen;
 import top.gregtao.concerto.screen.widget.ConcertoListWidget;
+import top.gregtao.concerto.screen.widget.CyclingButtonWidget;
 import top.gregtao.concerto.screen.widget.MetadataListWidget;
 
 import java.util.HashMap;
@@ -46,7 +47,7 @@ public class NeteaseCloudSearchScreen extends PageScreen {
                             break;
                         }
                         case PLAYLIST, ALBUM: {
-                            MinecraftClient.getInstance().setScreen(new PlaylistPreviewScreen((Playlist) entry.item, NeteaseCloudSearchScreen.this));
+                            MinecraftClient.getInstance().openScreen(new PlaylistPreviewScreen((Playlist) entry.item, NeteaseCloudSearchScreen.this));
                             break;
                         }
                     }
@@ -83,31 +84,10 @@ public class NeteaseCloudSearchScreen extends PageScreen {
         try {
             this.remove(this.listWidgetsMap.get(this.searchType));
         } catch (NullPointerException ignored) {}
-        this.addDrawableChild(this.listWidgetsMap.get(type));
-        this.refreshDrawable();
+        this.addChild(this.listWidgetsMap.get(type));
         this.searchType = type;
         this.infoButton.active = type == SearchType.MUSIC;
         this.toggleSearch();
-    }
-
-    @Override
-    public void refreshDrawable() {
-        try {
-            super.refreshDrawable();
-            this.remove(this.searchBox);
-            this.addDrawableChild(this.searchBox);
-            this.addSelectableChild(this.searchBox);
-            this.remove(this.infoButton);
-            this.addDrawableChild(this.infoButton);
-            this.remove(this.searchButton);
-            this.addDrawableChild(this.searchButton);
-            this.remove(this.typeButton);
-            this.addDrawableChild(this.typeButton);
-            this.remove(this.playButton);
-            this.addDrawableChild(this.playButton);
-            this.remove(this.addButton);
-            this.addDrawableChild(this.addButton);
-        } catch (NullPointerException ignored) {}
     }
 
     @Override
@@ -131,70 +111,86 @@ public class NeteaseCloudSearchScreen extends PageScreen {
         this.searchBox = new TextFieldWidget(this.textRenderer, this.width / 2 - 155, 17, 200, 20,
                 this.searchBox, new TranslatableText("concerto.screen.search"));
         this.searchBox.setText(DEFAULT_KEYWORD);
+        this.addButton(this.searchBox);
 
         this.infoButton = new ButtonWidget(this.width / 2 + 120, this.height - 30, 50, 20,
                 new TranslatableText("concerto.screen.info"), button -> {
-            ConcertoListWidget<Music>.Entry entry = this.musicList.getSelectedOrNull();
+            ConcertoListWidget<Music>.Entry entry = this.musicList.getSelected();
             if (entry != null) {
-                MinecraftClient.getInstance().setScreen(new MusicInfoScreen(entry.item, this));
+                MinecraftClient.getInstance().openScreen(new MusicInfoScreen(entry.item, this));
             }
         });
+        this.addButton(this.infoButton);
 
         this.searchButton = new ButtonWidget(this.width / 2 + 50, 17, 52, 20,
                 new TranslatableText("concerto.screen.search"), button -> this.toggleSearch());
+        this.addButton(this.searchButton);
 
         this.typeButton = CyclingButtonWidget.builder(SearchType::getName).values(SearchType.values()).initially(this.searchType).build(
                 this.width / 2 + 105, 17, 65, 20, new TranslatableText("concerto.search_type"),
                 (widget, type) -> this.updateSearchType(type));
+        this.addButton(this.typeButton);
 
         this.playButton = new ButtonWidget(this.width / 2 + 65, this.height - 30, 50, 20,
                 new TranslatableText("concerto.screen.play"), button -> {
             switch (this.searchType) {
                 case MUSIC: {
-                    ConcertoListWidget<Music>.Entry entry = this.musicList.getSelectedOrNull();
+                    ConcertoListWidget<Music>.Entry entry = this.musicList.getSelected();
                     if (entry != null) {
                         MusicPlayer.INSTANCE.addMusicHere(entry.item, true);
                     }
                 }
                 case PLAYLIST: {
-                    ConcertoListWidget<NeteaseCloudPlaylist>.Entry entry = this.playlistList.getSelectedOrNull();
+                    ConcertoListWidget<NeteaseCloudPlaylist>.Entry entry = this.playlistList.getSelected();
                     if (entry != null) {
-                        MinecraftClient.getInstance().setScreen(new PlaylistPreviewScreen(entry.item, this));
+                        MinecraftClient.getInstance().openScreen(new PlaylistPreviewScreen(entry.item, this));
                     }
                 }
                 case ALBUM: {
-                    ConcertoListWidget<NeteaseCloudPlaylist>.Entry entry = this.albumList.getSelectedOrNull();
+                    ConcertoListWidget<NeteaseCloudPlaylist>.Entry entry = this.albumList.getSelected();
                     if (entry != null) {
-                        MinecraftClient.getInstance().setScreen(new PlaylistPreviewScreen(entry.item, this));
+                        MinecraftClient.getInstance().openScreen(new PlaylistPreviewScreen(entry.item, this));
                     }
                 }
             }
         });
+        this.addButton(this.playButton);
 
         this.addButton = new ButtonWidget(this.width / 2 + 10, this.height - 30, 50, 20,
                 new TranslatableText("concerto.screen.add"), button -> {
             switch (this.searchType) {
                 case MUSIC: {
-                    ConcertoListWidget<Music>.Entry entry = this.musicList.getSelectedOrNull();
+                    ConcertoListWidget<Music>.Entry entry = this.musicList.getSelected();
                     if (entry != null) {
                         MusicPlayer.INSTANCE.addMusic(entry.item);
                     }
                 }
                 case PLAYLIST: {
-                    ConcertoListWidget<NeteaseCloudPlaylist>.Entry entry = this.playlistList.getSelectedOrNull();
+                    ConcertoListWidget<NeteaseCloudPlaylist>.Entry entry = this.playlistList.getSelected();
                     if (entry != null) {
                         MusicPlayer.INSTANCE.addMusic(() -> entry.item.getList(), () -> {});
                     }
                 }
                 case ALBUM: {
-                    ConcertoListWidget<NeteaseCloudPlaylist>.Entry entry = this.albumList.getSelectedOrNull();
+                    ConcertoListWidget<NeteaseCloudPlaylist>.Entry entry = this.albumList.getSelected();
                     if (entry != null) {
                         MusicPlayer.INSTANCE.addMusic(() -> entry.item.getList(), () -> {});
                     }
                 }
             }
         });
+        this.addButton(this.addButton);
         this.updateSearchType(this.searchType);
+    }
+
+    @Override
+    public void render(MatrixStack matrices, int mouseX, int mouseY, float delta) {
+        switch (this.searchType) {
+            case PLAYLIST -> this.playlistList.render(matrices, mouseX, mouseY, delta);
+            case MUSIC -> this.musicList.render(matrices, mouseX, mouseY, delta);
+            case ALBUM -> this.albumList.render(matrices, mouseX, mouseY, delta);
+        }
+        super.render(matrices, mouseX, mouseY, delta);
     }
 
     @Override

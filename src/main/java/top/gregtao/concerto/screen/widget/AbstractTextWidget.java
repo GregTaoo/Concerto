@@ -1,7 +1,6 @@
 package top.gregtao.concerto.screen.widget;
 
 import net.minecraft.client.font.TextRenderer;
-import net.minecraft.client.gui.screen.narration.NarrationMessageBuilder;
 import net.minecraft.client.gui.widget.ClickableWidget;
 import net.minecraft.text.Text;
 
@@ -12,10 +11,6 @@ public abstract class AbstractTextWidget extends ClickableWidget {
     public AbstractTextWidget(int x, int y, int width, int height, Text message, TextRenderer textRenderer) {
         super(x, y, width, height, message);
         this.textRenderer = textRenderer;
-    }
-
-    @Override
-    public void appendNarrations(NarrationMessageBuilder builder) {
     }
 
     public AbstractTextWidget setTextColor(int textColor) {

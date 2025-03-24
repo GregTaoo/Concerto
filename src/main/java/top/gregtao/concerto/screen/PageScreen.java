@@ -2,7 +2,6 @@ package top.gregtao.concerto.screen;
 
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
-import net.minecraft.client.gui.DrawableHelper;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.util.math.MatrixStack;
@@ -34,17 +33,6 @@ public abstract class PageScreen extends ConcertoScreen {
         this.buttonY = buttonY;
     }
 
-    public void refreshDrawable() {
-        try {
-            this.remove(this.prevButton);
-            this.remove(this.nextButton);
-            this.addDrawableChild(this.prevButton);
-            this.addDrawableChild(this.nextButton);
-            this.addSelectableChild(this.prevButton);
-            this.addSelectableChild(this.nextButton);
-        } catch (NullPointerException ignored) {}
-    }
-
     @Override
     protected void init() {
         this.configure(this.width / 2 - 120, this.height - 30);
@@ -63,10 +51,8 @@ public abstract class PageScreen extends ConcertoScreen {
                 this.onPageTurned(this.page);
             }
         });
-        this.addDrawableChild(this.prevButton);
-        this.addDrawableChild(this.nextButton);
-        this.addSelectableChild(this.prevButton);
-        this.addSelectableChild(this.nextButton);
+        this.addButton(this.prevButton);
+        this.addButton(this.nextButton);
     }
 
     @Override
@@ -74,6 +60,6 @@ public abstract class PageScreen extends ConcertoScreen {
         super.render(matrices, mouseX, mouseY, delta);
         TextRenderer renderer = MinecraftClient.getInstance().textRenderer;
         Text text = new TranslatableText("concerto.screen.page", this.page + 1);
-        DrawableHelper.drawCenteredTextWithShadow(matrices, renderer, text.asOrderedText(), this.buttonX, this.buttonY + 5, 0xffffffff);
+        ConcertoScreen.drawCenteredTextWithShadow(matrices, renderer, text.asOrderedText(), this.buttonX, this.buttonY + 5, 0xffffffff);
     }
 }

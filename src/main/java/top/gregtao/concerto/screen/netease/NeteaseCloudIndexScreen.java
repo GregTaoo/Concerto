@@ -1,7 +1,6 @@
 package top.gregtao.concerto.screen.netease;
 
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.DrawableHelper;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.util.math.MatrixStack;
@@ -25,12 +24,12 @@ public class NeteaseCloudIndexScreen extends ConcertoScreen {
     @Override
     protected void init() {
         super.init();
-        this.addDrawableChild(new ButtonWidget(this.width / 2 - 50, 40, 100, 20,
+        this.addButton(new ButtonWidget(this.width / 2 - 50, 40, 100, 20,
                 new TranslatableText("concerto.screen.user"),
-                button -> MinecraftClient.getInstance().setScreen(new NeteaseCloudUserScreen(this))
+                button -> MinecraftClient.getInstance().openScreen(new NeteaseCloudUserScreen(this))
         ));
-        this.addDrawableChild(new ButtonWidget(this.width / 2 - 50, 65, 100, 20, new TranslatableText("concerto.screen.search"),
-                button -> MinecraftClient.getInstance().setScreen(new NeteaseCloudSearchScreen(this))
+        this.addButton(new ButtonWidget(this.width / 2 - 50, 65, 100, 20, new TranslatableText("concerto.screen.search"),
+                button -> MinecraftClient.getInstance().openScreen(new NeteaseCloudSearchScreen(this))
         ));
 
         URL avatarUrl;
@@ -59,7 +58,7 @@ public class NeteaseCloudIndexScreen extends ConcertoScreen {
         super.render(matrices, mouseX, mouseY, delta);
         Text text = this.loggedIn() ? new TranslatableText("concerto.screen.163.welcome", NeteaseCloudApiClient.LOCAL_USER.nickname) :
                 new TranslatableText("concerto.screen.163.not_login");
-        DrawableHelper.drawCenteredTextWithShadow(matrices, this.textRenderer, text.asOrderedText(), this.width / 2, 90, 0xffffffff);
+        ConcertoScreen.drawCenteredTextWithShadow(matrices, this.textRenderer, text.asOrderedText(), this.width / 2, 90, 0xffffffff);
         this.avatar.render(matrices, mouseX, mouseY, delta);
     }
 }

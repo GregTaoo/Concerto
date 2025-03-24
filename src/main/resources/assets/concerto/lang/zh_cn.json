@@ -190,6 +190,7 @@
   "concerto.dislike": "取消喜欢了歌曲 %s，来自 %s",
 
   "concerto.agent": "服务器点歌",
+  "concerto.agent.not_playing": "没有歌曲播放中",
   "concerto.agent.invite": "是否加入服务器点歌？",
   "concerto.agent.join": "加入了服务器点歌",
   "concerto.agent.quit": "退出了服务器点歌",
@@ -198,7 +199,8 @@
   "concerto.agent.add": "%s 点歌了 %s - %s.",
   "concerto.agent.vote": "请投票：是否切歌？",
   "concerto.agent.vote_for": "你投了 %s",
-  "concerto.agent.vote.duplicate": "当前投票未结束",
+  "concerto.agent.vote.duplicate": "你只能投一次票",
+  "concerto.agent.vote.voting": "有一场投票仍在进行",
   "concerto.agent.vote.ended": "没有投票进行中",
   "concerto.agent.vote.success": "投票已结束，结果为%s:%s，决定切歌",
   "concerto.agent.vote.failed": "投票已结束，结果为%s:%s，决定继续播放",

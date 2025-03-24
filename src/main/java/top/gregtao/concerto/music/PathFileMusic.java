@@ -1,7 +1,7 @@
 package top.gregtao.concerto.music;
 
 public abstract class PathFileMusic extends Music {
-    private final String rawPath;
+    private String rawPath;
 
     public PathFileMusic(String rawPath) {
         this.rawPath = rawPath;
@@ -9,6 +9,10 @@ public abstract class PathFileMusic extends Music {
 
     public String getRawPath() {
         return this.rawPath;
+    }
+
+    public void setRawPath(String s) {
+        this.rawPath = s;
     }
 
     @Override

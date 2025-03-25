@@ -120,7 +120,7 @@ public class NeteaseCloudApiClient extends HttpApiClient {
                 .get()));
     }
 
-    public Pair<ArrayList<Music>, PlaylistMetaData> parsePlayListJson(JsonObject object, NeteaseCloudMusic.Level level, boolean simply) {
+    public Pair<ArrayList<Music>, PlaylistMetaData> parsePlaylistJson(JsonObject object, NeteaseCloudMusic.Level level, boolean simply) {
         ArrayList<Music> music = new ArrayList<>();
         String createTime = "";
         if (!simply) {
@@ -185,12 +185,12 @@ public class NeteaseCloudApiClient extends HttpApiClient {
         return Pair.of(music, new PlaylistMetaData(creatorName, name, createTime, description));
     }
 
-    public Pair<ArrayList<Music>, PlaylistMetaData> getPlayList(String id, NeteaseCloudMusic.Level level) {
+    public Pair<ArrayList<Music>, PlaylistMetaData> getPlaylist(String id, NeteaseCloudMusic.Level level) {
         try {
             String url = "http://music.163.com/api/v6/playlist/detail?id=" + id + "&n=" + MusicPlayerHandler.MAX_SIZE;
             JsonObject object = Objects.requireNonNull(parseJson(this.open().url(url).get()))
                     .getAsJsonObject("playlist");
-            return this.parsePlayListJson(object, level, false);
+            return this.parsePlaylistJson(object, level, false);
         } catch (Exception e) {
             return Pair.of(new ArrayList<>(), PlaylistMetaData.EMPTY);
         }

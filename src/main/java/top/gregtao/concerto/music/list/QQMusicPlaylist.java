@@ -34,7 +34,7 @@ public class QQMusicPlaylist extends Playlist {
     @Override
     Pair<ArrayList<Music>, PlaylistMetaData> loadData() {
         try {
-            return this.isAlbum ? QQMusicApiClient.INSTANCE.getAlbum(this.id) : QQMusicApiClient.INSTANCE.getPlayList(this.id);
+            return this.isAlbum ? QQMusicApiClient.INSTANCE.getAlbum(this.id) : QQMusicApiClient.INSTANCE.getPlaylist(this.id);
         } catch (IOException | URISyntaxException e) {
             throw new RuntimeException(e);
         }

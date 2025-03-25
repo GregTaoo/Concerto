@@ -41,7 +41,7 @@ public class URLImageWidget implements Drawable, Widget, Closeable {
         this.y = y;
         this.url = url;
         this.texture = new NativeImageBackedTexture(width << 3, height << 3, false);
-        this.textureId = Identifier.of(ConcertoClient.MOD_ID, "image");
+        this.textureId = Identifier.of(ConcertoClient.MOD_ID, "image_" + System.nanoTime());
         MinecraftClient.getInstance().getTextureManager().registerTexture(this.textureId, this.texture);
     }
 

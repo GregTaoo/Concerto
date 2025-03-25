@@ -3,6 +3,7 @@ package top.gregtao.concerto.config;
 import com.google.gson.GsonBuilder;
 import org.joml.Vector2i;
 import top.gregtao.concerto.enums.TextAlignment;
+import top.gregtao.concerto.music.NeteaseCloudMusic;
 
 public class ClientConfig extends ConfigFile {
     public static ClientConfig INSTANCE = new ClientConfig();
@@ -50,18 +51,24 @@ public class ClientConfig extends ConfigFile {
         public int maxCacheSize = 1000 * 1000 * 100;
         public boolean joinAgentWhenInvited = false;
         public boolean registerMusicCommand = true;
+        public float scrollingTextSpeed = 1.0f;
+        public NeteaseCloudMusic.Level neteaseMusicQuality = NeteaseCloudMusic.Level.HIRES;
+
         public boolean displayLyrics = true;
         public String lyricsPosition = "0.5,1-70";
         public TextAlignment lyricsAlignment = TextAlignment.CENTER;
         public String lyricsColor = "#ff00aaaa";
+
         public boolean displaySubLyrics = true;
         public String subLyricsPosition = "0.5,1-60";
         public TextAlignment subLyricsAlignment = TextAlignment.CENTER;
         public String subLyricsColor = "#ffffaa00";
+
         public boolean displayMusicDetails = true;
         public String musicDetailsPosition = "1-5,0+5";
         public TextAlignment musicDetailsAlignment = TextAlignment.RIGHT;
         public String musicDetailsColor = "#ffffffff";
+
         public boolean displayTimeProgress = true;
         public String timeProgressPosition = "1-5,0+15";
         public TextAlignment timeProgressAlignment = TextAlignment.RIGHT;

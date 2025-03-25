@@ -7,6 +7,7 @@ import net.minecraft.client.gui.widget.TextFieldWidget;
 import net.minecraft.client.gui.widget.TextWidget;
 import net.minecraft.text.Text;
 import top.gregtao.concerto.api.UnsafeMusicException;
+import top.gregtao.concerto.config.ClientConfig;
 import top.gregtao.concerto.music.*;
 import top.gregtao.concerto.music.list.NeteaseCloudPlaylist;
 import top.gregtao.concerto.player.MusicPlayer;
@@ -52,7 +53,7 @@ public class AddMusicScreen extends ApplyDraggedFileScreen {
         this.addLabel(Text.translatable("concerto.screen.add.internet"), this.width / 2, 70,
                 str -> MusicPlayer.INSTANCE.addMusicHere(new HttpFileMusic(str), true));
         this.addLabel(Text.translatable("concerto.screen.add.netease_cloud"), this.width / 2, 95,
-                str -> MusicPlayer.INSTANCE.addMusicHere(new NeteaseCloudMusic(str, NeteaseCloudMusic.Level.HIRES), true));
+                str -> MusicPlayer.INSTANCE.addMusicHere(new NeteaseCloudMusic(str, ClientConfig.INSTANCE.options.neteaseMusicQuality), true));
         this.addLabel(Text.translatable("concerto.screen.add.netease_cloud.playlist"), this.width / 2, 120, str -> {
             NeteaseCloudPlaylist playlist = new NeteaseCloudPlaylist(str, false);
             playlist.load(() -> MinecraftClient.getInstance().setScreen(new PlaylistPreviewScreen(playlist, this)));

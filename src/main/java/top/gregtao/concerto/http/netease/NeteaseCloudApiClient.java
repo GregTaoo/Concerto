@@ -5,6 +5,7 @@ import com.google.gson.JsonObject;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.text.Text;
 import top.gregtao.concerto.ConcertoClient;
+import top.gregtao.concerto.config.ClientConfig;
 import top.gregtao.concerto.enums.SearchType;
 import top.gregtao.concerto.enums.Sources;
 import top.gregtao.concerto.http.HttpApiClient;
@@ -217,7 +218,7 @@ public class NeteaseCloudApiClient extends HttpApiClient {
             JsonObject object = this.search(keyword, page, SearchType.MUSIC);
             List<Music> musics = new ArrayList<>();
             JsonArray array = object.getAsJsonObject("result").getAsJsonArray("songs");
-            array.forEach(element -> musics.add(new NeteaseCloudMusic(element.getAsJsonObject(), NeteaseCloudMusic.Level.HIRES)));
+            array.forEach(element -> musics.add(new NeteaseCloudMusic(element.getAsJsonObject(), ClientConfig.INSTANCE.options.neteaseMusicQuality)));
             MusicPlayerHandler.loadInThreadPool(musics);
             return musics;
         } catch (Exception e) {
@@ -254,7 +255,7 @@ public class NeteaseCloudApiClient extends HttpApiClient {
          if (object == null) return null;
          JsonArray songs = object.getAsJsonObject("data").getAsJsonArray("dailySongs");
          ArrayList<Music> musics = new ArrayList<>();
-         songs.forEach(element -> musics.add(new NeteaseCloudMusic(element.getAsJsonObject(), NeteaseCloudMusic.Level.HIRES)));
+         songs.forEach(element -> musics.add(new NeteaseCloudMusic(element.getAsJsonObject(), ClientConfig.INSTANCE.options.neteaseMusicQuality)));
          return new FixedPlaylist(musics, new PlaylistMetaData(Text.translatable("concerto.source.netease_cloud").getString(),
                  Text.translatable("concerto.screen.daily_recommendation").getString(), "", ""), false);
     }

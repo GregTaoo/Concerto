@@ -13,18 +13,18 @@ import top.gregtao.concerto.util.TextUtil;
 
 public class InGameHudRenderer {
 
-    public static ScrollingText SCROLLER = new ScrollingText();
+    public static ScrollingText MUSIC_DETAIL_SCROLL = new ScrollingText();
 
     public static class ScrollingText {
         public static int STOP_TICKS = 180;
 
         private int width = 0, maxWidth = 0;
         private float dx = 0, stopTicks = 0;
-        private boolean stop = false, back = false;
+        private boolean stop = false, go_back = false;
 
         private void reset() {
             this.dx = 0;
-            this.back = false;
+            this.go_back = false;
             this.stop = true;
             this.stopTicks = STOP_TICKS;
         }
@@ -42,16 +42,16 @@ public class InGameHudRenderer {
         public void tick(float speed) {
             if (this.width <= this.maxWidth) return;
 
-            float delta = speed * 20f / MinecraftClient.getInstance().getCurrentFps();
+            float delta = speed * 40f / MinecraftClient.getInstance().getCurrentFps();
             if (this.stop) {
                 this.stopTicks -= delta;
                 if (this.stopTicks <= 0) {
                     this.stop = false;
-                    this.back = !this.back;
+                    this.go_back = !this.go_back;
                 }
             } else {
-                float limit = this.back ? 0 : (this.maxWidth - this.width);
-                this.dx = this.back ? Math.min(limit, this.dx + delta) : Math.max(limit, this.dx - delta);
+                float limit = this.go_back ? 0 : (this.maxWidth - this.width);
+                this.dx = this.go_back ? Math.min(limit, this.dx + delta) : Math.max(limit, this.dx - delta);
                 if (this.dx == limit) {
                     this.stop = true;
                     this.stopTicks = STOP_TICKS;
@@ -98,14 +98,14 @@ public class InGameHudRenderer {
                             : "";
 
                     Text text2 = Text.literal(texts[2] + state);
-                    SCROLLER.setMaxWidth(text3Width);
-                    SCROLLER.setWidth(client.textRenderer.getWidth(text2));
-                    SCROLLER.tick(2);
+                    MUSIC_DETAIL_SCROLL.setMaxWidth(text3Width);
+                    MUSIC_DETAIL_SCROLL.setWidth(client.textRenderer.getWidth(text2));
+                    MUSIC_DETAIL_SCROLL.tick(options.scrollingTextSpeed);
 
                     int startX = TextUtil.getTextRenderX(text3, options.musicDetailsAlignment, client.textRenderer, pos.x);
                     context.enableScissor(startX, pos.y, startX + text3Width, pos.y + client.textRenderer.fontHeight);
                     context.drawTextWithShadow(
-                            client.textRenderer, text2, startX + SCROLLER.getDx(),
+                            client.textRenderer, text2, startX + MUSIC_DETAIL_SCROLL.getDx(),
                             pos.y, (int) config.musicDetailsColor.getNumber()
                     );
                     context.disableScissor();

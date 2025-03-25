@@ -33,15 +33,18 @@ public class TextUtil {
         if (player != null) player.sendMessage(text);
     }
 
-    public static void renderText(Text text, TextAlignment align, int x, int y, DrawContext matrices, TextRenderer renderer, int color) {
-        OrderedText orderedText = text.asOrderedText();
-        int realX = x, textWidth = renderer.getWidth(orderedText);
+    public static int getTextRenderX(Text text, TextAlignment align, TextRenderer renderer, int x) {
+        int realX = x, textWidth = renderer.getWidth(text);
         if (align == TextAlignment.CENTER) {
             realX -= textWidth / 2;
         } else if (align == TextAlignment.RIGHT) {
             realX -= textWidth;
         }
-        matrices.drawTextWithShadow(renderer, orderedText, realX, y, color);
+        return realX;
+    }
+
+    public static void renderText(Text text, TextAlignment align, int x, int y, DrawContext matrices, TextRenderer renderer, int color) {
+        matrices.drawTextWithShadow(renderer, text, getTextRenderX(text, align, renderer, x), y, color);
     }
 
     public static Style getRunCommandStyle(String command) {

@@ -194,7 +194,7 @@ public class MusicCommand {
                     return 0;
                 })
         ).then(
-                ClientCommandManager.literal("unlike").executes(context -> {
+                ClientCommandManager.literal("dislike").executes(context -> {
                     ClientPlayerEntity clientPlayer = context.getSource().getPlayer();
                     Music music = MusicPlayerHandler.INSTANCE.getCurrentMusic();
                     if (music instanceof Likeable likeable) {

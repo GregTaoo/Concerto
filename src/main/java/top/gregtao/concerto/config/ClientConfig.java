@@ -1,8 +1,9 @@
 package top.gregtao.concerto.config;
 
 import com.google.gson.GsonBuilder;
-import net.minecraft.client.util.math.Vector2f;
 import top.gregtao.concerto.enums.TextAlignment;
+import top.gregtao.concerto.music.NeteaseCloudMusic;
+import top.gregtao.concerto.util.Vector2i;
 
 public class ClientConfig extends ConfigFile {
     public static ClientConfig INSTANCE = new ClientConfig();
@@ -11,7 +12,7 @@ public class ClientConfig extends ConfigFile {
 
     public PositionXYSupplier lyricsPosSupplier, subLyricsPosSupplier, musicDetailsPosSupplier, timeProgressPosSupplier;
 
-    public HexSupplier timeProgressColor, timeProgressBgColor;
+    public HexSupplier lyricsColor, subLyricsColor, musicDetailsColor, timeProgressTextColor, timeProgressColor, timeProgressBgColor;
 
     public ClientConfig() {
         super("Concerto/client_config.json");
@@ -31,6 +32,10 @@ public class ClientConfig extends ConfigFile {
         this.musicDetailsPosSupplier = new PositionXYSupplier(this.options.musicDetailsPosition);
         this.timeProgressPosSupplier = new PositionXYSupplier(this.options.timeProgressPosition);
 
+        this.lyricsColor = new HexSupplier(this.options.lyricsColor);
+        this.subLyricsColor = new HexSupplier(this.options.subLyricsColor);
+        this.musicDetailsColor = new HexSupplier(this.options.musicDetailsColor);
+        this.timeProgressTextColor = new HexSupplier(this.options.timeProgressTextColor);
         this.timeProgressColor = new HexSupplier(this.options.timeProgressColor);
         this.timeProgressBgColor = new HexSupplier(this.options.timeProgressBgColor);
     }
@@ -44,20 +49,30 @@ public class ClientConfig extends ConfigFile {
         public boolean hideWhenChat = true;
         public boolean printRequestResults = false;
         public int maxCacheSize = 1000 * 1000 * 100;
-        public boolean displayLyrics = true;
         public boolean joinAgentWhenInvited = false;
         public boolean registerMusicCommand = true;
+        public float scrollingTextSpeed = 1.0f;
+        public NeteaseCloudMusic.Level neteaseMusicQuality = NeteaseCloudMusic.Level.HIRES;
+
+        public boolean displayLyrics = true;
         public String lyricsPosition = "0.5,1-70";
         public TextAlignment lyricsAlignment = TextAlignment.CENTER;
+        public String lyricsColor = "#ff00aaaa";
+
         public boolean displaySubLyrics = true;
         public String subLyricsPosition = "0.5,1-60";
         public TextAlignment subLyricsAlignment = TextAlignment.CENTER;
+        public String subLyricsColor = "#ffffaa00";
+
         public boolean displayMusicDetails = true;
         public String musicDetailsPosition = "1-5,0+5";
         public TextAlignment musicDetailsAlignment = TextAlignment.RIGHT;
+        public String musicDetailsColor = "#ffffffff";
+
         public boolean displayTimeProgress = true;
         public String timeProgressPosition = "1-5,0+15";
         public TextAlignment timeProgressAlignment = TextAlignment.RIGHT;
+        public String timeProgressTextColor = "#ffffffff";
         public String timeProgressColor = "#ff0155bc";
         public String timeProgressBgColor = "#ffa1c7f6";
     }
@@ -79,8 +94,8 @@ public class ClientConfig extends ConfigFile {
             return this.y.getPosition(height);
         }
 
-        public Vector2f getPos(int width, int height) {
-            return new Vector2f(this.getX(width), this.getY(height));
+        public Vector2i getPos(int width, int height) {
+            return new Vector2i(this.getX(width), this.getY(height));
         }
     }
 
@@ -120,8 +135,8 @@ public class ClientConfig extends ConfigFile {
                 str = str.startsWith("0x") ? str.substring(2) : str;
                 str = str.startsWith("#") ? str.substring(1) : str;
                 this.number = Long.parseLong(str, 16);
-            } catch (NumberFormatException e) {
-                this.number = 0;
+            } catch (IndexOutOfBoundsException | NumberFormatException e) {
+                this.number = 0xffffffffL;
             }
         }
 

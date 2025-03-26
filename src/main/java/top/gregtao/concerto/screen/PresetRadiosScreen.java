@@ -52,7 +52,7 @@ public class PresetRadiosScreen extends ConcertoScreen {
                 new TranslatableText("concerto.refresh"), button -> {
             ClientPlayerEntity player = MinecraftClient.getInstance().player;
             if (player != null) {
-                player.sendChatMessage("concerto-server fetch-radios");
+                player.sendChatMessage("/concerto-server fetch-radios");
             }
         }));
     }

@@ -1,9 +1,9 @@
 package top.gregtao.concerto.music.list;
 
 import com.google.gson.JsonObject;
+import top.gregtao.concerto.config.ClientConfig;
 import top.gregtao.concerto.http.netease.NeteaseCloudApiClient;
 import top.gregtao.concerto.music.Music;
-import top.gregtao.concerto.music.NeteaseCloudMusic;
 import top.gregtao.concerto.music.meta.music.list.PlaylistMetaData;
 import top.gregtao.concerto.util.Pair;
 
@@ -24,16 +24,16 @@ public class NeteaseCloudPlaylist extends Playlist {
      * @param simply TRUE if there isn't music data in the Json or else FALSE
      */
     public NeteaseCloudPlaylist(JsonObject object, boolean isAlbum, boolean simply) {
-        super(isAlbum ? NeteaseCloudApiClient.INSTANCE.parseAlbumJson(object, NeteaseCloudMusic.Level.HIRES, simply) :
-                NeteaseCloudApiClient.INSTANCE.parsePlayListJson(object, NeteaseCloudMusic.Level.HIRES, simply), isAlbum);
+        super(isAlbum ? NeteaseCloudApiClient.INSTANCE.parseAlbumJson(object, ClientConfig.INSTANCE.options.neteaseMusicQuality, simply) :
+                NeteaseCloudApiClient.INSTANCE.parsePlaylistJson(object, ClientConfig.INSTANCE.options.neteaseMusicQuality, simply), isAlbum);
         this.simply = simply;
         this.id = object.get("id").getAsString();
     }
 
     @Override
     Pair<ArrayList<Music>, PlaylistMetaData> loadData() {
-        return this.isAlbum() ? NeteaseCloudApiClient.INSTANCE.getAlbum(this.id, NeteaseCloudMusic.Level.HIRES) :
-                NeteaseCloudApiClient.INSTANCE.getPlayList(this.id, NeteaseCloudMusic.Level.HIRES);
+        return this.isAlbum() ? NeteaseCloudApiClient.INSTANCE.getAlbum(this.id, ClientConfig.INSTANCE.options.neteaseMusicQuality) :
+                NeteaseCloudApiClient.INSTANCE.getPlaylist(this.id, ClientConfig.INSTANCE.options.neteaseMusicQuality);
     }
 
     // It is suggested to call this in an independent thread

@@ -207,7 +207,7 @@ public class ServerMusicNetworkHandler {
     public static void playerJoinHandshake(ServerPlayerEntity player) {
         ConcertoPayload payload = new ConcertoPayload(ConcertoPayload.Channel.HANDSHAKE,
                 ConcertoNetworking.HANDSHAKE_STRING + "CallJoin:" + player.getName().getString()
-                        + (ServerConfig.INSTANCE.options.agentInviteWhenJoin ? ":Invite" : ""));
+                        + (ServerConfig.INSTANCE.options.serverMusicAgent && ServerConfig.INSTANCE.options.agentInviteWhenJoin ? ":Invite" : ""));
         ServerPlayNetworking.send(player, payload);
         sendS2CAllAuditionData(player);
         sendS2CPresetRadiosPacket(player);

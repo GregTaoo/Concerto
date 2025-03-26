@@ -42,6 +42,20 @@ public class ServerMusicAgent {
     private long playTime = 0;
 
     private final AtomicBoolean isPlaying = new AtomicBoolean(false);
+    private final AtomicBoolean currentlyFreeTime = new AtomicBoolean(false);
+
+    public ArrayList<Music> freeTimePlaylist = new ArrayList<>();
+    private int freeTimePlaylistIndex = 0;
+
+    private Music getNextFreeTimeMusic() {
+        if (this.freeTimePlaylist.isEmpty()) return null;
+        this.freeTimePlaylistIndex = (this.freeTimePlaylistIndex + 1) % this.freeTimePlaylist.size();
+        return this.freeTimePlaylist.get(this.freeTimePlaylistIndex);
+    }
+
+    public boolean hasNextMusic() {
+        return !this.musicQueue.isEmpty() || !this.freeTimePlaylist.isEmpty();
+    }
 
     public void receiveVoteRequest(ServerPlayerEntity player) {
         if (this.isVoting) {
@@ -96,9 +110,9 @@ public class ServerMusicAgent {
         boolean success = this.yesVoters.size() > this.noVoters.size();
         if (success) {
             ConcertoServer.LOGGER.info("Vote: Play the next music");
-            if (this.musicQueue.isEmpty()) {
+            if (!this.hasNextMusic()) {
                 this.membersForEach(ServerMusicNetworkHandler::musicAgentSendStop);
-            } else if ((this.playNextFuture.isDone() || this.playNextFuture.cancel(false))) {
+            } else if (this.playNextFuture.isDone() || this.playNextFuture.cancel(false)) {
                 this.playNextMusic();
             }
         } else {
@@ -114,6 +128,12 @@ public class ServerMusicAgent {
     public synchronized void playNextMusic() {
         try {
             this.currentMusic = this.musicQueue.poll();
+            if (this.currentMusic == null) {
+                this.currentMusic = this.getNextFreeTimeMusic();
+                this.currentlyFreeTime.set(this.currentMusic != null);
+            } else {
+                this.currentlyFreeTime.set(false);
+            }
             this.currentSharedMusic = null;
             this.totalBytes = 0;
             this.playTime = 0;
@@ -121,7 +141,8 @@ public class ServerMusicAgent {
                 ConcertoServer.LOGGER.info("Music agent paused");
                 this.isPlaying.set(false);
             } else {
-                ConcertoServer.LOGGER.info("Start playing music {}", this.currentMusic.getMeta().title());
+                ConcertoServer.LOGGER.info("Start playing music {}, duration {}",
+                        this.currentMusic.getMeta().title(), this.currentMusic.getMeta().getDuration());
                 if (ServerConfig.INSTANCE.options.musicAgentUseShared && this.currentMusic instanceof DynamicPath dynamicPath) {
                     String path = dynamicPath.getLastRawPath();
                     if (path != null) {
@@ -130,7 +151,7 @@ public class ServerMusicAgent {
                         ConcertoServer.LOGGER.warn("Cannot play music {}", this.currentMusic.getMeta().title());
                         this.broadcast(Text.translatable("concerto.agent.play.failed",
                                 this.currentMusic.getMeta().title(), this.currentMusic.getMeta().author()));
-                        this.playNextFuture = this.musicScheduler.schedule(this::playNextMusic, 1, TimeUnit.SECONDS);
+                        this.schedulePlayNext(0, false);
                         return;
                     }
                     this.currentSharedMusic = new SharedMusic(path, this.currentMusic.getMeta(),
@@ -141,8 +162,7 @@ public class ServerMusicAgent {
                 this.isPlaying.set(true);
                 this.playTime = System.currentTimeMillis();
                 ServerMusicNetworkHandler.musicAgentSendMusic(this.getMembers(), this.currentSharedMusic);
-                this.playNextFuture = this.musicScheduler.schedule(this::playNextMusic,
-                        this.currentMusic.getMeta().getDuration().asSeconds(), TimeUnit.SECONDS);
+                this.schedulePlayNext(this.currentMusic.getMeta().getDuration().asSeconds(), false);
             }
         } catch (Exception e) {
             ConcertoServer.LOGGER.error("Play music failed", e);
@@ -173,8 +193,8 @@ public class ServerMusicAgent {
             this.broadcast(Text.translatable("concerto.agent.add",
                     player == null ? Text.translatable("concerto.unknown") : player.getName().getString(),
                     music.getMeta().title(), music.getMeta().author()));
-            if (!this.isPlaying.get()) {
-                this.playNextFuture = this.musicScheduler.schedule(this::playNextMusic, 1, TimeUnit.SECONDS);
+            if (!this.isPlaying.get() || this.currentlyFreeTime.get()) {
+                this.schedulePlayNext(0, false);
             }
         });
     }
@@ -182,7 +202,9 @@ public class ServerMusicAgent {
     public synchronized void playerJoin(ServerPlayerEntity player) {
         ConcertoServer.LOGGER.info("Player {} joined music agent", player.getName().getString());
         this.members.put(player, -1L);
-        if (this.isPlaying.get() && this.currentSharedMusic != null) {
+        if (!this.isPlaying.get() && this.hasNextMusic()) {
+            this.schedulePlayNext(0, false);
+        } else if (this.isPlaying.get() && this.currentSharedMusic != null) {
             MusicPlayer.run(() -> {
                 if (this.currentSharedMusic instanceof SharedMusic shared) {
                     shared.startTime = System.currentTimeMillis() - this.playTime;
@@ -198,6 +220,13 @@ public class ServerMusicAgent {
     public synchronized void playerQuit(ServerPlayerEntity player) {
         ConcertoServer.LOGGER.info("Player {} quited music agent", player.getName().getString());
         this.members.remove(player);
+    }
+
+    public synchronized void schedulePlayNext(int delay, boolean force) {
+        if (this.playNextFuture != null && !this.playNextFuture.isDone()) {
+            this.playNextFuture.cancel(force);
+        }
+        this.playNextFuture = this.musicScheduler.schedule(this::playNextMusic, delay, TimeUnit.SECONDS);
     }
 
     public synchronized void reset() {
@@ -218,6 +247,7 @@ public class ServerMusicAgent {
         this.totalBytes = 0;
         this.playTime = 0;
         this.isPlaying.set(false);
+        this.currentlyFreeTime.set(false);
 
         ConcertoServer.LOGGER.info("Reset server music agent");
     }

@@ -12,7 +12,6 @@ import net.minecraft.util.Formatting;
 import top.gregtao.concerto.enums.TextAlignment;
 
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
 import java.util.Base64;
 
 public class TextUtil {
@@ -69,20 +68,6 @@ public class TextUtil {
 
     public static String fromBase64(String str) {
         return new String(Base64.getDecoder().decode(str), StandardCharsets.UTF_8);
-    }
-
-    public static int getStringWidth(String s) {
-        s = s.replaceAll("[^\\x80-\\xff]", "**");
-        return s.length();
-    }
-
-    public static String cutIfTooLong(String str, int limit) {
-        limit += 1;
-        if (str.getBytes().length > limit) {
-            String str1 = new String(Arrays.copyOfRange(str.getBytes(), 0, limit));
-            return str1.substring(0, str1.length() - 2) + "...";
-        }
-        return str;
     }
 
     public static String trimSurrounding(String s, String r1, String r2) {

@@ -30,7 +30,7 @@ public class QQMusicApiClient extends HttpApiClient {
     public static final QQMusicUser LOCAL_USER = new QQMusicUser(INSTANCE);
 
     public QQMusicApiClient() {
-        super(Sources.QQ_MUSIC.name(), Map.of("Referer", "http://y.qq.com"), Map.of());
+        super(Sources.QQ_MUSIC.asString(), Map.of("Referer", "http://y.qq.com"), Map.of());
     }
 
     public HttpRequestBuilder openUApi() {

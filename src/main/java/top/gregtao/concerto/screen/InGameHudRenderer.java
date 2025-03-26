@@ -22,6 +22,8 @@ public class InGameHudRenderer {
         private float dx = 0, stopTicks = 0;
         private boolean stop = false, go_back = false;
 
+        private long lastRenderTime = 0;
+
         private void reset() {
             this.dx = 0;
             this.go_back = false;

@@ -7,6 +7,7 @@ import net.minecraft.client.gui.widget.TextFieldWidget;
 import net.minecraft.text.Text;
 import net.minecraft.text.TranslatableText;
 import top.gregtao.concerto.api.UnsafeMusicException;
+import top.gregtao.concerto.config.ClientConfig;
 import top.gregtao.concerto.music.*;
 import top.gregtao.concerto.music.list.NeteaseCloudPlaylist;
 import top.gregtao.concerto.player.MusicPlayer;
@@ -53,7 +54,7 @@ public class AddMusicScreen extends ApplyDraggedFileScreen {
         this.addLabel(new TranslatableText("concerto.screen.add.internet"), this.width / 2, 70,
                 str -> MusicPlayer.INSTANCE.addMusicHere(new HttpFileMusic(str), true));
         this.addLabel(new TranslatableText("concerto.screen.add.netease_cloud"), this.width / 2, 95,
-                str -> MusicPlayer.INSTANCE.addMusicHere(new NeteaseCloudMusic(str, NeteaseCloudMusic.Level.HIRES), true));
+                str -> MusicPlayer.INSTANCE.addMusicHere(new NeteaseCloudMusic(str, ClientConfig.INSTANCE.options.neteaseMusicQuality), true));
         this.addLabel(new TranslatableText("concerto.screen.add.netease_cloud.playlist"), this.width / 2, 120, str -> {
             NeteaseCloudPlaylist playlist = new NeteaseCloudPlaylist(str, false);
             playlist.load(() -> MinecraftClient.getInstance().setScreen(new PlaylistPreviewScreen(playlist, this)));
@@ -66,7 +67,7 @@ public class AddMusicScreen extends ApplyDraggedFileScreen {
                 str -> MusicPlayer.INSTANCE.addMusicHere(new QQMusic(str), true, () -> {
                     if (!MusicPlayer.INSTANCE.started) MusicPlayer.INSTANCE.start();
                 }));
-        this.addLabel(new TranslatableText("concerto.screen.add.bilibili"), this.width / 2, 195,
-                str -> MusicPlayer.INSTANCE.addMusicHere(new BilibiliMusic(str), true));
+//        this.addLabel(new TranslatableText("concerto.screen.add.bilibili"), this.width / 2, 195,
+//                str -> MusicPlayer.INSTANCE.addMusicHere(new BilibiliMusic(str), true));
     }
 }

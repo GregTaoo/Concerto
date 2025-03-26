@@ -33,8 +33,8 @@ public class QRCodeRenderer {
                 image.setColorArgb(i, j, matrix.get(i, j) ? BLACK : WHITE);
             }
         }
-        TEXTURE = new NativeImageBackedTexture(image);
         IDENTIFIER = Identifier.of(ConcertoClient.MOD_ID, "qrcode");
+        TEXTURE = new NativeImageBackedTexture(IDENTIFIER::toString, image);
         MinecraftClient.getInstance().getTextureManager().registerTexture(IDENTIFIER, TEXTURE);
     }
 

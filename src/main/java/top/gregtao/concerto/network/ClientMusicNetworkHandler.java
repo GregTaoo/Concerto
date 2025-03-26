@@ -59,7 +59,7 @@ public class ClientMusicNetworkHandler {
                 if (packet.to.equals("@a")) {
                     player.sendChatMessage(code);
                 } else {
-                    player.sendChatMessage("msg " + packet.to + " \"" + code + "\"");
+                    player.sendChatMessage("/msg " + packet.to + " \"" + code + "\"");
                 }
             }
             return;

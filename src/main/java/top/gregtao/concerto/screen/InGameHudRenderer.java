@@ -6,6 +6,7 @@ import net.minecraft.client.gui.DrawableHelper;
 import net.minecraft.client.gui.screen.ChatScreen;
 import net.minecraft.client.util.Window;
 import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.text.LiteralText;
 import net.minecraft.text.Text;
 import net.minecraft.text.TranslatableText;
 import top.gregtao.concerto.ConcertoClient;
@@ -13,6 +14,7 @@ import top.gregtao.concerto.config.ClientConfig;
 import top.gregtao.concerto.player.MusicPlayer;
 import top.gregtao.concerto.player.MusicPlayerHandler;
 import top.gregtao.concerto.util.TextUtil;
+import top.gregtao.concerto.util.Vector2i;
 
 public class InGameHudRenderer {
 
@@ -24,6 +26,8 @@ public class InGameHudRenderer {
         private int width = 0, maxWidth = 0;
         private float dx = 0, stopTicks = 0;
         private boolean stop = false, go_back = false;
+
+        private long lastRenderTime = 0;
 
         private void reset() {
             this.dx = 0;
@@ -42,10 +46,17 @@ public class InGameHudRenderer {
             this.maxWidth = maxWidth;
         }
 
+        public long getRenderTimeDelta() {
+            long delta = System.currentTimeMillis() - this.lastRenderTime;
+            delta = Math.min(delta, 100);
+            this.lastRenderTime = System.currentTimeMillis();
+            return delta;
+        }
+
         public void tick(float speed) {
             if (this.width <= this.maxWidth) return;
 
-            float delta = speed * 40f / MinecraftClient.getInstance().getCurrentFps();
+            float delta = speed * 0.04f * this.getRenderTimeDelta();
             if (this.stop) {
                 this.stopTicks -= delta;
                 if (this.stopTicks <= 0) {
@@ -97,16 +108,16 @@ public class InGameHudRenderer {
                 matrixStack.push();
                 if (options.displayLyrics) {
                     Vector2i pos = config.lyricsPosSupplier.getPos(scaledWidth, scaledHeight);
-                    TextUtil.renderText(Text.literal(texts[0]), options.lyricsAlignment,
-                            pos.x, pos.y, matrices, client.textRenderer, (int) config.lyricsColor.getNumber());
+                    TextUtil.renderText(new LiteralText(texts[0]), options.lyricsAlignment,
+                            pos.getX(), pos.getY(), matrixStack, client.textRenderer, (int) config.lyricsColor.getNumber());
                 }
                 if (options.displaySubLyrics) {
                     Vector2i pos = config.subLyricsPosSupplier.getPos(scaledWidth, scaledHeight);
-                    TextUtil.renderText(Text.literal(texts[1]), options.subLyricsAlignment,
-                            pos.x, pos.y, matrices, client.textRenderer, (int) config.subLyricsColor.getNumber());
+                    TextUtil.renderText(new LiteralText(texts[1]), options.subLyricsAlignment,
+                            pos.getX(), pos.getY(), matrixStack, client.textRenderer, (int) config.subLyricsColor.getNumber());
                 }
 
-                Text text3 = Text.literal(texts[3]);
+                Text text3 = new LiteralText(texts[3]);
                 int text3Width = client.textRenderer.getWidth(text3);
 
                 if (options.displayMusicDetails) {
@@ -117,36 +128,36 @@ public class InGameHudRenderer {
                             (ConcertoClient.clientState == ConcertoClient.ClientState.MUSIC_ROOM ? " | " + new TranslatableText("concerto.room").getString() : "")
                             : "";
 
-                    Text text2 = Text.literal(texts[2] + state);
+                    Text text2 = new LiteralText(texts[2] + state);
                     MUSIC_DETAIL_SCROLL.setMaxWidth(text3Width);
                     MUSIC_DETAIL_SCROLL.setWidth(client.textRenderer.getWidth(text2));
                     MUSIC_DETAIL_SCROLL.tick(options.scrollingTextSpeed);
 
-                    int startX = TextUtil.getTextRenderX(text3, options.musicDetailsAlignment, client.textRenderer, pos.x);
-                    enableScissor(startX, pos.y, startX + text3Width, pos.y + client.textRenderer.fontHeight);
+                    int startX = TextUtil.getTextRenderX(text3, options.musicDetailsAlignment, client.textRenderer, pos.getX());
+                    enableScissor(startX, pos.getY(), startX + text3Width, pos.getY() + client.textRenderer.fontHeight);
                     DrawableHelper.drawTextWithShadow(
-                            matrices, client.textRenderer, text2, startX + MUSIC_DETAIL_SCROLL.getDx(),
-                            pos.y, (int) config.musicDetailsColor.getNumber()
+                            matrixStack, client.textRenderer, text2, startX + MUSIC_DETAIL_SCROLL.getDx(),
+                            pos.getY(), (int) config.musicDetailsColor.getNumber()
                     );
                     disableScissor();
                 }
                 if (options.displayTimeProgress) {
                     Vector2i pos = config.timeProgressPosSupplier.getPos(scaledWidth, scaledHeight);
                     TextUtil.renderText(text3, options.timeProgressAlignment,
-                            pos.x, pos.y, matrices, client.textRenderer, (int) config.timeProgressTextColor.getNumber());
+                            pos.getX(), pos.getY(), matrixStack, client.textRenderer, (int) config.timeProgressTextColor.getNumber());
                     int blankWidth = client.textRenderer.getWidth("                              "); // 兼容不同字体
                     int timeWidth = (text3Width - blankWidth) / 2;
                     if (MusicPlayerHandler.INSTANCE.currentMeta != null && MusicPlayerHandler.INSTANCE.currentMeta.getDuration() != null) {
                         int x;
                         switch (options.timeProgressAlignment) {
-                            case LEFT -> x = pos.x + timeWidth + 9;
-                            case CENTER -> x = pos.x - blankWidth / 2 - 10;
-                            default -> x = pos.x - blankWidth - 15;
+                            case LEFT -> x = pos.getX() + timeWidth + 9;
+                            case CENTER -> x = pos.getX() - blankWidth / 2 - 10;
+                            default -> x = pos.getX() - blankWidth - 15;
                         }
-                        DrawableHelper.fill(matrices, x, pos.y + 3, x + blankWidth - 20, pos.y + 5,
+                        DrawableHelper.fill(matrixStack, x, pos.getY() + 3, x + blankWidth - 20, pos.getY() + 5,
                                 (int) config.timeProgressBgColor.getNumber());
-                        DrawableHelper.fill(matrices, x, pos.y + 3, (int) (x + (blankWidth - 20) * MusicPlayerHandler.INSTANCE.progressPercentage),
-                                pos.y + 5, (int) config.timeProgressColor.getNumber());
+                        DrawableHelper.fill(matrixStack, x, pos.getY() + 3, (int) (x + (blankWidth - 20) * MusicPlayerHandler.INSTANCE.progressPercentage),
+                                pos.getY() + 5, (int) config.timeProgressColor.getNumber());
                     }
                 }
                 matrixStack.pop();

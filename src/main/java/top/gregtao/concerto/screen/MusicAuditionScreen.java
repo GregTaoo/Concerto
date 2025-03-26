@@ -48,7 +48,7 @@ public class MusicAuditionScreen extends ConcertoScreen {
             ClientPlayerEntity player = MinecraftClient.getInstance().player;
             ConcertoListWidget<Pair<Music, UUID>>.Entry entry = this.widget.getSelected();
             if (player != null && entry != null) {
-                player.sendChatMessage("concerto-server audit " + entry.item.getSecond());
+                player.sendChatMessage("/concerto-server audit " + entry.item.getSecond());
                 this.widget.removeEntryWithoutScrolling(entry);
             }
         }));
@@ -58,7 +58,7 @@ public class MusicAuditionScreen extends ConcertoScreen {
             ClientPlayerEntity player = MinecraftClient.getInstance().player;
             ConcertoListWidget<Pair<Music, UUID>>.Entry entry = this.widget.getSelected();
             if (player != null && entry != null) {
-                player.sendChatMessage("concerto-server audit reject " + entry.item.getSecond());
+                player.sendChatMessage("/concerto-server audit reject " + entry.item.getSecond());
                 this.widget.removeEntryWithoutScrolling(entry);
             }
         }));
@@ -67,7 +67,7 @@ public class MusicAuditionScreen extends ConcertoScreen {
                 new TranslatableText("concerto.reject.all"), button -> {
             ClientPlayerEntity player = MinecraftClient.getInstance().player;
             if (player != null) {
-                player.sendChatMessage("concerto-server audit reject all");
+                player.sendChatMessage("/concerto-server audit reject all");
                 this.widget.clear();
             }
         }));

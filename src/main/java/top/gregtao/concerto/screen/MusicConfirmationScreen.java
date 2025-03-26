@@ -41,7 +41,7 @@ public class MusicConfirmationScreen extends ConcertoScreen {
             ClientPlayerEntity player = MinecraftClient.getInstance().player;
             ConcertoListWidget<Pair<Music, UUID>>.Entry entry = this.widget.getSelected();
             if (player != null && entry != null) {
-                player.sendChatMessage("sharemusic accept " + entry.item.getSecond());
+                player.sendChatMessage("/sharemusic accept " + entry.item.getSecond());
                 this.widget.removeEntryWithoutScrolling(entry);
             }
         }));
@@ -50,7 +50,7 @@ public class MusicConfirmationScreen extends ConcertoScreen {
             ClientPlayerEntity player = MinecraftClient.getInstance().player;
             ConcertoListWidget<Pair<Music, UUID>>.Entry entry = this.widget.getSelected();
             if (player != null && entry != null) {
-                player.sendChatMessage("sharemusic reject " + entry.item.getSecond());
+                player.sendChatMessage("/sharemusic reject " + entry.item.getSecond());
                 this.widget.removeEntryWithoutScrolling(entry);
             }
         }));
@@ -59,7 +59,7 @@ public class MusicConfirmationScreen extends ConcertoScreen {
                 new TranslatableText("concerto.reject.all"), button -> {
             ClientPlayerEntity player = MinecraftClient.getInstance().player;
             if (player != null) {
-                player.sendChatMessage("sharemusic reject all");
+                player.sendChatMessage("/sharemusic reject all");
                 this.widget.clear();
             }
         }));

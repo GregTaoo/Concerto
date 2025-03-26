@@ -30,7 +30,7 @@ public class QQMusicApiClient extends HttpApiClient {
     public static final QQMusicUser LOCAL_USER = new QQMusicUser(INSTANCE);
 
     public QQMusicApiClient() {
-        super(Sources.QQ_MUSIC.name(), Map.of("Referer", "http://y.qq.com"), Map.of());
+        super(Sources.QQ_MUSIC.asString(), Map.of("Referer", "http://y.qq.com"), Map.of());
     }
 
     public HttpRequestBuilder openUApi() {
@@ -297,7 +297,7 @@ public class QQMusicApiClient extends HttpApiClient {
         return this.requestSignedApi(module, method, param.substring(1, param.length() - 1));
     }
 
-    public Pair<ArrayList<Music>, PlaylistMetaData> getPlayList(String id) throws IOException, URISyntaxException {
+    public Pair<ArrayList<Music>, PlaylistMetaData> getPlaylist(String id) throws IOException, URISyntaxException {
         String data = this.openCApi().url("https://c.y.qq.com/qzone/fcg-bin/fcg_ucc_getcdinfo_byids_cp.fcg?utf8=1&type=1&hostUin=" + this.getQQUin() + "&loginUin=" + this.getQQUin() + "&disstid=" + id).setFixedReferer("https://y.qq.com/").get().body();
         data = data.substring(13, data.length() - 1);
         JsonObject object = JsonUtil.from(data).getAsJsonArray("cdlist").get(0).getAsJsonObject();

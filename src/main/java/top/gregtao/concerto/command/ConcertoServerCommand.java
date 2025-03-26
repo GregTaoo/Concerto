@@ -69,7 +69,8 @@ public class ConcertoServerCommand {
                                 )
                         )
                 ).then(
-                        CommandManager.literal("reload").executes(context -> {
+                        CommandManager.literal("reload").requires(source -> source.hasPermissionLevel(2))
+                                .executes(context -> {
                             ConcertoServer.reload();
                             return 0;
                         })

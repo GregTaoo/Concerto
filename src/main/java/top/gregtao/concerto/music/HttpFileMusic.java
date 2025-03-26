@@ -32,7 +32,7 @@ public class HttpFileMusic extends PathFileMusic implements CacheableMusic {
     @Override
     public void load() {
         this.setMusicMeta(new TimelessMusicMetaData(
-                TextUtil.getTranslatable("ah.unknown"), this.getRawPath(),
+                TextUtil.getTranslatable("concerto.unknown"), this.getRawPath(),
                 Sources.INTERNET.getName().getString()
         ));
         super.load();
@@ -45,7 +45,8 @@ public class HttpFileMusic extends PathFileMusic implements CacheableMusic {
 
     @Override
     public String getSuffix() {
-        return HttpUtil.getSuffix(this.getRawPath());
+        String suffix = HttpUtil.getSuffix(this.getRawPath());
+        return suffix.contains("/") ? "mp3" : suffix;
     }
 
     @Override

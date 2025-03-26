@@ -40,8 +40,8 @@ public class URLImageWidget implements Drawable, Widget, Closeable {
         this.x = x;
         this.y = y;
         this.url = url;
-        this.texture = new NativeImageBackedTexture(width << 3, height << 3, false);
         this.textureId = Identifier.of(ConcertoClient.MOD_ID, "image");
+        this.texture = new NativeImageBackedTexture(this.textureId.toString(), width << 3, height << 3, false);
         MinecraftClient.getInstance().getTextureManager().registerTexture(this.textureId, this.texture);
     }
 
@@ -101,7 +101,6 @@ public class URLImageWidget implements Drawable, Widget, Closeable {
                 this.writeCacheFile(image);
             }
             this.texture.setImage(toNativeImage(image));
-            this.texture.upload();
             this.loading = false;
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -123,7 +122,6 @@ public class URLImageWidget implements Drawable, Widget, Closeable {
                 this.writeCacheFile(image);
             }
             this.texture.setImage(toNativeImage(image));
-            this.texture.upload();
             this.loading = false;
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -145,6 +143,7 @@ public class URLImageWidget implements Drawable, Widget, Closeable {
         } else {
             NativeImage image = this.texture.getImage();
             if (image != null && !this.loading) {
+                this.texture.upload();
                 DrawContext drawContext = new DrawContext(MinecraftClient.getInstance(),
                         ((DrawContextAccessor) context).getVertexConsumers());
                 drawContext.getMatrices().scale(0.125f, 0.125f, 1);

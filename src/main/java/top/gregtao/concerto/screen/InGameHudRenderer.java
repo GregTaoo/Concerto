@@ -1,8 +1,10 @@
 package top.gregtao.concerto.screen;
 
+import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawableHelper;
 import net.minecraft.client.gui.screen.ChatScreen;
+import net.minecraft.client.util.Window;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.Text;
 import org.joml.Vector2i;
@@ -65,6 +67,21 @@ public class InGameHudRenderer {
         }
     }
 
+    public static void enableScissor(int x1, int y1, int x2, int y2) {
+        Window window = MinecraftClient.getInstance().getWindow();
+        int bufferHeight = window.getFramebufferHeight();
+        double scaleFactor = window.getScaleFactor();
+        int rX1 = (int) (x1 * scaleFactor);
+        int rY1 = (int) (bufferHeight - y2 * scaleFactor);
+        int rWidth = (int) ((x2 - x1) * scaleFactor);
+        int rHeight = (int) ((y2 - y1) * scaleFactor);
+        RenderSystem.enableScissor(rX1, rY1, Math.max(0, rWidth), Math.max(0, rHeight));
+    }
+
+    public static void disableScissor() {
+        RenderSystem.disableScissor();
+    }
+
     public static void render(MatrixStack matrices) {
         MinecraftClient client = MinecraftClient.getInstance();
         if (MusicPlayer.INSTANCE.isPlaying()) {
@@ -104,12 +121,12 @@ public class InGameHudRenderer {
                     MUSIC_DETAIL_SCROLL.tick(options.scrollingTextSpeed);
 
                     int startX = TextUtil.getTextRenderX(text3, options.musicDetailsAlignment, client.textRenderer, pos.x);
-                    context.enableScissor(startX, pos.y, startX + text3Width, pos.y + client.textRenderer.fontHeight);
-                    context.drawTextWithShadow(
-                            client.textRenderer, text2, startX + MUSIC_DETAIL_SCROLL.getDx(),
+                    enableScissor(startX, pos.y, startX + text3Width, pos.y + client.textRenderer.fontHeight);
+                    DrawableHelper.drawTextWithShadow(
+                            matrices, client.textRenderer, text2, startX + MUSIC_DETAIL_SCROLL.getDx(),
                             pos.y, (int) config.musicDetailsColor.getNumber()
                     );
-                    context.disableScissor();
+                    disableScissor();
                 }
                 if (options.displayTimeProgress) {
                     Vector2i pos = config.timeProgressPosSupplier.getPos(scaledWidth, scaledHeight);

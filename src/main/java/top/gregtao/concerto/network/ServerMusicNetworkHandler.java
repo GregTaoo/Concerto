@@ -205,7 +205,7 @@ public class ServerMusicNetworkHandler {
     public static void playerJoinHandshake(ServerPlayerEntity player) {
         PacketByteBuf packetByteBuf = PacketByteBufs.create();
         packetByteBuf.writeString(ConcertoNetworking.HANDSHAKE_STRING + "CallJoin:" + player.getName().getString()
-                        + (ServerConfig.INSTANCE.options.agentInviteWhenJoin ? ":Invite" : ""));
+                        + (ServerConfig.INSTANCE.options.serverMusicAgent && ServerConfig.INSTANCE.options.agentInviteWhenJoin ? ":Invite" : ""));
         ServerPlayNetworking.send(player, ConcertoNetworking.HANDSHAKE, packetByteBuf);
         sendS2CAllAuditionData(player);
         sendS2CPresetRadiosPacket(player);

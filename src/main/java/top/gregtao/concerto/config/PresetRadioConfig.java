@@ -7,6 +7,7 @@ import top.gregtao.concerto.ConcertoClient;
 import top.gregtao.concerto.ConcertoServer;
 import top.gregtao.concerto.api.MusicJsonParsers;
 import top.gregtao.concerto.music.list.Playlist;
+import top.gregtao.concerto.network.room.ServerMusicAgent;
 import top.gregtao.concerto.util.JsonUtil;
 
 import java.io.File;
@@ -52,6 +53,10 @@ public class PresetRadioConfig {
                     if (playlist == null) {
                         throw new IOException();
                     } else {
+                        if (file.getName().toLowerCase().endsWith("music_agent.json")) {
+                            ServerMusicAgent.INSTANCE.freeTimePlaylist.addAll(playlist.getList());
+                            ConcertoServer.LOGGER.info("Free time playlist for server music agent is loaded.");
+                        }
                         this.radios.add(playlist);
                         ConcertoServer.LOGGER.info("Loaded preset radio: {} in {}",
                                 playlist.getMeta().title(), file.getName());

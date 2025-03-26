@@ -150,7 +150,7 @@ public class NeteaseCloudMusicCommand {
     public static int addPlaylistExecutor(CommandContext<FabricClientCommandSource> context) {
         String id = StringArgumentType.getString(context, "id");
         return MusicAdderBuilder.executePlayList(context, Pair.of(
-                () -> NeteaseCloudApiClient.INSTANCE.getPlayList(id,
+                () -> NeteaseCloudApiClient.INSTANCE.getPlaylist(id,
                         NeteaseLevelArgumentType.getOrderType(context, "level")).getFirst(),
                 Text.translatable("concerto.playlist.netease_cloud.add", id)
         ));

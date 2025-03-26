@@ -13,7 +13,6 @@ import net.minecraft.util.Formatting;
 import top.gregtao.concerto.enums.TextAlignment;
 
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
 import java.util.Base64;
 
 public class TextUtil {
@@ -34,15 +33,18 @@ public class TextUtil {
         if (player != null) player.sendMessage(text);
     }
 
-    public static void renderText(Text text, TextAlignment align, int x, int y, MatrixStack matrices, TextRenderer renderer, int color) {
-        OrderedText orderedText = text.asOrderedText();
-        int realX = x, textWidth = renderer.getWidth(orderedText);
+    public static int getTextRenderX(Text text, TextAlignment align, TextRenderer renderer, int x) {
+        int realX = x, textWidth = renderer.getWidth(text);
         if (align == TextAlignment.CENTER) {
             realX -= textWidth / 2;
         } else if (align == TextAlignment.RIGHT) {
             realX -= textWidth;
         }
-        DrawableHelper.drawTextWithShadow(matrices, renderer, orderedText, realX, y, color);
+        return realX;
+    }
+
+    public static void renderText(Text text, TextAlignment align, int x, int y, MatrixStack matrices, TextRenderer renderer, int color) {
+        DrawableHelper.drawTextWithShadow(matrices, renderer, text, getTextRenderX(text, align, renderer, x), y, color);
     }
 
     public static Style getRunCommandStyle(String command) {
@@ -67,20 +69,6 @@ public class TextUtil {
 
     public static String fromBase64(String str) {
         return new String(Base64.getDecoder().decode(str), StandardCharsets.UTF_8);
-    }
-
-    public static int getStringWidth(String s) {
-        s = s.replaceAll("[^\\x80-\\xff]", "**");
-        return s.length();
-    }
-
-    public static String cutIfTooLong(String str, int limit) {
-        limit += 1;
-        if (str.getBytes().length > limit) {
-            String str1 = new String(Arrays.copyOfRange(str.getBytes(), 0, limit));
-            return str1.substring(0, str1.length() - 2) + "...";
-        }
-        return str;
     }
 
     public static String trimSurrounding(String s, String r1, String r2) {

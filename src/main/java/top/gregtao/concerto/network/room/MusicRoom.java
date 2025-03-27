@@ -23,7 +23,7 @@ import java.util.*;
 
 public class MusicRoom {
 
-    //TODO: optimization required
+    //TODO: 或许需要重写，但是没空了
 
     public static final Map<UUID, MusicRoom> ROOMS = new HashMap<>(); // Server side
 

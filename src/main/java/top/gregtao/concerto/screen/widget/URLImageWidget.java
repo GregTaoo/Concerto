@@ -99,7 +99,7 @@ public class URLImageWidget implements Drawable, Widget, Closeable {
                 image = ImageIO.read(this.getFromCache());
             } else {
                 image = resizeImage(ImageIO.read(URI.create(this.url).toURL()), this.width << 3, this.height << 3);
-                this.writeCacheFile(image);
+                if (useCache) this.writeCacheFile(image);
             }
             this.texture.setImage(toNativeImage(image));
             this.loading = false;
@@ -122,7 +122,7 @@ public class URLImageWidget implements Drawable, Widget, Closeable {
                 image = ImageIO.read(this.getFromCache());
             } else {
                 image = resizeImage(ImageIO.read(new ByteArrayInputStream(imageSupplier.apply(this.url))), this.width << 3, this.height << 3);
-                this.writeCacheFile(image);
+                if (useCache) this.writeCacheFile(image);
             }
             this.texture.setImage(toNativeImage(image));
             this.loading = false;

@@ -59,8 +59,7 @@ public class MusicCommand {
             context -> {
                 HttpFileMusic music = new HttpFileMusic(StringArgumentType.getString(context, "path"));
                 return Pair.of(music, Text.translatable(Sources.INTERNET.getKey("add"), music.getRawPath()));
-            },
-            NeteaseCloudMusicCommand::musicGetter
+            }
     );
 
     public static LiteralArgumentBuilder<FabricClientCommandSource> registerPlayerControllers(
@@ -265,19 +264,6 @@ public class MusicCommand {
                                 context -> MusicAdderBuilder.execute(context, GETTERS.get(1).get(context), false)
                         )
                 )
-        ).then(
-                ClientCommandManager.literal("163").then(
-                        NeteaseCloudMusicCommand.builderWithIdAndLevel(
-                                context -> MusicAdderBuilder.execute(context, GETTERS.get(2).get(context), false))
-                ).then(
-                        ClientCommandManager.literal("playlist").then(
-                                NeteaseCloudMusicCommand.builderWithIdAndLevel(NeteaseCloudMusicCommand::addPlaylistExecutor)
-                        )
-                ).then(
-                        ClientCommandManager.literal("album").then(
-                                NeteaseCloudMusicCommand.builderWithIdAndLevel(NeteaseCloudMusicCommand::addAlbumExecutor)
-                        )
-                )
         );
     }
 
@@ -292,12 +278,6 @@ public class MusicCommand {
                 ClientCommandManager.literal("http").then(
                         ClientCommandManager.argument("path", StringArgumentType.string()).executes(
                                 context -> MusicAdderBuilder.execute(context, GETTERS.get(1).get(context), true)
-                        )
-                )
-        ).then(
-                ClientCommandManager.literal("163").then(
-                        ClientCommandManager.argument("id", StringArgumentType.string()).executes(
-                                context -> MusicAdderBuilder.execute(context, GETTERS.get(2).get(context), true)
                         )
                 )
         );

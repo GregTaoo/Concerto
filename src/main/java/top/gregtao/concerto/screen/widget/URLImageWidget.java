@@ -19,7 +19,8 @@ import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.*;
-import java.net.URL;
+import java.net.MalformedURLException;
+import java.net.URI;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -29,12 +30,12 @@ public class URLImageWidget implements Drawable, Widget, Closeable {
     protected int height;
     private int x;
     private int y;
-    private URL url;
+    private String url;
     private final NativeImageBackedTexture texture;
     private final Identifier textureId;
     private boolean loading = true;
 
-    public URLImageWidget(int width, int height, int x, int y, URL url) {
+    public URLImageWidget(int width, int height, int x, int y, String url) {
         this.height = height;
         this.width = width;
         this.x = x;
@@ -63,12 +64,12 @@ public class URLImageWidget implements Drawable, Widget, Closeable {
         }
     }
 
-    public void setUrl(URL url) {
+    public void setUrl(String url) {
         this.url = url;
     }
 
     public String getFileName() {
-        return HashUtil.md5(this.url.toString()) + ".png";
+        return HashUtil.md5(this.url) + ".png";
     }
 
     public boolean cacheExists() {
@@ -97,21 +98,23 @@ public class URLImageWidget implements Drawable, Widget, Closeable {
             if (useCache && this.cacheExists()) {
                 image = ImageIO.read(this.getFromCache());
             } else {
-                image = resizeImage(ImageIO.read(this.url), this.width << 3, this.height << 3);
+                image = resizeImage(ImageIO.read(URI.create(this.url).toURL()), this.width << 3, this.height << 3);
                 this.writeCacheFile(image);
             }
             this.texture.setImage(toNativeImage(image));
             this.loading = false;
+        } catch (MalformedURLException e) {
+            throw new RuntimeException("Malformed URL: " + this.url, e);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
 
-    public void loadImage(Function<URL, byte[]> imageSupplier) {
+    public void loadImage(Function<String, byte[]> imageSupplier) {
         this.loadImage(imageSupplier, true);
     }
 
-    public void loadImage(Function<URL, byte[]> imageSupplier, boolean useCache) {
+    public void loadImage(Function<String, byte[]> imageSupplier, boolean useCache) {
         try {
             this.loading = true;
             BufferedImage image;

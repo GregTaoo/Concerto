@@ -156,7 +156,7 @@ public class QQMusicApiClient extends HttpApiClient {
         String[] args = key.split(":");
         if (args.length != 2) return Pair.of(-1, "");
         String url = "https://lp.open.weixin.qq.com/connect/l/qrconnect?uuid=" + args[0] + "&_=" + args[1];
-        String result = this.openUApi().addFixedHeader("Host", "https://lp.open.weixin.qq.com").url(url).get().body();
+        String result = this.openUApi().url(url).get().body();
         Matcher matcher = WECHAT_QRKEY_UPDATE_PATTERN.matcher(result);
         if (!matcher.find()) return Pair.of(-1, "");
         return Pair.of(MathUtil.parseIntOrElse(matcher.group(1), -1), matcher.group(2));

@@ -2,9 +2,7 @@ package top.gregtao.concerto.http.netease;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
-import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.text.Text;
-import top.gregtao.concerto.ConcertoClient;
 import top.gregtao.concerto.config.ClientConfig;
 import top.gregtao.concerto.enums.SearchType;
 import top.gregtao.concerto.enums.Sources;
@@ -17,7 +15,6 @@ import top.gregtao.concerto.music.list.NeteaseCloudPlaylist;
 import top.gregtao.concerto.music.meta.music.TimelessMusicMetaData;
 import top.gregtao.concerto.music.meta.music.list.PlaylistMetaData;
 import top.gregtao.concerto.player.MusicPlayerHandler;
-import top.gregtao.concerto.screen.QRCodeRenderer;
 import top.gregtao.concerto.util.HashUtil;
 import top.gregtao.concerto.util.JsonUtil;
 import top.gregtao.concerto.util.MathUtil;
@@ -25,11 +22,10 @@ import top.gregtao.concerto.util.Pair;
 
 import java.net.http.HttpResponse;
 import java.util.*;
-import java.util.concurrent.CompletableFuture;
 
 public class NeteaseCloudApiClient extends HttpApiClient {
 
-    public static String APP_VERSION = "3.0.0.Beta";
+    public static String APP_VERSION = "3.1.6";
     public static Map<String, String> HEADERS = Map.of(
             "Referer", "https://music.163.com",
             "User-Agent", "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Safari/537.36 Chrome/91.0.4472.164 NeteaseMusicDesktop/" + APP_VERSION
@@ -258,46 +254,6 @@ public class NeteaseCloudApiClient extends HttpApiClient {
          songs.forEach(element -> musics.add(new NeteaseCloudMusic(element.getAsJsonObject(), ClientConfig.INSTANCE.options.neteaseMusicQuality)));
          return new FixedPlaylist(musics, new PlaylistMetaData(Text.translatable("concerto.source.netease_cloud").getString(),
                  Text.translatable("concerto.screen.daily_recommendation").getString(), "", ""), false);
-    }
-
-    public static CompletableFuture<Void> CURRENT_THREAD = null;
-
-    public static void checkQRCodeStatusProgress(PlayerEntity player, String uniKey) {
-        if (CURRENT_THREAD != null) {
-            CURRENT_THREAD.cancel(true);
-            return;
-        }
-        CURRENT_THREAD = CompletableFuture.runAsync(() -> {
-            try {
-                long wait = 120000;
-                while (wait > 0) {
-                    Pair<Integer, String> pair = INSTANCE.getQRCodeStatus(uniKey);
-                    int code = pair.getFirst();
-                    if (code == 801 || code == 802) {
-                        if (CURRENT_THREAD.isDone()) return;
-                        Thread.sleep(1000L);
-                        wait -= 1000;
-                    } else if (code == 800) {
-                        wait = -1;
-                        break;
-                    } else if (code == 803) {
-                        player.sendMessage(Text.translatable("concerto.login.163.qrcode.success"), false);
-                        LOCAL_USER.updateLoginStatus();
-                        break;
-                    } else {
-                        ConcertoClient.LOGGER.error("Unknown code {}, it may caused by networking problems.", code);
-                        break;
-                    }
-                }
-                if (wait <= 0) player.sendMessage(Text.translatable("concerto.login.163.qrcode.expired"), false);
-                QRCodeRenderer.clear();
-            } catch (Exception e) {
-                player.sendMessage(Text.translatable("concerto.login.163.qrcode.error"), false);
-                ConcertoClient.LOGGER.error("Error occurs while checking QR code scanning status.");
-                QRCodeRenderer.clear();
-                throw new RuntimeException(e);
-            }
-        });
     }
 
     public static Pair<Integer, String> getCodeAndMessage(JsonObject body) {

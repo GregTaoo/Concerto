@@ -4,8 +4,10 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.text.Text;
+import top.gregtao.concerto.ConcertoClient;
 import top.gregtao.concerto.http.netease.NeteaseCloudApiClient;
 import top.gregtao.concerto.screen.ConcertoScreen;
+import top.gregtao.concerto.screen.QRCodeRenderer;
 import top.gregtao.concerto.screen.login.CaptchaLoginScreen;
 import top.gregtao.concerto.screen.login.PasswordLoginScreen;
 import top.gregtao.concerto.screen.login.QRCodeLoginScreen;
@@ -96,8 +98,7 @@ public class NeteaseCloudLoginScreens extends ConcertoScreen {
                         throw new RuntimeException(e);
                     }
                 },
-                key -> NeteaseCloudApiClient.INSTANCE.getQRCodeLoginLink(key),
-                null,
+                url -> QRCodeRenderer.generateQRCode(NeteaseCloudApiClient.INSTANCE.getQRCodeLoginLink(url)),
                 key -> {
                     try {
                         Pair<Integer, String> pair = NeteaseCloudApiClient.INSTANCE.getQRCodeStatus(key);
@@ -113,10 +114,11 @@ public class NeteaseCloudLoginScreens extends ConcertoScreen {
                             return QRCodeLoginScreen.Status.EMPTY;
                         }
                     } catch (Exception e) {
+                        ConcertoClient.LOGGER.error("Error in Netease QR Login", e);
                         throw new RuntimeException(e);
                     }
                 },
-                false, 110, 110,
+                110, 110,
                 SOURCE_TEXT,
                 this
         );

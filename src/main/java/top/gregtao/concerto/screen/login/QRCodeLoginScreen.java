@@ -8,7 +8,6 @@ import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.text.Text;
 import top.gregtao.concerto.player.MusicPlayer;
 import top.gregtao.concerto.screen.ConcertoScreen;
-import top.gregtao.concerto.screen.QRCodeRenderer;
 import top.gregtao.concerto.screen.widget.URLImageWidget;
 
 import java.util.function.Function;
@@ -61,7 +60,6 @@ public class QRCodeLoginScreen extends ConcertoScreen {
                         player.sendMessage(Text.translatable("concerto.screen.login.qrcode.success"), false);
                     }
                     MinecraftClient.getInstance().setScreen(null);
-                    QRCodeRenderer.clear();
                 }
                 case WAITING -> {
                     if (!this.updaterLock) {

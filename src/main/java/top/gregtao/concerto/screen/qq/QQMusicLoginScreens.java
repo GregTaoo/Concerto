@@ -7,7 +7,7 @@ import net.minecraft.text.Text;
 import top.gregtao.concerto.ConcertoClient;
 import top.gregtao.concerto.http.qq.QQMusicApiClient;
 import top.gregtao.concerto.screen.ConcertoScreen;
-import top.gregtao.concerto.screen.QRCodeRenderer;
+import top.gregtao.concerto.util.QRCodeRenderer;
 import top.gregtao.concerto.screen.login.QRCodeLoginScreen;
 import top.gregtao.concerto.util.Pair;
 

@@ -7,7 +7,7 @@ import net.minecraft.text.Text;
 import top.gregtao.concerto.ConcertoClient;
 import top.gregtao.concerto.http.netease.NeteaseCloudApiClient;
 import top.gregtao.concerto.screen.ConcertoScreen;
-import top.gregtao.concerto.screen.QRCodeRenderer;
+import top.gregtao.concerto.util.QRCodeRenderer;
 import top.gregtao.concerto.screen.login.CaptchaLoginScreen;
 import top.gregtao.concerto.screen.login.PasswordLoginScreen;
 import top.gregtao.concerto.screen.login.QRCodeLoginScreen;

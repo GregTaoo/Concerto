@@ -49,12 +49,12 @@ public class QQMusicApiClient extends HttpApiClient {
         return String.valueOf((new Random().nextLong(1000000000L, 9999999999L)));
     }
 
-    public String getMP3Filename(String mid, String mediaMid) {
+    public String getMp3Filename(String mid, String mediaMid) {
         return "M800" + mid + mediaMid + ".mp3";
     }
 
     public String getOggFilename(String mid, String mediaMid) {
-        return "O400" + mid + mediaMid + ".ogg";
+        return "O800" + mid + mediaMid + ".ogg";
     }
 
     public String getQQUin() throws IOException, URISyntaxException {

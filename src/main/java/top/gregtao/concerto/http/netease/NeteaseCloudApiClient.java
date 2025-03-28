@@ -3,6 +3,7 @@ package top.gregtao.concerto.http.netease;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import net.minecraft.text.Text;
+import top.gregtao.concerto.ConcertoClient;
 import top.gregtao.concerto.config.ClientConfig;
 import top.gregtao.concerto.enums.SearchType;
 import top.gregtao.concerto.enums.Sources;
@@ -188,6 +189,7 @@ public class NeteaseCloudApiClient extends HttpApiClient {
                     .getAsJsonObject("playlist");
             return this.parsePlaylistJson(object, level, false);
         } catch (Exception e) {
+            ConcertoClient.LOGGER.warn("Error while getting playlist {}: {}", id, e.getMessage());
             return Pair.of(new ArrayList<>(), PlaylistMetaData.EMPTY);
         }
     }
@@ -198,6 +200,7 @@ public class NeteaseCloudApiClient extends HttpApiClient {
                     .get());
             return this.parseAlbumJson(object, level, false);
         } catch (Exception e) {
+            ConcertoClient.LOGGER.warn("Error while getting album {}: {}", id, e.getMessage());
             return Pair.of(new ArrayList<>(), PlaylistMetaData.EMPTY);
         }
     }
@@ -218,6 +221,7 @@ public class NeteaseCloudApiClient extends HttpApiClient {
             MusicPlayerHandler.loadInThreadPool(musics);
             return musics;
         } catch (Exception e) {
+            ConcertoClient.LOGGER.warn("Error while searching for music '{}': {}", keyword, e.getMessage());
             return new ArrayList<>();
         }
     }
@@ -230,6 +234,7 @@ public class NeteaseCloudApiClient extends HttpApiClient {
             array.forEach(element -> playlists.add(new NeteaseCloudPlaylist(element.getAsJsonObject(), false, true)));
             return playlists;
         } catch (Exception e) {
+            ConcertoClient.LOGGER.warn("Error while searching for playlist '{}': {}", keyword, e.getMessage());
             return new ArrayList<>();
         }
     }
@@ -242,6 +247,7 @@ public class NeteaseCloudApiClient extends HttpApiClient {
             array.forEach(element -> playlists.add(new NeteaseCloudPlaylist(element.getAsJsonObject(), true, true)));
             return playlists;
         } catch (Exception e) {
+            ConcertoClient.LOGGER.warn("Error while searching for album '{}': {}", keyword, e.getMessage());
             return new ArrayList<>();
         }
     }

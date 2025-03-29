@@ -11,9 +11,6 @@ import top.gregtao.concerto.network.ClientMusicNetworkHandler;
 import top.gregtao.concerto.player.MusicPlayer;
 import top.gregtao.concerto.screen.widget.URLImageWidget;
 
-import java.net.MalformedURLException;
-import java.net.URI;
-
 public class MusicInfoScreen extends ConcertoScreen {
 
     private URLImageWidget headPicture;
@@ -63,13 +60,9 @@ public class MusicInfoScreen extends ConcertoScreen {
 
     private void initInfo() {
         MusicMetaData meta = this.music.getMeta();
-        try {
-            if (!meta.headPictureUrl().isEmpty()) {
-                this.headPicture.setUrl(URI.create(meta.headPictureUrl()).toURL());
-                this.headPicture.loadImage();
-            }
-        } catch (MalformedURLException e) {
-            throw new RuntimeException(e);
+        if (!meta.headPictureUrl().isEmpty()) {
+            this.headPicture.setUrl(meta.headPictureUrl());
+            this.headPicture.loadImage();
         }
     }
 

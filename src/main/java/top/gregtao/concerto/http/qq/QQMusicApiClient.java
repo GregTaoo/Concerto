@@ -3,6 +3,7 @@ package top.gregtao.concerto.http.qq;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import org.apache.commons.lang3.RandomStringUtils;
+import top.gregtao.concerto.ConcertoClient;
 import top.gregtao.concerto.enums.SearchType;
 import top.gregtao.concerto.enums.Sources;
 import top.gregtao.concerto.http.HttpApiClient;
@@ -49,12 +50,12 @@ public class QQMusicApiClient extends HttpApiClient {
         return String.valueOf((new Random().nextLong(1000000000L, 9999999999L)));
     }
 
-    public String getMP3Filename(String mid, String mediaMid) {
+    public String getMp3Filename(String mid, String mediaMid) {
         return "M800" + mid + mediaMid + ".mp3";
     }
 
     public String getOggFilename(String mid, String mediaMid) {
-        return "O400" + mid + mediaMid + ".ogg";
+        return "O800" + mid + mediaMid + ".ogg";
     }
 
     public String getQQUin() throws IOException, URISyntaxException {
@@ -101,11 +102,13 @@ public class QQMusicApiClient extends HttpApiClient {
             String link = midUrlInfo.get("purl").getAsString();
             JsonArray sip = data.getAsJsonArray("sip");
             if (sip.isJsonNull() || sip.isEmpty() || link.isEmpty()) {
+                ConcertoClient.LOGGER.warn("Got empty link for QQ Music {}", mid);
                 return "";
             } else {
                 return sip.get(0).getAsString() + link;
             }
         } catch (IOException | URISyntaxException e) {
+            ConcertoClient.LOGGER.error("Error getting music link", e);
             throw new RuntimeException(e);
         }
     }
@@ -145,6 +148,7 @@ public class QQMusicApiClient extends HttpApiClient {
         try {
             return "https://open.weixin.qq.com/connect/confirm?uuid=" + key.substring(0, key.indexOf(":"));
         } catch (StringIndexOutOfBoundsException e) {
+            ConcertoClient.LOGGER.warn("Error while combining WeChat QR link", e);
             return "error";
         }
     }
@@ -156,7 +160,7 @@ public class QQMusicApiClient extends HttpApiClient {
         String[] args = key.split(":");
         if (args.length != 2) return Pair.of(-1, "");
         String url = "https://lp.open.weixin.qq.com/connect/l/qrconnect?uuid=" + args[0] + "&_=" + args[1];
-        String result = this.openUApi().addFixedHeader("Host", "https://lp.open.weixin.qq.com").url(url).get().body();
+        String result = this.openUApi().url(url).get().body();
         Matcher matcher = WECHAT_QRKEY_UPDATE_PATTERN.matcher(result);
         if (!matcher.find()) return Pair.of(-1, "");
         return Pair.of(MathUtil.parseIntOrElse(matcher.group(1), -1), matcher.group(2));
@@ -243,6 +247,7 @@ public class QQMusicApiClient extends HttpApiClient {
             return this.requestSignedApi("music.search.SearchCgiService", "DoSearchForQQMusicDesktop", "\"remoteplace\":\"txt.yqq." + type.qqSuffix + "\",\"searchid\":\"" + id + "\",\"search_type\":" + type.qqKey + ",\"query\":\"" + keyword + "\",\"page_num\":" + page + ",\"num_per_page\":20")
                     .getAsJsonObject("data").getAsJsonObject("body");
         } catch (IOException | URISyntaxException e) {
+            ConcertoClient.LOGGER.warn("Error searching for music {}", keyword, e);
             return null;
         }
     }

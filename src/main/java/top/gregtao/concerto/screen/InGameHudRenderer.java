@@ -149,8 +149,5 @@ public class InGameHudRenderer {
                 }
             }
         }
-        if (client.currentScreen == null || client.currentScreen instanceof ChatScreen) {
-            QRCodeRenderer.drawQRCode(matrices, 5, 5);
-        }
     }
 }

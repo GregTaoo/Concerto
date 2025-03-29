@@ -35,10 +35,10 @@ public class MusicCacheManager extends CacheManager {
     }
 
     public void addMusic(CacheableMusic music, String oldSuffix) throws UnsupportedAudioFileException, IOException, InterruptedException {
-//        JsonObject json = MusicJsonParsers.to(music.getMusic(), false);
-//        if (json == null) return;
-//        String md5 = HashUtil.md5(json.toString()), filename = md5 + "." + oldSuffix;
-//        this.addFile(filename, music.getMusic().getMusicSource());
+        JsonObject json = MusicJsonParsers.to(music.getMusic(), false);
+        if (json == null) return;
+        String md5 = HashUtil.md5(json.toString()), filename = md5 + "." + oldSuffix;
+        this.addFile(filename, music.getMusic().getMusicSource());
 //        File oldFile = super.getChild(filename), newFile = super.getChild(md5 + "." + music.getSuffix());
 //
 //        try {

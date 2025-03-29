@@ -13,6 +13,7 @@ import top.gregtao.concerto.screen.ConcertoScreen;
 import top.gregtao.concerto.screen.widget.URLImageWidget;
 
 import java.net.MalformedURLException;
+import java.net.URI;
 import java.net.URL;
 
 public class QQMusicIndexScreen extends ConcertoScreen {
@@ -35,11 +36,12 @@ public class QQMusicIndexScreen extends ConcertoScreen {
         URL avatarUrl;
         try {
             avatarUrl = (!this.loggedIn() || QQMusicApiClient.LOCAL_USER.avatarUrl.isEmpty()) ? null :
-                    new URL(QQMusicApiClient.LOCAL_USER.avatarUrl);
+                    URI.create(QQMusicApiClient.LOCAL_USER.avatarUrl).toURL();
         } catch (MalformedURLException e) {
             avatarUrl = null;
         }
-        this.avatar = new URLImageWidget(64, 64, this.width / 2 - 32, 110, avatarUrl);
+        this.avatar = new URLImageWidget(64, 64, this.width / 2 - 32, 110,
+                avatarUrl == null ? null : avatarUrl.toString());
         MusicPlayer.run(() -> this.avatar.loadImage());
     }
 

@@ -103,7 +103,7 @@ public class MusicRoomCommand {
     }
 
     public static boolean checkServerAvailable(ClientPlayerEntity player) {
-        if (!ConcertoClient.serverAvailable) {
+        if (!ConcertoClient.isServerAvailable()) {
             player.sendMessage(new TranslatableText("concerto.not_available"), false);
             return false;
         }

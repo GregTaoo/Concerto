@@ -6,6 +6,7 @@ import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.text.LiteralText;
 import net.minecraft.text.Text;
 import net.minecraft.text.TranslatableText;
+import top.gregtao.concerto.ConcertoClient;
 import top.gregtao.concerto.http.qq.QQMusicApiClient;
 import top.gregtao.concerto.screen.ConcertoScreen;
 import top.gregtao.concerto.screen.login.QRCodeLoginScreen;
@@ -34,10 +35,6 @@ public class QQMusicLoginScreens extends ConcertoScreen {
         ));
     }
 
-    private static boolean loginChecker() {
-        return QQMusicApiClient.LOCAL_USER.loggedIn;
-    }
-
     public QRCodeLoginScreen weChatQRLogin() {
         return new QRCodeLoginScreen(
                 () -> {
@@ -47,8 +44,7 @@ public class QQMusicLoginScreens extends ConcertoScreen {
                         throw new RuntimeException(e);
                     }
                 },
-                QQMusicApiClient.INSTANCE::combineWeChatQRLink,
-                null,
+                url -> QRCodeRenderer.generateQRCode(QQMusicApiClient.INSTANCE.combineWeChatQRLink(url)),
                 key -> {
                     try {
                         Pair<Integer, String> pair = QQMusicApiClient.INSTANCE.getWeChatQRStatus(key);
@@ -65,10 +61,11 @@ public class QQMusicLoginScreens extends ConcertoScreen {
                             return QRCodeLoginScreen.Status.EMPTY;
                         }
                     } catch (Exception e) {
+                        ConcertoClient.LOGGER.error("Error in WeChat QR Login", e);
                         throw new RuntimeException(e);
                     }
                 },
-                false, 110, 110,
+                110, 110,
                 SOURCE_TEXT,
                 this
         );
@@ -77,10 +74,9 @@ public class QQMusicLoginScreens extends ConcertoScreen {
     public QRCodeLoginScreen qqQRLogin() {
         return new QRCodeLoginScreen(
                 QQMusicApiClient.INSTANCE::getQQLoginQRLink,
-                null,
                 url -> {
                     try {
-                        return QQMusicApiClient.INSTANCE.openQQLoginApi().url(url.toString()).get(HttpResponse.BodyHandlers.ofByteArray()).body();
+                        return QQMusicApiClient.INSTANCE.openQQLoginApi().url(url).get(HttpResponse.BodyHandlers.ofByteArray()).body();
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
@@ -102,10 +98,11 @@ public class QQMusicLoginScreens extends ConcertoScreen {
                             return QRCodeLoginScreen.Status.EMPTY;
                         }
                     } catch (Exception e) {
+                        ConcertoClient.LOGGER.error("Error in QQ QR Login", e);
                         throw new RuntimeException(e);
                     }
                 },
-                true, 111, 111,
+                111, 111,
                 SOURCE_TEXT,
                 this
         );

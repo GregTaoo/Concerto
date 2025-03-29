@@ -80,9 +80,8 @@ public class NeteaseCloudUserScreen extends PageScreen {
                 new TranslatableText("concerto.screen.logout"), button -> {
             if (this.loggedIn()) {
                 NeteaseCloudApiClient.LOCAL_USER.logout();
-            } else {
-                MinecraftClient.getInstance().setScreen(new NeteaseCloudLoginScreens(this));
             }
+            MinecraftClient.getInstance().setScreen(new NeteaseCloudLoginScreens(this));
         }));
         this.refreshDrawable();
     }

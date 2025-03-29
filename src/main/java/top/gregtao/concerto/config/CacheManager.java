@@ -1,5 +1,6 @@
 package top.gregtao.concerto.config;
 
+import top.gregtao.concerto.ConcertoClient;
 import top.gregtao.concerto.player.MusicPlayer;
 import top.gregtao.concerto.util.Pair;
 
@@ -46,10 +47,9 @@ public class CacheManager {
         return size;
     }
 
-    // TODO: Those codes suck, I will rewrite
     public void removeEarliest() {
         File[] files = this.folder.listFiles();
-        if (files == null) return;
+        if (files == null || files.length == 0) return;
         AtomicLong size = new AtomicLong();
         List<Pair<Pair<File, Long>, Long>> list = Arrays.stream(files).filter(File::isFile).map(file -> {
             long len = file.length();
@@ -59,6 +59,7 @@ public class CacheManager {
                         file.toPath(), BasicFileAttributeView.class, LinkOption.NOFOLLOW_LINKS).readAttributes();
                 return Pair.of(Pair.of(file, len), attributes.creationTime().toMillis());
             } catch (IOException e) {
+                ConcertoClient.LOGGER.warn("Error occurs while trying removing a file", e);
                 return Pair.of(Pair.of(file, len), 0L);
             }
         }).sorted(Comparator.comparingLong(Pair::getSecond)).toList();
@@ -68,6 +69,8 @@ public class CacheManager {
             Pair<File, Long> pair = list.get(pos).getFirst();
             if (pair.getFirst().delete()) {
                 finalSize -= pair.getSecond();
+            } else {
+                ConcertoClient.LOGGER.warn("Cannot remove file {}", pair.getFirst().getAbsolutePath());
             }
             ++pos;
         }
@@ -80,7 +83,7 @@ public class CacheManager {
 
     public void addFile(String filename, InputStream inputStream) throws IOException {
         File file = this.getChild(filename);
-        if (file.exists() || !file.createNewFile()) return;
+        if (file.exists() || !file.getParentFile().mkdirs() || !file.createNewFile()) return;
         try (FileOutputStream outputStream = new FileOutputStream(file)) {
             outputStream.write(inputStream.readAllBytes());
         }

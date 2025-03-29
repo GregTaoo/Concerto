@@ -11,8 +11,7 @@
     "MinecraftClientMixin",
     "GameMenuScreenMixin",
     "MusicTrackerMixin",
-    "SoundManagerMixin",
-    "DrawContextAccessor"
+    "SoundManagerMixin"
   ],
   "server": [
   ],

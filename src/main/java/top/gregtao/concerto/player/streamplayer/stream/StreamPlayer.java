@@ -425,8 +425,9 @@ public class StreamPlayer implements StreamPlayerInterface, Callable<Void> {
 		}
 	}
 
-	public static AudioInputStream decodeFlacToInputStream(InputStream inputStream, AudioFormat targetFormat, int bit) {
+	public AudioInputStream decodeFlacToInputStream(InputStream inputStream, AudioFormat targetFormat, int bit) {
 		try {
+			logger.info(() -> "Entered decodeFlacToInputStream(" + inputStream + ")\n");
 			PipedInputStream pipedInputStream = new PipedInputStream();
 			PipedOutputStream pipedOutputStream = new PipedOutputStream(pipedInputStream);
 			FLACDecoder decoder = new FLACDecoder(inputStream);

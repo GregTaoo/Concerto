@@ -39,6 +39,7 @@ public class HttpApiClient {
             try {
                 this.cookieManager.put(new URI(url), Map.of("Set-Cookie", list));
             } catch (IOException | URISyntaxException e) {
+                this.logger.error("Failed to load cookies", e);
                 throw new RuntimeException(e);
             }
         });

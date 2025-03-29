@@ -6,12 +6,14 @@ import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.text.LiteralText;
 import net.minecraft.text.Text;
 import net.minecraft.text.TranslatableText;
+import top.gregtao.concerto.ConcertoClient;
 import top.gregtao.concerto.http.netease.NeteaseCloudApiClient;
 import top.gregtao.concerto.screen.ConcertoScreen;
 import top.gregtao.concerto.screen.login.CaptchaLoginScreen;
 import top.gregtao.concerto.screen.login.PasswordLoginScreen;
 import top.gregtao.concerto.screen.login.QRCodeLoginScreen;
 import top.gregtao.concerto.util.Pair;
+import top.gregtao.concerto.util.QRCodeRenderer;
 import top.gregtao.concerto.util.TextUtil;
 
 public class NeteaseCloudLoginScreens extends ConcertoScreen {
@@ -25,15 +27,15 @@ public class NeteaseCloudLoginScreens extends ConcertoScreen {
     @Override
     protected void init() {
         super.init();
-        this.addButton(new ButtonWidget(this.width / 2 - 50, 40, 100, 20, 
+        this.addButton(new ButtonWidget(this.width / 2 - 50, 40, 100, 20,
                 new TranslatableText("concerto.screen.login.type.password"),
                 button -> MinecraftClient.getInstance().openScreen(this.passwordLogin())
         ));
-        this.addButton(new ButtonWidget(this.width / 2 - 50, 70, 100, 20, 
+        this.addButton(new ButtonWidget(this.width / 2 - 50, 70, 100, 20,
                 new TranslatableText("concerto.screen.login.type.captcha"),
                 button -> MinecraftClient.getInstance().openScreen(this.captchaLogin())
         ));
-        this.addButton(new ButtonWidget(this.width / 2 - 50, 100, 100, 20, 
+        this.addButton(new ButtonWidget(this.width / 2 - 50, 100, 100, 20,
                 new TranslatableText("concerto.screen.login.type.qrcode"),
                 button -> MinecraftClient.getInstance().openScreen(this.qrCodeLogin())
         ));
@@ -101,8 +103,7 @@ public class NeteaseCloudLoginScreens extends ConcertoScreen {
                         throw new RuntimeException(e);
                     }
                 },
-                key -> NeteaseCloudApiClient.INSTANCE.getQRCodeLoginLink(key),
-                null,
+                url -> QRCodeRenderer.generateQRCode(NeteaseCloudApiClient.INSTANCE.getQRCodeLoginLink(url)),
                 key -> {
                     try {
                         Pair<Integer, String> pair = NeteaseCloudApiClient.INSTANCE.getQRCodeStatus(key);
@@ -118,10 +119,11 @@ public class NeteaseCloudLoginScreens extends ConcertoScreen {
                             return QRCodeLoginScreen.Status.EMPTY;
                         }
                     } catch (Exception e) {
+                        ConcertoClient.LOGGER.error("Error in Netease QR Login", e);
                         throw new RuntimeException(e);
                     }
                 },
-                false, 110, 110,
+                110, 110,
                 SOURCE_TEXT,
                 this
         );

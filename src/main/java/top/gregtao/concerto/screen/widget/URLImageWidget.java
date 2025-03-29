@@ -42,7 +42,7 @@ public class URLImageWidget implements Drawable, Widget, AutoCloseable {
         this.y = y;
         this.url = url;
         this.textureId = Identifier.of(ConcertoClient.MOD_ID, "image" + System.currentTimeMillis());
-        this.texture = new NativeImageBackedTexture(this.textureId.toString(), width << 3, height << 3, false);
+        this.texture = new NativeImageBackedTexture(width << 3, height << 3, false);
         MinecraftClient.getInstance().getTextureManager().registerTexture(this.textureId, this.texture);
     }
 

@@ -47,8 +47,8 @@ public class TextUtil {
     }
 
     public static Style getRunCommandStyle(String command) {
-        return Style.EMPTY.withClickEvent(new ClickEvent.RunCommand(command))
-                .withHoverEvent(new HoverEvent.ShowText(Text.literal(command).formatted(Formatting.AQUA)));
+        return Style.EMPTY.withClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, command))
+                .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, Text.literal(command).formatted(Formatting.AQUA)));
     }
 
     public static boolean isDigit(String str) {

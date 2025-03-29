@@ -104,7 +104,7 @@ public class MusicRoomCommand {
     }
 
     public static boolean checkServerAvailable(ClientPlayerEntity player) {
-        if (!ConcertoClient.serverAvailable) {
+        if (!ConcertoClient.isServerAvailable()) {
             player.sendMessage(Text.translatable("concerto.not_available"), false);
             return false;
         }

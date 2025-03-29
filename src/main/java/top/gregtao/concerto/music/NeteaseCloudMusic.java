@@ -104,7 +104,10 @@ public class NeteaseCloudMusic extends Music implements CacheableMusic, DynamicP
         long duration = object.get("dt").getAsLong();
         JsonArray authors = object.getAsJsonArray("ar");
         List<String> authorList = new ArrayList<>();
-        authors.forEach(element -> authorList.add(element.getAsJsonObject().get("name").getAsString()));
+        authors.forEach(element -> {
+            JsonElement nameElement = element.getAsJsonObject().get("name");
+            if (!nameElement.isJsonNull()) authorList.add(nameElement.getAsString());
+        });
         JsonObject album = object.getAsJsonObject("al");
         String headPic = "";
         if (!album.isJsonNull()) {

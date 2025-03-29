@@ -1,6 +1,5 @@
 package top.gregtao.concerto.screen.login;
 
-import com.google.zxing.WriterException;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
@@ -9,20 +8,15 @@ import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.text.Text;
 import top.gregtao.concerto.player.MusicPlayer;
 import top.gregtao.concerto.screen.ConcertoScreen;
-import top.gregtao.concerto.screen.QRCodeRenderer;
 import top.gregtao.concerto.screen.widget.URLImageWidget;
 
-import java.net.MalformedURLException;
-import java.net.URI;
-import java.net.URL;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
 public class QRCodeLoginScreen extends ConcertoScreen {
     private final Supplier<String> qrKeySupplier;
-    private final Function<String, String> qrCodeLinkGetter;
     private final Function<String, Status> statusUpdater;
-    private final Function<URL, byte[]> imageUpdater;
+    private final Function<String, byte[]> imageUpdater;
     private String key;
     private Status status = Status.EMPTY;
     private int timer = 0;
@@ -30,17 +24,13 @@ public class QRCodeLoginScreen extends ConcertoScreen {
     private final int qrHeight;
     private Text message = Text.empty();
     private boolean updaterLock = false;
-    private final boolean isSpecificImage;
     private URLImageWidget urlImageWidget;
 
-    public QRCodeLoginScreen(Supplier<String> qrKeySupplier, Function<String, String> qrCodeLinkGetter,
-                             Function<URL, byte[]> imageUpdater, Function<String, Status> statusUpdater,
-                             boolean isSpecificImage, int width, int height, Text title, Screen parent) {
+    public QRCodeLoginScreen(Supplier<String> qrKeySupplier, Function<String, byte[]> imageUpdater,
+                             Function<String, Status> statusUpdater, int width, int height, Text title, Screen parent) {
         super(Text.literal(Text.translatable("concerto.screen.login").getString() + title.getString()), parent);
         this.qrKeySupplier = qrKeySupplier;
-        this.qrCodeLinkGetter = qrCodeLinkGetter;
         this.statusUpdater = statusUpdater;
-        this.isSpecificImage = isSpecificImage;
         this.imageUpdater = imageUpdater;
         this.qrWidth = width;
         this.qrHeight = height;
@@ -53,9 +43,7 @@ public class QRCodeLoginScreen extends ConcertoScreen {
             this.timer = 0;
             this.status = Status.EMPTY;
         }).size(100, 20).position(this.width / 2 - 50, this.height - 40).build());
-        if (this.isSpecificImage) {
-            this.urlImageWidget = new URLImageWidget(this.qrWidth, this.qrHeight, this.width / 2 - this.qrWidth / 2, 30, null);
-        }
+        this.urlImageWidget = new URLImageWidget(this.qrWidth, this.qrHeight, this.width / 2 - this.qrWidth / 2, 30, null);
     }
 
     @Override
@@ -72,7 +60,6 @@ public class QRCodeLoginScreen extends ConcertoScreen {
                         player.sendMessage(Text.translatable("concerto.screen.login.qrcode.success"), false);
                     }
                     MinecraftClient.getInstance().setScreen(null);
-                    QRCodeRenderer.clear();
                 }
                 case WAITING -> {
                     if (!this.updaterLock) {
@@ -90,26 +77,11 @@ public class QRCodeLoginScreen extends ConcertoScreen {
 
     public void loadQRCode() {
         MusicPlayer.run(() -> {
-            if (this.isSpecificImage) {
-                String link = this.qrKeySupplier.get();
-                try {
-                    this.urlImageWidget.setUrl(URI.create(link).toURL());
-                    if (this.imageUpdater != null) this.urlImageWidget.loadImage(this.imageUpdater, false);
-                    else this.urlImageWidget.loadImage();
-                    this.status = Status.WAITING;
-                } catch (MalformedURLException e) {
-                    throw new RuntimeException(e);
-                }
-            } else {
-                this.key = this.qrKeySupplier.get();
-                String link = this.qrCodeLinkGetter.apply(this.key);
-                try {
-                    QRCodeRenderer.load(link);
-                    this.status = Status.WAITING;
-                } catch (WriterException e) {
-                    throw new RuntimeException(e);
-                }
-            }
+            String link = this.key = this.qrKeySupplier.get();
+            this.urlImageWidget.setUrl(link);
+            if (this.imageUpdater != null) this.urlImageWidget.loadImage(this.imageUpdater, false);
+            else this.urlImageWidget.loadImage();
+            this.status = Status.WAITING;
         });
     }
 
@@ -121,19 +93,14 @@ public class QRCodeLoginScreen extends ConcertoScreen {
     @Override
     public void render(DrawContext matrices, int mouseX, int mouseY, float delta) {
         super.render(matrices, mouseX, mouseY, delta);
-        if (this.isSpecificImage) {
-            this.urlImageWidget.render(matrices, mouseX, mouseY, delta);
-        } else {
-            QRCodeRenderer.drawQRCode(matrices, this.width / 2 - this.qrWidth / 2, 30);
-        }
+        this.urlImageWidget.render(matrices, mouseX, mouseY, delta);
         matrices.drawCenteredTextWithShadow(this.textRenderer, this.message, this.width / 2, 120, 0xffffffff);
     }
 
     @Override
     public void close() {
         super.close();
-        if (this.isSpecificImage) this.urlImageWidget.close();
-        else QRCodeRenderer.clear();
+        this.urlImageWidget.close();
     }
 
     public enum Status {

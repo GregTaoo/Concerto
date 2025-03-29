@@ -102,8 +102,8 @@ public class QRCodeLoginScreen extends ConcertoScreen {
     }
 
     @Override
-    public void close() {
-        super.close();
+    public void onClose() {
+        super.onClose();
         this.urlImageWidget.close();
     }
 

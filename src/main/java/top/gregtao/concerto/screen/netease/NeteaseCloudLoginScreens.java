@@ -13,6 +13,7 @@ import top.gregtao.concerto.screen.login.CaptchaLoginScreen;
 import top.gregtao.concerto.screen.login.PasswordLoginScreen;
 import top.gregtao.concerto.screen.login.QRCodeLoginScreen;
 import top.gregtao.concerto.util.Pair;
+import top.gregtao.concerto.util.QRCodeRenderer;
 import top.gregtao.concerto.util.TextUtil;
 
 public class NeteaseCloudLoginScreens extends ConcertoScreen {

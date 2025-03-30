@@ -4,6 +4,7 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.network.ClientPlayerEntity;
+import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.TranslatableText;
 import top.gregtao.concerto.ConcertoClient;
 import top.gregtao.concerto.api.WithMetaData;
@@ -56,5 +57,11 @@ public class PresetRadiosScreen extends ConcertoScreen {
                 player.sendChatMessage("/concerto-server fetch-radios");
             }
         }));
+    }
+
+    @Override
+    public void render(MatrixStack matrices, int mouseX, int mouseY, float delta) {
+        this.playlistList.render(matrices, mouseX, mouseY, delta);
+        super.render(matrices, mouseX, mouseY, delta);
     }
 }

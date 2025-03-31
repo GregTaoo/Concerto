@@ -27,12 +27,6 @@ dependencies {
 	modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
 	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
 
-//	my("com.github.goxr3plus:java-stream-player:10.0.2") {
-//		exclude module: 'junit'
-//	}
-//	my("com.github.gregtaoo:java-stream-player-forked:f9b448c72f") {
-//		exclude module: 'junit'
-//	}
 	my 'com.google.zxing:core:3.3.0'
 	my('com.googlecode.soundlibs:mp3spi:1.9.5.4') {
 		exclude group: 'com.googlecode.soundlibs', module: 'tritonus-share'
@@ -43,7 +37,6 @@ dependencies {
 		exclude group: 'com.googlecode.soundlibs', module: 'tritonus-share'
 	}
 	my 'net.jthink:jaudiotagger:3.0.1'
-//	my 'commons-io:commons-io:2.14.0'
 }
 
 processResources {
@@ -62,7 +55,7 @@ java {
 	// Loom will automatically attach sourcesJar to a RemapSourcesJar task and to the "build" task
 	// if it is present.
 	// If you remove this line, sources will not be generated.
-	withSourcesJar()
+    // withSourcesJar()
 }
 
 jar {

@@ -5,6 +5,7 @@ import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.text.Text;
+import net.minecraft.util.Util;
 import top.gregtao.concerto.ConcertoClient;
 import top.gregtao.concerto.screen.qq.QQMusicIndexScreen;
 import top.gregtao.concerto.screen.netease.NeteaseCloudIndexScreen;
@@ -53,5 +54,9 @@ public class ConcertoIndexScreen extends ConcertoScreen {
         if (player == null || !ConcertoClient.isServerAvailable()) {
             widget1.active = false;
         }
+
+        this.addDrawableChild(ButtonWidget.builder(Text.translatable("concerto.report_bugs"),
+                button -> Util.getOperatingSystem().open("https://github.com/GregTaoo/Concerto/issues")
+        ).position(this.width / 2 + 20, 130).size(115, 20).build());
     }
 }

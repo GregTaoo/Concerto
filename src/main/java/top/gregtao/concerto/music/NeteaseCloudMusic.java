@@ -163,6 +163,11 @@ public class NeteaseCloudMusic extends Music implements CacheableMusic, DynamicP
         return NeteaseCloudApiClient.LOCAL_USER.dislikeMusic(this);
     }
 
+    @Override
+    public boolean equals(Object obj) {
+        return (obj instanceof NeteaseCloudMusic music) && music.level == this.level && music.id.equals(this.id);
+    }
+
     public enum Level implements SimpleStringIdentifiable {
         STANDARD,
         HIGHER,

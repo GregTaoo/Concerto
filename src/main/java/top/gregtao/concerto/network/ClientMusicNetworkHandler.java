@@ -165,7 +165,7 @@ public class ClientMusicNetworkHandler {
                 ConcertoClient.LOGGER.info("Concerto has been installed in this server");
                 if (args.length > 3 && !MinecraftClient.getInstance().isInSingleplayer() && args[3].equals("Invite")) {
                     if (ClientConfig.INSTANCE.options.joinAgentWhenInvited) {
-                        player.networkHandler.sendChatCommand("/musicroom agent join");
+                        player.networkHandler.sendChatCommand("musicroom agent join");
                     } else {
                         player.sendMessage(TextUtil.PAGE_SPLIT, false);
                         player.sendMessage(Text.translatable("concerto.agent.invite")

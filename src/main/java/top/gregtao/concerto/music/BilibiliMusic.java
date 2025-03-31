@@ -96,4 +96,9 @@ public class BilibiliMusic extends Music implements CacheableMusic {
     public Music getMusic() {
         return this;
     }
+
+    @Override
+    public boolean equals(Object obj) {
+        return (obj instanceof BilibiliMusic music) && music.bvid.equals(this.bvid);
+    }
 }

@@ -105,7 +105,10 @@ public class NeteaseCloudMusic extends Music implements CacheableMusic, DynamicP
         long duration = object.get("dt").getAsLong();
         JsonArray authors = object.getAsJsonArray("ar");
         List<String> authorList = new ArrayList<>();
-        authors.forEach(element -> authorList.add(element.getAsJsonObject().get("name").getAsString()));
+        authors.forEach(element -> {
+            JsonElement nameElement = element.getAsJsonObject().get("name");
+            if (!nameElement.isJsonNull()) authorList.add(nameElement.getAsString());
+        });
         JsonObject album = object.getAsJsonObject("al");
         String headPic = "";
         if (!album.isJsonNull()) {
@@ -159,6 +162,11 @@ public class NeteaseCloudMusic extends Music implements CacheableMusic, DynamicP
     @Override
     public boolean dislikeIt() {
         return NeteaseCloudApiClient.LOCAL_USER.dislikeMusic(this);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        return (obj instanceof NeteaseCloudMusic music) && music.level == this.level && music.id.equals(this.id);
     }
 
     public enum Level implements SimpleStringIdentifiable {

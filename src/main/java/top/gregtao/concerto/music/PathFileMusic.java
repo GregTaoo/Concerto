@@ -19,4 +19,9 @@ public abstract class PathFileMusic extends Music {
     public String getLink() {
         return this.getRawPath();
     }
+
+    @Override
+    public boolean equals(Object obj) {
+        return (obj instanceof PathFileMusic music) && music.rawPath.equals(this.rawPath);
+    }
 }

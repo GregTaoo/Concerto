@@ -54,7 +54,7 @@ public class ConcertoIndexScreen extends ConcertoScreen {
             widget1.active = false;
         }
 
-        this.addDrawableChild(new ButtonWidget(this.width / 2 + 20, 130, 115, 20, new TranslatableText("concerto.report_bugs"),
+        this.addButton(new ButtonWidget(this.width / 2 + 20, 130, 115, 20, new TranslatableText("concerto.report_bugs"),
                 button -> Util.getOperatingSystem().open("https://github.com/GregTaoo/Concerto/issues")
         ));
     }

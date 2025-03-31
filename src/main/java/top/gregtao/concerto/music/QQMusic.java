@@ -135,4 +135,9 @@ public class QQMusic extends Music implements CacheableMusic, DynamicPath {
     public Music getMusic() {
         return this;
     }
+
+    @Override
+    public boolean equals(Object obj) {
+        return (obj instanceof QQMusic music) && music.mid.equals(this.mid);
+    }
 }

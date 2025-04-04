@@ -16,19 +16,23 @@ public class DefaultFormatLyrics extends Lyrics {
                 for (int index = 0; index < args.length - 1; ++index) {
                     String[] timesArr = args[index].substring(1).split(":");
                     String[] secondsArr = timesArr[1].split("\\.");
-                    if (secondsArr.length == 2) {
-                        long milli = MathUtil.parseIntOrElse(secondsArr[1], 0);
-                        int place = (int) (1000 / Math.pow(10, secondsArr[1].trim().length()));
-                        this.addLine(MusicTimestamp.of(
-                                MathUtil.parseIntOrElse(timesArr[0], 0),
-                                MathUtil.parseIntOrElse(secondsArr[0], 0),
-                                (int) (milli * place)
-                        ), args[args.length - 1]);
-                    } else {
-                        this.addLine(MusicTimestamp.of(
-                                MathUtil.parseIntOrElse(timesArr[0], 0),
-                                MathUtil.parseIntOrElse(secondsArr[0], 0)
-                        ), args[args.length - 1]);
+                    String lyric = args[args.length - 1].trim();
+                    if (!lyric.isEmpty() && !lyric.startsWith("//")) {
+                        lyric = lyric.replaceAll(MusicTimestamp.INLINE_REGEX, "");
+                        if (secondsArr.length == 2) {
+                            long milli = MathUtil.parseIntOrElse(secondsArr[1], 0);
+                            int place = (int) (1000 / Math.pow(10, secondsArr[1].trim().length()));
+                            this.addLine(MusicTimestamp.of(
+                                    MathUtil.parseIntOrElse(timesArr[0], 0),
+                                    MathUtil.parseIntOrElse(secondsArr[0], 0),
+                                    (int) (milli * place)
+                            ), lyric);
+                        } else {
+                            this.addLine(MusicTimestamp.of(
+                                    MathUtil.parseIntOrElse(timesArr[0], 0),
+                                    MathUtil.parseIntOrElse(secondsArr[0], 0)
+                            ), lyric);
+                        }
                     }
                 }
             }

@@ -45,7 +45,7 @@ public class FileUtil {
     }
 
     public static BufferedInputStream createBuffered(InputStream inputStream) {
-        return new BufferedInputStream(inputStream, 16384);
+        return new BufferedInputStream(inputStream, 2 << 18); // 256 KB
     }
 
     public static String getSuffix(String name) {

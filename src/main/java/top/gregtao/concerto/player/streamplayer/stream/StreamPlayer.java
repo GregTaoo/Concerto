@@ -21,7 +21,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.naming.OperationNotSupportedException;
-import javax.sound.sampled.AudioFileFormat;
 import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
@@ -436,8 +435,8 @@ public class StreamPlayer implements StreamPlayerInterface, Callable<Void> {
             CompletableFuture.runAsync(() -> {
 				try {
 					decoder.decode();
-					pipedInputStream.close();
 					pipedOutputStream.close();
+					pipedInputStream.close();
 				} catch (IOException e) {
 					throw new RuntimeException(e);
 				}
@@ -849,8 +848,6 @@ public class StreamPlayer implements StreamPlayerInterface, Callable<Void> {
 				try {
 					// Playing?
 					if (status == Status.PLAYING) {
-
-						// System.out.println("Inside Stream Player Run method")
 						int toRead = audioDataLength;
 						int totalRead = 0;
 
@@ -862,7 +859,7 @@ public class StreamPlayer implements StreamPlayerInterface, Callable<Void> {
 							// Check for under run
 							if (outlet.getSourceDataLine().available() >= outlet.getSourceDataLine().getBufferSize())
 								logger.info(() -> "Under run> Available=" + outlet.getSourceDataLine().available()
-									+ " , SourceDataLineBuffer=" + outlet.getSourceDataLine().getBufferSize());
+										+ " , SourceDataLineBuffer=" + outlet.getSourceDataLine().getBufferSize());
 
 						// Check if anything has been read
 						if (totalRead > 0) {

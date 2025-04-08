@@ -173,11 +173,11 @@ public class QQMusic extends Music implements CacheableMusic, DynamicPath {
 
         ATMOS_2("Q000", "flac"),
         ATMOS_51("Q001", "flac"),
-        FLAC("F000", "flac"),
         OGG_320("O800", "ogg"),
         MP3_320("M800", "mp3"),
         MP3_128("M500", "mp3"),
         OGG_96("O400", "ogg"),
+        FLAC("F000", "flac"),
         // 不支持的格式
         // MASTER("AI00", "flac"),
         // OGG_640("O801", "ogg"),

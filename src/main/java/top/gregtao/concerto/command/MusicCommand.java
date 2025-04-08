@@ -122,6 +122,12 @@ public class MusicCommand {
                     return 0;
                 })
         ).then(
+                ClientCommandManager.literal("restart").executes(context -> {
+                    MusicPlayer.resetInstance();
+                    TextUtil.commandMessageClient(context, Text.translatable("concerto.success"));
+                    return 0;
+                })
+        ).then(
                 ClientCommandManager.literal("mode").then(
                         ClientCommandManager.argument("mode", OrderTypeArgumentType.orderType()).executes((context -> {
                             OrderType type = OrderTypeArgumentType.getOrderType(context, "mode");

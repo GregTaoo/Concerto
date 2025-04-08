@@ -110,7 +110,7 @@ public class HttpURLInputStream extends InputStream {
 
     public int read() throws IOException {
         if (this.closed) return -1;
-        if (this.readBytesTotal >= this.szBytes - 1) {
+        if (this.readBytesTotal >= this.szBytes) {
             this.close();
             return -1;
         }
@@ -133,13 +133,13 @@ public class HttpURLInputStream extends InputStream {
 
     public int read(byte @NotNull [] b, int off, int len) throws IOException {
         if (this.closed) return -1;
-        if (this.readBytesTotal >= this.szBytes - 1) {
+        if (this.readBytesTotal >= this.szBytes) {
             this.close();
             return -1;
         }
-        for (int i = off; i < b.length && i < len + off; ++i) {
+        for (int i = off; i < len + off; ++i) {
             int b1 = this.read();
-            if (b1 == -1) return i - off + 1;
+            if (b1 == -1) return i - off;
             b[i] = (byte) (b1 & 0xFF);
         }
         return len;

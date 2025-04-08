@@ -31,6 +31,7 @@ public class HttpURLInputStream extends InputStream {
         if (this.connection.getResponseCode() == 200) {
             this.szBytes = this.connection.getContentLength();
             this.in = this.connection.getInputStream();
+            ConcertoClient.LOGGER.info("Connected to {}", url);
         } else {
             String message = this.connection.getResponseCode() + " - couldn't access to: " + url;
             ConcertoClient.LOGGER.error(message);

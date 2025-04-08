@@ -1,6 +1,7 @@
 package top.gregtao.concerto.util;
 
 import org.jaudiotagger.audio.AudioFile;
+import org.jaudiotagger.audio.AudioFileIO;
 import org.jaudiotagger.tag.FieldKey;
 import org.jaudiotagger.tag.KeyNotFoundException;
 import org.jaudiotagger.tag.Tag;
@@ -23,6 +24,17 @@ public class FileUtil {
             return String.join(", ", list.stream().filter(s -> !s.isEmpty()).toList());
         } catch (Exception e) {
             return "";
+        }
+    }
+
+    public static void writeTagToFile(File file, FieldKey key, String value) throws UnsupportedOperationException {
+        try {
+            AudioFile audioFile = AudioFileIO.read(file);
+            Tag tag = audioFile.getTagOrCreateAndSetDefault();
+            tag.setField(key, value);
+            audioFile.commit();
+        } catch (Exception e) {
+            throw new UnsupportedOperationException(e);
         }
     }
 
@@ -49,8 +61,7 @@ public class FileUtil {
     }
 
     public static String getSuffix(String name) {
-        String[] strings = name.split("\\.");
-        if (strings.length == 1) return "";
-        else return strings[strings.length - 1];
+        int idx = name.lastIndexOf(".");
+        return idx > 0 ? name.substring(idx + 1) : name;
     }
 }

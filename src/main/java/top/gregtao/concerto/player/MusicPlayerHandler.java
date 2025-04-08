@@ -2,6 +2,7 @@ package top.gregtao.concerto.player;
 
 import net.minecraft.text.Text;
 import net.minecraft.util.math.MathHelper;
+import org.jaudiotagger.tag.FieldKey;
 import top.gregtao.concerto.ConcertoClient;
 import top.gregtao.concerto.api.CacheableMusic;
 import top.gregtao.concerto.api.LazyLoadable;
@@ -11,9 +12,11 @@ import top.gregtao.concerto.music.meta.music.MusicMetaData;
 import top.gregtao.concerto.enums.OrderType;
 import top.gregtao.concerto.music.Music;
 import top.gregtao.concerto.music.MusicTimestamp;
+import top.gregtao.concerto.util.FileUtil;
 import top.gregtao.concerto.util.Pair;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -294,28 +297,51 @@ public class MusicPlayerHandler {
 
     public static void downloadMusics(List<Music> musics) {
         MusicPlayer.run(() -> {
-            File file = new File("Concerto/Downloads");
-            if (!file.exists() || !file.isDirectory()) {
-                if (!file.mkdirs()) return;
+            File folder = new File("Concerto/Downloads");
+            if (!folder.exists() || !folder.isDirectory()) {
+                if (folder.mkdirs()) {
+                    try {
+                        Thread.sleep(250);
+                    } catch (InterruptedException e) {
+                        throw new RuntimeException(e);
+                    }
+                } else {
+                    return;
+                }
             }
-            try (ExecutorService service = Executors.newFixedThreadPool(32)) {
+            try (ExecutorService service = Executors.newFixedThreadPool(16)) {
                 musics.forEach(music -> {
                     if (music instanceof CacheableMusic cacheableMusic) {
                         service.submit(() -> {
                             MusicMetaData metaData = music.getMeta();
-                            String filename = filenameFilter(metaData.title() + " - " + metaData.author());
-                            File file1 = file.toPath().resolve(filename + "." + cacheableMusic.getSuffix()).toFile();
+                            String filename = filenameFilter(metaData.title() + " - " + metaData.author() + " - " + metaData.getSource());
+                            File file = folder.toPath().resolve(filename + "." + cacheableMusic.getSuffix()).toFile();
+                            File lrcFile = folder.toPath().resolve(filename + ".lrc").toFile();
                             try {
-                                if (!file1.exists()) {
-                                    if (file1.createNewFile()) {
-                                        try (FileOutputStream stream = new FileOutputStream(file1)) {
+                                if (!file.exists()) {
+                                    if (file.createNewFile()) {
+                                        try (FileOutputStream stream = new FileOutputStream(file)) {
                                             stream.write(music.getMusicSource().readAllBytes());
                                         }
                                     }
                                     ConcertoClient.LOGGER.info("Downloaded: {}", filename);
                                 }
+                                String lyrics = music.getLyrics().getFirst().toString();
+                                try {
+                                    FileUtil.writeTagToFile(file, FieldKey.LYRICS, lyrics);
+                                } catch (UnsupportedOperationException e) {
+                                    ConcertoClient.LOGGER.warn("Cannot write lyrics tag into file: {}", file);
+                                }
+                                if (!lrcFile.exists()) {
+                                    if (lrcFile.createNewFile()) {
+                                        try (FileOutputStream stream = new FileOutputStream(lrcFile)) {
+                                            stream.write(lyrics.getBytes(StandardCharsets.UTF_8));
+                                        }
+                                    }
+                                    ConcertoClient.LOGGER.info("Downloaded LRC: {}", filename);
+                                }
                             } catch (IOException e) {
-                                ConcertoClient.LOGGER.error("{} - {}", e, file1.getAbsolutePath());
+                                ConcertoClient.LOGGER.error("{} - {}", e, file.getAbsolutePath());
                             }
                         });
                     } else {

@@ -20,7 +20,7 @@ import java.util.List;
 
 public class QQMusic extends Music implements CacheableMusic, DynamicPath {
 
-    public String mid, mediaMid, rawPath, rawLyrics, rawSubLyrics;
+    public String mid, mediaMid, rawPath, rawLyrics, rawSubLyrics, format;
 
     public QQMusic(String mid) {
         this.mid = mid;
@@ -101,10 +101,12 @@ public class QQMusic extends Music implements CacheableMusic, DynamicPath {
 
     public String getRawPath() {
         try {
-            this.rawPath = QQMusicApiClient.INSTANCE.getMusicLink(this.mid, this.mediaMid);
-            this.rawPath = this.rawPath.isEmpty() ? null : this.rawPath;
+            Pair<String, String> pair = QQMusicApiClient.INSTANCE.getMusicLink(this.mid, this.mediaMid);
+            this.rawPath = pair.getFirst().isEmpty() ? null : pair.getFirst();
+            this.format = pair.getSecond().isEmpty() ? null : pair.getSecond();
         } catch (Exception e) {
             this.rawPath = null;
+            this.format = null;
         }
         return this.rawPath;
     }
@@ -121,6 +123,12 @@ public class QQMusic extends Music implements CacheableMusic, DynamicPath {
     }
 
     @Override
+    public String getLastSuffix() {
+        if (this.format == null) return this.getRawPath();
+        return this.format;
+    }
+
+    @Override
     public String getLastLyrics() {
         if (this.rawLyrics == null) this.getLyrics();
         return this.rawLyrics;
@@ -133,7 +141,7 @@ public class QQMusic extends Music implements CacheableMusic, DynamicPath {
 
     @Override
     public String getSuffix() {
-        return "ogg";
+        return this.getLastSuffix();
     }
 
     @Override
@@ -186,6 +194,10 @@ public class QQMusic extends Music implements CacheableMusic, DynamicPath {
         Level(String prefix, String suffix) {
             this.prefix = prefix;
             this.suffix = suffix;
+        }
+
+        public String getSuffix() {
+            return this.suffix;
         }
 
         public String getFilename(String mid, String mediaMid) {

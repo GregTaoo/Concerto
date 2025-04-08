@@ -209,11 +209,13 @@ public class MusicCommand {
         ).then(
                 ClientCommandManager.literal("download-current").executes(context -> {
                     MusicPlayerHandler.downloadMusics(List.of(MusicPlayerHandler.INSTANCE.getCurrentMusic()));
+                    context.getSource().getPlayer().sendMessage(Text.translatable("concerto.success"), false);
                     return 0;
                 })
         ).then(
                 ClientCommandManager.literal("download-all").executes(context -> {
                     MusicPlayerHandler.downloadMusics(MusicPlayerHandler.INSTANCE.getMusicList());
+                    context.getSource().getPlayer().sendMessage(Text.translatable("concerto.success"), false);
                     return 0;
                 })
         ).then(

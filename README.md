@@ -13,7 +13,7 @@
 
 **Wiki 基准模组版本：1.3.7**
 
-目前已知支持版本：1.21.4, 1.21.1, 1.20.6, 1.20.1, 1.19.4, 1.18.2, 1.17.1, 1.16.5，其余版本未经测试
+目前已知支持版本：1.21.5, 1.21.4, 1.21.1, 1.20.6, 1.20.1, 1.19.4, 1.18.2, 1.17.1, 1.16.5，其余版本未经测试
 
 ### 安全提醒！
 
@@ -97,7 +97,7 @@
 
 4. `/musicroom`（客户端指令，服务端必须安装 Concerto 才能正常使用）
 
-   `create`: 新建并加入音乐室，并自动复制音乐室的 UUID（详见 音乐室）
+   `create`: 新建并加入音乐室，并自动复制音乐室的 UUID，默认需要管理员（详见 音乐室、服务端配置文件）
 
    `join [UUID]`: 加入编号为 `[UUID]` 的音乐室
 
@@ -195,6 +195,7 @@
 - `timeProgressTextColor`: 歌曲播放进度文字颜色（格式详见下方 颜色配置，默认为 `#ffffffff` ）
 - `timeProgressColor`: 歌曲播放进度条颜色（格式详见下方 颜色配置，默认为 `#ff0155bc` ）
 - `timeProgressBgColor`:  歌曲播放进度条背景颜色（格式详见下方 颜色配置，默认为 `#ffa1c7f6`）
+- `textShadow`: 歌词/音乐信息显示文字阴影（默认开启）
 
 ### 位置格式配置
 
@@ -234,7 +235,7 @@
 - [java-stream-player](https://github.com/goxr3plus/java-stream-player)
 - [ZXing](https://github.com/zxing/zxing)
 - [soundlibs](https://github.com/pdudits/soundlibs)
-- [jflac](https://github.com/nguillaumin/jflac)
+- [JustFlac](https://github.com/drogatkin/JustFLAC)
 - [java-vorbis-support](https://github.com/Trilarion/java-vorbis-support)
 - [jaudiotagger](https://github.com/marcoc1712/jaudiotagger)
 - [Fabric](https://github.com/FabricMC/fabric)

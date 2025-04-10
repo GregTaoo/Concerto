@@ -95,7 +95,7 @@ public class HttpApiClient {
     }
 
     public static Map<Character, Character> ESCAPE_MAP = Map.of(
-            '\u00a0', ' ', '\r', '\n'
+            '\u00a0', ' ', '\ufeff', ' ', '\r', '\n'
     ); // escape illegal spaces
 
     public static String escapeChars(String string) {

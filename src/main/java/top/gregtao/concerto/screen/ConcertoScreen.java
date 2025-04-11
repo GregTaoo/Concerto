@@ -25,7 +25,7 @@ public class ConcertoScreen extends Screen {
         this.message.setMessage(text);
         this.initTabNavigation();
         this.message.visible = true;
-        CompletableFuture.delayedExecutor(3, TimeUnit.SECONDS).execute(() -> {
+        CompletableFuture.delayedExecutor(5, TimeUnit.SECONDS).execute(() -> {
             this.message.setMessage(Text.empty());
             this.message.visible = false;
         });
@@ -71,6 +71,5 @@ public class ConcertoScreen extends Screen {
         this.renderBackground(matrices, mouseX, mouseY, delta);
         super.render(matrices, mouseX, mouseY, delta);
         matrices.drawCenteredTextWithShadow(this.textRenderer, this.title, this.width / 2, 5, 0xffffffff);
-        this.message.render(matrices, mouseX, mouseY, delta);
     }
 }

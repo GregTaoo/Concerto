@@ -38,4 +38,12 @@ public class DefaultFormatLyrics extends Lyrics {
             }
         }
     }
+
+    @Override
+    public String toString() {
+        StringBuilder builder = new StringBuilder();
+        this.getLyricBody().forEach(pair ->
+                builder.append("[").append(pair.getFirst().toString()).append("] ").append(pair.getSecond()).append("\n"));
+        return builder.toString();
+    }
 }

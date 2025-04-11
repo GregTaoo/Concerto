@@ -5,13 +5,17 @@ import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.text.LiteralText;
 import net.minecraft.text.Text;
 import net.minecraft.text.TranslatableText;
+import top.gregtao.concerto.api.MusicJsonParsers;
 import top.gregtao.concerto.music.LocalFileMusic;
 import top.gregtao.concerto.music.Music;
 import top.gregtao.concerto.api.UnsafeMusicException;
+import top.gregtao.concerto.music.list.Playlist;
 import top.gregtao.concerto.player.MusicPlayer;
 import top.gregtao.concerto.player.MusicPlayerHandler;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
@@ -38,9 +42,16 @@ public abstract class ApplyDraggedFileScreen extends ConcertoScreen {
                         try {
                             if (file.isDirectory()) {
                                 list.addAll(LocalFileMusic.getMusicsInFolder(file));
+                            } else if (path.toString().toLowerCase().endsWith(".json")) {
+                                try (FileInputStream inputStream = new FileInputStream(file)) {
+                                    Playlist playlist = MusicJsonParsers.fromPlaylist(new String(inputStream.readAllBytes()));
+                                    if (playlist != null) list.addAll(playlist.getList());
+                                }
                             } else {
                                 list.add(new LocalFileMusic(file.getAbsolutePath()));
                             }
+                        } catch (IOException e) {
+                            this.displayAlert(new LiteralText(e.getMessage()));
                         } catch (UnsafeMusicException e) {
                             this.displayAlert(new TranslatableText("concerto.error.invalid_path"));
                         }

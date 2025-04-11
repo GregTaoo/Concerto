@@ -124,7 +124,7 @@ public class MusicCommand {
         ).then(
                 ClientCommandManager.literal("restart").executes(context -> {
                     MusicPlayer.resetInstance();
-                    TextUtil.commandMessageClient(context, Text.translatable("concerto.success"));
+                    TextUtil.commandMessageClient(context, new TranslatableText("concerto.success"));
                     return 0;
                 })
         ).then(
@@ -215,13 +215,13 @@ public class MusicCommand {
         ).then(
                 ClientCommandManager.literal("download-current").executes(context -> {
                     MusicPlayerHandler.downloadMusics(List.of(MusicPlayerHandler.INSTANCE.getCurrentMusic()));
-                    context.getSource().getPlayer().sendMessage(Text.translatable("concerto.success"), false);
+                    context.getSource().getPlayer().sendMessage(new TranslatableText("concerto.success"), false);
                     return 0;
                 })
         ).then(
                 ClientCommandManager.literal("download-all").executes(context -> {
                     MusicPlayerHandler.downloadMusics(MusicPlayerHandler.INSTANCE.getMusicList());
-                    context.getSource().getPlayer().sendMessage(Text.translatable("concerto.success"), false);
+                    context.getSource().getPlayer().sendMessage(new TranslatableText("concerto.success"), false);
                     return 0;
                 })
         ).then(

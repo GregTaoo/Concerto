@@ -83,7 +83,7 @@ public class QQMusicApiClient extends HttpApiClient {
         return gtk;
     }
 
-    public String getMusicLink(String mid, String mediaMid) {
+    public Pair<String, String> getMusicLink(String mid, String mediaMid) {
         try {
             String uin = this.getQQUin(), guid = this.generateGuid();
             for (QQMusic.Level level : QQMusic.Level.values()) {
@@ -96,12 +96,12 @@ public class QQMusicApiClient extends HttpApiClient {
                     String link = midUrlInfo.get("purl").getAsString();
                     JsonArray sip = data.getAsJsonArray("sip");
                     if (sip.isJsonArray() && !sip.isEmpty() && !link.isEmpty()) {
-                        return sip.get(0).getAsString() + link;
+                        return Pair.of(sip.get(0).getAsString() + link, level.getSuffix());
                     }
                 }
             }
             ConcertoClient.LOGGER.warn("Got empty link for QQ Music {}", mid);
-            return "";
+            return Pair.of("", "");
         } catch (IOException | URISyntaxException e) {
             ConcertoClient.LOGGER.error("Error getting music link", e);
             throw new RuntimeException(e);

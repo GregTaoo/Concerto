@@ -24,7 +24,7 @@ import java.util.List;
 public class NeteaseCloudMusic extends Music implements CacheableMusic, DynamicPath, Likeable {
     private final String id;
     private final Level level;
-    private String rawPath, rawLyrics, rawSubLyrics;
+    private String rawPath, rawLyrics, rawSubLyrics, format;
 
     public NeteaseCloudMusic(String id, Level level) {
         this.id = id;
@@ -57,8 +57,12 @@ public class NeteaseCloudMusic extends Music implements CacheableMusic, DynamicP
                     .getAsJsonArray("data").get(0).getAsJsonObject();
             this.rawPath = object.get("url").getAsString();
             this.rawPath = this.rawPath.isEmpty() ? null : this.rawPath;
+            if (this.rawPath != null) {
+                this.format = FileUtil.getSuffix(URI.create(this.rawPath).getPath());
+            }
         } catch (Exception e) {
             this.rawPath = null;
+            this.format = null;
         }
         return this.rawPath;
     }
@@ -72,6 +76,12 @@ public class NeteaseCloudMusic extends Music implements CacheableMusic, DynamicP
     @Override
     public String updateRawPath() {
         return this.getRawPath();
+    }
+
+    @Override
+    public String getLastSuffix() {
+        if (this.format == null) return this.getRawPath();
+        return this.format;
     }
 
     @Override
@@ -145,7 +155,7 @@ public class NeteaseCloudMusic extends Music implements CacheableMusic, DynamicP
 
     @Override
     public String getSuffix() {
-        return "mp3";
+        return this.getLastSuffix();
     }
 
     @Override

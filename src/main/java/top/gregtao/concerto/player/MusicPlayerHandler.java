@@ -311,7 +311,7 @@ public class MusicPlayerHandler {
                     return;
                 }
             }
-            ExecutorService service = Executors.newFixedThreadPool(16)
+            ExecutorService service = Executors.newFixedThreadPool(16);
             musics.forEach(music -> {
                 if (music instanceof CacheableMusic cacheableMusic) {
                     service.submit(() -> {

@@ -31,7 +31,8 @@ dependencies {
 	my('com.googlecode.soundlibs:mp3spi:1.9.5.4') {
 		exclude group: 'com.googlecode.soundlibs', module: 'tritonus-share'
 	}
-	my 'org.jflac:jflac-codec:1.5.2'
+//	my 'org.jflac:jflac-codec:1.5.2'
+	my 'com.github.GregTaoo:JustFLAC:85f0934435'
 	my 'com.github.trilarion:vorbis-support:1.1.0'
 	my('com.googlecode.soundlibs:tritonus-all:0.3.7.2') {
 		exclude group: 'com.googlecode.soundlibs', module: 'tritonus-share'

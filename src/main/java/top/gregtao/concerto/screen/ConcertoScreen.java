@@ -29,7 +29,7 @@ public class ConcertoScreen extends Screen {
     public void displayAlert(Text text) {
         this.message = text;
         this.messageVisible = true;
-        CompletableFuture.delayedExecutor(3, TimeUnit.SECONDS).execute(() -> {
+        CompletableFuture.delayedExecutor(5, TimeUnit.SECONDS).execute(() -> {
             this.message = Text.of("");
             this.messageVisible = false;
         });

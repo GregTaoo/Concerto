@@ -11,9 +11,9 @@ import javax.sound.sampled.UnsupportedAudioFileException;
 import org.jaudiotagger.audio.mp3.MP3AudioHeader;
 import org.jaudiotagger.audio.mp3.MP3File;
 
-import org.jflac.FLACDecoder;
-import org.jflac.io.RandomFileInputStream;
-import org.jflac.metadata.StreamInfo;
+import org.kc7bfi.jflac.FLACDecoder;
+import org.kc7bfi.jflac.io.RandomFileInputStream;
+import org.kc7bfi.jflac.metadata.StreamInfo;
 import top.gregtao.concerto.player.streamplayer.enums.AudioType;
 
 public final class TimeTool {

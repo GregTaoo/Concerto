@@ -45,7 +45,7 @@ public class HttpFileMusic extends PathFileMusic implements CacheableMusic {
 
     @Override
     public String getSuffix() {
-        String suffix = HttpUtil.getSuffix(this.getRawPath());
+        String suffix = HttpUtil.getSuffix(URI.create(this.getRawPath()).getPath());
         return suffix.contains("/") ? "mp3" : suffix;
     }
 

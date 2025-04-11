@@ -122,6 +122,12 @@ public class MusicCommand {
                     return 0;
                 })
         ).then(
+                ClientCommandManager.literal("restart").executes(context -> {
+                    MusicPlayer.resetInstance();
+                    TextUtil.commandMessageClient(context, Text.translatable("concerto.success"));
+                    return 0;
+                })
+        ).then(
                 ClientCommandManager.literal("mode").then(
                         ClientCommandManager.argument("mode", OrderTypeArgumentType.orderType()).executes((context -> {
                             OrderType type = OrderTypeArgumentType.getOrderType(context, "mode");
@@ -209,11 +215,13 @@ public class MusicCommand {
         ).then(
                 ClientCommandManager.literal("download-current").executes(context -> {
                     MusicPlayerHandler.downloadMusics(List.of(MusicPlayerHandler.INSTANCE.getCurrentMusic()));
+                    context.getSource().getPlayer().sendMessage(Text.translatable("concerto.success"), false);
                     return 0;
                 })
         ).then(
                 ClientCommandManager.literal("download-all").executes(context -> {
                     MusicPlayerHandler.downloadMusics(MusicPlayerHandler.INSTANCE.getMusicList());
+                    context.getSource().getPlayer().sendMessage(Text.translatable("concerto.success"), false);
                     return 0;
                 })
         ).then(

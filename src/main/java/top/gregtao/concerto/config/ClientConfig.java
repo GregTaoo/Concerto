@@ -75,6 +75,8 @@ public class ClientConfig extends ConfigFile {
         public String timeProgressTextColor = "#ffffffff";
         public String timeProgressColor = "#ff0155bc";
         public String timeProgressBgColor = "#ffa1c7f6";
+
+        public boolean textShadow = true;
     }
 
     public static class PositionXYSupplier {

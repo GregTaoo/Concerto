@@ -48,6 +48,8 @@ public abstract class Lyrics {
     // Override this function with this.addLine()
     public abstract void parse(String raw);
 
+    public abstract String toString();
+
     public Lyrics load(String raw) {
         this.parse(raw);
         this.sortLines();

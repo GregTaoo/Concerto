@@ -9,6 +9,7 @@ import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.*;
 import net.minecraft.util.Formatting;
+import top.gregtao.concerto.config.ClientConfig;
 import top.gregtao.concerto.enums.TextAlignment;
 
 import java.nio.charset.StandardCharsets;
@@ -43,7 +44,7 @@ public class TextUtil {
     }
 
     public static void renderText(Text text, TextAlignment align, int x, int y, DrawContext matrices, TextRenderer renderer, int color) {
-        matrices.drawTextWithShadow(renderer, text, getTextRenderX(text, align, renderer, x), y, color);
+        matrices.drawText(renderer, text, getTextRenderX(text, align, renderer, x), y, color, ClientConfig.INSTANCE.options.textShadow);
     }
 
     public static Style getRunCommandStyle(String command) {

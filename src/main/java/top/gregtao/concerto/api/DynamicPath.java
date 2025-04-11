@@ -6,6 +6,8 @@ public interface DynamicPath {
 
     String updateRawPath();
 
+    String getLastSuffix();
+
     String getLastLyrics();
 
     String getLastSubLyrics();

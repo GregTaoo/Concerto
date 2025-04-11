@@ -8,7 +8,6 @@ import org.jaudiotagger.audio.exceptions.ReadOnlyFileException;
 import org.jaudiotagger.tag.FieldKey;
 import org.jaudiotagger.tag.Tag;
 import org.jaudiotagger.tag.TagException;
-import org.jflac.sound.spi.FlacAudioFileReader;
 import top.gregtao.concerto.ConcertoClient;
 import top.gregtao.concerto.api.*;
 import top.gregtao.concerto.music.lyrics.DefaultFormatLyrics;
@@ -23,7 +22,6 @@ import top.gregtao.concerto.util.HttpUtil;
 import top.gregtao.concerto.util.Pair;
 import top.gregtao.concerto.util.TextUtil;
 
-import javax.sound.sampled.UnsupportedAudioFileException;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
@@ -46,15 +44,17 @@ public class LocalFileMusic extends PathFileMusic {
     @Override
     public InputStream getMusicSource() {
         try {
-            InputStream stream = FileUtil.createBuffered(new FileInputStream(this.getRawPath()));
-            try {
-                FlacAudioFileReader reader = new FlacAudioFileReader();
-                return FileUtil.createBuffered(reader.getAudioInputStream(stream));
-            } catch (UnsupportedAudioFileException e) {
-                return stream;
-            } catch (IOException e) {
-                return new ByteArrayInputStream(stream.readAllBytes());
-            }
+            // 读取文件字节
+            byte[] fileBytes = Files.readAllBytes(Path.of(this.getRawPath()));
+
+            // 计算需要对齐的字节数
+            int alignedLength = (fileBytes.length + 4095) / 4096 * 4096; // 对齐到下一个 4096 字节
+
+            // 创建新的字节数组，对齐到 4096 字节
+            byte[] alignedBytes = new byte[alignedLength];
+            System.arraycopy(fileBytes, 0, alignedBytes, 0, fileBytes.length);
+
+            return new ByteArrayInputStream(alignedBytes);
         } catch (IOException e) {
             throw new MusicSourceNotFoundException(e);
         }

@@ -50,14 +50,6 @@ public class QQMusicApiClient extends HttpApiClient {
         return String.valueOf((new Random().nextLong(1000000000L, 9999999999L)));
     }
 
-    public String getMp3Filename(String mid, String mediaMid) {
-        return "M800" + mid + mediaMid + ".mp3";
-    }
-
-    public String getOggFilename(String mid, String mediaMid) {
-        return "O800" + mid + mediaMid + ".ogg";
-    }
-
     public String getQQUin() throws IOException, URISyntaxException {
         String uin = this.getCookie("https://u.y.qq.com", "wxuin");
         if (!uin.isEmpty()) return uin;
@@ -91,22 +83,25 @@ public class QQMusicApiClient extends HttpApiClient {
         return gtk;
     }
 
-    public String getMusicLink(String mid, String mediaMid) {
+    public Pair<String, String> getMusicLink(String mid, String mediaMid) {
         try {
             String uin = this.getQQUin(), guid = this.generateGuid();
-            String url = "https://u.y.qq.com/cgi-bin/musicu.fcg?-=getplaysongvkey&format=json&loginUin=" + uin + "&hostUin=0&inCharset=utf-8&needNewCode=0&outCharset=utf-8&platform=yqq.json&data=%7B%22req_0%22%3A%7B%22module%22%3A%22vkey.GetVkeyServer%22%2C%22method%22%3A%22CgiGetVkey%22%2C%22param%22%3A%7B%22filename%22%3A%5B%22" + this.getOggFilename(mid, mediaMid) + "%22%5D%2C%22guid%22%3A%22" + guid + "%22%2C%22songmid%22%3A%5B%22" + mid + "%22%5D%2C%22songtype%22%3A%5B0%5D%2C%22uin%22%3A%22" + uin + "%22%2C%22loginflag%22%3A1%2C%22platform%22%3A%2220%22%7D%7D%2C%22comm%22%3A%7B%22uin%22%3A" + uin + "%2C%22format%22%3A%22json%22%2C%22ct%22%3A24%2C%22cv%22%3A0%7D%7D";
-            JsonObject object = parseJson(this.openUApi().url(url).get());
-            if (object == null) return "";
-            JsonObject data = object.getAsJsonObject("req_0").getAsJsonObject("data");
-            JsonObject midUrlInfo = data.getAsJsonArray("midurlinfo").get(0).getAsJsonObject();
-            String link = midUrlInfo.get("purl").getAsString();
-            JsonArray sip = data.getAsJsonArray("sip");
-            if (sip.isJsonNull() || sip.isEmpty() || link.isEmpty()) {
-                ConcertoClient.LOGGER.warn("Got empty link for QQ Music {}", mid);
-                return "";
-            } else {
-                return sip.get(0).getAsString() + link;
+            for (QQMusic.Level level : QQMusic.Level.values()) {
+                String url = "https://u.y.qq.com/cgi-bin/musicu.fcg?-=getplaysongvkey&format=json&loginUin=" + uin + "&hostUin=0&inCharset=utf-8&needNewCode=0&outCharset=utf-8&platform=yqq.json&data=%7B%22req_0%22%3A%7B%22module%22%3A%22vkey.GetVkeyServer%22%2C%22method%22%3A%22CgiGetVkey%22%2C%22param%22%3A%7B%22filename%22%3A%5B%22" +
+                             level.getFilename(mid, mediaMid) + "%22%5D%2C%22guid%22%3A%22" + guid + "%22%2C%22songmid%22%3A%5B%22" + mid + "%22%5D%2C%22songtype%22%3A%5B0%5D%2C%22uin%22%3A%22" + uin + "%22%2C%22loginflag%22%3A1%2C%22platform%22%3A%2220%22%7D%7D%2C%22comm%22%3A%7B%22uin%22%3A" + uin + "%2C%22format%22%3A%22json%22%2C%22ct%22%3A24%2C%22cv%22%3A0%7D%7D";
+                JsonObject object = parseJson(this.openUApi().url(url).get());
+                if (object != null) {
+                    JsonObject data = object.getAsJsonObject("req_0").getAsJsonObject("data");
+                    JsonObject midUrlInfo = data.getAsJsonArray("midurlinfo").get(0).getAsJsonObject();
+                    String link = midUrlInfo.get("purl").getAsString();
+                    JsonArray sip = data.getAsJsonArray("sip");
+                    if (sip.isJsonArray() && !sip.isEmpty() && !link.isEmpty()) {
+                        return Pair.of(sip.get(0).getAsString() + link, level.getSuffix());
+                    }
+                }
             }
+            ConcertoClient.LOGGER.warn("Got empty link for QQ Music {}", mid);
+            return Pair.of("", "");
         } catch (IOException | URISyntaxException e) {
             ConcertoClient.LOGGER.error("Error getting music link", e);
             throw new RuntimeException(e);

@@ -45,12 +45,11 @@ public class FileUtil {
     }
 
     public static BufferedInputStream createBuffered(InputStream inputStream) {
-        return new BufferedInputStream(inputStream, 16384);
+        return new BufferedInputStream(inputStream, 2 << 18); // 256 KB
     }
 
     public static String getSuffix(String name) {
-        String[] strings = name.split("\\.");
-        if (strings.length == 1) return "";
-        else return strings[strings.length - 1];
+        int idx = name.lastIndexOf(".");
+        return idx > 0 ? name.substring(idx + 1) : name;
     }
 }

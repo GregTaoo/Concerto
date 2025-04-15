@@ -20,10 +20,15 @@ import java.util.List;
 
 public class QQMusic extends Music implements CacheableMusic, DynamicPath {
 
-    public String mid, mediaMid, rawPath, rawLyrics, rawSubLyrics;
+    public String mid, mediaMid, rawPath, rawLyrics, rawSubLyrics, format;
 
     public QQMusic(String mid) {
         this.mid = mid;
+    }
+
+    public QQMusic(String mid, String mediaMid) {
+        this(mid);
+        this.mediaMid = mediaMid;
     }
 
     public QQMusic(JsonObject object, int type) {
@@ -96,10 +101,12 @@ public class QQMusic extends Music implements CacheableMusic, DynamicPath {
 
     public String getRawPath() {
         try {
-            this.rawPath = QQMusicApiClient.INSTANCE.getMusicLink(this.mid, this.mediaMid);
-            this.rawPath = this.rawPath.isEmpty() ? null : this.rawPath;
+            Pair<String, String> pair = QQMusicApiClient.INSTANCE.getMusicLink(this.mid, this.mediaMid);
+            this.rawPath = pair.getFirst().isEmpty() ? null : pair.getFirst();
+            this.format = pair.getSecond().isEmpty() ? null : pair.getSecond();
         } catch (Exception e) {
             this.rawPath = null;
+            this.format = null;
         }
         return this.rawPath;
     }
@@ -116,6 +123,12 @@ public class QQMusic extends Music implements CacheableMusic, DynamicPath {
     }
 
     @Override
+    public String getLastSuffix() {
+        if (this.format == null) return this.getRawPath();
+        return this.format;
+    }
+
+    @Override
     public String getLastLyrics() {
         if (this.rawLyrics == null) this.getLyrics();
         return this.rawLyrics;
@@ -128,7 +141,7 @@ public class QQMusic extends Music implements CacheableMusic, DynamicPath {
 
     @Override
     public String getSuffix() {
-        return "ogg";
+        return this.getLastSuffix();
     }
 
     @Override
@@ -139,5 +152,57 @@ public class QQMusic extends Music implements CacheableMusic, DynamicPath {
     @Override
     public boolean equals(Object obj) {
         return (obj instanceof QQMusic music) && music.mid.equals(this.mid);
+    }
+
+    public enum Level {
+        /*
+        MASTER: 臻品母带2.0, 24Bit 192kHz
+        ATMOS_2: 臻品全景声2.0, 16Bit 44.1kHz
+        ATMOS_51: 臻品音质2.0, 16Bit 44.1kHz
+        FLAC: flac 格式, 16Bit 44.1kHz ~ 24Bit 48kHz
+        OGG_640: ogg 格式, 640kbps
+        OGG_320: ogg 格式, 320kbps
+        OGG_192: ogg 格式, 192kbps
+        OGG_96: ogg 格式, 96kbps
+        MP3_320: mp3 格式, 320kbps
+        MP3_128: mp3 格式, 128kbps
+        ACC_192: m4a 格式, 192kbps
+        ACC_96: m4a 格式, 96kbps
+        ACC_48: m4a 格式, 48kbps
+        */
+
+        ATMOS_2("Q000", "flac"),
+        ATMOS_51("Q001", "flac"),
+        OGG_320("O800", "ogg"),
+        MP3_320("M800", "mp3"),
+        FLAC("F000", "flac"),
+        MP3_128("M500", "mp3"),
+        OGG_96("O400", "ogg"),
+
+        // 不支持的格式
+        // MASTER("AI00", "flac"),
+        // OGG_640("O801", "ogg"),
+        // ACC_192("C600", "m4a"),
+        // ACC_48("C200", "m4a"),
+        // ACC_96("C400", "m4a"),
+
+        // 会 404 的格式
+        // OGG_192("O600", "ogg"),
+        ;
+
+        private final String prefix, suffix;
+
+        Level(String prefix, String suffix) {
+            this.prefix = prefix;
+            this.suffix = suffix;
+        }
+
+        public String getSuffix() {
+            return this.suffix;
+        }
+
+        public String getFilename(String mid, String mediaMid) {
+            return this.prefix + mid + mediaMid + "." + this.suffix;
+        }
     }
 }

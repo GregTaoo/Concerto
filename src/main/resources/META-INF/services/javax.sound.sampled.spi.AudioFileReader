@@ -1,4 +1,4 @@
-org.jflac.sound.spi.FlacAudioFileReader
+org.kc7bfi.jflac.sound.spi.FlacAudioFileReader
 com.github.trilarion.sound.vorbis.sampled.spi.VorbisAudioFileReader
 javazoom.spi.mpeg.sampled.file.MpegAudioFileReader
 org.tritonus.sampled.file.AuAudioFileReader

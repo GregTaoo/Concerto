@@ -21,23 +21,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.naming.OperationNotSupportedException;
-import javax.sound.sampled.AudioFileFormat;
-import javax.sound.sampled.AudioFormat;
-import javax.sound.sampled.AudioInputStream;
-import javax.sound.sampled.AudioSystem;
-import javax.sound.sampled.BooleanControl;
-import javax.sound.sampled.DataLine;
-import javax.sound.sampled.FloatControl;
-import javax.sound.sampled.Line;
-import javax.sound.sampled.LineUnavailableException;
-import javax.sound.sampled.Mixer;
-import javax.sound.sampled.SourceDataLine;
-import javax.sound.sampled.UnsupportedAudioFileException;
-
-import org.jflac.FLACDecoder;
-import org.jflac.PCMProcessor;
-import org.jflac.metadata.StreamInfo;
-import org.jflac.util.ByteData;
+import javax.sound.sampled.*;
 
 import top.gregtao.concerto.player.streamplayer.enums.Status;
 import top.gregtao.concerto.player.streamplayer.stream.StreamPlayerException.PlayerException;
@@ -380,71 +364,14 @@ public class StreamPlayer implements StreamPlayerInterface, Callable<Void> {
 	@Override
 	public void setSpeedFactor(final double speedFactor) {
 		this.speedFactor = speedFactor;
-
-	}
-
-
-	private static class PCMDataProcessor implements PCMProcessor {
-		private final OutputStream outputStream;
-		private final int bit;
-
-		public PCMDataProcessor(OutputStream outputStream, int bit) {
-			this.outputStream = outputStream;
-			this.bit = bit;
-		}
-
-		@Override
-		public void processStreamInfo(StreamInfo streamInfo) {
-			// Process stream info if needed
-		}
-
-		@Override
-		public void processPCM(ByteData byteData) {
-			try {
-				if (this.bit == 24) {
-					// Get the PCM data
-					byte[] pcmData = byteData.getData();
-					int len = byteData.getLen();
-
-					// Convert 24-bit PCM to 16-bit PCM
-					byte[] bytes = new byte[(len / 3) * 2];
-					int k = 0;
-					for (int i = 0; i < len; i += 3) {
-						int sample = ((pcmData[i + 2] & 0xFF) << 16) | ((pcmData[i + 1] & 0xFF) << 8) | (pcmData[i] & 0xFF);
-						short sample16 = (short) (sample >> 8); // Drop the lowest 8 bits
-						bytes[k++] = (byte) (sample16 & 0xFF);
-						bytes[k++] = (byte) ((sample16 >> 8) & 0xFF);
-					}
-					outputStream.write(bytes, 0, bytes.length);
-				} else {
-					outputStream.write(byteData.getData(), 0, byteData.getLen());
-				}
-			} catch (IOException e) {
-				throw new RuntimeException(e);
-			}
-		}
 	}
 
 	public AudioInputStream decodeFlacToInputStream(InputStream inputStream, AudioFormat targetFormat, int bit) {
 		try {
 			logger.info(() -> "Entered decodeFlacToInputStream(" + inputStream + ")\n");
-			PipedInputStream pipedInputStream = new PipedInputStream();
-			PipedOutputStream pipedOutputStream = new PipedOutputStream(pipedInputStream);
-			FLACDecoder decoder = new FLACDecoder(inputStream);
-			PCMDataProcessor processor = new PCMDataProcessor(pipedOutputStream, bit);
-			decoder.addPCMProcessor(processor);
-            CompletableFuture.runAsync(() -> {
-				try {
-					decoder.decode();
-					pipedInputStream.close();
-					pipedOutputStream.close();
-				} catch (IOException e) {
-					throw new RuntimeException(e);
-				}
-			});
-			return new AudioInputStream(pipedInputStream, targetFormat, AudioSystem.NOT_SPECIFIED);
+			return new AudioInputStream(new FlacDecoderStream(inputStream, targetFormat, bit, logger), targetFormat, AudioSystem.NOT_SPECIFIED);
 		} catch (IOException e) {
-			e.printStackTrace();
+			logger.log(Level.SEVERE, e.getMessage(), e);
 			throw new RuntimeException(e);
 		}
 	}
@@ -475,6 +402,7 @@ public class StreamPlayer implements StreamPlayerInterface, Callable<Void> {
 
 			logger.info(() -> "Create Line : Source format : " + sourceFormat + "\n");
 
+			AudioFormat.Encoding encoding = AudioFormat.Encoding.PCM_SIGNED;
 			// Calculate the Sample Size in bits
 			int nSampleSizeInBits = sourceFormat.getSampleSizeInBits(), bitBackup = nSampleSizeInBits;
 			if (sourceFormat.getEncoding() == AudioFormat.Encoding.ULAW || sourceFormat.getEncoding() == AudioFormat.Encoding.ALAW
@@ -482,7 +410,7 @@ public class StreamPlayer implements StreamPlayerInterface, Callable<Void> {
 				nSampleSizeInBits = 16;
 
 			final AudioFormat targetFormat = new AudioFormat(
-					AudioFormat.Encoding.PCM_SIGNED,
+					encoding,
 					(float) (sourceFormat.getSampleRate() * speedFactor),
 					nSampleSizeInBits,
 					sourceFormat.getChannels(),
@@ -849,8 +777,6 @@ public class StreamPlayer implements StreamPlayerInterface, Callable<Void> {
 				try {
 					// Playing?
 					if (status == Status.PLAYING) {
-
-						// System.out.println("Inside Stream Player Run method")
 						int toRead = audioDataLength;
 						int totalRead = 0;
 
@@ -862,7 +788,7 @@ public class StreamPlayer implements StreamPlayerInterface, Callable<Void> {
 							// Check for under run
 							if (outlet.getSourceDataLine().available() >= outlet.getSourceDataLine().getBufferSize())
 								logger.info(() -> "Under run> Available=" + outlet.getSourceDataLine().available()
-									+ " , SourceDataLineBuffer=" + outlet.getSourceDataLine().getBufferSize());
+										+ " , SourceDataLineBuffer=" + outlet.getSourceDataLine().getBufferSize());
 
 						// Check if anything has been read
 						if (totalRead > 0) {

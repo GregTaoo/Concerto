@@ -34,7 +34,7 @@ public class HttpApiClient {
         this.cookieManager.setCookiePolicy(CookiePolicy.ACCEPT_ALL);
         this.client = HttpClient.newBuilder().cookieHandler(this.cookieManager).build();
         this.defaultHeaders = defaultHeaders;
-        this.cookieFile.read(this.cookieManager);
+        this.readCookie();
         initCookies.forEach((url, list) -> {
             try {
                 this.cookieManager.put(new URI(url), Map.of("Set-Cookie", list));
@@ -67,8 +67,12 @@ public class HttpApiClient {
         return this.name;
     }
 
-    public void updateCookie() {
+    public void writeCookie() {
         this.cookieFile.write(this.cookieManager);
+    }
+
+    public void readCookie() {
+        this.cookieFile.read(this.cookieManager);
     }
 
     public void clearCookie() {
@@ -91,11 +95,11 @@ public class HttpApiClient {
 
     public void setCookie(String url, String key, String value) throws IOException, URISyntaxException {
         this.cookieManager.put(new URI(url), Map.of("Set-Cookie", List.of(key + "=" + value)));
-        this.updateCookie();
+        this.writeCookie();
     }
 
     public static Map<Character, Character> ESCAPE_MAP = Map.of(
-            '\u00a0', ' ', '\r', '\n'
+            '\u00a0', ' ', '\ufeff', ' ', '\r', '\n'
     ); // escape illegal spaces
 
     public static String escapeChars(String string) {

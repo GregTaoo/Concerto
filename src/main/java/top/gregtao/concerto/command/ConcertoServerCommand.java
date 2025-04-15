@@ -10,6 +10,8 @@ import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import top.gregtao.concerto.ConcertoServer;
+import top.gregtao.concerto.http.netease.NeteaseCloudApiClient;
+import top.gregtao.concerto.http.qq.QQMusicApiClient;
 import top.gregtao.concerto.network.MusicDataPacket;
 import top.gregtao.concerto.network.room.ServerMusicAgent;
 import top.gregtao.concerto.network.ServerMusicNetworkHandler;
@@ -71,9 +73,16 @@ public class ConcertoServerCommand {
                 ).then(
                         CommandManager.literal("reload").requires(source -> source.hasPermissionLevel(2))
                                 .executes(context -> {
-                            ConcertoServer.reload();
-                            return 0;
-                        })
+                                    ConcertoServer.reload();
+                                    return 0;
+                                })
+                ).then(
+                        CommandManager.literal("reload-cookie").requires(source -> source.hasPermissionLevel(2))
+                                .executes(context -> {
+                                    NeteaseCloudApiClient.INSTANCE.readCookie();
+                                    QQMusicApiClient.INSTANCE.readCookie();
+                                    return 0;
+                                })
                 ).then(
                         CommandManager.literal("fetch-radios")
                                 .requires(source -> source.hasPermissionLevel(0)).executes(context -> {

@@ -83,7 +83,7 @@ public class HttpRequestBuilder {
         try {
             HttpResponse<InputStream> response = this.client.getClient().send(request, HttpResponse.BodyHandlers.ofInputStream());
             this.client.getLogger().info("STREAM {} GET {}", response.statusCode(), this.url);
-            this.client.updateCookie();
+            this.client.writeCookie();
             return response;
         } catch (IOException | InterruptedException e) {
             this.client.getLogger().error("ERROR GET STREAM {} : {}", this.url, e.getMessage());
@@ -102,7 +102,7 @@ public class HttpRequestBuilder {
             } else {
                 this.client.getLogger().info("{} GET {}", response.statusCode(), this.url);
             }
-            this.client.updateCookie();
+            this.client.writeCookie();
             return response;
         } catch (IOException | InterruptedException e) {
             this.client.getLogger().error("ERROR GET {} : {}", this.url, e.getMessage());
@@ -126,7 +126,7 @@ public class HttpRequestBuilder {
             } else {
                 this.client.getLogger().info("{} POST {}", response.statusCode(), this.url);
             }
-            this.client.updateCookie();
+            this.client.writeCookie();
             return response;
         } catch (IOException | InterruptedException e) {
             this.client.getLogger().error("ERROR POST {} : {}", this.url, e.getMessage());

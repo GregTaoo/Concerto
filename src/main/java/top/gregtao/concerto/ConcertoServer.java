@@ -12,6 +12,8 @@ import org.apache.logging.log4j.Logger;
 import top.gregtao.concerto.command.ConcertoServerCommand;
 import top.gregtao.concerto.config.PresetRadioConfig;
 import top.gregtao.concerto.config.ServerConfig;
+import top.gregtao.concerto.http.netease.NeteaseCloudApiClient;
+import top.gregtao.concerto.http.qq.QQMusicApiClient;
 import top.gregtao.concerto.network.ServerMusicNetworkHandler;
 
 public class ConcertoServer implements ModInitializer {
@@ -39,5 +41,7 @@ public class ConcertoServer implements ModInitializer {
     public static void reload() {
         ServerConfig.INSTANCE.readOptions();
         PresetRadioConfig.INSTANCE.read();
+        NeteaseCloudApiClient.INSTANCE.readCookie();
+        QQMusicApiClient.INSTANCE.readCookie();
     }
 }

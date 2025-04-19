@@ -120,8 +120,8 @@ public class InGameHudRenderer {
                         int x;
                         switch (options.timeProgressAlignment) {
                             case LEFT -> x = pos.x + timeWidth + 9;
-                            case CENTER -> x = pos.x - blankWidth / 2 - 10;
-                            default -> x = pos.x - blankWidth - 15;
+                            case CENTER -> x = pos.x - blankWidth / 2 + 9;
+                            default -> x = pos.x - blankWidth - 18;
                         }
                         context.fill(x, pos.y + 3, x + blankWidth - 20, pos.y + 5,
                                 (int) config.timeProgressBgColor.getNumber());

@@ -15,6 +15,8 @@ import java.util.stream.Stream;
 public class ConcertoOptions {
     public static ConcertoOptions INSTANCE = new ConcertoOptions(ClientConfig.INSTANCE);
 
+    public boolean canUpdate = false;
+
     private ClientConfig config;
     private final List<OptionsUpdater> updaters = new ArrayList<>();
 
@@ -105,10 +107,13 @@ public class ConcertoOptions {
     }
 
     public void readOptions() {
+        this.canUpdate = false;
         this.updaters.forEach(OptionsUpdater::readOptions);
+        this.canUpdate = true;
     }
 
     public void writeOptions() {
+        if (!this.canUpdate) return;
         this.updaters.forEach(OptionsUpdater::writeOptions);
         this.config.parseOptions();
     }
@@ -150,7 +155,7 @@ public class ConcertoOptions {
         Stream<SimpleOption<?>> streamOptions();
     }
 
-    private static class SingleBooleanOption implements OptionsUpdater {
+    private class SingleBooleanOption implements OptionsUpdater {
         public final SimpleOption<Boolean> option;
 
         private final Consumer<Boolean> writer;
@@ -172,6 +177,7 @@ public class ConcertoOptions {
 
         @Override
         public void writeOptions() {
+            if (!ConcertoOptions.this.canUpdate) return;
             this.writer.accept(this.option.getValue());
         }
 
@@ -181,7 +187,7 @@ public class ConcertoOptions {
         }
     }
 
-    private static class TextOptions implements OptionsUpdater {
+    private class TextOptions implements OptionsUpdater {
         public final SimpleOption<Boolean> display;
         public final SimpleOption<Integer> align;
         public final SimpleOption<Double> posXPercent;
@@ -254,6 +260,7 @@ public class ConcertoOptions {
         }
 
         public void writeOptions() {
+            if (!ConcertoOptions.this.canUpdate) return;
             this.writer.accept(
                     this.display.getValue(), TextAlignment.values()[this.align.getValue()],
                     getPositionXYString(

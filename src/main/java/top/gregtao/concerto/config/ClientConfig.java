@@ -48,8 +48,9 @@ public class ClientConfig extends ConfigFile {
     }
 
     public void resetOptions() {
-        this.write("");
-        this.readOptions();
+        this.options = new ClientConfigOptions();
+        this.parseOptions();
+        this.writeOptions();
     }
 
     public static class ClientConfigOptions {

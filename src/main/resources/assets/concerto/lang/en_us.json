@@ -215,10 +215,10 @@
   "concerto.error.invalid_path": "Invalid path or file format",
   "concerto.error.unsupported_operation": "Unsupported Operation!",
 
-  "concerto.options.confirmAfterReceived": "confirmAfterReceived",
-  "concerto.options.hideWhenChat": "hideWhenChat",
-  "concerto.options.printRequestResults": "printRequestResults",
-  "concerto.options.joinAgentWhenInvited": "joinAgentWhenInvited",
+  "concerto.options.confirmAfterReceived": "Shared music confirm needed",
+  "concerto.options.hideWhenChat": "Hide when chat",
+  "concerto.options.printRequestResults": "Print HTTP results",
+  "concerto.options.joinAgentWhenInvited": "Join agent when invited",
 
   "concerto.options.display.lyrics": "Show Lyrics",
   "concerto.options.align.lyrics": "Lyrics Align",

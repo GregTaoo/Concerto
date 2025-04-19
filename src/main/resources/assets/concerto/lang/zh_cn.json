@@ -215,9 +215,9 @@
   "concerto.error.invalid_path": "不可用的路径或文件格式",
   "concerto.error.unsupported_operation": "不支持的操作！",
 
-  "concerto.options.confirmAfterReceived": "自动接受音乐分享",
+  "concerto.options.confirmAfterReceived": "手动接受音乐分享",
   "concerto.options.hideWhenChat": "聊天时隐藏",
-  "concerto.options.printRequestResults": "打印请求结果",
+  "concerto.options.printRequestResults": "打印HTTP请求结果",
   "concerto.options.joinAgentWhenInvited": "自动加入点播",
 
   "concerto.options.display.lyrics": "主歌词",

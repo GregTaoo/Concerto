@@ -215,7 +215,7 @@
   "concerto.error.invalid_path": "Invalid path or file format",
   "concerto.error.unsupported_operation": "Unsupported Operation!",
 
-  "concerto.options.confirmAfterReceived": "Shared music confirm needed",
+  "concerto.options.confirmAfterReceived": "Confirm shared music",
   "concerto.options.hideWhenChat": "Hide when chat",
   "concerto.options.printRequestResults": "Print HTTP results",
   "concerto.options.joinAgentWhenInvited": "Join agent when invited",

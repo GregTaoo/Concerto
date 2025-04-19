@@ -58,9 +58,9 @@
 
    `dislike`: 取消喜欢当前歌曲
 
-   `download-current`: 下载当前歌曲到 `Concerto` 文件夹
+   `download-current`: 下载当前歌曲到 `Concerto` 文件夹（包括歌词文件）
 
-   `download-all`: 下载播放队列中的所有歌曲到 `Concerto` 文件夹
+   `download-all`: 下载播放队列中的所有歌曲到 `Concerto` 文件夹（包括歌词文件）
 
    `export-as-playlist`: 导出当前播放队列为服务端预设歌单格式 `JSON`（详见 服务端预设歌单）
 
@@ -76,6 +76,8 @@
    `audit list [页码]`: 列出第 `[页码]` 页的待审歌曲清单
 
    `reload`: 重新加载服务端配置文件（详见 服务端配置文件）
+
+   `reload-cookie`: 重新加载所有cookie文件
 
    `fetch-radios`: 技术性指令，同步服务端预设歌单到本地（允许普通用户使用）
 
@@ -231,6 +233,10 @@
 
 - Q: QQ音乐无法查看个人歌单/无法播放
 - A: 只能重新登录，目前无解决方法，每次开游戏都得重新登录
+
+
+- Q: QQ音乐服务端cookie隔一段时间就失效
+- A: 只能重新复制，目前无解决方法。可用 `/concerto-server reload-cookie` 重新加载cookie
 
 ### 使用的开源项目
 

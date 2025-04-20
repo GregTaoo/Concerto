@@ -33,7 +33,7 @@ public class ConcertoOptionsScreen extends ConcertoScreen {
         this.addSelectableChild(resetButton);
         this.addDrawableChild(resetButton);
         ButtonWidget doneButton = new ButtonWidget(this.width / 2 + 5, this.height - 26, 150, 20,
-                ScreenTexts.DONE, button -> this.close()
+                ScreenTexts.DONE, button -> this.onClose()
         );
         this.addSelectableChild(doneButton);
         this.addDrawableChild(doneButton);

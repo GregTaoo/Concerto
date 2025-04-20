@@ -10,7 +10,6 @@ import top.gregtao.concerto.util.ConcertoOptions;
 
 public class ConcertoOptionsScreen extends ConcertoScreen {
     protected OptionListWidget buttonList;
-    private ButtonWidget resetButton, doneButton;
 
     public ConcertoOptionsScreen(Screen parent) {
         super(Text.translatable("concerto.screen.options"), parent);
@@ -21,7 +20,8 @@ public class ConcertoOptionsScreen extends ConcertoScreen {
         this.buttonList = new OptionListWidget(this.client, this.width, this.height, 18, this.height - 32, 25);
         this.buttonList.addAll(ConcertoOptions.INSTANCE.getOptions());
         this.addSelectableChild(this.buttonList);
-        this.resetButton = ButtonWidget.builder(Text.translatable("concerto.reset"), button -> {
+        this.addDrawableChild(this.buttonList);
+        ButtonWidget resetButton = ButtonWidget.builder(Text.translatable("concerto.reset"), button -> {
             if (this.client != null) {
                 this.client.setScreen(new ConfirmScreen(confirmed -> {
                     ConcertoOptions.INSTANCE.resetOptions();
@@ -29,11 +29,14 @@ public class ConcertoOptionsScreen extends ConcertoScreen {
                 }, this.title, Text.translatable("concerto.reset_confirm")));
             }
         }).position(this.width / 2 - 155, this.height - 26).build();
-        this.addSelectableChild(this.resetButton);
-        this.doneButton = ButtonWidget.builder(
+        this.addSelectableChild(resetButton);
+        this.addDrawableChild(resetButton);
+        ButtonWidget doneButton = ButtonWidget.builder(
                 ScreenTexts.DONE, button -> this.close()
         ).position(this.width / 2 + 5, this.height - 26).build();
-        this.addSelectableChild(this.doneButton);
+        this.addSelectableChild(doneButton);
+        this.addDrawableChild(doneButton);
+        super.init();
     }
 
     @Override
@@ -44,9 +47,6 @@ public class ConcertoOptionsScreen extends ConcertoScreen {
     @Override
     public void render(MatrixStack matrices, int mouseX, int mouseY, float delta) {
         super.render(matrices, mouseX, mouseY, delta);
-        this.buttonList.render(matrices, mouseX, mouseY, delta);
-        this.resetButton.render(matrices, mouseX, mouseY, delta);
-        this.doneButton.render(matrices, mouseX, mouseY, delta);
         InGameHudRenderer.render(matrices);
     }
 }

@@ -17,26 +17,24 @@ public class ConcertoOptionsScreen extends ConcertoScreen {
 
     @Override
     protected void init() {
+        this.setRenderBg(false);
         this.buttonList = new ButtonListWidget(this.client, this.width, this.height, 18, this.height - 32, 25);
         this.buttonList.addAll(ConcertoOptions.INSTANCE.getOptions());
-        this.addSelectableChild(this.buttonList);
-        this.addDrawableChild(this.buttonList);
+        this.addChild(this.buttonList);
         ButtonWidget resetButton = new ButtonWidget(this.width / 2 - 155, this.height - 26, 150, 20,
                 new TranslatableText("concerto.reset"), button -> {
             if (this.client != null) {
-                this.client.setScreen(new ConfirmScreen(confirmed -> {
+                this.client.openScreen(new ConfirmScreen(confirmed -> {
                     ConcertoOptions.INSTANCE.resetOptions();
-                    this.client.setScreen(new ConcertoOptionsScreen(this.getParent()));
+                    this.client.openScreen(new ConcertoOptionsScreen(this.getParent()));
                 }, this.title, new TranslatableText("concerto.reset_confirm")));
             }
         });
-        this.addSelectableChild(resetButton);
-        this.addDrawableChild(resetButton);
+        this.addButton(resetButton);
         ButtonWidget doneButton = new ButtonWidget(this.width / 2 + 5, this.height - 26, 150, 20,
                 ScreenTexts.DONE, button -> this.onClose()
         );
-        this.addSelectableChild(doneButton);
-        this.addDrawableChild(doneButton);
+        this.addButton(doneButton);
         super.init();
     }
 
@@ -47,6 +45,7 @@ public class ConcertoOptionsScreen extends ConcertoScreen {
 
     @Override
     public void render(MatrixStack matrices, int mouseX, int mouseY, float delta) {
+        this.buttonList.render(matrices, mouseX, mouseY, delta);
         super.render(matrices, mouseX, mouseY, delta);
         InGameHudRenderer.render(matrices);
     }

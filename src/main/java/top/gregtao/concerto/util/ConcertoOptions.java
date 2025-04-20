@@ -1,5 +1,6 @@
 package top.gregtao.concerto.util;
 
+import net.minecraft.client.option.BooleanOption;
 import net.minecraft.client.option.CyclingOption;
 import net.minecraft.client.option.DoubleOption;
 import net.minecraft.client.option.Option;
@@ -21,43 +22,42 @@ public class ConcertoOptions {
     public ConcertoOptions(ClientConfig config) {
         this.config = config;
 
-        this.updaters.add(CyclingOption.create(
+        this.updaters.add(new BooleanOption(
                 "concerto.options.confirmAfterReceived",
                 o -> this.config.options.confirmAfterReceived,
-                (o, option, value) -> this.config.options.confirmAfterReceived = value
+                (o, value) -> this.config.options.confirmAfterReceived = value
         ));
 
-        this.updaters.add(CyclingOption.create(
+        this.updaters.add(new BooleanOption(
                 "concerto.options.hideWhenChat",
                 o -> this.config.options.hideWhenChat,
-                (o, option, value) -> this.config.options.hideWhenChat = value
+                (o, value) -> this.config.options.hideWhenChat = value
         ));
 
-        this.updaters.add(CyclingOption.create(
+        this.updaters.add(new BooleanOption(
                 "concerto.options.printRequestResults",
                 o -> this.config.options.printRequestResults,
-                (o, option, value) -> this.config.options.printRequestResults = value
+                (o, value) -> this.config.options.printRequestResults = value
         ));
 
-        this.updaters.add(CyclingOption.create(
+        this.updaters.add(new BooleanOption(
                 "concerto.options.joinAgentWhenInvited",
                 o -> this.config.options.joinAgentWhenInvited,
-                (o, option, value) -> this.config.options.joinAgentWhenInvited = value
+                (o, value) -> this.config.options.joinAgentWhenInvited = value
         ));
 
         // ====================================
 
-        this.updaters.add(CyclingOption.create(
+        this.updaters.add(new BooleanOption(
                 "concerto.options.display.lyrics",
                 o -> this.config.options.displayLyrics,
-                (o, option, value) -> this.config.options.displayLyrics = value
+                (o, value) -> this.config.options.displayLyrics = value
         ));
-        this.updaters.add(CyclingOption.create(
+        this.updaters.add(new CyclingOption(
                 "concerto.options.align.lyrics",
-                TextAlignment.values(),
-                align -> new TranslatableText("concerto.options.align." + align.name().toLowerCase()),
-                o -> this.config.options.lyricsAlignment,
-                (o, option, value) -> this.config.options.lyricsAlignment = value
+                (o, x) -> this.config.options.lyricsAlignment = getNextAlignment(this.config.options.lyricsAlignment),
+                (o, option) -> getAlignValueText(
+                        "concerto.options.align.lyrics", this.config.options.lyricsAlignment)
         ));
         this.updaters.add(new DoubleOption(
                 "concerto.options.posXPercent.lyrics", 0.0, 1.0, 0.0F,
@@ -98,23 +98,16 @@ public class ConcertoOptions {
 
         // ====================================
 
-        this.updaters.add(CyclingOption.create(
+        this.updaters.add(new BooleanOption(
                 "concerto.options.display.subLyrics",
                 o -> this.config.options.displaySubLyrics,
-                (o, option, value) -> {
-                    this.config.options.displaySubLyrics = value;
-                    this.config.parseOptions();
-                }
+                (o, value) -> this.config.options.displaySubLyrics = value
         ));
-        this.updaters.add(CyclingOption.create(
+        this.updaters.add(new CyclingOption(
                 "concerto.options.align.subLyrics",
-                TextAlignment.values(),
-                align -> new TranslatableText("concerto.options.align." + align.name().toLowerCase()),
-                o -> this.config.options.subLyricsAlignment,
-                (o, option, value) -> {
-                    this.config.options.subLyricsAlignment = value;
-                    this.config.parseOptions();
-                }
+                (o, x) -> this.config.options.subLyricsAlignment = getNextAlignment(this.config.options.subLyricsAlignment),
+                (o, option) -> getAlignValueText(
+                        "concerto.options.align.subLyrics", this.config.options.subLyricsAlignment)
         ));
         this.updaters.add(new DoubleOption(
                 "concerto.options.posXPercent.subLyrics", 0.0, 1.0, 0.0F,
@@ -159,23 +152,16 @@ public class ConcertoOptions {
 
         // ====================================
 
-        this.updaters.add(CyclingOption.create(
+        this.updaters.add(new BooleanOption(
                 "concerto.options.display.musicDetails",
                 o -> this.config.options.displayMusicDetails,
-                (o, option, value) -> {
-                    this.config.options.displayMusicDetails = value;
-                    this.config.parseOptions();
-                }
+                (o, value) -> this.config.options.displayMusicDetails = value
         ));
-        this.updaters.add(CyclingOption.create(
+        this.updaters.add(new CyclingOption(
                 "concerto.options.align.musicDetails",
-                TextAlignment.values(),
-                align -> new TranslatableText("concerto.options.align." + align.name().toLowerCase()),
-                o -> this.config.options.musicDetailsAlignment,
-                (o, option, value) -> {
-                    this.config.options.musicDetailsAlignment = value;
-                    this.config.parseOptions();
-                }
+                (o, x) -> this.config.options.musicDetailsAlignment = getNextAlignment(this.config.options.musicDetailsAlignment),
+                (o, option) -> getAlignValueText(
+                        "concerto.options.align.musicDetails", this.config.options.musicDetailsAlignment)
         ));
         this.updaters.add(new DoubleOption(
                 "concerto.options.posXPercent.musicDetails", 0.0, 1.0, 0.0F,
@@ -220,23 +206,16 @@ public class ConcertoOptions {
 
         // ====================================
 
-        this.updaters.add(CyclingOption.create(
+        this.updaters.add(new BooleanOption(
                 "concerto.options.display.timeProgress",
                 o -> this.config.options.displayTimeProgress,
-                (o, option, value) -> {
-                    this.config.options.displayTimeProgress = value;
-                    this.config.parseOptions();
-                }
+                (o, value) -> this.config.options.displayTimeProgress = value
         ));
-        this.updaters.add(CyclingOption.create(
+        this.updaters.add(new CyclingOption(
                 "concerto.options.align.timeProgress",
-                TextAlignment.values(),
-                align -> new TranslatableText("concerto.options.align." + align.name().toLowerCase()),
-                o -> this.config.options.timeProgressAlignment,
-                (o, option, value) -> {
-                    this.config.options.timeProgressAlignment = value;
-                    this.config.parseOptions();
-                }
+                (o, x) -> this.config.options.timeProgressAlignment = getNextAlignment(this.config.options.timeProgressAlignment),
+                (o, option) -> getAlignValueText(
+                        "concerto.options.align.timeProgress", this.config.options.timeProgressAlignment)
         ));
         this.updaters.add(new DoubleOption(
                 "concerto.options.posXPercent.timeProgress", 0.0, 1.0, 0.0F,
@@ -281,10 +260,10 @@ public class ConcertoOptions {
 
         // ====================================
 
-        this.updaters.add(CyclingOption.create(
+        this.updaters.add(new BooleanOption(
                 "concerto.options.textShadow",
                 o -> this.config.options.textShadow,
-                (o, option, value) -> this.config.options.textShadow = value
+                (o, value) -> this.config.options.textShadow = value
         ));
     }
 
@@ -321,5 +300,14 @@ public class ConcertoOptions {
                 supplier.getX().getPercentage(), supplier.getX().getDelta(),
                 supplier.getY().getPercentage(), supplier.getY().getDelta()
         );
+    }
+
+    private static Text getAlignValueText(String prefix, TextAlignment value) {
+        return new TranslatableText("concerto.options.align", new TranslatableText(prefix),
+                new TranslatableText("concerto.options.align." + value.name().toLowerCase()));
+    }
+
+    private static TextAlignment getNextAlignment(TextAlignment align) {
+        return TextAlignment.values()[(align.ordinal() + 1) % 3];
     }
 }

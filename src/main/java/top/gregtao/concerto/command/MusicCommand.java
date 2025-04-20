@@ -89,7 +89,7 @@ public class MusicCommand {
         ).then(
                 ClientCommandManager.literal("stop").executes(context -> {
                     player.started = false;
-                    player.playNextLock = true;
+                    player.playNextLock.set(true);
                     player.stop();
                     MusicPlayerHandler.INSTANCE.resetInfo();
                     TextUtil.commandMessageClient(context, new TranslatableText("concerto.player.stop"));

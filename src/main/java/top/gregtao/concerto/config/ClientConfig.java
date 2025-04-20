@@ -26,7 +26,10 @@ public class ClientConfig extends ConfigFile {
 
         MusicCacheManager.INSTANCE = new MusicCacheManager(this.options.maxCacheSize);
         CacheManager.IMAGE_CACHE_MANAGER = new CacheManager("images", this.options.maxCacheSize);
+        this.parseOptions();
+    }
 
+    public void parseOptions() {
         this.lyricsPosSupplier = new PositionXYSupplier(this.options.lyricsPosition);
         this.subLyricsPosSupplier = new PositionXYSupplier(this.options.subLyricsPosition);
         this.musicDetailsPosSupplier = new PositionXYSupplier(this.options.musicDetailsPosition);
@@ -44,12 +47,19 @@ public class ClientConfig extends ConfigFile {
         this.write(new GsonBuilder().setPrettyPrinting().create().toJson(this.options, ClientConfigOptions.class));
     }
 
+    public void resetOptions() {
+        this.options = new ClientConfigOptions();
+        this.parseOptions();
+        this.writeOptions();
+    }
+
     public static class ClientConfigOptions {
         public boolean confirmAfterReceived = true;
         public boolean hideWhenChat = true;
         public boolean printRequestResults = false;
-        public int maxCacheSize = 1000 * 1000 * 100;
         public boolean joinAgentWhenInvited = false;
+
+        public int maxCacheSize = 1000 * 1000 * 100;
         public boolean registerMusicCommand = true;
         public float scrollingTextSpeed = 1.0f;
         public NeteaseCloudMusic.Level neteaseMusicQuality = NeteaseCloudMusic.Level.HIRES;
@@ -99,6 +109,14 @@ public class ClientConfig extends ConfigFile {
         public Vector2i getPos(int width, int height) {
             return new Vector2i(this.getX(width), this.getY(height));
         }
+
+        public PositionSupplier getX() {
+            return this.x;
+        }
+
+        public PositionSupplier getY() {
+            return this.y;
+        }
     }
 
     public static class PositionSupplier {
@@ -125,6 +143,22 @@ public class ClientConfig extends ConfigFile {
 
         public int getPosition(int total) {
             return (int) (total * this.percentage) + this.delta;
+        }
+
+        public double getPercentage() {
+            return this.percentage;
+        }
+
+        public int getDelta() {
+            return this.delta;
+        }
+
+        public void setPercentage(double percentage) {
+            this.percentage = (float) percentage;
+        }
+
+        public void setDelta(int delta) {
+            this.delta = delta;
         }
     }
 

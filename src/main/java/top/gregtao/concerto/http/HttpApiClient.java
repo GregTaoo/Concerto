@@ -93,6 +93,10 @@ public class HttpApiClient {
         return "";
     }
 
+    public CookieFile getCookieFile() {
+        return this.cookieFile;
+    }
+
     public void setCookie(String url, String key, String value) throws IOException, URISyntaxException {
         this.cookieManager.put(new URI(url), Map.of("Set-Cookie", List.of(key + "=" + value)));
         this.writeCookie();

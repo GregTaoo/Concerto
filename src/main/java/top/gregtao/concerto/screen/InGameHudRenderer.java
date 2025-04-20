@@ -122,10 +122,17 @@ public class InGameHudRenderer {
 
                     int startX = TextUtil.getTextRenderX(text3, options.musicDetailsAlignment, client.textRenderer, pos.x);
                     enableScissor(startX, pos.y, startX + text3Width, pos.y + client.textRenderer.fontHeight);
-                    DrawableHelper.drawTextWithShadow(
-                            matrices, client.textRenderer, text2, startX + MUSIC_DETAIL_SCROLL.getDx(),
-                            pos.y, (int) config.musicDetailsColor.getNumber()
-                    );
+                    if (ClientConfig.INSTANCE.options.textShadow) {
+                        client.textRenderer.drawWithShadow(
+                                matrices, text2, startX + MUSIC_DETAIL_SCROLL.getDx(),
+                                pos.y, (int) config.musicDetailsColor.getNumber()
+                        );
+                    } else {
+                        client.textRenderer.draw(
+                                matrices, text2, startX + MUSIC_DETAIL_SCROLL.getDx(),
+                                pos.y, (int) config.musicDetailsColor.getNumber()
+                        );
+                    }
                     disableScissor();
                 }
                 if (options.displayTimeProgress) {
@@ -138,8 +145,8 @@ public class InGameHudRenderer {
                         int x;
                         switch (options.timeProgressAlignment) {
                             case LEFT -> x = pos.x + timeWidth + 9;
-                            case CENTER -> x = pos.x - blankWidth / 2 - 10;
-                            default -> x = pos.x - blankWidth - 15;
+                            case CENTER -> x = pos.x - blankWidth / 2 + 9;
+                            default -> x = pos.x - blankWidth - 18;
                         }
                         DrawableHelper.fill(matrices, x, pos.y + 3, x + blankWidth - 20, pos.y + 5,
                                 (int) config.timeProgressBgColor.getNumber());

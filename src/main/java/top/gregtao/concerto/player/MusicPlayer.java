@@ -23,6 +23,7 @@ import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.logging.FileHandler;
@@ -68,7 +69,7 @@ public class MusicPlayer extends StreamPlayer implements StreamPlayerListener {
 
     public boolean started = false;
 
-    public boolean playNextLock = false;
+    public AtomicBoolean playNextLock = new AtomicBoolean(false);
 
     public boolean isPlayingTemp = false;
 
@@ -200,12 +201,12 @@ public class MusicPlayer extends StreamPlayer implements StreamPlayerListener {
     public void statusUpdated(StreamPlayerEvent event) {
         Status status = event.getPlayerStatus();
         if (status == Status.EOM) {
-            if (!this.playNextLock) {
+            if (!this.playNextLock.get()) {
                 MusicPlayerHandler.INSTANCE.resetInfo();
             }
             if (MusicPlayerHandler.INSTANCE.isEmpty()) {
                 this.started = false;
-            } else if (!this.playNextLock && !this.isPlayingTemp) {
+            } else if (!this.playNextLock.get() && !this.isPlayingTemp) {
                 this.playNext(1);
             }
             this.forcePaused = this.isPlayingTemp = false;
@@ -217,7 +218,8 @@ public class MusicPlayer extends StreamPlayer implements StreamPlayerListener {
             InputStream source = music.getMusicSourceOrNull();
             if (source == null) return;
             this.forcePaused = false;
-            this.playNextLock = this.started = true;
+            this.playNextLock.set(true);
+            this.started = true;
             this.stop();
             MusicPlayerHandler status = MusicPlayerHandler.INSTANCE;
             status.resetInfo();
@@ -235,7 +237,7 @@ public class MusicPlayer extends StreamPlayer implements StreamPlayerListener {
                 ConcertoClient.LOGGER.error(e.toString());
                 throw new RuntimeException(e);
             }
-            this.playNextLock = false;
+            this.playNextLock.set(false);
         }, callback);
     }
 
@@ -258,7 +260,7 @@ public class MusicPlayer extends StreamPlayer implements StreamPlayerListener {
                     this.started = false;
                     return;
                 }
-                this.playNextLock = true;
+                this.playNextLock.set(true);
                 this.stop();
                 Music music = MusicPlayerHandler.INSTANCE.playNext(forward);
                 if (music != null) {
@@ -285,7 +287,8 @@ public class MusicPlayer extends StreamPlayer implements StreamPlayerListener {
                     MusicRoom.clientUpdate(music);
                     callback.accept(MusicPlayerHandler.INSTANCE.getCurrentIndex());
                 }
-                this.playNextLock = this.isPlayingTemp = this.forcePaused = false;
+                this.playNextLock.set(false);
+                this.isPlayingTemp = this.forcePaused = false;
             } catch (Exception e) {
                 this.started = this.isPlayingTemp = this.forcePaused = false;
                 ConcertoClient.LOGGER.error(e.toString());
@@ -304,7 +307,7 @@ public class MusicPlayer extends StreamPlayer implements StreamPlayerListener {
     public void start() {
         this.started = true;
         this.forcePaused = false;
-        this.playNextLock = false;
+        this.playNextLock.set(false);
         this.playNext(0);
     }
 

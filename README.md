@@ -11,7 +11,7 @@
 -----------------------------
 
 
-**Wiki 基准模组版本：1.3.7**
+**Wiki 基准模组版本：1.3.8**
 
 目前已知支持版本：1.21.5, 1.21.4, 1.21.1, 1.20.6, 1.20.1, 1.19.4, 1.18.2, 1.17.1, 1.16.5，其余版本未经测试
 
@@ -58,9 +58,9 @@
 
    `dislike`: 取消喜欢当前歌曲
 
-   `download-current`: 下载当前歌曲到 `Concerto` 文件夹
+   `download-current`: 下载当前歌曲到 `Concerto` 文件夹（包括歌词文件）
 
-   `download-all`: 下载播放队列中的所有歌曲到 `Concerto` 文件夹
+   `download-all`: 下载播放队列中的所有歌曲到 `Concerto` 文件夹（包括歌词文件）
 
    `export-as-playlist`: 导出当前播放队列为服务端预设歌单格式 `JSON`（详见 服务端预设歌单）
 
@@ -76,6 +76,8 @@
    `audit list [页码]`: 列出第 `[页码]` 页的待审歌曲清单
 
    `reload`: 重新加载服务端配置文件（详见 服务端配置文件）
+
+   `reload-cookie`: 重新加载所有cookie文件
 
    `fetch-radios`: 技术性指令，同步服务端预设歌单到本地（允许普通用户使用）
 
@@ -171,7 +173,7 @@
 ### 客户端配置文件
 
 - 文件位于 `Concerto/client_config.json`
-- `confirmAfterReceived`: 自动接受所有接收到的音乐分享（默认关闭）
+- `confirmAfterReceived`: 手动接受所有接收到的音乐分享（默认开启）
 - `hideWhenChat`: 在聊天栏打开时隐藏歌词/歌曲信息（默认启用）
 - `printRequestResults`: 输出HTTP请求返回的数据；安全起见，除非有必要，否则最好不要启用（默认关闭）
 - `maxCacheSize`: 最大缓存大小（默认 100MB）
@@ -231,6 +233,10 @@
 
 - Q: QQ音乐无法查看个人歌单/无法播放
 - A: 只能重新登录，目前无解决方法，每次开游戏都得重新登录
+
+
+- Q: QQ音乐服务端cookie隔一段时间就失效
+- A: 只能重新复制，目前无解决方法。可用 `/concerto-server reload-cookie` 重新加载cookie
 
 ### 使用的开源项目
 

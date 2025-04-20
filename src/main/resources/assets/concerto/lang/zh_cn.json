@@ -20,6 +20,8 @@
   "concerto.drag_confirm": "确认将下列 文件/文件夹 添加到 Concerto?",
   "concerto.thank_you": "感谢支持！您的支持是我更新的最大动力",
   "concerto.report_bugs": "报告漏洞",
+  "concerto.reset": "重置",
+  "concerto.reset_confirm": "确定要重置吗？",
 
   "concerto.playlist": "歌单",
   "concerto.album": "专辑",
@@ -140,6 +142,7 @@
   "concerto.screen.acknowledgement": "感谢支持!",
   "concerto.screen.copy_link": "复制链接",
   "concerto.screen.pause_resume": "暂停/继续播放",
+  "concerto.screen.options": "Concerto 设置",
 
   "concerto.donate.afdian": "爱发电",
   "concerto.donate.bilibili": "哔哩哔哩",
@@ -211,5 +214,44 @@
   "concerto.agent.add.too_quick": "请求过于频繁！请在 %d 秒后重试",
 
   "concerto.error.invalid_path": "不可用的路径或文件格式",
-  "concerto.error.unsupported_operation": "不支持的操作！"
+  "concerto.error.unsupported_operation": "不支持的操作！",
+
+  "concerto.options.confirmAfterReceived": "手动接受音乐分享",
+  "concerto.options.hideWhenChat": "聊天时隐藏",
+  "concerto.options.printRequestResults": "打印HTTP请求结果",
+  "concerto.options.joinAgentWhenInvited": "自动加入点播",
+  "concerto.options.textShadow": "文字阴影",
+
+  "concerto.options.display.lyrics": "主歌词",
+  "concerto.options.align.lyrics": "歌词对齐",
+  "concerto.options.posXPercent.lyrics": "歌词 X %",
+  "concerto.options.posXDelta.lyrics": "歌词 X ±px",
+  "concerto.options.posYPercent.lyrics": "歌词 Y %",
+  "concerto.options.posYDelta.lyrics": "歌词 Y ±px",
+
+  "concerto.options.display.subLyrics": "副歌词",
+  "concerto.options.align.subLyrics": "副歌词对齐",
+  "concerto.options.posXPercent.subLyrics": "副歌词 X %",
+  "concerto.options.posXDelta.subLyrics": "副歌词 X ±px",
+  "concerto.options.posYPercent.subLyrics": "副歌词 Y %",
+  "concerto.options.posYDelta.subLyrics": "副歌词 Y ±px",
+
+  "concerto.options.display.musicDetails": "歌曲信息",
+  "concerto.options.align.musicDetails": "歌曲信息对齐",
+  "concerto.options.posXPercent.musicDetails": "歌曲信息 X %",
+  "concerto.options.posXDelta.musicDetails": "歌曲信息 X ±px",
+  "concerto.options.posYPercent.musicDetails": "歌曲信息 Y %",
+  "concerto.options.posYDelta.musicDetails": "歌曲信息 Y ±px",
+
+  "concerto.options.display.timeProgress": "进度条",
+  "concerto.options.align.timeProgress": "进度条对齐",
+  "concerto.options.posXPercent.timeProgress": "进度条 X %",
+  "concerto.options.posXDelta.timeProgress": "进度条 X ±px",
+  "concerto.options.posYPercent.timeProgress": "进度条 Y %",
+  "concerto.options.posYDelta.timeProgress": "进度条 Y ±px",
+
+  "concerto.options.align": "%s: %s",
+  "concerto.options.align.left": "左",
+  "concerto.options.align.center": "中",
+  "concerto.options.align.right": "右"
 }

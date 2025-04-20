@@ -60,6 +60,10 @@ public class ConcertoScreen extends Screen {
         }
     }
 
+    protected Screen getParent() {
+        return this.parent;
+    }
+
     @Override
     public void close() {
         super.close();

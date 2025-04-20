@@ -1,5 +1,6 @@
 package top.gregtao.concerto.screen;
 
+import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.ConfirmScreen;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.*;
@@ -67,5 +68,11 @@ public class ConcertoOptionsScreen extends ConcertoScreen {
             this.body.applyAllPendingValues();
         }
         super.close();
+    }
+
+    @Override
+    public void render(DrawContext matrices, int mouseX, int mouseY, float delta) {
+        super.render(matrices, mouseX, mouseY, delta);
+        InGameHudRenderer.render(matrices);
     }
 }

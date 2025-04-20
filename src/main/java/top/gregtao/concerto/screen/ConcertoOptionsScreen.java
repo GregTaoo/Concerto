@@ -37,6 +37,7 @@ public class ConcertoOptionsScreen extends ConcertoScreen {
         );
         this.addSelectableChild(doneButton);
         this.addDrawableChild(doneButton);
+        super.init();
     }
 
     @Override

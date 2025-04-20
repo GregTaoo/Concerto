@@ -1,9 +1,9 @@
 package top.gregtao.concerto.screen;
 
-import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.ConfirmScreen;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.*;
+import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.screen.ScreenTexts;
 import net.minecraft.text.Text;
 import top.gregtao.concerto.util.ConcertoOptions;
@@ -42,7 +42,7 @@ public class ConcertoOptionsScreen extends ConcertoScreen {
     }
 
     @Override
-    public void render(DrawContext matrices, int mouseX, int mouseY, float delta) {
+    public void render(MatrixStack matrices, int mouseX, int mouseY, float delta) {
         super.render(matrices, mouseX, mouseY, delta);
         this.buttonList.render(matrices, mouseX, mouseY, delta);
         this.resetButton.render(matrices, mouseX, mouseY, delta);

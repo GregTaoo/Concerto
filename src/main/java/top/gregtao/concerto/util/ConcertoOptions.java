@@ -22,26 +22,31 @@ public class ConcertoOptions {
 
     public ConcertoOptions(ClientConfig config) {
         this.config = config;
+
         this.updaters.add(new SingleBooleanOption(
                 "confirmAfterReceived",
                 value -> this.config.options.confirmAfterReceived = value,
                 () -> this.config.options.confirmAfterReceived
         ));
+
         this.updaters.add(new SingleBooleanOption(
                 "hideWhenChat",
                 value -> this.config.options.hideWhenChat = value,
                 () -> this.config.options.hideWhenChat
         ));
+
         this.updaters.add(new SingleBooleanOption(
                 "printRequestResults",
                 value -> this.config.options.printRequestResults = value,
                 () -> this.config.options.printRequestResults
         ));
+
         this.updaters.add(new SingleBooleanOption(
                 "joinAgentWhenInvited",
                 value -> this.config.options.joinAgentWhenInvited = value,
                 () -> this.config.options.joinAgentWhenInvited
         ));
+
         this.updaters.add(new TextOptions("lyrics", (display, align, pos) -> {
             this.config.options.displayLyrics = display;
             this.config.options.lyricsAlignment = align;
@@ -52,6 +57,7 @@ public class ConcertoOptions {
             options.align.setValue(this.config.options.lyricsAlignment.ordinal());
             TextOptions.setPosition(options, this.config.lyricsPosSupplier);
         }));
+
         this.updaters.add(new TextOptions("subLyrics", (display, align, pos) -> {
             this.config.options.displaySubLyrics = display;
             this.config.options.subLyricsAlignment = align;
@@ -62,6 +68,7 @@ public class ConcertoOptions {
             options.align.setValue(this.config.options.subLyricsAlignment.ordinal());
             TextOptions.setPosition(options, this.config.subLyricsPosSupplier);
         }));
+
         this.updaters.add(new TextOptions("musicDetails", (display, align, pos) -> {
             this.config.options.displayMusicDetails = display;
             this.config.options.musicDetailsAlignment = align;
@@ -72,6 +79,7 @@ public class ConcertoOptions {
             options.align.setValue(this.config.options.musicDetailsAlignment.ordinal());
             TextOptions.setPosition(options, this.config.musicDetailsPosSupplier);
         }));
+
         this.updaters.add(new TextOptions("timeProgress", (display, align, pos) -> {
             this.config.options.displayTimeProgress = display;
             this.config.options.timeProgressAlignment = align;
@@ -82,6 +90,7 @@ public class ConcertoOptions {
             options.align.setValue(this.config.options.timeProgressAlignment.ordinal());
             TextOptions.setPosition(options, this.config.timeProgressPosSupplier);
         }));
+
         this.updaters.add(new SingleBooleanOption(
                 "textShadow",
                 value -> this.config.options.textShadow = value,

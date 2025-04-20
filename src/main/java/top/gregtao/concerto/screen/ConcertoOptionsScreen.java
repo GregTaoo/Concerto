@@ -18,6 +18,7 @@ public class ConcertoOptionsScreen extends ConcertoScreen {
 
     @Override
     protected void init() {
+        this.layout.setHeaderHeight(18);
         this.initBody();
         this.initFooter();
         this.layout.forEachChild(this::addDrawableChild);

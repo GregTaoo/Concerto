@@ -20,6 +20,8 @@
   "concerto.drag_confirm": "Do you want to add the following files/folders to Concerto?",
   "concerto.thank_you": "Thank you! Your support keeps me going always!",
   "concerto.report_bugs": "Report Bugs",
+  "concerto.reset": "Reset",
+  "concerto.reset_confirm": "Are you sure you want to reset?",
 
   "concerto.playlist": "Playlist",
   "concerto.album": "Album",
@@ -98,11 +100,11 @@
   "concerto.screen.copy_link": "Copy link",
 
   "concerto.screen.add.local_file": "Local File:",
-  "concerto.screen.add.local_file.folder": "Local File Path:",
+  "concerto.screen.add.local_file.folder": "Local Folder:",
   "concerto.screen.add.internet": "Internet:",
-  "concerto.screen.add.netease_cloud": "NeteaseCloud Music:",
-  "concerto.screen.add.netease_cloud.playlist": "NeteaseCloud Playlist:",
-  "concerto.screen.add.netease_cloud.album": "NeteaseCloud Album:",
+  "concerto.screen.add.netease_cloud": "Netease Music:",
+  "concerto.screen.add.netease_cloud.playlist": "Netease Playlist:",
+  "concerto.screen.add.netease_cloud.album": "Netease Album:",
   "concerto.screen.add.qq": "QQ Music (MID):",
   "concerto.screen.add.bilibili": "Bilibili (BVID):",
 
@@ -140,6 +142,7 @@
   "concerto.screen.preset_radios": "Server Preset Radios",
   "concerto.screen.acknowledgement": "Thank you for supporting!",
   "concerto.screen.pause_resume": "Pause/Resume",
+  "concerto.screen.options": "Concerto Settings",
 
   "concerto.donate.afdian": "Afdian",
   "concerto.donate.bilibili": "Bilibili",
@@ -211,5 +214,44 @@
   "concerto.agent.add.too_quick": "You are requesting too quickly! Please retry after %d seconds.",
 
   "concerto.error.invalid_path": "Invalid path or file format",
-  "concerto.error.unsupported_operation": "Unsupported Operation!"
+  "concerto.error.unsupported_operation": "Unsupported Operation!",
+
+  "concerto.options.confirmAfterReceived": "Confirm shared music",
+  "concerto.options.hideWhenChat": "Hide when chat",
+  "concerto.options.printRequestResults": "Print HTTP results",
+  "concerto.options.joinAgentWhenInvited": "Join agent when invited",
+  "concerto.options.textShadow": "Text shadow",
+
+  "concerto.options.display.lyrics": "Show Lyrics",
+  "concerto.options.align.lyrics": "Lyrics Align",
+  "concerto.options.posXPercent.lyrics": "Lyrics X %",
+  "concerto.options.posXDelta.lyrics": "Lyrics X ±px",
+  "concerto.options.posYPercent.lyrics": "Lyrics Y %",
+  "concerto.options.posYDelta.lyrics": "Lyrics Y ±px",
+
+  "concerto.options.display.subLyrics": "Show SubLyrics",
+  "concerto.options.align.subLyrics": "SubLyrics Align",
+  "concerto.options.posXPercent.subLyrics": "SubLyrics X %",
+  "concerto.options.posXDelta.subLyrics": "SubLyrics X ±px",
+  "concerto.options.posYPercent.subLyrics": "SubLyrics Y %",
+  "concerto.options.posYDelta.subLyrics": "SubLyrics Y ±px",
+
+  "concerto.options.display.musicDetails": "Show Music Info",
+  "concerto.options.align.musicDetails": "Info Align",
+  "concerto.options.posXPercent.musicDetails": "Info X %",
+  "concerto.options.posXDelta.musicDetails": "Info X ±px",
+  "concerto.options.posYPercent.musicDetails": "Info Y %",
+  "concerto.options.posYDelta.musicDetails": "Info Y ±px",
+
+  "concerto.options.display.timeProgress": "Show TimeBar",
+  "concerto.options.align.timeProgress": "TimeBar Align",
+  "concerto.options.posXPercent.timeProgress": "TimeBar X %",
+  "concerto.options.posXDelta.timeProgress": "TimeBar X ±px",
+  "concerto.options.posYPercent.timeProgress": "TimeBar Y %",
+  "concerto.options.posYDelta.timeProgress": "TimeBar Y ±px",
+
+  "concerto.options.align": "%s: %s",
+  "concerto.options.align.left": "Left",
+  "concerto.options.align.center": "Center",
+  "concerto.options.align.right": "Right"
 }

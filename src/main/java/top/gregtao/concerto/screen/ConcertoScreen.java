@@ -53,6 +53,10 @@ public class ConcertoScreen extends Screen {
         this.messageVisible = false;
     }
 
+    protected Screen getParent() {
+        return this.parent;
+    }
+
     @Override
     public void close() {
         for (Element element : this.children()) {

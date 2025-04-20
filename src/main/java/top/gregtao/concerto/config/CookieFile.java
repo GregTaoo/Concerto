@@ -1,11 +1,10 @@
 package top.gregtao.concerto.config;
 
+import top.gregtao.concerto.ConcertoServer;
 import top.gregtao.concerto.util.TextUtil;
 
-import java.io.IOException;
 import java.net.CookieManager;
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.List;
 import java.util.Map;
 
@@ -23,8 +22,8 @@ public class CookieFile extends ConfigFile {
                         .append('\n');
             }
             this.write(builder.toString());
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+        } catch (Exception e) {
+            ConcertoServer.LOGGER.error("Error writing cookie", e);
         }
     }
 
@@ -41,8 +40,27 @@ public class CookieFile extends ConfigFile {
                 List<String> cookies = List.of(raw.split("\n"));
                 manager.put(uri, Map.of("Set-Cookie", cookies));
             }
-        } catch (IOException | URISyntaxException e) {
-            throw new RuntimeException(e);
+        } catch (Exception e) {
+            ConcertoServer.LOGGER.error("Error reading cookie", e);
+        }
+    }
+
+    public String readAsHeader() {
+        try {
+            String baseRaw = this.read();
+            if (baseRaw.isEmpty()) return "";
+            String[] lines = baseRaw.split("\n");
+            StringBuilder result = new StringBuilder();
+            for (String line : lines) {
+                String[] args = line.split(":");
+                if (args.length != 2) continue;
+                String raw = TextUtil.fromBase64(args[1]).replace("\n", "; ");
+                result.append(raw);
+            }
+            return result.toString();
+        } catch (Exception e) {
+            ConcertoServer.LOGGER.error("Error reading cookie as header", e);
+            return "";
         }
     }
 }

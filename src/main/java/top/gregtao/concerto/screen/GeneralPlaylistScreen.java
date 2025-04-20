@@ -48,7 +48,7 @@ public class GeneralPlaylistScreen extends ApplyDraggedFileScreen {
 
         this.addDrawableChild(ButtonWidget.builder(Text.translatable("concerto.screen.next"), button -> {
             if (!MusicPlayer.INSTANCE.started) MusicPlayer.INSTANCE.start();
-            else if (!MusicPlayer.INSTANCE.playNextLock) MusicPlayer.INSTANCE.playNext(1, index -> {
+            else if (!MusicPlayer.INSTANCE.playNextLock.get()) MusicPlayer.INSTANCE.playNext(1, index -> {
                 this.widget.reset();
                 this.widget.setSelected(index);
             });

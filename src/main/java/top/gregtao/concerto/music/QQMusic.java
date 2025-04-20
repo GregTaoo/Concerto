@@ -171,13 +171,14 @@ public class QQMusic extends Music implements CacheableMusic, DynamicPath {
         ACC_48: m4a 格式, 48kbps
         */
 
-        ATMOS_2("Q000", "flac"),
-        ATMOS_51("Q001", "flac"),
-        OGG_320("O800", "ogg"),
         MP3_320("M800", "mp3"),
         FLAC("F000", "flac"),
         MP3_128("M500", "mp3"),
         OGG_96("O400", "ogg"),
+
+        // 不知道是否支持的格式
+        // ATMOS_2("Q000", "flac"),
+        // ATMOS_51("Q001", "flac"),
 
         // 不支持的格式
         // MASTER("AI00", "flac"),
@@ -187,6 +188,7 @@ public class QQMusic extends Music implements CacheableMusic, DynamicPath {
         // ACC_96("C400", "m4a"),
 
         // 会 404 的格式
+        // OGG_320("O800", "ogg"),
         // OGG_192("O600", "ogg"),
         ;
 

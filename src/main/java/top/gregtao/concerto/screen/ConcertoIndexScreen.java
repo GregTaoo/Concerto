@@ -58,5 +58,9 @@ public class ConcertoIndexScreen extends ConcertoScreen {
         this.addDrawableChild(ButtonWidget.builder(Text.translatable("concerto.report_bugs"),
                 button -> Util.getOperatingSystem().open("https://github.com/GregTaoo/Concerto/issues")
         ).position(this.width / 2 + 20, 130).size(115, 20).build());
+
+        this.addDrawableChild(ButtonWidget.builder(Text.translatable("concerto.screen.options"),
+                button -> MinecraftClient.getInstance().setScreen(new ConcertoOptionsScreen(this))
+        ).position(this.width / 2 - 120, 160).size(115, 20).build());
     }
 }

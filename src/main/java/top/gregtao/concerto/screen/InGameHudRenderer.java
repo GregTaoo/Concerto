@@ -104,9 +104,10 @@ public class InGameHudRenderer {
 
                     int startX = TextUtil.getTextRenderX(text3, options.musicDetailsAlignment, client.textRenderer, pos.x);
                     context.enableScissor(startX, pos.y, startX + text3Width, pos.y + client.textRenderer.fontHeight);
-                    context.drawTextWithShadow(
+                    context.drawText(
                             client.textRenderer, text2, startX + MUSIC_DETAIL_SCROLL.getDx(),
-                            pos.y, (int) config.musicDetailsColor.getNumber()
+                            pos.y, (int) config.musicDetailsColor.getNumber(),
+                            options.textShadow
                     );
                     context.disableScissor();
                 }
@@ -120,8 +121,8 @@ public class InGameHudRenderer {
                         int x;
                         switch (options.timeProgressAlignment) {
                             case LEFT -> x = pos.x + timeWidth + 9;
-                            case CENTER -> x = pos.x - blankWidth / 2 - 10;
-                            default -> x = pos.x - blankWidth - 15;
+                            case CENTER -> x = pos.x - blankWidth / 2 + 9;
+                            default -> x = pos.x - blankWidth - 18;
                         }
                         context.fill(x, pos.y + 3, x + blankWidth - 20, pos.y + 5,
                                 (int) config.timeProgressBgColor.getNumber());

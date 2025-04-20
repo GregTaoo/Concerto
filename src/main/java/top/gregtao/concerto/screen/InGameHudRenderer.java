@@ -104,9 +104,10 @@ public class InGameHudRenderer {
 
                     int startX = TextUtil.getTextRenderX(text3, options.musicDetailsAlignment, client.textRenderer, pos.x);
                     context.enableScissor(startX, pos.y, startX + text3Width, pos.y + client.textRenderer.fontHeight);
-                    context.drawTextWithShadow(
+                    context.drawText(
                             client.textRenderer, text2, startX + MUSIC_DETAIL_SCROLL.getDx(),
-                            pos.y, (int) config.musicDetailsColor.getNumber()
+                            pos.y, (int) config.musicDetailsColor.getNumber(),
+                            options.textShadow
                     );
                     context.disableScissor();
                 }

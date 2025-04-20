@@ -100,11 +100,11 @@
   "concerto.screen.copy_link": "Copy link",
 
   "concerto.screen.add.local_file": "Local File:",
-  "concerto.screen.add.local_file.folder": "Local File Path:",
+  "concerto.screen.add.local_file.folder": "Local Folder:",
   "concerto.screen.add.internet": "Internet:",
-  "concerto.screen.add.netease_cloud": "NeteaseCloud Music:",
-  "concerto.screen.add.netease_cloud.playlist": "NeteaseCloud Playlist:",
-  "concerto.screen.add.netease_cloud.album": "NeteaseCloud Album:",
+  "concerto.screen.add.netease_cloud": "Netease Music:",
+  "concerto.screen.add.netease_cloud.playlist": "Netease Playlist:",
+  "concerto.screen.add.netease_cloud.album": "Netease Album:",
   "concerto.screen.add.qq": "QQ Music (MID):",
   "concerto.screen.add.bilibili": "Bilibili (BVID):",
 
@@ -220,6 +220,7 @@
   "concerto.options.hideWhenChat": "Hide when chat",
   "concerto.options.printRequestResults": "Print HTTP results",
   "concerto.options.joinAgentWhenInvited": "Join agent when invited",
+  "concerto.options.textShadow": "Text shadow",
 
   "concerto.options.display.lyrics": "Show Lyrics",
   "concerto.options.align.lyrics": "Lyrics Align",

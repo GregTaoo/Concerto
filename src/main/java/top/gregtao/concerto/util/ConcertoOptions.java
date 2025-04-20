@@ -17,89 +17,76 @@ public class ConcertoOptions {
 
     public boolean canUpdate = false;
 
-    private ClientConfig config;
+    private final ClientConfig config;
     private final List<OptionsUpdater> updaters = new ArrayList<>();
-
-    private final SingleBooleanOption confirmAfterReceivedOption = new SingleBooleanOption(
-            "confirmAfterReceived",
-            value -> this.config.options.confirmAfterReceived = value,
-            () -> this.config.options.confirmAfterReceived
-    );
-
-    private final SingleBooleanOption hideWhenChatOption = new SingleBooleanOption(
-            "hideWhenChat",
-            value -> this.config.options.hideWhenChat = value,
-            () -> this.config.options.hideWhenChat
-    );
-
-    private final SingleBooleanOption printRequestResultsOption = new SingleBooleanOption(
-            "printRequestResults",
-            value -> this.config.options.printRequestResults = value,
-            () -> this.config.options.printRequestResults
-    );
-
-    private final SingleBooleanOption joinAgentWhenInvitedOption = new SingleBooleanOption(
-            "joinAgentWhenInvited",
-            value -> this.config.options.joinAgentWhenInvited = value,
-            () -> this.config.options.joinAgentWhenInvited
-    );
-
-    private final TextOptions lyricsOption = new TextOptions("lyrics", (display, align, pos) -> {
-        this.config.options.displayLyrics = display;
-        this.config.options.lyricsAlignment = align;
-        this.config.options.lyricsPosition = pos;
-        this.config.parseOptions();
-    }, options -> {
-        options.display.setValue(this.config.options.displayLyrics);
-        options.align.setValue(this.config.options.lyricsAlignment.ordinal());
-        TextOptions.setPosition(options, this.config.lyricsPosSupplier);
-    });
-
-    private final TextOptions subLyricsOption = new TextOptions("subLyrics", (display, align, pos) -> {
-        this.config.options.displaySubLyrics = display;
-        this.config.options.subLyricsAlignment = align;
-        this.config.options.subLyricsPosition = pos;
-        this.config.parseOptions();
-    }, options -> {
-        options.display.setValue(this.config.options.displaySubLyrics);
-        options.align.setValue(this.config.options.subLyricsAlignment.ordinal());
-        TextOptions.setPosition(options, this.config.subLyricsPosSupplier);
-    });
-
-    private final TextOptions musicDetailsOption = new TextOptions("musicDetails", (display, align, pos) -> {
-        this.config.options.displayMusicDetails = display;
-        this.config.options.musicDetailsAlignment = align;
-        this.config.options.musicDetailsPosition = pos;
-        this.config.parseOptions();
-    }, options -> {
-        options.display.setValue(this.config.options.displayMusicDetails);
-        options.align.setValue(this.config.options.musicDetailsAlignment.ordinal());
-        TextOptions.setPosition(options, this.config.musicDetailsPosSupplier);
-    });
-
-    private final TextOptions timeProgressOption = new TextOptions("timeProgress", (display, align, pos) -> {
-        this.config.options.displayTimeProgress = display;
-        this.config.options.timeProgressAlignment = align;
-        this.config.options.timeProgressPosition = pos;
-        this.config.parseOptions();
-    },
-    options -> {
-        options.display.setValue(this.config.options.displayTimeProgress);
-        options.align.setValue(this.config.options.timeProgressAlignment.ordinal());
-        TextOptions.setPosition(options, this.config.timeProgressPosSupplier);
-    });
-
 
     public ConcertoOptions(ClientConfig config) {
         this.config = config;
-        this.updaters.add(this.confirmAfterReceivedOption);
-        this.updaters.add(this.hideWhenChatOption);
-        this.updaters.add(this.printRequestResultsOption);
-        this.updaters.add(this.joinAgentWhenInvitedOption);
-        this.updaters.add(this.lyricsOption);
-        this.updaters.add(this.subLyricsOption);
-        this.updaters.add(this.musicDetailsOption);
-        this.updaters.add(this.timeProgressOption);
+        this.updaters.add(new SingleBooleanOption(
+                "confirmAfterReceived",
+                value -> this.config.options.confirmAfterReceived = value,
+                () -> this.config.options.confirmAfterReceived
+        ));
+        this.updaters.add(new SingleBooleanOption(
+                "hideWhenChat",
+                value -> this.config.options.hideWhenChat = value,
+                () -> this.config.options.hideWhenChat
+        ));
+        this.updaters.add(new SingleBooleanOption(
+                "printRequestResults",
+                value -> this.config.options.printRequestResults = value,
+                () -> this.config.options.printRequestResults
+        ));
+        this.updaters.add(new SingleBooleanOption(
+                "joinAgentWhenInvited",
+                value -> this.config.options.joinAgentWhenInvited = value,
+                () -> this.config.options.joinAgentWhenInvited
+        ));
+        this.updaters.add(new TextOptions("lyrics", (display, align, pos) -> {
+            this.config.options.displayLyrics = display;
+            this.config.options.lyricsAlignment = align;
+            this.config.options.lyricsPosition = pos;
+            this.config.parseOptions();
+        }, options -> {
+            options.display.setValue(this.config.options.displayLyrics);
+            options.align.setValue(this.config.options.lyricsAlignment.ordinal());
+            TextOptions.setPosition(options, this.config.lyricsPosSupplier);
+        }));
+        this.updaters.add(new TextOptions("subLyrics", (display, align, pos) -> {
+            this.config.options.displaySubLyrics = display;
+            this.config.options.subLyricsAlignment = align;
+            this.config.options.subLyricsPosition = pos;
+            this.config.parseOptions();
+        }, options -> {
+            options.display.setValue(this.config.options.displaySubLyrics);
+            options.align.setValue(this.config.options.subLyricsAlignment.ordinal());
+            TextOptions.setPosition(options, this.config.subLyricsPosSupplier);
+        }));
+        this.updaters.add(new TextOptions("musicDetails", (display, align, pos) -> {
+            this.config.options.displayMusicDetails = display;
+            this.config.options.musicDetailsAlignment = align;
+            this.config.options.musicDetailsPosition = pos;
+            this.config.parseOptions();
+        }, options -> {
+            options.display.setValue(this.config.options.displayMusicDetails);
+            options.align.setValue(this.config.options.musicDetailsAlignment.ordinal());
+            TextOptions.setPosition(options, this.config.musicDetailsPosSupplier);
+        }));
+        this.updaters.add(new TextOptions("timeProgress", (display, align, pos) -> {
+            this.config.options.displayTimeProgress = display;
+            this.config.options.timeProgressAlignment = align;
+            this.config.options.timeProgressPosition = pos;
+            this.config.parseOptions();
+        }, options -> {
+            options.display.setValue(this.config.options.displayTimeProgress);
+            options.align.setValue(this.config.options.timeProgressAlignment.ordinal());
+            TextOptions.setPosition(options, this.config.timeProgressPosSupplier);
+        }));
+        this.updaters.add(new SingleBooleanOption(
+                "textShadow",
+                value -> this.config.options.textShadow = value,
+                () -> this.config.options.textShadow
+        ));
     }
 
     public SimpleOption<?>[] getOptions() {

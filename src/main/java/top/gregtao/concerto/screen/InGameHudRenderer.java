@@ -137,12 +137,12 @@ public class InGameHudRenderer {
                     enableScissor(startX, pos.getY(), startX + text3Width, pos.getY() + client.textRenderer.fontHeight);
                     if (ClientConfig.INSTANCE.options.textShadow) {
                         client.textRenderer.drawWithShadow(
-                                matrices, text2, startX + MUSIC_DETAIL_SCROLL.getDx(),
+                                matrixStack, text2, startX + MUSIC_DETAIL_SCROLL.getDx(),
                                 pos.getY(), (int) config.musicDetailsColor.getNumber()
                         );
                     } else {
                         client.textRenderer.draw(
-                                matrices, text2, startX + MUSIC_DETAIL_SCROLL.getDx(),
+                                matrixStack, text2, startX + MUSIC_DETAIL_SCROLL.getDx(),
                                 pos.getY(), (int) config.musicDetailsColor.getNumber()
                         );
                     }

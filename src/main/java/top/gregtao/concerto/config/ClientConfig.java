@@ -152,6 +152,14 @@ public class ClientConfig extends ConfigFile {
         public int getDelta() {
             return this.delta;
         }
+
+        public void setPercentage(double percentage) {
+            this.percentage = (float) percentage;
+        }
+
+        public void setDelta(int delta) {
+            this.delta = delta;
+        }
     }
 
     public static class HexSupplier {

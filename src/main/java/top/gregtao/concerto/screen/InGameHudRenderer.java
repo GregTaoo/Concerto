@@ -135,10 +135,17 @@ public class InGameHudRenderer {
 
                     int startX = TextUtil.getTextRenderX(text3, options.musicDetailsAlignment, client.textRenderer, pos.getX());
                     enableScissor(startX, pos.getY(), startX + text3Width, pos.getY() + client.textRenderer.fontHeight);
-                    DrawableHelper.drawTextWithShadow(
-                            matrixStack, client.textRenderer, text2, startX + MUSIC_DETAIL_SCROLL.getDx(),
-                            pos.getY(), (int) config.musicDetailsColor.getNumber()
-                    );
+                    if (ClientConfig.INSTANCE.options.textShadow) {
+                        client.textRenderer.drawWithShadow(
+                                matrixStack, text2, startX + MUSIC_DETAIL_SCROLL.getDx(),
+                                pos.getY(), (int) config.musicDetailsColor.getNumber()
+                        );
+                    } else {
+                        client.textRenderer.draw(
+                                matrixStack, text2, startX + MUSIC_DETAIL_SCROLL.getDx(),
+                                pos.getY(), (int) config.musicDetailsColor.getNumber()
+                        );
+                    }
                     disableScissor();
                 }
                 if (options.displayTimeProgress) {
@@ -151,8 +158,8 @@ public class InGameHudRenderer {
                         int x;
                         switch (options.timeProgressAlignment) {
                             case LEFT -> x = pos.getX() + timeWidth + 9;
-                            case CENTER -> x = pos.getX() - blankWidth / 2 - 10;
-                            default -> x = pos.getX() - blankWidth - 15;
+                            case CENTER -> x = pos.getX() - blankWidth / 2 + 9;
+                            default -> x = pos.getX() - blankWidth - 18;
                         }
                         DrawableHelper.fill(matrixStack, x, pos.getY() + 3, x + blankWidth - 20, pos.getY() + 5,
                                 (int) config.timeProgressBgColor.getNumber());

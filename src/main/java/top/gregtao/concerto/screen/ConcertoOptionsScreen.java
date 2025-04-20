@@ -6,12 +6,11 @@ import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.*;
 import net.minecraft.screen.ScreenTexts;
 import net.minecraft.text.Text;
-import top.gregtao.concerto.screen.widget.ConcertoOptionListWidget;
 import top.gregtao.concerto.util.ConcertoOptions;
 
 public class ConcertoOptionsScreen extends ConcertoScreen {
-    protected ConcertoOptionListWidget body;
-    public final ThreePartsLayoutWidget layout = new ThreePartsLayoutWidget(this);
+    protected OptionListWidget buttonList;
+    private ButtonWidget resetButton, doneButton;
 
     public ConcertoOptionsScreen(Screen parent) {
         super(Text.translatable("concerto.screen.options"), parent);
@@ -19,41 +18,22 @@ public class ConcertoOptionsScreen extends ConcertoScreen {
 
     @Override
     protected void init() {
-        this.layout.setHeaderHeight(18);
-        this.initBody();
-        this.initFooter();
-        this.layout.forEachChild(this::addDrawableChild);
-        this.refreshWidgetPositions();
-    }
-
-    protected void initBody() {
-        this.body = this.layout.addBody(new ConcertoOptionListWidget(this.client, this.width, this));
-        this.addOptions();
-    }
-
-    protected void addOptions() {
-        this.body.addAll(ConcertoOptions.INSTANCE.getOptions());
-    }
-
-    protected void initFooter() {
-        DirectionalLayoutWidget directionalLayoutWidget = this.layout.addFooter(DirectionalLayoutWidget.horizontal().spacing(8));
-        directionalLayoutWidget.add(ButtonWidget.builder(
-                Text.translatable("concerto.reset"), button -> {
-                    if (this.client != null) {
-                        this.client.setScreen(new ConfirmScreen(confirmed -> {
-                            ConcertoOptions.INSTANCE.resetOptions();
-                            this.client.setScreen(new ConcertoOptionsScreen(this.getParent()));
-                        }, this.title, Text.translatable("concerto.reset_confirm")));
-                    }
-                }).build());
-        directionalLayoutWidget.add(ButtonWidget.builder(ScreenTexts.DONE, button -> this.close()).build());
-    }
-
-    protected void refreshWidgetPositions() {
-        this.layout.refreshPositions();
-        if (this.body != null) {
-            this.body.position(this.width, this.layout);
-        }
+        this.buttonList = new OptionListWidget(this.client, this.width, this.height, 18, this.height - 32, 25);
+        this.buttonList.addAll(ConcertoOptions.INSTANCE.getOptions());
+        this.addSelectableChild(this.buttonList);
+        this.resetButton = ButtonWidget.builder(Text.translatable("concerto.reset"), button -> {
+            if (this.client != null) {
+                this.client.setScreen(new ConfirmScreen(confirmed -> {
+                    ConcertoOptions.INSTANCE.resetOptions();
+                    this.client.setScreen(new ConcertoOptionsScreen(this.getParent()));
+                }, this.title, Text.translatable("concerto.reset_confirm")));
+            }
+        }).position(this.width / 2 - 155, this.height - 26).build();
+        this.addSelectableChild(this.resetButton);
+        this.doneButton = ButtonWidget.builder(
+                ScreenTexts.DONE, button -> this.close()
+        ).position(this.width / 2 + 5, this.height - 26).build();
+        this.addSelectableChild(this.doneButton);
     }
 
     @Override
@@ -62,16 +42,11 @@ public class ConcertoOptionsScreen extends ConcertoScreen {
     }
 
     @Override
-    public void close() {
-        if (this.body != null) {
-            this.body.applyAllPendingValues();
-        }
-        super.close();
-    }
-
-    @Override
     public void render(DrawContext matrices, int mouseX, int mouseY, float delta) {
         super.render(matrices, mouseX, mouseY, delta);
+        this.buttonList.render(matrices, mouseX, mouseY, delta);
+        this.resetButton.render(matrices, mouseX, mouseY, delta);
+        this.doneButton.render(matrices, mouseX, mouseY, delta);
         InGameHudRenderer.render(matrices);
     }
 }

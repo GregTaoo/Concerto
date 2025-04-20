@@ -2,6 +2,7 @@ package top.gregtao.concerto.util;
 
 import net.minecraft.client.option.SimpleOption;
 import net.minecraft.text.Text;
+import net.minecraft.util.math.MathHelper;
 import org.apache.logging.log4j.util.TriConsumer;
 import top.gregtao.concerto.config.ClientConfig;
 import top.gregtao.concerto.enums.TextAlignment;
@@ -139,7 +140,7 @@ public class ConcertoOptions {
     }
 
     private static String getPositionString(double percent, int delta) {
-        return String.format("%.2f%+d", Math.clamp(percent, 0, 1), delta);
+        return String.format("%.2f%+d", MathHelper.clamp(percent, 0, 1), delta);
     }
 
     private static String getPositionXYString(double xPercent, int xDelta, double yPercent, int yDelta) {

@@ -49,7 +49,6 @@ public class ConcertoOptionsScreen extends ConcertoScreen {
         directionalLayoutWidget.add(ButtonWidget.builder(ScreenTexts.DONE, button -> this.close()).build());
     }
 
-    @Override
     protected void refreshWidgetPositions() {
         this.layout.refreshPositions();
         if (this.body != null) {

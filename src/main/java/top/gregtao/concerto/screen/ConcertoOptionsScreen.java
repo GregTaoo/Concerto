@@ -1,5 +1,6 @@
 package top.gregtao.concerto.screen;
 
+import net.minecraft.client.gui.screen.ConfirmScreen;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.*;
 import net.minecraft.screen.ScreenTexts;
@@ -36,9 +37,11 @@ public class ConcertoOptionsScreen extends ConcertoScreen {
         DirectionalLayoutWidget directionalLayoutWidget = this.layout.addFooter(DirectionalLayoutWidget.horizontal().spacing(8));
         directionalLayoutWidget.add(ButtonWidget.builder(
                 Text.translatable("concerto.reset"), button -> {
-                    ConcertoOptions.INSTANCE.resetOptions();
                     if (this.client != null) {
-                        this.client.setScreen(new ConcertoOptionsScreen(this.getParent()));
+                        this.client.setScreen(new ConfirmScreen(confirmed -> {
+                            ConcertoOptions.INSTANCE.resetOptions();
+                            this.client.setScreen(new ConcertoOptionsScreen(this.getParent()));
+                        }, this.title, Text.translatable("concerto.reset_confirm")));
                     }
                 }).build());
         directionalLayoutWidget.add(ButtonWidget.builder(ScreenTexts.DONE, button -> this.close()).build());

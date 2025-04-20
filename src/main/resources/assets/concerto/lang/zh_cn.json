@@ -21,6 +21,7 @@
   "concerto.thank_you": "感谢支持！您的支持是我更新的最大动力",
   "concerto.report_bugs": "报告漏洞",
   "concerto.reset": "重置",
+  "concerto.reset_confirm": "确定要重置吗？",
 
   "concerto.playlist": "歌单",
   "concerto.album": "专辑",

@@ -107,6 +107,7 @@ public class ConcertoOptions {
     }
 
     public void readOptions() {
+        // 避免重新设置
         this.canUpdate = false;
         this.updaters.forEach(OptionsUpdater::readOptions);
         this.canUpdate = true;

@@ -21,6 +21,7 @@
   "concerto.thank_you": "Thank you! Your support keeps me going always!",
   "concerto.report_bugs": "Report Bugs",
   "concerto.reset": "Reset",
+  "concerto.reset_confirm": "Are you sure you want to reset?",
 
   "concerto.playlist": "Playlist",
   "concerto.album": "Album",

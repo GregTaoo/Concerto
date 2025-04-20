@@ -24,6 +24,7 @@ public class ConcertoOptionsScreen extends ConcertoScreen {
         this.initFooter();
         this.layout.forEachChild(this::addDrawableChild);
         this.refreshWidgetPositions();
+        super.init();
     }
 
     protected void initBody() {

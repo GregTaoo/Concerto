@@ -2,6 +2,7 @@ package top.gregtao.concerto.music.lyrics;
 
 import net.minecraft.text.LiteralText;
 import net.minecraft.text.Text;
+import top.gregtao.concerto.ConcertoClient;
 import top.gregtao.concerto.music.MusicTimestamp;
 import top.gregtao.concerto.util.MathUtil;
 import top.gregtao.concerto.util.Pair;
@@ -51,7 +52,11 @@ public abstract class Lyrics {
     public abstract String toString();
 
     public Lyrics load(String raw) {
-        this.parse(raw);
+        try {
+            this.parse(raw);
+        } catch (Exception e) {
+            ConcertoClient.LOGGER.error("Error parsing lyric", e);
+        }
         this.sortLines();
         return this;
     }

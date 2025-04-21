@@ -46,6 +46,18 @@ public class ConcertoOptions {
                 (o, value) -> this.config.options.joinAgentWhenInvited = value
         ));
 
+        this.updaters.add(new BooleanOption(
+                "concerto.options.textShadow",
+                o -> this.config.options.textShadow,
+                (o, value) -> this.config.options.textShadow = value
+        ));
+
+        this.updaters.add(new BooleanOption(
+                "concerto.options.handshakeRequired",
+                o -> this.config.options.handshakeRequired,
+                (o, value) -> this.config.options.handshakeRequired = value
+        ));
+
         // ====================================
 
         this.updaters.add(new BooleanOption(
@@ -256,14 +268,6 @@ public class ConcertoOptions {
                     this.config.parseOptions();
                 },
                 (o, option) -> getPixelValueText("concerto.options.posYDelta.timeProgress", (int) option.get(null))
-        ));
-
-        // ====================================
-
-        this.updaters.add(new BooleanOption(
-                "concerto.options.textShadow",
-                o -> this.config.options.textShadow,
-                (o, value) -> this.config.options.textShadow = value
         ));
     }
 

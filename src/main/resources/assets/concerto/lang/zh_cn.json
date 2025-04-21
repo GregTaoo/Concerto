@@ -221,6 +221,7 @@
   "concerto.options.printRequestResults": "打印HTTP请求结果",
   "concerto.options.joinAgentWhenInvited": "自动加入点播",
   "concerto.options.textShadow": "文字阴影",
+  "concerto.options.handshakeRequired": "需要服务端握手",
 
   "concerto.options.display.lyrics": "主歌词",
   "concerto.options.align.lyrics": "歌词对齐",

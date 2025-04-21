@@ -87,6 +87,7 @@ public class ClientConfig extends ConfigFile {
         public String timeProgressBgColor = "#ffa1c7f6";
 
         public boolean textShadow = true;
+        public boolean handshakeRequired = true;
     }
 
     public static class PositionXYSupplier {

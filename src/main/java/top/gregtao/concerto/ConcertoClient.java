@@ -41,8 +41,8 @@ public class ConcertoClient implements ClientModInitializer {
 	public static List<Playlist> presetRadios = List.of();
 
 	public static boolean isServerAvailable() {
-		return serverAvailable || MinecraftClient.getInstance().isInSingleplayer();
-//		return serverAvailable; // DEBUG
+		return serverAvailable || !ClientConfig.INSTANCE.options.handshakeRequired ||
+				MinecraftClient.getInstance().isInSingleplayer();
 	}
 
 	public enum ClientState {

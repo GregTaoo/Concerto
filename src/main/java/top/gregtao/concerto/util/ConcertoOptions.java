@@ -45,6 +45,18 @@ public class ConcertoOptions {
                 (o, option, value) -> this.config.options.joinAgentWhenInvited = value
         ));
 
+        this.updaters.add(CyclingOption.create(
+                "concerto.options.textShadow",
+                o -> this.config.options.textShadow,
+                (o, option, value) -> this.config.options.textShadow = value
+        ));
+
+        this.updaters.add(CyclingOption.create(
+                "concerto.options.handshakeRequired",
+                o -> this.config.options.handshakeRequired,
+                (o, option, value) -> this.config.options.handshakeRequired = value
+        ));
+
         // ====================================
 
         this.updaters.add(CyclingOption.create(
@@ -277,14 +289,6 @@ public class ConcertoOptions {
                     this.config.parseOptions();
                 },
                 (o, option) -> getPixelValueText("concerto.options.posYDelta.timeProgress", (int) option.get(null))
-        ));
-
-        // ====================================
-
-        this.updaters.add(CyclingOption.create(
-                "concerto.options.textShadow",
-                o -> this.config.options.textShadow,
-                (o, option, value) -> this.config.options.textShadow = value
         ));
     }
 

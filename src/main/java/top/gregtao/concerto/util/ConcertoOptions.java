@@ -47,6 +47,18 @@ public class ConcertoOptions {
                 () -> this.config.options.joinAgentWhenInvited
         ));
 
+        this.updaters.add(new SingleBooleanOption(
+                "textShadow",
+                value -> this.config.options.textShadow = value,
+                () -> this.config.options.textShadow
+        ));
+
+        this.updaters.add(new SingleBooleanOption(
+                "handshakeRequired",
+                value -> this.config.options.handshakeRequired = value,
+                () -> this.config.options.handshakeRequired
+        ));
+
         this.updaters.add(new TextOptions("lyrics", (display, align, pos) -> {
             this.config.options.displayLyrics = display;
             this.config.options.lyricsAlignment = align;
@@ -90,12 +102,6 @@ public class ConcertoOptions {
             options.align.setValue(this.config.options.timeProgressAlignment.ordinal());
             TextOptions.setPosition(options, this.config.timeProgressPosSupplier);
         }));
-
-        this.updaters.add(new SingleBooleanOption(
-                "textShadow",
-                value -> this.config.options.textShadow = value,
-                () -> this.config.options.textShadow
-        ));
     }
 
     public SimpleOption<?>[] getOptions() {

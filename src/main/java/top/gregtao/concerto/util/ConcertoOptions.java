@@ -113,20 +113,14 @@ public class ConcertoOptions {
         this.updaters.add(CyclingOption.create(
                 "concerto.options.display.subLyrics",
                 o -> this.config.options.displaySubLyrics,
-                (o, option, value) -> {
-                    this.config.options.displaySubLyrics = value;
-                    this.config.parseOptions();
-                }
+                (o, option, value) -> this.config.options.displaySubLyrics = value
         ));
         this.updaters.add(CyclingOption.create(
                 "concerto.options.align.subLyrics",
                 TextAlignment.values(),
                 align -> new TranslatableText("concerto.options.align." + align.name().toLowerCase()),
                 o -> this.config.options.subLyricsAlignment,
-                (o, option, value) -> {
-                    this.config.options.subLyricsAlignment = value;
-                    this.config.parseOptions();
-                }
+                (o, option, value) -> this.config.options.subLyricsAlignment = value
         ));
         this.updaters.add(new DoubleOption(
                 "concerto.options.posXPercent.subLyrics", 0.0, 1.0, 0.0F,
@@ -134,7 +128,6 @@ public class ConcertoOptions {
                 (o, value) -> {
                     this.config.subLyricsPosSupplier.getX().setPercentage(value);
                     this.config.options.subLyricsPosition = getPositionXYString(this.config.subLyricsPosSupplier);
-                    this.config.parseOptions();
                 },
                 (o, option) -> getPercentValueText("concerto.options.posXPercent.subLyrics", option.get(null))
         ));
@@ -144,7 +137,6 @@ public class ConcertoOptions {
                 (o, value) -> {
                     this.config.subLyricsPosSupplier.getX().setDelta((int) value.doubleValue());
                     this.config.options.subLyricsPosition = getPositionXYString(this.config.subLyricsPosSupplier);
-                    this.config.parseOptions();
                 },
                 (o, option) -> getPixelValueText("concerto.options.posXDelta.subLyrics", (int) option.get(null))
         ));
@@ -154,7 +146,6 @@ public class ConcertoOptions {
                 (o, value) -> {
                     this.config.subLyricsPosSupplier.getY().setPercentage(value);
                     this.config.options.subLyricsPosition = getPositionXYString(this.config.subLyricsPosSupplier);
-                    this.config.parseOptions();
                 },
                 (o, option) -> getPercentValueText("concerto.options.posYPercent.subLyrics", option.get(null))
         ));
@@ -164,7 +155,6 @@ public class ConcertoOptions {
                 (o, value) -> {
                     this.config.subLyricsPosSupplier.getY().setDelta((int) value.doubleValue());
                     this.config.options.subLyricsPosition = getPositionXYString(this.config.subLyricsPosSupplier);
-                    this.config.parseOptions();
                 },
                 (o, option) -> getPixelValueText("concerto.options.posYDelta.subLyrics", (int) option.get(null))
         ));
@@ -174,20 +164,14 @@ public class ConcertoOptions {
         this.updaters.add(CyclingOption.create(
                 "concerto.options.display.musicDetails",
                 o -> this.config.options.displayMusicDetails,
-                (o, option, value) -> {
-                    this.config.options.displayMusicDetails = value;
-                    this.config.parseOptions();
-                }
+                (o, option, value) -> this.config.options.displayMusicDetails = value
         ));
         this.updaters.add(CyclingOption.create(
                 "concerto.options.align.musicDetails",
                 TextAlignment.values(),
                 align -> new TranslatableText("concerto.options.align." + align.name().toLowerCase()),
                 o -> this.config.options.musicDetailsAlignment,
-                (o, option, value) -> {
-                    this.config.options.musicDetailsAlignment = value;
-                    this.config.parseOptions();
-                }
+                (o, option, value) -> this.config.options.musicDetailsAlignment = value
         ));
         this.updaters.add(new DoubleOption(
                 "concerto.options.posXPercent.musicDetails", 0.0, 1.0, 0.0F,
@@ -195,7 +179,6 @@ public class ConcertoOptions {
                 (o, value) -> {
                     this.config.musicDetailsPosSupplier.getX().setPercentage(value);
                     this.config.options.musicDetailsPosition = getPositionXYString(this.config.musicDetailsPosSupplier);
-                    this.config.parseOptions();
                 },
                 (o, option) -> getPercentValueText("concerto.options.posXPercent.musicDetails", option.get(null))
         ));
@@ -205,7 +188,6 @@ public class ConcertoOptions {
                 (o, value) -> {
                     this.config.musicDetailsPosSupplier.getX().setDelta((int) value.doubleValue());
                     this.config.options.musicDetailsPosition = getPositionXYString(this.config.musicDetailsPosSupplier);
-                    this.config.parseOptions();
                 },
                 (o, option) -> getPixelValueText("concerto.options.posXDelta.musicDetails", (int) option.get(null))
         ));
@@ -215,7 +197,6 @@ public class ConcertoOptions {
                 (o, value) -> {
                     this.config.musicDetailsPosSupplier.getY().setPercentage(value);
                     this.config.options.musicDetailsPosition = getPositionXYString(this.config.musicDetailsPosSupplier);
-                    this.config.parseOptions();
                 },
                 (o, option) -> getPercentValueText("concerto.options.posYPercent.musicDetails", option.get(null))
         ));
@@ -225,7 +206,6 @@ public class ConcertoOptions {
                 (o, value) -> {
                     this.config.musicDetailsPosSupplier.getY().setDelta((int) value.doubleValue());
                     this.config.options.musicDetailsPosition = getPositionXYString(this.config.musicDetailsPosSupplier);
-                    this.config.parseOptions();
                 },
                 (o, option) -> getPixelValueText("concerto.options.posYDelta.musicDetails", (int) option.get(null))
         ));
@@ -235,20 +215,14 @@ public class ConcertoOptions {
         this.updaters.add(CyclingOption.create(
                 "concerto.options.display.timeProgress",
                 o -> this.config.options.displayTimeProgress,
-                (o, option, value) -> {
-                    this.config.options.displayTimeProgress = value;
-                    this.config.parseOptions();
-                }
+                (o, option, value) -> this.config.options.displayTimeProgress = value
         ));
         this.updaters.add(CyclingOption.create(
                 "concerto.options.align.timeProgress",
                 TextAlignment.values(),
                 align -> new TranslatableText("concerto.options.align." + align.name().toLowerCase()),
                 o -> this.config.options.timeProgressAlignment,
-                (o, option, value) -> {
-                    this.config.options.timeProgressAlignment = value;
-                    this.config.parseOptions();
-                }
+                (o, option, value) -> this.config.options.timeProgressAlignment = value
         ));
         this.updaters.add(new DoubleOption(
                 "concerto.options.posXPercent.timeProgress", 0.0, 1.0, 0.0F,
@@ -256,7 +230,6 @@ public class ConcertoOptions {
                 (o, value) -> {
                     this.config.timeProgressPosSupplier.getX().setPercentage(value);
                     this.config.options.timeProgressPosition = getPositionXYString(this.config.timeProgressPosSupplier);
-                    this.config.parseOptions();
                 },
                 (o, option) -> getPercentValueText("concerto.options.posXPercent.timeProgress", option.get(null))
         ));
@@ -266,7 +239,6 @@ public class ConcertoOptions {
                 (o, value) -> {
                     this.config.timeProgressPosSupplier.getX().setDelta((int) value.doubleValue());
                     this.config.options.timeProgressPosition = getPositionXYString(this.config.timeProgressPosSupplier);
-                    this.config.parseOptions();
                 },
                 (o, option) -> getPixelValueText("concerto.options.posXDelta.timeProgress", (int) option.get(null))
         ));
@@ -276,7 +248,6 @@ public class ConcertoOptions {
                 (o, value) -> {
                     this.config.timeProgressPosSupplier.getY().setPercentage(value);
                     this.config.options.timeProgressPosition = getPositionXYString(this.config.timeProgressPosSupplier);
-                    this.config.parseOptions();
                 },
                 (o, option) -> getPercentValueText("concerto.options.posYPercent.timeProgress", option.get(null))
         ));
@@ -286,7 +257,6 @@ public class ConcertoOptions {
                 (o, value) -> {
                     this.config.timeProgressPosSupplier.getY().setDelta((int) value.doubleValue());
                     this.config.options.timeProgressPosition = getPositionXYString(this.config.timeProgressPosSupplier);
-                    this.config.parseOptions();
                 },
                 (o, option) -> getPixelValueText("concerto.options.posYDelta.timeProgress", (int) option.get(null))
         ));

@@ -221,6 +221,7 @@
   "concerto.options.printRequestResults": "Print HTTP results",
   "concerto.options.joinAgentWhenInvited": "Join agent when invited",
   "concerto.options.textShadow": "Text shadow",
+  "concerto.options.handshakeRequired": "Handshake required",
 
   "concerto.options.display.lyrics": "Show Lyrics",
   "concerto.options.align.lyrics": "Lyrics Align",

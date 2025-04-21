@@ -15,6 +15,7 @@ public class DefaultFormatLyrics extends Lyrics {
                 String[] args = line.split("]");
                 for (int index = 0; index < args.length - 1; ++index) {
                     String[] timesArr = args[index].substring(1).split(":");
+                    if (timesArr.length < 2) continue;
                     String[] secondsArr = timesArr[1].split("\\.");
                     String lyric = args[args.length - 1].trim();
                     if (!lyric.isEmpty() && !lyric.startsWith("//")) {

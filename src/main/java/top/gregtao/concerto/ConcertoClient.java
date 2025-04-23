@@ -21,6 +21,7 @@ import top.gregtao.concerto.music.list.Playlist;
 import top.gregtao.concerto.network.ClientMusicNetworkHandler;
 import top.gregtao.concerto.player.MusicPlayer;
 import top.gregtao.concerto.util.ConcertoHotkeys;
+import top.gregtao.concerto.util.ConcertoOptions;
 
 import java.util.List;
 
@@ -42,8 +43,8 @@ public class ConcertoClient implements ClientModInitializer {
 	public static List<Playlist> presetRadios = List.of();
 
 	public static boolean isServerAvailable() {
-		return serverAvailable || MinecraftClient.getInstance().isInSingleplayer();
-//		return serverAvailable; // DEBUG
+		return serverAvailable || !ClientConfig.INSTANCE.options.handshakeRequired ||
+				MinecraftClient.getInstance().isInSingleplayer();
 	}
 
 	public enum ClientState {
@@ -70,6 +71,7 @@ public class ConcertoClient implements ClientModInitializer {
 			public void reload(ResourceManager manager) {
 				MusicPlayer.run(() -> {
 					ClientConfig.INSTANCE.readOptions();
+					ConcertoOptions.INSTANCE.readOptions();
 					MusicPlayer.INSTANCE.reloadConfig(() -> LOGGER.info("Loaded general music playlist"));
 					NeteaseCloudApiClient.LOCAL_USER.updateLoginStatus();
 					QQMusicApiClient.LOCAL_USER.updateLoginStatus();

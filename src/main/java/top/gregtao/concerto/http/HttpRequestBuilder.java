@@ -79,7 +79,7 @@ public class HttpRequestBuilder {
     public HttpResponse<InputStream> openStream() {
         this.builder.GET();
         this.setHeaders(this.fixedHeaders);
-        HttpRequest request = this.builder.build();
+        HttpRequest request = this.builder.setHeader("Cookie", this.client.getCookieFile().readAsHeader()).build();
         try {
             HttpResponse<InputStream> response = this.client.getClient().send(request, HttpResponse.BodyHandlers.ofInputStream());
             this.client.getLogger().info("STREAM {} GET {}", response.statusCode(), this.url);
@@ -94,7 +94,7 @@ public class HttpRequestBuilder {
     public <T> HttpResponse<T> get(HttpResponse.BodyHandler<T> bodyHandler) {
         this.builder.GET();
         this.setHeaders(this.fixedHeaders);
-        HttpRequest request = this.builder.build();
+        HttpRequest request = this.builder.setHeader("Cookie", this.client.getCookieFile().readAsHeader()).build();
         try {
             HttpResponse<T> response = this.client.getClient().send(request, bodyHandler);
             if (ClientConfig.INSTANCE.options.printRequestResults && bodyHandler == HttpResponse.BodyHandlers.ofString()) {
@@ -118,7 +118,7 @@ public class HttpRequestBuilder {
         this.setContentType(contentType.name);
         this.builder.POST(HttpRequest.BodyPublishers.ofString(data, StandardCharsets.UTF_8));
         this.setHeaders(this.fixedHeaders);
-        HttpRequest request = this.builder.build();
+        HttpRequest request = this.builder.setHeader("Cookie", this.client.getCookieFile().readAsHeader()).build();
         try {
             HttpResponse<T> response = this.client.getClient().send(request, bodyHandler);
             if (ClientConfig.INSTANCE.options.printRequestResults && bodyHandler == HttpResponse.BodyHandlers.ofString()) {

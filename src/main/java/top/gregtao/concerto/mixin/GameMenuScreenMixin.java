@@ -10,8 +10,8 @@ import top.gregtao.concerto.player.MusicPlayer;
 @Mixin(GameMenuScreen.class)
 public class GameMenuScreenMixin {
 
-    @Inject(at = @At("HEAD"), method = "disconnect()V")
-    private void disconnectInject(CallbackInfo ci) {
+    @Inject(at = @At("HEAD"), method = "disconnect(Lnet/minecraft/client/MinecraftClient;Lnet/minecraft/text/Text;)V")
+    private static void disconnectInject(CallbackInfo ci) {
         MusicPlayer.run(MusicPlayer.INSTANCE::pause);
     }
 }

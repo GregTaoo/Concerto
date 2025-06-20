@@ -11,8 +11,8 @@ import top.gregtao.concerto.player.MusicPlayer;
 @Mixin(SoundManager.class)
 public class SoundManagerMixin {
 
-    @Inject(at = @At("HEAD"), method = "pauseAll()V")
-    private void pauseAllInject(CallbackInfo ci) {
+    @Inject(at = @At("HEAD"), method = "stopAll()V")
+    private void stopAllInject(CallbackInfo ci) {
         MusicPlayer.INSTANCE.pause();
     }
 

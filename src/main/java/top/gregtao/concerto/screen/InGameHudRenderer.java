@@ -64,7 +64,7 @@ public class InGameHudRenderer {
         }
     }
 
-    public static void render(DrawContext context) {
+    public static void render(DrawContext context, int mouseX, int mouseY, float delta) {
         MinecraftClient client = MinecraftClient.getInstance();
         if (MusicPlayer.INSTANCE.isPlaying()) {
 
@@ -129,6 +129,14 @@ public class InGameHudRenderer {
                         context.fill(x, pos.y + 3, (int) (x + (blankWidth - 20) * MusicPlayerHandler.INSTANCE.progressPercentage),
                                 pos.y + 5, (int) config.timeProgressColor.getNumber());
                     }
+                }
+
+                if (options.displayCoverImg) {
+                    Vector2i pos = config.coverImgPosSupplier.getPos(scaledWidth, scaledHeight);
+                    MusicPlayerHandler.INSTANCE.headPicture.setX(pos.x);
+                    MusicPlayerHandler.INSTANCE.headPicture.setY(pos.y);
+                    MusicPlayerHandler.INSTANCE.headPicture.setSize(config.options.coverImgSize, config.options.coverImgSize);
+                    MusicPlayerHandler.INSTANCE.headPicture.render(context, mouseX, mouseY, delta);
                 }
             }
         }

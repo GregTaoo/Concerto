@@ -46,7 +46,7 @@ public class QQMusicUser {
                 object.getAsJsonObject("data").getAsJsonObject("mydiss").getAsJsonArray("list")
                         .forEach(element -> playlists.add(new QQMusicPlaylist(element.getAsJsonObject().get("dissid").getAsString(), false)));
             }
-            MusicPlayerHandler.loadInThreadPool(playlists);
+            // MusicPlayerHandler.loadInThreadPool(playlists);
             return playlists;
         } catch (IOException | URISyntaxException | NullPointerException e) {
             return List.of();

@@ -18,12 +18,17 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
-public class PresetRadioConfig {
+public class PresetPlaylistsConfig {
 
-    public static final PresetRadioConfig INSTANCE = new PresetRadioConfig();
+    public static final PresetPlaylistsConfig PRESET_RADIOS = new PresetPlaylistsConfig("preset_radios");
+    public static final PresetPlaylistsConfig LOCAL_PLAYLISTS = new PresetPlaylistsConfig("local_playlists");
 
-    private final File folder = new File("Concerto/preset_radios");
+    private final File folder;
     private final List<Playlist> radios = new ArrayList<>();
+
+    public PresetPlaylistsConfig(String folder) {
+        this.folder = new File("Concerto/" + folder);
+    }
 
     public List<Playlist> getRadios() {
         return this.radios;
@@ -102,8 +107,8 @@ public class PresetRadioConfig {
         return fromJson(JsonUtil.from(s));
     }
 
-    public static boolean saveToTmpFile(Playlist playlist) {
-        File file = new File("Concerto/concerto_playlist_export.json");
+    public static boolean saveToLocalPlaylists(Playlist playlist) {
+        File file = new File("Concerto/local_playlists/" + playlist.getMeta().title() + "-" + System.currentTimeMillis() + ".json");
         try {
             if (file.exists() || file.createNewFile()) {
                 FileWriter writer = new FileWriter(file);

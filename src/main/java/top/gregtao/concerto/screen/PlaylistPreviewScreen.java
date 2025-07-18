@@ -5,7 +5,7 @@ import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.text.Text;
-import top.gregtao.concerto.config.PresetRadioConfig;
+import top.gregtao.concerto.config.PresetPlaylistsConfig;
 import top.gregtao.concerto.music.Music;
 import top.gregtao.concerto.music.list.Playlist;
 import top.gregtao.concerto.player.MusicPlayer;
@@ -62,7 +62,7 @@ public class PlaylistPreviewScreen extends ConcertoScreen {
         }).position(215, this.height - 30).size(60, 20).build());
 
         this.addDrawableChild(ButtonWidget.builder(Text.translatable("concerto.playlist.export"), button -> {
-            Text text = PresetRadioConfig.saveToTmpFile(this.playlist) ? Text.translatable("concerto.playlist.export.success") :
+            Text text = PresetPlaylistsConfig.saveToLocalPlaylists(this.playlist) ? Text.translatable("concerto.playlist.export.success") :
                     Text.translatable("concerto.playlist.export.fail");
             this.displayAlert(text);
         }).position(280, this.height - 30).size(60, 20).build());

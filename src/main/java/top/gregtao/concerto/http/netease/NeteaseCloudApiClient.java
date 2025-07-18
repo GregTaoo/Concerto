@@ -134,7 +134,7 @@ public class NeteaseCloudApiClient extends HttpApiClient {
                 if (!ids.contains(id)) music.add(new NeteaseCloudMusic(id, level));
             });
             createTime = MathUtil.formattedTime(object.get("createTime").getAsString());
-            MusicPlayerHandler.loadInThreadPool(music);
+            // MusicPlayerHandler.loadInThreadPool(music);
         }
         String name = object.get("name").getAsString();
         JsonObject creator = object.getAsJsonObject("creator");
@@ -218,7 +218,7 @@ public class NeteaseCloudApiClient extends HttpApiClient {
             List<Music> musics = new ArrayList<>();
             JsonArray array = object.getAsJsonObject("result").getAsJsonArray("songs");
             array.forEach(element -> musics.add(new NeteaseCloudMusic(element.getAsJsonObject(), ClientConfig.INSTANCE.options.neteaseMusicQuality)));
-            MusicPlayerHandler.loadInThreadPool(musics);
+            // MusicPlayerHandler.loadInThreadPool(musics);
             return musics;
         } catch (Exception e) {
             ConcertoClient.LOGGER.warn("Error while searching for music '{}': {}", keyword, e.getMessage());

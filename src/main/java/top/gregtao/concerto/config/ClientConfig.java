@@ -10,9 +10,11 @@ public class ClientConfig extends ConfigFile {
 
     public ClientConfigOptions options = new ClientConfigOptions();
 
-    public PositionXYSupplier lyricsPosSupplier, subLyricsPosSupplier, musicDetailsPosSupplier, timeProgressPosSupplier;
+    public PositionXYSupplier
+        lyricsPosSupplier, subLyricsPosSupplier, musicDetailsPosSupplier, timeProgressPosSupplier, coverImgPosSupplier;
 
-    public HexSupplier lyricsColor, subLyricsColor, musicDetailsColor, timeProgressTextColor, timeProgressColor, timeProgressBgColor;
+    public HexSupplier
+        lyricsColor, subLyricsColor, musicDetailsColor, timeProgressTextColor, timeProgressColor, timeProgressBgColor;
 
     public ClientConfig() {
         super("Concerto/client_config.json");
@@ -34,6 +36,7 @@ public class ClientConfig extends ConfigFile {
         this.subLyricsPosSupplier = new PositionXYSupplier(this.options.subLyricsPosition);
         this.musicDetailsPosSupplier = new PositionXYSupplier(this.options.musicDetailsPosition);
         this.timeProgressPosSupplier = new PositionXYSupplier(this.options.timeProgressPosition);
+        this.coverImgPosSupplier = new PositionXYSupplier(this.options.coverImgPosition);
 
         this.lyricsColor = new HexSupplier(this.options.lyricsColor);
         this.subLyricsColor = new HexSupplier(this.options.subLyricsColor);
@@ -75,16 +78,20 @@ public class ClientConfig extends ConfigFile {
         public String subLyricsColor = "#ffffaa00";
 
         public boolean displayMusicDetails = true;
-        public String musicDetailsPosition = "1-5,0+5";
+        public String musicDetailsPosition = "1-30,0+5";
         public TextAlignment musicDetailsAlignment = TextAlignment.RIGHT;
         public String musicDetailsColor = "#ffffffff";
 
         public boolean displayTimeProgress = true;
-        public String timeProgressPosition = "1-5,0+15";
+        public String timeProgressPosition = "1-30,0+15";
         public TextAlignment timeProgressAlignment = TextAlignment.RIGHT;
         public String timeProgressTextColor = "#ffffffff";
         public String timeProgressColor = "#ff0155bc";
         public String timeProgressBgColor = "#ffa1c7f6";
+
+        public boolean displayCoverImg = true;
+        public int coverImgSize = 25;
+        public String coverImgPosition = "1-25,0";
 
         public boolean textShadow = true;
         public boolean handshakeRequired = true;

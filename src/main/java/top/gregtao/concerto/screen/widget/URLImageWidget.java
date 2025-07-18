@@ -32,9 +32,10 @@ public class URLImageWidget implements Drawable, Widget, AutoCloseable {
     private int x;
     private int y;
     private String url;
-    private final NativeImageBackedTexture texture;
+    private NativeImageBackedTexture texture;
     private final Identifier textureId;
     private boolean loading = true;
+    private boolean border = true;
 
     public URLImageWidget(int width, int height, int x, int y, String url) {
         this.height = height;
@@ -43,8 +44,15 @@ public class URLImageWidget implements Drawable, Widget, AutoCloseable {
         this.y = y;
         this.url = url;
         this.textureId = Identifier.of(ConcertoClient.MOD_ID, "image" + System.currentTimeMillis());
-        this.texture = new NativeImageBackedTexture(this.textureId.toString(), width << 3, height << 3, false);
-        MinecraftClient.getInstance().getTextureManager().registerTexture(this.textureId, this.texture);
+        MinecraftClient.getInstance().submit(() -> {
+            this.texture = new NativeImageBackedTexture(this.textureId.toString(), width << 4, height << 4, false);
+            MinecraftClient.getInstance().getTextureManager().registerTexture(this.textureId, this.texture);
+        });
+    }
+
+    public URLImageWidget(int width, int height, int x, int y, String url, boolean border) {
+        this(width, height, x, y, url);
+        this.border = border;
     }
 
     public static BufferedImage resizeImage(BufferedImage originalImage, int targetWidth, int targetHeight) {
@@ -64,6 +72,10 @@ public class URLImageWidget implements Drawable, Widget, AutoCloseable {
             ConcertoClient.LOGGER.error("Error parsing BufferedImage to NativeImage", e);
             throw new RuntimeException(e);
         }
+    }
+
+    public String getUrl() {
+        return this.url;
     }
 
     public void setUrl(String url) {
@@ -88,23 +100,30 @@ public class URLImageWidget implements Drawable, Widget, AutoCloseable {
         CacheManager.IMAGE_CACHE_MANAGER.addFile(this.getFileName(), new ByteArrayInputStream(outputStream.toByteArray()));
     }
 
+    private void uploadImage(BufferedImage image, Runnable callback) {
+        MinecraftClient.getInstance().submit(() -> {
+            MinecraftClient.getInstance().getTextureManager().destroyTexture(this.textureId);
+            this.texture = new NativeImageBackedTexture(this.textureId::toString, toNativeImage(image));
+            MinecraftClient.getInstance().getTextureManager().registerTexture(this.textureId, this.texture);
+        }).thenRun(callback);
+    }
+
     public void loadImage() {
         this.loadImage(true);
     }
 
     public void loadImage(boolean useCache) {
-        if (this.url == null) return;
+        if (this.url == null || this.texture == null) return;
         try {
             this.loading = true;
             BufferedImage image;
             if (useCache && this.cacheExists()) {
                 image = ImageIO.read(this.getFromCache());
             } else {
-                image = resizeImage(ImageIO.read(URI.create(this.url).toURL()), this.width << 3, this.height << 3);
+                image = resizeImage(ImageIO.read(URI.create(this.url).toURL()), this.width << 4, this.height << 4);
                 if (useCache) this.writeCacheFile(image);
             }
-            this.texture.setImage(toNativeImage(image));
-            this.loading = false;
+            this.uploadImage(image, () -> this.loading = false);
         } catch (MalformedURLException e) {
             ConcertoClient.LOGGER.error("Malformed URL: {}", this.url, e);
             throw new RuntimeException("Malformed URL: " + this.url, e);
@@ -119,17 +138,17 @@ public class URLImageWidget implements Drawable, Widget, AutoCloseable {
     }
 
     public void loadImage(Function<String, byte[]> imageSupplier, boolean useCache) {
+        if (this.texture == null) return;
         try {
             this.loading = true;
             BufferedImage image;
             if (useCache && this.cacheExists()) {
                 image = ImageIO.read(this.getFromCache());
             } else {
-                image = resizeImage(ImageIO.read(new ByteArrayInputStream(imageSupplier.apply(this.url))), this.width << 3, this.height << 3);
+                image = resizeImage(ImageIO.read(new ByteArrayInputStream(imageSupplier.apply(this.url))), this.width << 4, this.height << 4);
                 if (useCache) this.writeCacheFile(image);
             }
-            this.texture.setImage(toNativeImage(image));
-            this.loading = false;
+            this.uploadImage(image, () -> this.loading = false);
         } catch (IOException e) {
             ConcertoClient.LOGGER.error("Error while loading image: {}", this.url, e);
             throw new RuntimeException(e);
@@ -140,14 +159,14 @@ public class URLImageWidget implements Drawable, Widget, AutoCloseable {
     public void close() {
         this.loading = true;
         MinecraftClient.getInstance().getTextureManager().destroyTexture(this.textureId);
-        this.texture.close();
+        if (this.texture != null) this.texture.close();
     }
 
     @Override
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
-        context.drawBorder(this.x, this.y, this.width, this.height, 0xffffffff);
+        if (this.border) context.drawBorder(this.x, this.y, this.width, this.height, 0xffffffff);
         TextRenderer textRenderer = MinecraftClient.getInstance().textRenderer;
-        if (this.url == null) {
+        if (this.url == null || this.texture == null) {
             context.drawCenteredTextWithShadow(
                 textRenderer, Text.translatable("concerto.screen.url_image.empty"),
                 this.x + this.width / 2, this.y + (this.height - textRenderer.fontHeight) / 2, 0xffffffff
@@ -155,13 +174,12 @@ public class URLImageWidget implements Drawable, Widget, AutoCloseable {
         } else {
             NativeImage image = this.texture.getImage();
             if (image != null && !this.loading) {
-                this.texture.upload();
                 DrawContext drawContext = new DrawContext(MinecraftClient.getInstance(),
                         ((DrawContextAccessor) context).getVertexConsumers());
                 drawContext.getMatrices().push();
-                drawContext.getMatrices().scale(0.125f, 0.125f, 1);
-                drawContext.getMatrices().translate(7 * this.x, 7 * this.y, 0);
-                drawContext.drawTexture(RenderLayer::getGuiTextured, this.textureId, this.x, this.y, 0, 0, this.width << 3, this.height << 3, image.getWidth(), image.getHeight());
+                drawContext.getMatrices().scale(0.0625f, 0.0625f, 1);
+                drawContext.getMatrices().translate(15 * this.x, 15 * this.y, 0);
+                drawContext.drawTexture(RenderLayer::getGuiTextured, this.textureId, this.x, this.y, 0, 0, this.width << 4, this.height << 4, image.getWidth(), image.getHeight());
                 drawContext.getMatrices().pop();
             } else {
                 context.drawCenteredTextWithShadow(
@@ -200,6 +218,11 @@ public class URLImageWidget implements Drawable, Widget, AutoCloseable {
     @Override
     public int getHeight() {
         return this.height;
+    }
+
+    public void setSize(int width, int height) {
+        this.width = width;
+        this.height = height;
     }
 
     @Override

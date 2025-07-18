@@ -141,6 +141,7 @@
   "concerto.screen.login.type.qrcode.wechat": "WeChat QR Code",
   "concerto.screen.general_list": "General Playlist",
   "concerto.screen.preset_radios": "Server Preset Radios",
+  "concerto.screen.local_playlists": "Local Playlists",
   "concerto.screen.acknowledgement": "Thank you for supporting!",
   "concerto.screen.pause_resume": "Pause/Resume",
   "concerto.screen.options": "Concerto Settings",
@@ -156,7 +157,7 @@
 
   "concerto.playlist.export": "Export as JSON",
   "concerto.playlist.export.fail": "Failed to export playlist to JSON",
-  "concerto.playlist.export.success": "Successfully exported playlist to JSON in concerto_playlist_export.json",
+  "concerto.playlist.export.success": "Successfully exported playlist to JSON in Concerto/local_playlists",
 
   "concerto.search_type": "Type",
   "concerto.search_type.music": "Music",
@@ -256,6 +257,13 @@
   "concerto.options.posXDelta.timeProgress": "TimeBar X ±px",
   "concerto.options.posYPercent.timeProgress": "TimeBar Y %",
   "concerto.options.posYDelta.timeProgress": "TimeBar Y ±px",
+
+  "concerto.options.display.coverImg": "Show Cover Image",
+  "concerto.options.size.coverImg": "Cover Image Size",
+  "concerto.options.posXPercent.coverImg": "CoverImg X %",
+  "concerto.options.posXDelta.coverImg": "CoverImg X ±px",
+  "concerto.options.posYPercent.coverImg": "CoverImg Y %",
+  "concerto.options.posYDelta.coverImg": "CoverImg Y ±px",
 
   "concerto.options.align": "%s: %s",
   "concerto.options.align.left": "Left",

@@ -10,6 +10,7 @@ import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.text.Text;
 import net.minecraft.util.Util;
 import top.gregtao.concerto.ConcertoClient;
+import top.gregtao.concerto.config.PresetPlaylistsConfig;
 import top.gregtao.concerto.network.room.MusicRoom;
 import top.gregtao.concerto.screen.qq.QQMusicIndexScreen;
 import top.gregtao.concerto.screen.netease.NeteaseCloudIndexScreen;
@@ -28,7 +29,7 @@ public class ConcertoIndexScreen extends ConcertoScreen {
 
         ButtonWidget widget = ButtonWidget.builder(Text.translatable("concerto.screen.audition"),
                 button -> MinecraftClient.getInstance().setScreen(new MusicAuditionScreen(this))
-        ).position(this.width / 2 + 20, 20).size(115, 20).build();
+        ).position(this.width / 2 + 5, 20).size(115, 20).build();
         this.addDrawableChild(widget);
         ClientPlayerEntity player = MinecraftClient.getInstance().player;
         if (player == null || !player.hasPermissionLevel(2) || !ConcertoClient.isServerAvailable()) {
@@ -37,7 +38,7 @@ public class ConcertoIndexScreen extends ConcertoScreen {
 
         this.addDrawableChild(ButtonWidget.builder(Text.translatable("concerto.screen.confirmation"),
                 button -> MinecraftClient.getInstance().setScreen(new MusicConfirmationScreen(this))
-        ).position(this.width / 2 + 20, 50).size(115, 20).build());
+        ).position(this.width / 2 + 5, 50).size(115, 20).build());
 
         this.addDrawableChild(ButtonWidget.builder(Text.translatable("concerto.screen.index.163"),
                 button -> MinecraftClient.getInstance().setScreen(new NeteaseCloudIndexScreen(this))
@@ -49,7 +50,7 @@ public class ConcertoIndexScreen extends ConcertoScreen {
 
         ButtonWidget widget1 = ButtonWidget.builder(Text.translatable("concerto.screen.preset_radios"),
                 button -> MinecraftClient.getInstance().setScreen(new PresetRadiosScreen(this))
-        ).position(this.width / 2 + 20, 80).size(115, 20).build();
+        ).position(this.width / 2 + 5, 80).size(115, 20).build();
         this.addDrawableChild(widget1);
         if (player == null || !ConcertoClient.isServerAvailable()) {
             widget1.active = false;
@@ -59,9 +60,14 @@ public class ConcertoIndexScreen extends ConcertoScreen {
                 button -> MinecraftClient.getInstance().setScreen(new AddMusicScreen(this)))
             .position(this.width / 2 - 120, 110).size(115, 20).build());
 
+        this.addDrawableChild(ButtonWidget.builder(Text.translatable("concerto.screen.local_playlists"),
+            button -> MinecraftClient.getInstance().setScreen(new PlaylistListScreen(
+                Text.translatable("concerto.screen.local_playlists"), this, PresetPlaylistsConfig.LOCAL_PLAYLISTS.getRadios()))
+        ).position(this.width / 2 + 5, 110).size(115, 20).build());
+
         this.addDrawableChild(ButtonWidget.builder(Text.translatable("concerto.report_bugs"),
                 button -> Util.getOperatingSystem().open("https://github.com/GregTaoo/Concerto/issues")
-        ).position(this.width / 2 + 20, 110).size(115, 20).build());
+        ).position(this.width / 2 + 5, 140).size(115, 20).build());
 
         this.addDrawableChild(ButtonWidget.builder(Text.translatable("concerto.screen.options"),
                 button -> MinecraftClient.getInstance().setScreen(new ConcertoOptionsScreen(this))

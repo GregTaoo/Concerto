@@ -30,7 +30,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class LocalFileMusic extends PathFileMusic {
-    public static List<String> FORMATS = List.of("mp3", "ogg", "wav", "flac", "aac");
+    public static List<String> FORMATS = List.of("mp3", "ogg", "wav", "flac", "aac", "m4a");
 
     public LocalFileMusic(String rawPath) throws UnsafeMusicException {
         super(new File(TextUtil.trimSurrounding(rawPath, "\"", "\"")).getAbsolutePath());

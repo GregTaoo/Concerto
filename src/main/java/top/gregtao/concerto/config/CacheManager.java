@@ -1,6 +1,7 @@
 package top.gregtao.concerto.config;
 
 import top.gregtao.concerto.ConcertoClient;
+import top.gregtao.concerto.ConcertoServer;
 import top.gregtao.concerto.player.MusicPlayer;
 import top.gregtao.concerto.util.Pair;
 
@@ -10,10 +11,13 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.LinkOption;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.nio.file.attribute.BasicFileAttributeView;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.stream.Stream;
 
 public class CacheManager {
 
@@ -33,6 +37,35 @@ public class CacheManager {
     public CacheManager(String name, int maxSize) {
         this(name);
         this.maxSize = maxSize;
+    }
+
+    public static void cleanAllCache() {
+        Path cacheRoot = Paths.get(CACHE_ROOT_FOLDER);
+
+        if (!Files.exists(cacheRoot) || !Files.isDirectory(cacheRoot)) {
+            ConcertoServer.LOGGER.error("Cache folder does not exist or is not a directory: {}", cacheRoot);
+            return;
+        }
+
+        try (Stream<Path> walk = Files.walk(cacheRoot, 1)) {
+            walk.filter(path -> !path.equals(cacheRoot)).forEach(CacheManager::deleteRecursively);
+        } catch (IOException e) {
+            ConcertoServer.LOGGER.error("Failed to scan cache folder: {}", cacheRoot, e);
+        }
+    }
+
+    private static void deleteRecursively(Path path) {
+        try (Stream<Path> walk = Files.walk(path)) {
+            walk.sorted(Comparator.reverseOrder()).forEach(p -> {
+                try {
+                    Files.delete(p);
+                } catch (IOException e) {
+                    ConcertoServer.LOGGER.error("Failed to delete: {}", p, e);
+                }
+            });
+        } catch (IOException e) {
+            ConcertoServer.LOGGER.error("Failed to traverse path: {}", path, e);
+        }
     }
 
     public File getChild(String child) {

@@ -1,6 +1,7 @@
 package top.gregtao.concerto.screen.widget;
 
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.Drawable;
 import net.minecraft.client.gui.widget.ClickableWidget;
@@ -145,9 +146,12 @@ public class URLImageWidget implements Drawable, Widget, AutoCloseable {
     @Override
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
         context.drawBorder(this.x, this.y, this.width, this.height, 0xffffffff);
+        TextRenderer textRenderer = MinecraftClient.getInstance().textRenderer;
         if (this.url == null) {
-            context.drawCenteredTextWithShadow(MinecraftClient.getInstance().textRenderer,
-                    Text.translatable("concerto.screen.url_image.empty"), this.x + this.width / 2, this.y + this.height / 2, 0xffffffff);
+            context.drawCenteredTextWithShadow(
+                textRenderer, Text.translatable("concerto.screen.url_image.empty"),
+                this.x + this.width / 2, this.y + (this.height - textRenderer.fontHeight) / 2, 0xffffffff
+            );
         } else {
             NativeImage image = this.texture.getImage();
             if (image != null && !this.loading) {
@@ -160,8 +164,10 @@ public class URLImageWidget implements Drawable, Widget, AutoCloseable {
                 drawContext.drawTexture(RenderLayer::getGuiTextured, this.textureId, this.x, this.y, 0, 0, this.width << 3, this.height << 3, image.getWidth(), image.getHeight());
                 drawContext.getMatrices().pop();
             } else {
-                context.drawCenteredTextWithShadow(MinecraftClient.getInstance().textRenderer,
-                        Text.translatable("concerto.screen.loading"), this.x + this.width / 2, this.y + this.height / 2, 0xffffffff);
+                context.drawCenteredTextWithShadow(
+                    textRenderer, Text.translatable("concerto.screen.loading"),
+                    this.x + this.width / 2, this.y + (this.height - textRenderer.fontHeight) / 2, 0xffffffff
+                );
             }
         }
     }

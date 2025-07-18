@@ -13,6 +13,7 @@ import net.minecraft.command.CommandRegistryAccess;
 import net.minecraft.text.Text;
 import top.gregtao.concerto.api.CacheableMusic;
 import top.gregtao.concerto.api.Likeable;
+import top.gregtao.concerto.config.CacheManager;
 import top.gregtao.concerto.config.MusicCacheManager;
 import top.gregtao.concerto.config.PresetRadioConfig;
 import top.gregtao.concerto.music.list.FixedPlaylist;
@@ -242,6 +243,11 @@ public class MusicCommand {
                     } else {
                         clientPlayer.sendMessage(Text.translatable("concerto.playlist.export.fail"), false);
                     }
+                    return 0;
+                })
+        ).then(
+                ClientCommandManager.literal("clean-cache").executes(context -> {
+                    CacheManager.cleanAllCache();
                     return 0;
                 })
         );

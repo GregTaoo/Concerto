@@ -246,7 +246,7 @@ public class ClientMusicNetworkHandler {
         if (ConcertoClient.clientState != ConcertoClient.ClientState.MUSIC_AGENT) return;
         MusicPlayer.run(() -> {
             if (payload.string.equals("Stop")) {
-                MusicPlayer.INSTANCE.playNext(1);
+                MusicPlayer.INSTANCE.stop();
             } else {
                 Music music = MusicJsonParsers.from(TextUtil.fromBase64(payload.string));
                 if (music != null) {

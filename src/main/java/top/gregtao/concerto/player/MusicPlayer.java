@@ -1,5 +1,6 @@
 package top.gregtao.concerto.player;
 
+import top.gregtao.concerto.enums.Sources;
 import top.gregtao.concerto.player.streamplayer.enums.Status;
 import top.gregtao.concerto.player.streamplayer.stream.StreamPlayer;
 import top.gregtao.concerto.player.streamplayer.stream.StreamPlayerEvent;
@@ -215,6 +216,7 @@ public class MusicPlayer extends StreamPlayer implements StreamPlayerListener {
 
     public void playTempMusic(Music music, Runnable callback) {
         run(() -> {
+            ClientPlayerEntity player = MinecraftClient.getInstance().player;
             InputStream source = music.getMusicSourceOrNull();
             if (source == null) return;
             this.forcePaused = false;
@@ -230,13 +232,19 @@ public class MusicPlayer extends StreamPlayer implements StreamPlayerListener {
             try {
                 this.open(source);
                 this.play();
-                ConcertoClient.LOGGER.info("Start playing temporary music {} - {}", music.getMeta().title(), music.getMeta().author());
-                this.isPlayingTemp = true;
+                ConcertoClient.LOGGER.info(
+                    "Start playing temporary music {} - {} from {}",
+                    music.getMeta().title(), music.getMeta().author(),
+                    Sources.getI18nString(music.getMeta().getSource())
+                );
             } catch (StreamPlayerException e) {
                 this.started = this.isPlayingTemp = this.forcePaused = false;
                 ConcertoClient.LOGGER.error(e.toString());
-                throw new RuntimeException(e);
+                if (player != null) {
+                    player.sendMessage(Text.translatable("concerto.player.error", e.toString()), false);
+                }
             }
+            this.isPlayingTemp = true;
             this.playNextLock.set(false);
         }, callback);
     }
@@ -255,6 +263,7 @@ public class MusicPlayer extends StreamPlayer implements StreamPlayerListener {
 
     public void playNext(int forward, Consumer<Integer> callback) {
         run(() -> {
+            ClientPlayerEntity player = MinecraftClient.getInstance().player;
             try {
                 if (!this.started || MusicPlayerHandler.INSTANCE.isEmpty()) {
                     this.started = false;
@@ -265,12 +274,18 @@ public class MusicPlayer extends StreamPlayer implements StreamPlayerListener {
                 Music music = MusicPlayerHandler.INSTANCE.playNext(forward);
                 if (music != null) {
                     InputStream source;
-                    ClientPlayerEntity player = MinecraftClient.getInstance().player;
                     while ((source = music.getMusicSourceOrNull()) == null) {
-                        ConcertoClient.LOGGER.error("Unable to play music: '{}' of '{}'", music.getMeta().title(), music.getMeta().author());
+                        ConcertoClient.LOGGER.error(
+                            "Unable to play music: {} - {} from {}",
+                            music.getMeta().title(), music.getMeta().author(),
+                            Sources.getI18nString(music.getMeta().getSource())
+                        );
                         if (player != null) {
                             player.sendMessage(Text.translatable(
-                                    "concerto.player.unable", music.getMeta().title(), music.getMeta().author()), false);
+                                "concerto.player.unable",
+                                music.getMeta().title(), music.getMeta().author(),
+                                Sources.getI18nString(music.getMeta().getSource())
+                            ), false);
                         }
                         MusicPlayerHandler.INSTANCE.setCurrentIndex((MusicPlayerHandler.INSTANCE.getCurrentIndex() + 1)
                                 % MusicPlayerHandler.INSTANCE.getMusicList().size());
@@ -290,9 +305,13 @@ public class MusicPlayer extends StreamPlayer implements StreamPlayerListener {
                 this.playNextLock.set(false);
                 this.isPlayingTemp = this.forcePaused = false;
             } catch (Exception e) {
-                this.started = this.isPlayingTemp = this.forcePaused = false;
                 ConcertoClient.LOGGER.error(e.toString());
-                throw new RuntimeException(e);
+                if (player != null) {
+                    player.sendMessage(Text.translatable("concerto.player.error", e.toString()), false);
+                }
+                this.playNextLock.set(false);
+                this.isPlayingTemp = this.forcePaused = false;
+                playNext(1);
             }
         });
     }

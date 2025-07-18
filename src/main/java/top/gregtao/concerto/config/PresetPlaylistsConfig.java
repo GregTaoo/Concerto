@@ -108,7 +108,7 @@ public class PresetPlaylistsConfig {
     }
 
     public static boolean saveToLocalPlaylists(Playlist playlist) {
-        File file = new File("Concerto/local_playlists/" + playlist.getMeta().title() + "-" + System.currentTimeMillis() + ".json");
+        File file = new File("Concerto/local_playlists/" + System.currentTimeMillis() + ".json");
         try {
             if (file.exists() || file.createNewFile()) {
                 FileWriter writer = new FileWriter(file);

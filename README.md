@@ -138,13 +138,21 @@
 - 单击选中音乐，再点击详情按钮查看音乐具体信息（内有**服务器点歌**按钮）
 - 可将多个文件/文件夹拖入 播放队列管理界面/添加音乐界面 进行添加
 
+
+### 本地预设歌单
+
+- 使用 `/concerto export-as-playlist` 或歌单详情页面按钮导出歌单
+- 导出的 `JSON` 文件已经被放置于 `Concerto/local_playlists` 文件夹下
+- 可用 `/concerto reload` 重新加载最新添加的预设歌单
+- 可在 Concerto 主菜单里看到本地预设歌单的入口
+
 ### 服务端预设歌单
 
 - 使用 `/concerto export-as-playlist` 或歌单详情页面按钮导出歌单
-- 将导出的 `JSON` 文件放置于 `Concerto/preset_radios` 文件夹下
+- 将导出的 `JSON` 文件复制并放置于 `Concerto/preset_radios` 文件夹下（默认是导出到本地的文件夹，`Concerto/local_playlists`）
 - 若文件名为 `music_agent.json` 将作为音乐点播室空闲时候的歌单
 - 可用 `/concerto-server reload` 重新加载最新添加的预设歌单
-- 玩家可在 Concerto 主菜单里看到服务端预设歌单的入口
+- 服务器玩家可在 Concerto 主菜单里看到服务端预设歌单的入口
 
 ### 服务端配置文件
 

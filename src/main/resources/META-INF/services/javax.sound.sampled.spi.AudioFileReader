@@ -4,3 +4,4 @@ javazoom.spi.mpeg.sampled.file.MpegAudioFileReader
 org.tritonus.sampled.file.AuAudioFileReader
 org.tritonus.sampled.file.WaveAudioFileReader
 org.tritonus.sampled.file.AiffAudioFileReader
+net.sourceforge.jaad.spi.javasound.AACAudioFileReader

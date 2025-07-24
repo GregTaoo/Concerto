@@ -4,9 +4,11 @@ import org.jaudiotagger.audio.AudioFile;
 import org.jaudiotagger.tag.FieldKey;
 import org.jaudiotagger.tag.KeyNotFoundException;
 import org.jaudiotagger.tag.Tag;
+import org.jaudiotagger.tag.images.Artwork;
 
 import java.io.*;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.List;
 
 public class FileUtil {
@@ -42,6 +44,24 @@ public class FileUtil {
         } catch (KeyNotFoundException e) {
             return orElse;
         }
+    }
+
+    public static String getCoverAsObjectURL(AudioFile file) {
+        Tag tag = file.getTag();
+
+        try {
+            if (tag != null && tag.getFirstArtwork() != null) {
+                Artwork artwork = tag.getFirstArtwork();
+                byte[] imageData = artwork.getBinaryData();
+                String mimeType = artwork.getMimeType();
+                String base64 = Base64.getEncoder().encodeToString(imageData);
+                return "data:" + mimeType + ";base64," + base64;
+            }
+        } catch (Exception e) {
+            return null;
+        }
+
+        return null;
     }
 
     public static BufferedInputStream createBuffered(InputStream inputStream) {

@@ -168,8 +168,10 @@ public class MusicPlayerHandler {
             this.displayTexts[2] = this.currentMeta.title() + " | " + this.currentMeta.author() + " | " + this.currentMeta.getSource();
             MusicTimestamp timestamp = this.currentMeta.getDuration();
             this.timeFormat = "%s" + (timestamp == null ? "" : " ".repeat(30) + this.currentMeta.getDuration().toShortString());
-            this.headPicture.setUrl(this.currentMeta.headPictureUrl());
-            this.headPicture.loadImage(true, ClientConfig.INSTANCE.options.coverImgInCircle);
+            if (!this.currentMeta.headPictureUrl().isEmpty()) {
+                this.headPicture.setUrl(this.currentMeta.headPictureUrl());
+                this.headPicture.loadImage(true, ClientConfig.INSTANCE.options.coverImgInCircle);
+            }
         } else {
             this.displayTexts[2] = "";
         }

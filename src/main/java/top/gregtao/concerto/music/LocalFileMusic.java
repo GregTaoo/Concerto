@@ -79,14 +79,15 @@ public class LocalFileMusic extends PathFileMusic {
 
     @Override
     public void load() {
-        String author, title;
+        String author, title, coverImg;
         try {
             AudioFile file = AudioFileIO.read(new File(this.getRawPath()));
             Tag tag = file.getTagAndConvertOrCreateDefault();
             title = tag.getFirst(FieldKey.TITLE);
             author = FileUtil.getLocalAudioAuthors(file);
+            coverImg = FileUtil.getCoverAsObjectURL(file);
         } catch (Exception e) {
-            author = title = null;
+            author = title = coverImg = null;
         }
         long duration = TimeTool.durationInMilliseconds(new File(this.getRawPath()).getAbsolutePath(), AudioType.FILE);
         if (duration <= 0) {
@@ -100,7 +101,8 @@ public class LocalFileMusic extends PathFileMusic {
                     author == null || author.isEmpty() ? TextUtil.getTranslatable("concerto.unknown") : author,
                     title == null || title.isEmpty() ? this.getRawPath() : title,
                     Sources.LOCAL_FILE.getName().getString(),
-                    TimeTool.durationInMilliseconds(new File(this.getRawPath()).getAbsolutePath(), AudioType.FILE)
+                    TimeTool.durationInMilliseconds(new File(this.getRawPath()).getAbsolutePath(), AudioType.FILE),
+                    coverImg == null ? "" : coverImg
             ));
         }
         super.load();

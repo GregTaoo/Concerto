@@ -114,6 +114,18 @@ public class ConcertoOptions {
             options.size.setValue(this.config.options.coverImgSize);
             PosOptions.setPosition(options, this.config.coverImgPosSupplier);
         }));
+
+        this.updaters.add(new SingleBooleanOption(
+                "coverImgInCircle",
+                value -> this.config.options.coverImgInCircle = value,
+                () -> this.config.options.coverImgInCircle
+        ));
+
+        this.updaters.add(new SingleBooleanOption(
+                "coverImgRotate",
+                value -> this.config.options.coverImgRotate = value,
+                () -> this.config.options.coverImgRotate
+        ));
     }
 
     public SimpleOption<?>[] getOptions() {

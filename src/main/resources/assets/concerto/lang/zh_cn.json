@@ -265,6 +265,9 @@
   "concerto.options.posYPercent.coverImg": "封面图 Y %",
   "concerto.options.posYDelta.coverImg": "封面图 Y ±px",
 
+  "concerto.options.coverImgInCircle": "圆形封面图",
+  "concerto.options.coverImgRotate": "封面图旋转",
+
   "concerto.options.align": "%s: %s",
   "concerto.options.align.left": "左",
   "concerto.options.align.center": "中",

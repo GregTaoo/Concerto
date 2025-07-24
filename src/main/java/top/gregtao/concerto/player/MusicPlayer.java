@@ -1,6 +1,5 @@
 package top.gregtao.concerto.player;
 
-import top.gregtao.concerto.enums.Sources;
 import top.gregtao.concerto.player.streamplayer.enums.Status;
 import top.gregtao.concerto.player.streamplayer.stream.StreamPlayer;
 import top.gregtao.concerto.player.streamplayer.stream.StreamPlayerEvent;
@@ -235,7 +234,7 @@ public class MusicPlayer extends StreamPlayer implements StreamPlayerListener {
                 ConcertoClient.LOGGER.info(
                     "Start playing temporary music {} - {} from {}",
                     music.getMeta().title(), music.getMeta().author(),
-                    Sources.getI18nString(music.getMeta().getSource())
+                    music.getMeta().getSource()
                 );
             } catch (StreamPlayerException e) {
                 this.started = this.isPlayingTemp = this.forcePaused = false;
@@ -278,13 +277,13 @@ public class MusicPlayer extends StreamPlayer implements StreamPlayerListener {
                         ConcertoClient.LOGGER.error(
                             "Unable to play music: {} - {} from {}",
                             music.getMeta().title(), music.getMeta().author(),
-                            Sources.getI18nString(music.getMeta().getSource())
+                            music.getMeta().getSource()
                         );
                         if (player != null) {
                             player.sendMessage(Text.translatable(
                                 "concerto.player.unable",
                                 music.getMeta().title(), music.getMeta().author(),
-                                Sources.getI18nString(music.getMeta().getSource())
+                                music.getMeta().getSource()
                             ), false);
                         }
                         MusicPlayerHandler.INSTANCE.setCurrentIndex((MusicPlayerHandler.INSTANCE.getCurrentIndex() + 1)

@@ -11,6 +11,7 @@ import top.gregtao.concerto.ConcertoClient;
 import top.gregtao.concerto.api.CacheableMusic;
 import top.gregtao.concerto.api.LazyLoadable;
 import top.gregtao.concerto.api.MusicJsonParsers;
+import top.gregtao.concerto.config.ClientConfig;
 import top.gregtao.concerto.music.lyrics.Lyrics;
 import top.gregtao.concerto.music.meta.music.MusicMetaData;
 import top.gregtao.concerto.enums.OrderType;
@@ -168,7 +169,7 @@ public class MusicPlayerHandler {
             MusicTimestamp timestamp = this.currentMeta.getDuration();
             this.timeFormat = "%s" + (timestamp == null ? "" : " ".repeat(30) + this.currentMeta.getDuration().toShortString());
             this.headPicture.setUrl(this.currentMeta.headPictureUrl());
-            this.headPicture.loadImage();
+            this.headPicture.loadImage(true, ClientConfig.INSTANCE.options.coverImgInCircle);
         } else {
             this.displayTexts[2] = "";
         }

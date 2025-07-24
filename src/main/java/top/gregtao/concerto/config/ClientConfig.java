@@ -92,6 +92,8 @@ public class ClientConfig extends ConfigFile {
         public boolean displayCoverImg = true;
         public int coverImgSize = 25;
         public String coverImgPosition = "1-25,0";
+        public boolean coverImgInCircle = true;
+        public boolean coverImgRotate = true;
 
         public boolean textShadow = true;
         public boolean handshakeRequired = true;

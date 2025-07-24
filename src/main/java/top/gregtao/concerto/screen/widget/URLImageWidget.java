@@ -13,11 +13,11 @@ import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 import top.gregtao.concerto.ConcertoClient;
 import top.gregtao.concerto.config.CacheManager;
-import top.gregtao.concerto.mixin.DrawContextAccessor;
 import top.gregtao.concerto.util.HashUtil;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
+import java.awt.geom.Ellipse2D;
 import java.awt.image.BufferedImage;
 import java.io.*;
 import java.net.MalformedURLException;
@@ -44,10 +44,6 @@ public class URLImageWidget implements Drawable, Widget, AutoCloseable {
         this.y = y;
         this.url = url;
         this.textureId = Identifier.of(ConcertoClient.MOD_ID, "image" + System.currentTimeMillis());
-        MinecraftClient.getInstance().submit(() -> {
-            this.texture = new NativeImageBackedTexture(this.textureId.toString(), width << 4, height << 4, false);
-            MinecraftClient.getInstance().getTextureManager().registerTexture(this.textureId, this.texture);
-        });
     }
 
     public URLImageWidget(int width, int height, int x, int y, String url, boolean border) {
@@ -61,6 +57,33 @@ public class URLImageWidget implements Drawable, Widget, AutoCloseable {
         BufferedImage outputImage = new BufferedImage(targetWidth, targetHeight, BufferedImage.TYPE_INT_ARGB);
         outputImage.getGraphics().drawImage(resultingImage, 0, 0, null);
         return outputImage;
+    }
+
+    public static BufferedImage cropCircleImage(BufferedImage inputImage) {
+        int width = inputImage.getWidth();
+        int height = inputImage.getHeight();
+        int diameter = Math.min(width, height);
+
+        // 创建一个透明背景的 ARGB 图像
+        BufferedImage output = new BufferedImage(diameter, diameter, BufferedImage.TYPE_INT_ARGB);
+
+        Graphics2D g2 = output.createGraphics();
+
+        // 开启抗锯齿
+        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+        // 创建圆形剪裁区域
+        g2.setClip(new Ellipse2D.Float(0, 0, diameter, diameter));
+
+        // 计算居中位置（如果原图不是正方形）
+        int x = (width - diameter) / 2;
+        int y = (height - diameter) / 2;
+
+        // 裁剪绘制
+        g2.drawImage(inputImage, -x, -y, null);
+
+        g2.dispose();
+        return output;
     }
 
     public static NativeImage toNativeImage(BufferedImage image) {
@@ -102,27 +125,29 @@ public class URLImageWidget implements Drawable, Widget, AutoCloseable {
 
     private void uploadImage(BufferedImage image, Runnable callback) {
         MinecraftClient.getInstance().submit(() -> {
-            MinecraftClient.getInstance().getTextureManager().destroyTexture(this.textureId);
+            if (this.texture != null)
+              MinecraftClient.getInstance().getTextureManager().destroyTexture(this.textureId);
             this.texture = new NativeImageBackedTexture(this.textureId::toString, toNativeImage(image));
             MinecraftClient.getInstance().getTextureManager().registerTexture(this.textureId, this.texture);
         }).thenRun(callback);
     }
 
     public void loadImage() {
-        this.loadImage(true);
+        this.loadImage(true, false);
     }
 
-    public void loadImage(boolean useCache) {
-        if (this.url == null || this.texture == null) return;
+    public void loadImage(boolean useCache, boolean cropCircle) {
+        if (this.url == null) return;
         try {
             this.loading = true;
             BufferedImage image;
             if (useCache && this.cacheExists()) {
-                image = ImageIO.read(this.getFromCache());
+                image = resizeImage(ImageIO.read(this.getFromCache()), this.getImageWidth(), this.getImageHeight());
             } else {
-                image = resizeImage(ImageIO.read(URI.create(this.url).toURL()), this.width << 4, this.height << 4);
+                image = resizeImage(ImageIO.read(URI.create(this.url).toURL()), this.getImageWidth(), this.getImageHeight());
                 if (useCache) this.writeCacheFile(image);
             }
+            if (cropCircle) image = cropCircleImage(image);
             this.uploadImage(image, () -> this.loading = false);
         } catch (MalformedURLException e) {
             ConcertoClient.LOGGER.error("Malformed URL: {}", this.url, e);
@@ -138,14 +163,13 @@ public class URLImageWidget implements Drawable, Widget, AutoCloseable {
     }
 
     public void loadImage(Function<String, byte[]> imageSupplier, boolean useCache) {
-        if (this.texture == null) return;
         try {
             this.loading = true;
             BufferedImage image;
             if (useCache && this.cacheExists()) {
-                image = ImageIO.read(this.getFromCache());
+                image = resizeImage(ImageIO.read(this.getFromCache()), this.getImageWidth(), this.getImageHeight());
             } else {
-                image = resizeImage(ImageIO.read(new ByteArrayInputStream(imageSupplier.apply(this.url))), this.width << 4, this.height << 4);
+                image = resizeImage(ImageIO.read(new ByteArrayInputStream(imageSupplier.apply(this.url))), this.getImageWidth(), this.getImageHeight());
                 if (useCache) this.writeCacheFile(image);
             }
             this.uploadImage(image, () -> this.loading = false);
@@ -174,13 +198,12 @@ public class URLImageWidget implements Drawable, Widget, AutoCloseable {
         } else {
             NativeImage image = this.texture.getImage();
             if (image != null && !this.loading) {
-                DrawContext drawContext = new DrawContext(MinecraftClient.getInstance(),
-                        ((DrawContextAccessor) context).getVertexConsumers());
-                drawContext.getMatrices().push();
-                drawContext.getMatrices().scale(0.0625f, 0.0625f, 1);
-                drawContext.getMatrices().translate(15 * this.x, 15 * this.y, 0);
-                drawContext.drawTexture(RenderLayer::getGuiTextured, this.textureId, this.x, this.y, 0, 0, this.width << 4, this.height << 4, image.getWidth(), image.getHeight());
-                drawContext.getMatrices().pop();
+                context.getMatrices().push();
+                context.getMatrices().scale(0.0625f, 0.0625f, 1);
+                context.getMatrices().translate(15 * this.x, 15 * this.y, 0);
+                context.drawTexture(RenderLayer::getGuiTextured, this.textureId, this.x, this.y, 0, 0,
+                        this.getImageWidth(), this.getImageHeight(), this.getImageWidth(), this.getImageHeight());
+                context.getMatrices().pop();
             } else {
                 context.drawCenteredTextWithShadow(
                     textRenderer, Text.translatable("concerto.screen.loading"),
@@ -214,10 +237,18 @@ public class URLImageWidget implements Drawable, Widget, AutoCloseable {
     public int getWidth() {
         return this.width;
     }
+    
+    public int getImageWidth() {
+        return this.getWidth() << 4;
+    }
 
     @Override
     public int getHeight() {
         return this.height;
+    }
+
+    public int getImageHeight() {
+        return this.getHeight() << 4;
     }
 
     public void setSize(int width, int height) {

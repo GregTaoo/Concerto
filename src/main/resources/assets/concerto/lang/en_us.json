@@ -265,6 +265,9 @@
   "concerto.options.posYPercent.coverImg": "CoverImg Y %",
   "concerto.options.posYDelta.coverImg": "CoverImg Y ±px",
 
+  "concerto.options.coverImgInCircle": "CoverImg In Circle",
+  "concerto.options.coverImgRotate": "Rotate Cover Image",
+
   "concerto.options.align": "%s: %s",
   "concerto.options.align.left": "Left",
   "concerto.options.align.center": "Center",

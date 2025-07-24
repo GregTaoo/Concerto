@@ -4,9 +4,11 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.ChatScreen;
 import net.minecraft.text.Text;
+import org.joml.Quaternionf;
 import org.joml.Vector2i;
 import top.gregtao.concerto.ConcertoClient;
 import top.gregtao.concerto.config.ClientConfig;
+import top.gregtao.concerto.mixin.DrawContextAccessor;
 import top.gregtao.concerto.player.MusicPlayer;
 import top.gregtao.concerto.player.MusicPlayerHandler;
 import top.gregtao.concerto.util.TextUtil;
@@ -75,6 +77,9 @@ public class InGameHudRenderer {
                 int scaledWidth = client.getWindow().getScaledWidth(), scaledHeight = client.getWindow().getScaledHeight();
                 String[] texts = MusicPlayerHandler.INSTANCE.getDisplayTexts();
 
+                context = new DrawContext(MinecraftClient.getInstance(),
+                        ((DrawContextAccessor) context).getVertexConsumers());
+
                 if (options.displayLyrics) {
                     Vector2i pos = config.lyricsPosSupplier.getPos(scaledWidth, scaledHeight);
                     TextUtil.renderText(Text.literal(texts[0]), options.lyricsAlignment,
@@ -133,9 +138,21 @@ public class InGameHudRenderer {
 
                 if (options.displayCoverImg) {
                     Vector2i pos = config.coverImgPosSupplier.getPos(scaledWidth, scaledHeight);
+                    int size = config.options.coverImgSize;
                     MusicPlayerHandler.INSTANCE.headPicture.setX(pos.x);
                     MusicPlayerHandler.INSTANCE.headPicture.setY(pos.y);
-                    MusicPlayerHandler.INSTANCE.headPicture.setSize(config.options.coverImgSize, config.options.coverImgSize);
+                    MusicPlayerHandler.INSTANCE.headPicture.setSize(size, size);
+
+                    if (options.coverImgRotate) {
+                        float cx = pos.x + size / 2f;
+                        float cy = pos.y + size / 2f;
+                        float angleRad = delta * (float) Math.PI / 180f;
+
+                        context.getMatrices().translate(cx, cy, 0); // 先平移到中心
+                        context.getMatrices().multiply(new Quaternionf().rotateZ(angleRad)); // 旋转
+                        context.getMatrices().translate(-cx, -cy, 0); // 再平移回来
+                    }
+
                     MusicPlayerHandler.INSTANCE.headPicture.render(context, mouseX, mouseY, delta);
                 }
             }

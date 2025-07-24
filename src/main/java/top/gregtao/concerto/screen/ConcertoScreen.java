@@ -46,7 +46,7 @@ public class ConcertoScreen extends Screen {
             );
         }
 
-        this.message = this.addDrawableChild(new NarratedMultilineTextWidget(
+        this.message = this.addSelectableChild(new NarratedMultilineTextWidget(
                 this.width, Text.empty(), this.textRenderer, 12));
         this.message.visible = false;
         this.initTabNavigation();
@@ -75,5 +75,6 @@ public class ConcertoScreen extends Screen {
         this.renderBackground(matrices, mouseX, mouseY, delta);
         super.render(matrices, mouseX, mouseY, delta);
         matrices.drawCenteredTextWithShadow(this.textRenderer, this.title, this.width / 2, 5, 0xffffffff);
+        this.message.render(matrices, mouseX, mouseY, delta);
     }
 }

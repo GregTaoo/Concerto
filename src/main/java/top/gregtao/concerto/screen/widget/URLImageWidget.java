@@ -34,7 +34,7 @@ public class URLImageWidget implements Drawable, Widget, AutoCloseable {
     private String url;
     private NativeImageBackedTexture texture;
     private final Identifier textureId;
-    private boolean loading = true;
+    private State state = State.LOADING;
     private boolean border = true;
 
     public URLImageWidget(int width, int height, int x, int y, String url) {
@@ -123,6 +123,17 @@ public class URLImageWidget implements Drawable, Widget, AutoCloseable {
         CacheManager.IMAGE_CACHE_MANAGER.addFile(this.getFileName(), new ByteArrayInputStream(outputStream.toByteArray()));
     }
 
+    public static BufferedImage readImageFromUrl(String url) throws IOException {
+        for (int i = 0; i < 5; ++i) {
+            try {
+                return ImageIO.read(URI.create(url).toURL());
+            } catch (Exception e) {
+                ConcertoClient.LOGGER.warn("Error reading image from URL: {}", url);
+            }
+        }
+        throw new IOException("Error reading image from URL: " + url);
+    }
+
     private void uploadImage(BufferedImage image, Runnable callback) {
         MinecraftClient.getInstance().submit(() -> {
             if (this.texture != null)
@@ -139,22 +150,22 @@ public class URLImageWidget implements Drawable, Widget, AutoCloseable {
     public void loadImage(boolean useCache, boolean cropCircle) {
         if (this.url == null) return;
         try {
-            this.loading = true;
+            this.state = State.LOADING;
             BufferedImage image;
             if (useCache && this.cacheExists()) {
                 image = resizeImage(ImageIO.read(this.getFromCache()), this.getImageWidth(), this.getImageHeight());
             } else {
-                image = resizeImage(ImageIO.read(URI.create(this.url).toURL()), this.getImageWidth(), this.getImageHeight());
+                image = resizeImage(readImageFromUrl(this.url), this.getImageWidth(), this.getImageHeight());
                 if (useCache) this.writeCacheFile(image);
             }
             if (cropCircle) image = cropCircleImage(image);
-            this.uploadImage(image, () -> this.loading = false);
+            this.uploadImage(image, () -> this.state = State.READY);
         } catch (MalformedURLException e) {
             ConcertoClient.LOGGER.error("Malformed URL: {}", this.url, e);
-            throw new RuntimeException("Malformed URL: " + this.url, e);
+            this.state = State.FAILED;
         } catch (IOException e) {
             ConcertoClient.LOGGER.error("Error while loading image: {}", this.url, e);
-            throw new RuntimeException(e);
+            this.state = State.FAILED;
         }
     }
 
@@ -164,7 +175,7 @@ public class URLImageWidget implements Drawable, Widget, AutoCloseable {
 
     public void loadImage(Function<String, byte[]> imageSupplier, boolean useCache) {
         try {
-            this.loading = true;
+            this.state = State.LOADING;
             BufferedImage image;
             if (useCache && this.cacheExists()) {
                 image = resizeImage(ImageIO.read(this.getFromCache()), this.getImageWidth(), this.getImageHeight());
@@ -172,16 +183,16 @@ public class URLImageWidget implements Drawable, Widget, AutoCloseable {
                 image = resizeImage(ImageIO.read(new ByteArrayInputStream(imageSupplier.apply(this.url))), this.getImageWidth(), this.getImageHeight());
                 if (useCache) this.writeCacheFile(image);
             }
-            this.uploadImage(image, () -> this.loading = false);
+            this.uploadImage(image, () -> this.state = State.READY);
         } catch (IOException e) {
             ConcertoClient.LOGGER.error("Error while loading image: {}", this.url, e);
-            throw new RuntimeException(e);
+            this.state = State.FAILED;
         }
     }
 
     @Override
     public void close() {
-        this.loading = true;
+        this.state = State.FAILED;
         MinecraftClient.getInstance().getTextureManager().destroyTexture(this.textureId);
         if (this.texture != null) this.texture.close();
     }
@@ -197,17 +208,22 @@ public class URLImageWidget implements Drawable, Widget, AutoCloseable {
             );
         } else {
             NativeImage image = this.texture.getImage();
-            if (image != null && !this.loading) {
+            if (image != null && this.state == State.READY) {
                 context.getMatrices().push();
                 context.getMatrices().scale(0.0625f, 0.0625f, 1);
                 context.getMatrices().translate(15 * this.x, 15 * this.y, 0);
                 context.drawTexture(RenderLayer::getGuiTextured, this.textureId, this.x, this.y, 0, 0,
                         this.getImageWidth(), this.getImageHeight(), this.getImageWidth(), this.getImageHeight());
                 context.getMatrices().pop();
+            } else if (this.state == State.LOADING) {
+                context.drawCenteredTextWithShadow(
+                        textRenderer, Text.translatable("concerto.screen.loading"),
+                        this.x + this.width / 2, this.y + (this.height - textRenderer.fontHeight) / 2, 0xffffffff
+                );
             } else {
                 context.drawCenteredTextWithShadow(
-                    textRenderer, Text.translatable("concerto.screen.loading"),
-                    this.x + this.width / 2, this.y + (this.height - textRenderer.fontHeight) / 2, 0xffffffff
+                        textRenderer, Text.translatable("concerto.fail"),
+                        this.x + this.width / 2, this.y + (this.height - textRenderer.fontHeight) / 2, 0xffffffff
                 );
             }
         }
@@ -258,4 +274,10 @@ public class URLImageWidget implements Drawable, Widget, AutoCloseable {
 
     @Override
     public void forEachChild(Consumer<ClickableWidget> consumer) {}
+
+    enum State {
+        LOADING,
+        FAILED,
+        READY,
+    }
 }

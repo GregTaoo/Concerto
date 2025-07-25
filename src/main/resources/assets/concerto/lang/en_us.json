@@ -121,6 +121,7 @@
   "concerto.screen.login.type.password": "Username & Password",
   "concerto.screen.login.type.captcha": "CAPTCHA Code",
   "concerto.screen.login.type.qrcode": "QR Code (Recommended)",
+  "concerto.screen.login.type.cookie": "Input Cookies",
   "concerto.screen.login.qrcode.refresh": "Refresh QR Code",
   "concerto.screen.login.qrcode.failed": "Fail to login, refreshing",
   "concerto.screen.login.qrcode.expired": "Code expired, refreshing",
@@ -145,6 +146,9 @@
   "concerto.screen.acknowledgement": "Thank you for supporting!",
   "concerto.screen.pause_resume": "Pause/Resume",
   "concerto.screen.options": "Concerto Settings",
+  "concerto.screen.login.cookie": "Input your Cookies with pattern 'key1=value1; key2=value2;'",
+  "concerto.screen.login.cookie.empty": "No Cookies matched! Please check the pattern.",
+  "concerto.screen.login.cookie.failed": "Failed to login! (Invalid Cookies or login expired)",
 
   "concerto.screen.in_which_room": "You are now in:",
   "concerto.screen.in_music_room": "MusicRoom %s (Click to copy)",

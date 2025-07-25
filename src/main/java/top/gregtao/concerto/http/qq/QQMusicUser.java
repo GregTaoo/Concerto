@@ -2,7 +2,6 @@ package top.gregtao.concerto.http.qq;
 
 import com.google.gson.JsonObject;
 import top.gregtao.concerto.music.list.QQMusicPlaylist;
-import top.gregtao.concerto.player.MusicPlayerHandler;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -22,7 +21,7 @@ public class QQMusicUser {
         this.apiClient = apiClient;
     }
 
-    public void updateLoginStatus() {
+    public boolean updateLoginStatus() {
         try {
             String uin = this.apiClient.getQQUin();
             JsonObject object = this.apiClient.requestSignedApi("userInfo.BaseUserInfoServer", "get_user_baseinfo_v2", "\"vec_uin\":[\"" + uin + "\"]");
@@ -35,6 +34,7 @@ public class QQMusicUser {
         } catch (Exception e) {
             this.loggedIn = false;
         }
+        return this.loggedIn;
     }
 
     public List<QQMusicPlaylist> getUserPlaylists() {

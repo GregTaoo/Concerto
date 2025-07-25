@@ -120,6 +120,7 @@
   "concerto.screen.login.type.password": "用户名 & 密码",
   "concerto.screen.login.type.captcha": "手机验证码",
   "concerto.screen.login.type.qrcode": "二维码扫描 (推荐)",
+  "concerto.screen.login.type.cookie": "输入 Cookie",
   "concerto.screen.login.qrcode.refresh": "刷新二维码",
   "concerto.screen.login.qrcode.failed": "登陆失败，刷新中",
   "concerto.screen.login.qrcode.expired": "二维码失效，刷新中",
@@ -145,6 +146,9 @@
   "concerto.screen.copy_link": "复制链接",
   "concerto.screen.pause_resume": "暂停/继续播放",
   "concerto.screen.options": "Concerto 设置",
+  "concerto.screen.login.cookie": "请输入Cookie，格式为 'key1=value1; key2=value2;'",
+  "concerto.screen.login.cookie.empty": "没有匹配到正确的Cookie，请检查格式",
+  "concerto.screen.login.cookie.failed": "登录失败！(不可用的Cookie或登录已失效)",
 
   "concerto.screen.in_which_room": "您已经加入了：",
   "concerto.screen.in_music_room": "音乐室 %s (点击复制)",

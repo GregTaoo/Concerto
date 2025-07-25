@@ -37,7 +37,8 @@ public class InGameHudRenderer {
         }
 
         public void setMaxWidth(int maxWidth) {
-            if (maxWidth != this.maxWidth) this.reset();
+            // 强制 Unicode 字体时，该宽度经常小范围变动，因此设置容许范围
+            if (maxWidth > this.maxWidth + 5 || maxWidth < this.maxWidth - 5) this.reset();
             this.maxWidth = maxWidth;
         }
 
@@ -127,7 +128,7 @@ public class InGameHudRenderer {
                         switch (options.timeProgressAlignment) {
                             case LEFT -> x = pos.x + timeWidth + 9;
                             case CENTER -> x = pos.x - blankWidth / 2 + 9;
-                            default -> x = pos.x - blankWidth - 18;
+                            default -> x = pos.x - blankWidth - timeWidth + 9;
                         }
                         context.fill(x, pos.y + 3, x + blankWidth - 20, pos.y + 5,
                                 (int) config.timeProgressBgColor.getNumber());

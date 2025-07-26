@@ -116,7 +116,7 @@ public class CacheManager {
 
     public void addFile(String filename, InputStream inputStream) throws IOException {
         File file = this.getChild(filename);
-        if (file.exists() || !file.getParentFile().mkdirs() || !file.createNewFile()) return;
+        if (file.exists() || (!file.getParentFile().exists() && !file.getParentFile().mkdirs()) || !file.createNewFile()) return;
         try (FileOutputStream outputStream = new FileOutputStream(file)) {
             outputStream.write(inputStream.readAllBytes());
         }

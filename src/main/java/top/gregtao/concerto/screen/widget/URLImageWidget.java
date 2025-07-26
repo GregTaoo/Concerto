@@ -15,13 +15,18 @@ import top.gregtao.concerto.ConcertoClient;
 import top.gregtao.concerto.config.CacheManager;
 import top.gregtao.concerto.util.HashUtil;
 
+import javax.imageio.IIOImage;
 import javax.imageio.ImageIO;
+import javax.imageio.ImageWriteParam;
+import javax.imageio.ImageWriter;
+import javax.imageio.stream.ImageOutputStream;
 import java.awt.*;
 import java.awt.geom.Ellipse2D;
 import java.awt.image.BufferedImage;
 import java.io.*;
 import java.net.MalformedURLException;
 import java.net.URI;
+import java.util.Iterator;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -118,8 +123,28 @@ public class URLImageWidget implements Drawable, Widget, AutoCloseable {
     }
 
     public void writeCacheFile(BufferedImage image) throws IOException {
+        // JPEG 不支持透明通道，先转为 RGB，白色填充背景
+        BufferedImage rgbImage = new BufferedImage(image.getWidth(), image.getHeight(), BufferedImage.TYPE_INT_RGB);
+        Graphics2D g = rgbImage.createGraphics();
+        g.drawImage(image, 0, 0, java.awt.Color.WHITE, null);
+        g.dispose();
+
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        ImageIO.write(image, "png", outputStream);
+
+        Iterator<ImageWriter> writers = ImageIO.getImageWritersByFormatName("jpg");
+        if (!writers.hasNext()) throw new IllegalStateException("No JPEG writers available");
+        ImageWriter writer = writers.next();
+
+        ImageWriteParam param = writer.getDefaultWriteParam();
+        param.setCompressionMode(ImageWriteParam.MODE_EXPLICIT);
+        param.setCompressionQuality(0.8f); // 0.8 ~ 1.0 推荐
+
+        ImageOutputStream ios = ImageIO.createImageOutputStream(outputStream);
+        writer.setOutput(ios);
+        writer.write(null, new IIOImage(rgbImage, null, null), param);
+        ios.close();
+        writer.dispose();
+
         CacheManager.IMAGE_CACHE_MANAGER.addFile(this.getFileName(), new ByteArrayInputStream(outputStream.toByteArray()));
     }
 

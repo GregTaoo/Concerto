@@ -343,7 +343,6 @@ public class MusicPlayerHandler {
                                     AudioFile audioFile = AudioFileIO.read(file);
                                     Tag tag = audioFile.getTagOrCreateAndSetDefault();
                                     tag.setField(FieldKey.TITLE, metaData.title());
-                                    tag.setField(FieldKey.ARTIST, metaData.author());
                                     tag.setField(FieldKey.ARTISTS, metaData.author());
                                     tag.setField(FieldKey.LYRICS, lyrics);
                                     if (!metaData.headPictureUrl().isEmpty()) {

@@ -47,15 +47,19 @@ public class FileUtil {
     }
 
     public static String getCoverAsObjectURL(AudioFile file) {
-        Tag tag = file.getTag();
+        Tag tag = file.getTagAndConvertOrCreateDefault();
 
         try {
             if (tag != null && tag.getFirstArtwork() != null) {
                 Artwork artwork = tag.getFirstArtwork();
-                byte[] imageData = artwork.getBinaryData();
-                String mimeType = artwork.getMimeType();
-                String base64 = Base64.getEncoder().encodeToString(imageData);
-                return "data:" + mimeType + ";base64," + base64;
+                if (artwork.isLinked()) {
+                    return artwork.getImageUrl();
+                } else {
+                    byte[] imageData = artwork.getBinaryData();
+                    String mimeType = artwork.getMimeType();
+                    String base64 = Base64.getEncoder().encodeToString(imageData);
+                    return "data:" + mimeType + ";base64," + base64;
+                }
             }
         } catch (Exception e) {
             return null;

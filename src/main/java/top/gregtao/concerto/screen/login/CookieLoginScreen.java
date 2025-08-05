@@ -36,7 +36,7 @@ public class CookieLoginScreen extends ConcertoScreen {
     protected void init() {
         super.init();
 
-        TextWidget textWidget = new TextWidget(this.width / 2 - 125, 20, 250, 10, Text.translatable("concerto.screen.login.cookie"), this.textRenderer);
+        TextWidget textWidget = new TextWidget(this.width / 2 - 200, 20, 400, 10, Text.translatable("concerto.screen.login.cookie"), this.textRenderer);
         this.addDrawableChild(textWidget);
 
         this.field = new TextFieldWidget(this.textRenderer, this.width / 2 - 125, 30, 250, 20, Text.empty());

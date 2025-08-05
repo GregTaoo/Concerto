@@ -41,21 +41,21 @@ public class NeteaseCloudApiClient extends HttpApiClient {
     }
 
     public String getOuterMusicLink(String id) {
-        return "http://music.163.com/song/media/outer/url?id=" + id;
+        return "https://music.163.com/song/media/outer/url?id=" + id;
     }
 
     public JsonObject getMusicLink(String id, NeteaseCloudMusic.Level level) {
-        String url = "http://music.163.com/api/song/enhance/player/url/v1?encodeType=mp3&ids=[" + id + "]&level=" + level.asString();
+        String url = "https://music.163.com/api/song/enhance/player/url/v1?encodeType=mp3&ids=[" + id + "]&level=" + level.asString();
         return parseJson(this.open().url(url).get());
     }
 
     public JsonObject getMusicDetail(String id) {
-        String url = "http://music.163.com/api/v3/song/detail?c=%5B%7B%22id%22%3A%20" + id + "%7D%5D";
+        String url = "https://music.163.com/api/v3/song/detail?c=%5B%7B%22id%22%3A%20" + id + "%7D%5D";
         return parseJson(this.open().url(url).get());
     }
 
     public Pair<String, String> getLyrics(String id) {
-        String url = "http://music.163.com/api/song/lyric?id=" + id + "&lv=0&tv=0";
+        String url = "https://music.163.com/api/song/lyric?id=" + id + "&lv=0&tv=0";
         JsonObject object = parseJson(this.open().url(url).get());
         if (object == null) return null;
         return Pair.of(object.getAsJsonObject("lrc").get("lyric").getAsString(),
@@ -63,7 +63,7 @@ public class NeteaseCloudApiClient extends HttpApiClient {
     }
 
     public Pair<Integer, String> sendPhoneCaptcha(String countryCode, String phoneNumber) {
-        String url = "http://music.163.com/api/sms/captcha/sent?cellphone=" + phoneNumber + "&ctcode=" + countryCode;
+        String url = "https://music.163.com/api/sms/captcha/sent?cellphone=" + phoneNumber + "&ctcode=" + countryCode;
         JsonObject object = parseJson(this.open().url(url).get());
         if (object == null) return null;
         return getCodeAndMessage(object);
@@ -74,7 +74,7 @@ public class NeteaseCloudApiClient extends HttpApiClient {
     }
 
     public Pair<Integer, String> cellphoneLogin(String countryCode, String phoneNumber, boolean captcha, String code) {
-        String url = "http://music.163.com/api/login/cellphone";
+        String url = "https://music.163.com/api/login/cellphone";
         JsonObject object = parseJson(this.open().url(url, Map.of(
                 "phone", phoneNumber, "countrycode", countryCode, "rememberLogin", true,
                 captcha ? "captcha" : "password", captcha ? code : HashUtil.md5(code)
@@ -90,7 +90,7 @@ public class NeteaseCloudApiClient extends HttpApiClient {
     }
 
     public Pair<Integer, String> emailPasswordLogin(String email, String password) {
-        String url = "http://music.163.com/api/login";
+        String url = "https://music.163.com/api/login";
         JsonObject object = parseJson(this.open().url(url, Map.of(
                 "username", email, "password", HashUtil.md5(password), "rememberLogin", true
         )).get());
@@ -101,19 +101,19 @@ public class NeteaseCloudApiClient extends HttpApiClient {
     }
 
     public String generateQRCodeKey() {
-        String url = "http://music.163.com/api/login/qrcode/unikey?type=1";
+        String url = "https://music.163.com/api/login/qrcode/unikey?type=1";
         JsonObject object = parseJson(this.open().url(url).get());
         if (object == null) return null;
         return object.get("unikey").getAsString();
     }
 
     public String getQRCodeLoginLink(String uniKey) {
-        return "http://music.163.com/login?codekey=" + uniKey;
+        return "https://music.163.com/login?codekey=" + uniKey;
     }
 
     public Pair<Integer, String> getQRCodeStatus(String uniKey) {
         return getCodeAndMessage(parseJson(this.open()
-                .url("http://music.163.com/api/login/qrcode/client/login?type=1&key=" + uniKey)
+                .url("https://music.163.com/api/login/qrcode/client/login?type=1&key=" + uniKey)
                 .get()));
     }
 
@@ -134,7 +134,7 @@ public class NeteaseCloudApiClient extends HttpApiClient {
                 if (!ids.contains(id)) music.add(new NeteaseCloudMusic(id, level));
             });
             createTime = MathUtil.formattedTime(object.get("createTime").getAsString());
-            MusicPlayerHandler.loadInThreadPool(music);
+            // MusicPlayerHandler.loadInThreadPool(music);
         }
         String name = object.get("name").getAsString();
         JsonObject creator = object.getAsJsonObject("creator");
@@ -184,7 +184,7 @@ public class NeteaseCloudApiClient extends HttpApiClient {
 
     public Pair<ArrayList<Music>, PlaylistMetaData> getPlaylist(String id, NeteaseCloudMusic.Level level) {
         try {
-            String url = "http://music.163.com/api/v6/playlist/detail?id=" + id + "&n=" + MusicPlayerHandler.MAX_SIZE;
+            String url = "https://music.163.com/api/v6/playlist/detail?id=" + id + "&n=" + MusicPlayerHandler.MAX_SIZE;
             JsonObject object = Objects.requireNonNull(parseJson(this.open().url(url).get()))
                     .getAsJsonObject("playlist");
             return this.parsePlaylistJson(object, level, false);
@@ -196,7 +196,7 @@ public class NeteaseCloudApiClient extends HttpApiClient {
 
     public Pair<ArrayList<Music>, PlaylistMetaData> getAlbum(String id, NeteaseCloudMusic.Level level) {
         try {
-            JsonObject object = parseJson(this.open().url("http://music.163.com/api/v1/album/" + id)
+            JsonObject object = parseJson(this.open().url("https://music.163.com/api/v1/album/" + id)
                     .get());
             return this.parseAlbumJson(object, level, false);
         } catch (Exception e) {
@@ -206,7 +206,7 @@ public class NeteaseCloudApiClient extends HttpApiClient {
     }
 
     private JsonObject search(String keyword, int page, SearchType type) {
-        return parseJson(this.open().url("http://music.163.com/api/cloudsearch/pc/").post(
+        return parseJson(this.open().url("https://music.163.com/api/cloudsearch/pc/").post(
                 HttpResponse.BodyHandlers.ofString(), HttpRequestBuilder.ContentType.FORM,
                 Map.of("s", keyword, "offset", 30 * page, "limit", 30, "type", type.neteaseKey, "total", true)
         ));
@@ -218,7 +218,7 @@ public class NeteaseCloudApiClient extends HttpApiClient {
             List<Music> musics = new ArrayList<>();
             JsonArray array = object.getAsJsonObject("result").getAsJsonArray("songs");
             array.forEach(element -> musics.add(new NeteaseCloudMusic(element.getAsJsonObject(), ClientConfig.INSTANCE.options.neteaseMusicQuality)));
-            MusicPlayerHandler.loadInThreadPool(musics);
+            // MusicPlayerHandler.loadInThreadPool(musics);
             return musics;
         } catch (Exception e) {
             ConcertoClient.LOGGER.warn("Error while searching for music '{}': {}", keyword, e.getMessage());
@@ -253,7 +253,7 @@ public class NeteaseCloudApiClient extends HttpApiClient {
     }
 
     public FixedPlaylist getDailyRecommendation() {
-         JsonObject object = parseJson(this.open().url("http://music.163.com/api/v3/discovery/recommend/songs").post());
+         JsonObject object = parseJson(this.open().url("https://music.163.com/api/v3/discovery/recommend/songs").post());
          if (object == null) return null;
          JsonArray songs = object.getAsJsonObject("data").getAsJsonArray("dailySongs");
          ArrayList<Music> musics = new ArrayList<>();

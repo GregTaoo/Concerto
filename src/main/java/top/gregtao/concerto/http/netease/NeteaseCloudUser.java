@@ -27,13 +27,13 @@ public class NeteaseCloudUser {
     }
 
     public boolean updateLoginStatus() {
-        String url = "http://music.163.com/api/w/nuser/account/get";
+        String url = "https://music.163.com/api/w/nuser/account/get";
         JsonObject object = HttpApiClient.parseJson(this.apiClient.open().url(url).post());
         if (object == null || object.get("account").isJsonNull()) {
             this.loggedIn = false;
         } else {
             this.uid = object.getAsJsonObject("profile").get("userId").getAsLong();
-            String url1 = "http://music.163.com/api/v1/user/detail/" + this.uid;
+            String url1 = "https://music.163.com/api/v1/user/detail/" + this.uid;
             JsonObject detail = HttpApiClient.parseJson(this.apiClient.open().url(url1).post());
             if (detail == null) return false;
             JsonObject profile = detail.getAsJsonObject("profile");
@@ -46,14 +46,14 @@ public class NeteaseCloudUser {
     }
 
     public void logout() {
-        this.apiClient.open().url("http://music.163.com/api/logout").get();
+        this.apiClient.open().url("https://music.163.com/api/logout").get();
         this.apiClient.clearCookie();
         this.loggedIn = false;
     }
 
     public List<NeteaseCloudPlaylist> getUserPlaylists(int page) {
         List<NeteaseCloudPlaylist> lists = new ArrayList<>();
-        String url = "http://music.163.com/api/user/playlist";
+        String url = "https://music.163.com/api/user/playlist";
         JsonObject object = HttpApiClient.parseJson(this.apiClient.open().url(url).post(
                 HttpResponse.BodyHandlers.ofString(),
                 HttpRequestBuilder.ContentType.FORM,
@@ -67,7 +67,7 @@ public class NeteaseCloudUser {
     }
 
     public boolean likeMusic(String id, boolean like) {
-        JsonObject object = HttpApiClient.parseJson(this.apiClient.open().url("http://music.163.com/api/radio/like", Map.of(
+        JsonObject object = HttpApiClient.parseJson(this.apiClient.open().url("https://music.163.com/api/radio/like", Map.of(
                 "alg", "itembased", "trackId", id, "like", like
         )).post());
         return object != null && object.get("code").getAsInt() == 200;

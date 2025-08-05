@@ -42,7 +42,7 @@ public class ConcertoOptionsScreen extends ConcertoScreen {
                 Text.translatable("concerto.reset"), button -> {
                     if (this.client != null) {
                         this.client.setScreen(new ConfirmScreen(confirmed -> {
-                            ConcertoOptions.INSTANCE.resetOptions();
+                            if (confirmed) ConcertoOptions.INSTANCE.resetOptions();
                             this.client.setScreen(new ConcertoOptionsScreen(this.getParent()));
                         }, this.title, Text.translatable("concerto.reset_confirm")));
                     }
@@ -73,6 +73,6 @@ public class ConcertoOptionsScreen extends ConcertoScreen {
     @Override
     public void render(DrawContext matrices, int mouseX, int mouseY, float delta) {
         super.render(matrices, mouseX, mouseY, delta);
-        InGameHudRenderer.render(matrices);
+        InGameHudRenderer.render(matrices, mouseX, mouseY, delta);
     }
 }

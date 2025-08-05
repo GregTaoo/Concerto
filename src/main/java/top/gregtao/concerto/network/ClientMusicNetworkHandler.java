@@ -12,7 +12,7 @@ import top.gregtao.concerto.ConcertoClient;
 import top.gregtao.concerto.api.MusicJsonParsers;
 import top.gregtao.concerto.command.ShareMusicCommand;
 import top.gregtao.concerto.config.ClientConfig;
-import top.gregtao.concerto.config.PresetRadioConfig;
+import top.gregtao.concerto.config.PresetPlaylistsConfig;
 import top.gregtao.concerto.music.Music;
 import top.gregtao.concerto.network.room.MusicRoom;
 import top.gregtao.concerto.player.MusicPlayer;
@@ -197,9 +197,9 @@ public class ClientMusicNetworkHandler {
     }
 
     public static void presetRadiosReceiver(ConcertoPayload payload, ClientPlayNetworking.Context context) {
-        MusicPlayer.run(() -> ConcertoClient.presetRadios = PresetRadioConfig.fromJson(payload.string).stream().filter(playlist ->
-                        playlist.getList().stream().allMatch(MusicDataPacket::isMusicSafe))
-                .peek(playlist -> MusicPlayerHandler.loadInThreadPool(playlist.getList())).toList(), () -> {
+        MusicPlayer.run(() -> ConcertoClient.presetRadios = PresetPlaylistsConfig.fromJson(payload.string).stream().filter(playlist ->
+                        playlist.getList().stream().allMatch(MusicDataPacket::isMusicSafe)).toList(), () -> {
+//          .peek(playlist -> MusicPlayerHandler.loadInThreadPool(playlist.getList())).toList(), () -> {
             MinecraftClient client = context.client();
             if (client != null && client.currentScreen instanceof PresetRadiosScreen screen) {
                 screen.reset();
@@ -246,7 +246,7 @@ public class ClientMusicNetworkHandler {
         if (ConcertoClient.clientState != ConcertoClient.ClientState.MUSIC_AGENT) return;
         MusicPlayer.run(() -> {
             if (payload.string.equals("Stop")) {
-                MusicPlayer.INSTANCE.playNext(1);
+                MusicPlayer.INSTANCE.stop();
             } else {
                 Music music = MusicJsonParsers.from(TextUtil.fromBase64(payload.string));
                 if (music != null) {

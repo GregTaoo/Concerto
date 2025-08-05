@@ -32,7 +32,10 @@ public class MusicRoomCommand {
                                     return 0;
                                 })
                         )).then(ClientCommandManager.literal("quit").executes(context -> {
-                            MusicRoom.clientQuit();
+                            switch (ConcertoClient.clientState) {
+                                case MUSIC_AGENT -> ClientMusicNetworkHandler.musicAgentQuit();
+                                case MUSIC_ROOM -> MusicRoom.clientQuit();
+                            }
                             return 0;
                         })).then(ClientCommandManager.literal("members").executes(context -> {
                             if (MusicRoom.CLIENT_ROOM != null) {
@@ -124,7 +127,7 @@ public class MusicRoomCommand {
         if (ConcertoClient.clientState == ConcertoClient.ClientState.MUSIC_AGENT) {
             return true;
         } else {
-            player.sendMessage(Text.translatable("concerto.not_available"), false);
+            player.sendMessage(Text.translatable("concerto.agent.not_in"), false);
             return false;
         }
     }

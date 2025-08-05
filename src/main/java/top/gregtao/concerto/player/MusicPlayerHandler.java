@@ -11,11 +11,13 @@ import top.gregtao.concerto.ConcertoClient;
 import top.gregtao.concerto.api.CacheableMusic;
 import top.gregtao.concerto.api.LazyLoadable;
 import top.gregtao.concerto.api.MusicJsonParsers;
+import top.gregtao.concerto.config.ClientConfig;
 import top.gregtao.concerto.music.lyrics.Lyrics;
 import top.gregtao.concerto.music.meta.music.MusicMetaData;
 import top.gregtao.concerto.enums.OrderType;
 import top.gregtao.concerto.music.Music;
 import top.gregtao.concerto.music.MusicTimestamp;
+import top.gregtao.concerto.screen.widget.URLImageWidget;
 import top.gregtao.concerto.util.Pair;
 
 import java.io.*;
@@ -50,6 +52,8 @@ public class MusicPlayerHandler {
     private MusicTimestamp currentTime = null;
 
     private String[] displayTexts = new String[]{ "", "", "", ""}; // Lyrics; SubLyrics; Title | Author; Source | Time;
+
+    public URLImageWidget headPicture = new URLImageWidget(20, 20, 0, 0, null, false);
 
     private String timeFormat = "%s" + " ".repeat(30) + "%s";
 
@@ -102,6 +106,7 @@ public class MusicPlayerHandler {
         this.timeFormat = "%s" + " ".repeat(30) + "%s";
         this.progressPercentage = 0;
         this.startTime = 0;
+        this.headPicture.setUrl(null);
     }
 
     public void clear() {
@@ -163,6 +168,10 @@ public class MusicPlayerHandler {
             this.displayTexts[2] = this.currentMeta.title() + " | " + this.currentMeta.author() + " | " + this.currentMeta.getSource();
             MusicTimestamp timestamp = this.currentMeta.getDuration();
             this.timeFormat = "%s" + (timestamp == null ? "" : " ".repeat(30) + this.currentMeta.getDuration().toShortString());
+            if (!this.currentMeta.headPictureUrl().isEmpty()) {
+                this.headPicture.setUrl(this.currentMeta.headPictureUrl());
+                this.headPicture.loadImage(true, ClientConfig.INSTANCE.options.coverImgInCircle);
+            }
         } else {
             this.displayTexts[2] = "";
         }
@@ -334,7 +343,6 @@ public class MusicPlayerHandler {
                                     AudioFile audioFile = AudioFileIO.read(file);
                                     Tag tag = audioFile.getTagOrCreateAndSetDefault();
                                     tag.setField(FieldKey.TITLE, metaData.title());
-                                    tag.setField(FieldKey.ARTIST, metaData.author());
                                     tag.setField(FieldKey.ARTISTS, metaData.author());
                                     tag.setField(FieldKey.LYRICS, lyrics);
                                     if (!metaData.headPictureUrl().isEmpty()) {

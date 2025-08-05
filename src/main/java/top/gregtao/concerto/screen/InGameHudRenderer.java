@@ -4,11 +4,10 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.ChatScreen;
 import net.minecraft.text.Text;
-import org.joml.Quaternionf;
+import org.joml.Matrix3x2fStack;
 import org.joml.Vector2i;
 import top.gregtao.concerto.ConcertoClient;
 import top.gregtao.concerto.config.ClientConfig;
-import top.gregtao.concerto.mixin.DrawContextAccessor;
 import top.gregtao.concerto.player.MusicPlayer;
 import top.gregtao.concerto.player.MusicPlayerHandler;
 import top.gregtao.concerto.util.TextUtil;
@@ -78,8 +77,7 @@ public class InGameHudRenderer {
                 int scaledWidth = client.getWindow().getScaledWidth(), scaledHeight = client.getWindow().getScaledHeight();
                 String[] texts = MusicPlayerHandler.INSTANCE.getDisplayTexts();
 
-                context = new DrawContext(MinecraftClient.getInstance(),
-                        ((DrawContextAccessor) context).getVertexConsumers());
+                context = new DrawContext(MinecraftClient.getInstance(), context.state);
 
                 if (options.displayLyrics) {
                     Vector2i pos = config.lyricsPosSupplier.getPos(scaledWidth, scaledHeight);
@@ -149,9 +147,10 @@ public class InGameHudRenderer {
                         float cy = pos.y + size / 2f;
                         float angleRad = delta * (float) Math.PI / 180f;
 
-                        context.getMatrices().translate(cx, cy, 0); // 先平移到中心
-                        context.getMatrices().multiply(new Quaternionf().rotateZ(angleRad)); // 旋转
-                        context.getMatrices().translate(-cx, -cy, 0); // 再平移回来
+                        Matrix3x2fStack matrices = context.getMatrices();
+                        matrices.translate(cx, cy, matrices); // 先平移到中心
+                        matrices.rotate(angleRad); // 旋转
+                        matrices.translate(-cx, -cy, matrices); // 再平移回来
                     }
 
                     MusicPlayerHandler.INSTANCE.headPicture.render(context, mouseX, mouseY, delta);

@@ -8,7 +8,6 @@ import org.joml.Quaternionf;
 import org.joml.Vector2i;
 import top.gregtao.concerto.ConcertoClient;
 import top.gregtao.concerto.config.ClientConfig;
-import top.gregtao.concerto.mixin.DrawContextAccessor;
 import top.gregtao.concerto.player.MusicPlayer;
 import top.gregtao.concerto.player.MusicPlayerHandler;
 import top.gregtao.concerto.util.TextUtil;
@@ -78,8 +77,7 @@ public class InGameHudRenderer {
                 int scaledWidth = client.getWindow().getScaledWidth(), scaledHeight = client.getWindow().getScaledHeight();
                 String[] texts = MusicPlayerHandler.INSTANCE.getDisplayTexts();
 
-                context = new DrawContext(MinecraftClient.getInstance(),
-                        ((DrawContextAccessor) context).getVertexConsumers());
+                context = new DrawContext(MinecraftClient.getInstance(), context.getVertexConsumers());
 
                 if (options.displayLyrics) {
                     Vector2i pos = config.lyricsPosSupplier.getPos(scaledWidth, scaledHeight);

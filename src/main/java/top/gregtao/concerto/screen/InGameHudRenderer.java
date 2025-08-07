@@ -7,6 +7,7 @@ import net.minecraft.client.gui.screen.ChatScreen;
 import net.minecraft.client.util.Window;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.Text;
+import org.joml.Quaternionf;
 import org.joml.Vector2i;
 import top.gregtao.concerto.ConcertoClient;
 import top.gregtao.concerto.config.ClientConfig;
@@ -38,7 +39,8 @@ public class InGameHudRenderer {
         }
 
         public void setMaxWidth(int maxWidth) {
-            if (maxWidth != this.maxWidth) this.reset();
+            // 强制 Unicode 字体时，该宽度经常小范围变动，因此设置容许范围
+            if (maxWidth > this.maxWidth + 5 || maxWidth < this.maxWidth - 5) this.reset();
             this.maxWidth = maxWidth;
         }
 
@@ -82,7 +84,7 @@ public class InGameHudRenderer {
         RenderSystem.disableScissor();
     }
 
-    public static void render(MatrixStack matrices) {
+    public static void render(MatrixStack matrices, int mouseX, int mouseY, float delta) {
         MinecraftClient client = MinecraftClient.getInstance();
         if (MusicPlayer.INSTANCE.isPlaying()) {
 
@@ -146,13 +148,36 @@ public class InGameHudRenderer {
                         switch (options.timeProgressAlignment) {
                             case LEFT -> x = pos.x + timeWidth + 9;
                             case CENTER -> x = pos.x - blankWidth / 2 + 9;
-                            default -> x = pos.x - blankWidth - 18;
+                            default -> x = pos.x - blankWidth - timeWidth + 9;
                         }
                         DrawableHelper.fill(matrices, x, pos.y + 3, x + blankWidth - 20, pos.y + 5,
                                 (int) config.timeProgressBgColor.getNumber());
                         DrawableHelper.fill(matrices, x, pos.y + 3, (int) (x + (blankWidth - 20) * MusicPlayerHandler.INSTANCE.progressPercentage),
                                 pos.y + 5, (int) config.timeProgressColor.getNumber());
                     }
+                }
+
+                if (options.displayCoverImg) {
+                    matrices.push();
+
+                    Vector2i pos = config.coverImgPosSupplier.getPos(scaledWidth, scaledHeight);
+                    int size = config.options.coverImgSize;
+                    MusicPlayerHandler.INSTANCE.headPicture.setX(pos.x);
+                    MusicPlayerHandler.INSTANCE.headPicture.setY(pos.y);
+                    MusicPlayerHandler.INSTANCE.headPicture.setSize(size, size);
+
+                    if (options.coverImgRotate) {
+                        float cx = pos.x + size / 2f;
+                        float cy = pos.y + size / 2f;
+                        float angleRad = delta * (float) Math.PI / 180f;
+
+                        matrices.translate(cx, cy, 0); // 先平移到中心
+                        matrices.multiply(new Quaternionf().rotateZ(angleRad)); // 旋转
+                        matrices.translate(-cx, -cy, 0); // 再平移回来
+                    }
+
+                    MusicPlayerHandler.INSTANCE.headPicture.render(context, mouseX, mouseY, delta);
+                    matrices.pop();
                 }
             }
         }

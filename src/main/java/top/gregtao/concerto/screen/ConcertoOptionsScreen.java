@@ -47,6 +47,6 @@ public class ConcertoOptionsScreen extends ConcertoScreen {
     @Override
     public void render(MatrixStack matrices, int mouseX, int mouseY, float delta) {
         super.render(matrices, mouseX, mouseY, delta);
-        InGameHudRenderer.render(matrices);
+        InGameHudRenderer.render(matrices, mouseX, mouseY, delta);
     }
 }

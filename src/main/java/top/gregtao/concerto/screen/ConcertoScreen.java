@@ -76,5 +76,6 @@ public class ConcertoScreen extends Screen {
         this.renderBackground(matrices);
         super.render(matrices, mouseX, mouseY, delta);
         DrawableHelper.drawCenteredTextWithShadow(matrices, this.textRenderer, this.title, this.width / 2, 5, 0xffffffff);
+        this.message.render(matrices, mouseX, mouseY, delta);
     }
 }

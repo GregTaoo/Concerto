@@ -40,8 +40,8 @@ public class QQMusicIndexScreen extends ConcertoScreen {
             avatarUrl = null;
         }
         this.avatar = new URLImageWidget(64, 64, this.width / 2 - 32, 110,
-                avatarUrl == null ? null : avatarUrl.toString());
-        MusicPlayer.run(() -> this.avatar.loadImage());
+                avatarUrl == null ? null : avatarUrl.toString(), false);
+        MusicPlayer.run(() -> this.avatar.loadImage(true, true));
     }
 
     @Override

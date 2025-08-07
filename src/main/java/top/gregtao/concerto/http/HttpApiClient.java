@@ -102,6 +102,12 @@ public class HttpApiClient {
         this.writeCookie();
     }
 
+    public void setCookies(String url, Map<String, String> cookies) throws IOException, URISyntaxException {
+        this.cookieManager.put(new URI(url), Map.of("Set-Cookie",
+                cookies.entrySet().stream().map(e -> e.getKey() + "=" + e.getValue()).toList()));
+        this.writeCookie();
+    }
+
     public static Map<Character, Character> ESCAPE_MAP = Map.of(
             '\u00a0', ' ', '\ufeff', ' ', '\r', '\n'
     ); // escape illegal spaces

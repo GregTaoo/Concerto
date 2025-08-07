@@ -13,8 +13,9 @@ import net.minecraft.text.Text;
 import net.minecraft.text.TranslatableText;
 import top.gregtao.concerto.api.CacheableMusic;
 import top.gregtao.concerto.api.Likeable;
+import top.gregtao.concerto.config.CacheManager;
 import top.gregtao.concerto.config.MusicCacheManager;
-import top.gregtao.concerto.config.PresetRadioConfig;
+import top.gregtao.concerto.config.PresetPlaylistsConfig;
 import top.gregtao.concerto.music.list.FixedPlaylist;
 import top.gregtao.concerto.music.meta.music.MusicMetaData;
 import top.gregtao.concerto.command.argument.OrderTypeArgumentType;
@@ -141,6 +142,7 @@ public class MusicCommand {
                     MusicPlayer.INSTANCE.reloadConfig(() ->
                             TextUtil.commandMessageClient(context, new TranslatableText("concerto.player.reload")));
                     ClientConfig.INSTANCE.readOptions();
+                    PresetPlaylistsConfig.LOCAL_PLAYLISTS.read();
                     MusicPlayer.resetInstance();
                     return 0;
                 })
@@ -228,7 +230,7 @@ public class MusicCommand {
                 ClientCommandManager.literal("export-as-playlist").executes(context -> {
                     ClientPlayerEntity clientPlayer = context.getSource().getPlayer();
                     Text playerName = clientPlayer.getDisplayName();
-                    if (PresetRadioConfig.saveToTmpFile(new FixedPlaylist(
+                    if (PresetPlaylistsConfig.saveToLocalPlaylists(new FixedPlaylist(
                             MusicPlayerHandler.INSTANCE.getMusicList(),
                             new PlaylistMetaData(
                                     playerName == null ? "Unknown" : playerName.getString(),
@@ -242,6 +244,11 @@ public class MusicCommand {
                     } else {
                         clientPlayer.sendMessage(new TranslatableText("concerto.playlist.export.fail"), false);
                     }
+                    return 0;
+                })
+        ).then(
+                ClientCommandManager.literal("clean-cache").executes(context -> {
+                    CacheManager.cleanAllCache();
                     return 0;
                 })
         );

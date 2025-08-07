@@ -2,9 +2,7 @@ package top.gregtao.concerto.command;
 
 import com.mojang.brigadier.arguments.BoolArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
-import com.mojang.brigadier.tree.LiteralCommandNode;
 import net.fabricmc.fabric.api.client.command.v1.ClientCommandManager;
-import net.fabricmc.fabric.api.client.command.v1.FabricClientCommandSource;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.text.TranslatableText;
 import top.gregtao.concerto.ConcertoClient;
@@ -31,7 +29,10 @@ public class MusicRoomCommand {
                                     return 0;
                                 })
                         )).then(ClientCommandManager.literal("quit").executes(context -> {
-                            MusicRoom.clientQuit();
+                            switch (ConcertoClient.clientState) {
+                                case MUSIC_AGENT -> ClientMusicNetworkHandler.musicAgentQuit();
+                                case MUSIC_ROOM -> MusicRoom.clientQuit();
+                            }
                             return 0;
                         })).then(ClientCommandManager.literal("members").executes(context -> {
                             if (MusicRoom.CLIENT_ROOM != null) {
@@ -123,7 +124,7 @@ public class MusicRoomCommand {
         if (ConcertoClient.clientState == ConcertoClient.ClientState.MUSIC_AGENT) {
             return true;
         } else {
-            player.sendMessage(new TranslatableText("concerto.not_available"), false);
+            player.sendMessage(new TranslatableText("concerto.agent.not_in"), false);
             return false;
         }
     }

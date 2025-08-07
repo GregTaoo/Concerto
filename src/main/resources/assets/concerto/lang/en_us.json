@@ -42,7 +42,8 @@
   "concerto.player.cut": "Skipped to the next music and removed current one",
   "concerto.player.clear": "General playlist cleared",
   "concerto.player.reload": "General playlist and client configs reloaded",
-  "concerto.player.unable": "Unable to load music '%s' - '%s', skipping",
+  "concerto.player.unable": "Unable to load music: %s, author: %s, from: %s. Skipping...",
+  "concerto.player.error": "Error occurs in the music player (May caused by unsupported audio formats): %s",
 
   "concerto.playlist.netease_cloud.add": "A Netease Cloud Music playlist is added by id %s. Please login if no musics are successfully added",
   "concerto.album.netease_cloud.add": "A Netease Cloud Music album is added by id %s",
@@ -119,7 +120,8 @@
   "concerto.screen.login.success": "Successfully logged in",
   "concerto.screen.login.type.password": "Username & Password",
   "concerto.screen.login.type.captcha": "CAPTCHA Code",
-  "concerto.screen.login.type.qrcode": "QR Code",
+  "concerto.screen.login.type.qrcode": "QR Code (Recommended)",
+  "concerto.screen.login.type.cookie": "Input Cookies",
   "concerto.screen.login.qrcode.refresh": "Refresh QR Code",
   "concerto.screen.login.qrcode.failed": "Fail to login, refreshing",
   "concerto.screen.login.qrcode.expired": "Code expired, refreshing",
@@ -140,9 +142,17 @@
   "concerto.screen.login.type.qrcode.wechat": "WeChat QR Code",
   "concerto.screen.general_list": "General Playlist",
   "concerto.screen.preset_radios": "Server Preset Radios",
+  "concerto.screen.local_playlists": "Local Playlists",
   "concerto.screen.acknowledgement": "Thank you for supporting!",
   "concerto.screen.pause_resume": "Pause/Resume",
   "concerto.screen.options": "Concerto Settings",
+  "concerto.screen.login.cookie": "Input your Cookies with pattern 'key1=value1; key2=value2;'",
+  "concerto.screen.login.cookie.empty": "No Cookies matched! Please check the pattern.",
+  "concerto.screen.login.cookie.failed": "Failed to login! (Invalid Cookies or login expired)",
+
+  "concerto.screen.in_which_room": "You are now in:",
+  "concerto.screen.in_music_room": "MusicRoom %s (Click to copy)",
+  "concerto.screen.in_music_agent": "Server Music Agent",
 
   "concerto.donate.afdian": "Afdian",
   "concerto.donate.bilibili": "Bilibili",
@@ -151,7 +161,7 @@
 
   "concerto.playlist.export": "Export as JSON",
   "concerto.playlist.export.fail": "Failed to export playlist to JSON",
-  "concerto.playlist.export.success": "Successfully exported playlist to JSON in concerto_playlist_export.json",
+  "concerto.playlist.export.success": "Successfully exported playlist to JSON in Concerto/local_playlists",
 
   "concerto.search_type": "Type",
   "concerto.search_type.music": "Music",
@@ -199,7 +209,8 @@
   "concerto.agent.join": "Joined the server music agent.",
   "concerto.agent.quit": "Quited the server music agent.",
   "concerto.screen.request": "Request in server",
-  "concerto.agent.occupied": "Please quit the current music room before joining a new one.",
+  "concerto.agent.occupied": "Please quit the current music room or music agent before joining a new one.",
+  "concerto.agent.not_in": "Please join the server music agent before using this function!",
   "concerto.agent.add": "%s requested for music: %s - %s.",
   "concerto.agent.vote": "Please vote for whether to CUT the current music",
   "concerto.agent.vote_for": "You have voted for %s.",
@@ -250,6 +261,16 @@
   "concerto.options.posXDelta.timeProgress": "TimeBar X ±px",
   "concerto.options.posYPercent.timeProgress": "TimeBar Y %",
   "concerto.options.posYDelta.timeProgress": "TimeBar Y ±px",
+
+  "concerto.options.display.coverImg": "Show Cover Image",
+  "concerto.options.size.coverImg": "Cover Image Size",
+  "concerto.options.posXPercent.coverImg": "CoverImg X %",
+  "concerto.options.posXDelta.coverImg": "CoverImg X ±px",
+  "concerto.options.posYPercent.coverImg": "CoverImg Y %",
+  "concerto.options.posYDelta.coverImg": "CoverImg Y ±px",
+
+  "concerto.options.coverImgInCircle": "CoverImg In Circle",
+  "concerto.options.coverImgRotate": "Rotate Cover Image",
 
   "concerto.options.align": "%s: %s",
   "concerto.options.align.left": "Left",

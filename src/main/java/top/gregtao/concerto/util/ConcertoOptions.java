@@ -257,6 +257,69 @@ public class ConcertoOptions {
                 },
                 (o, option) -> getPixelValueText("concerto.options.posYDelta.timeProgress", (int) option.get(null))
         ));
+
+        // ====================================
+
+        this.updaters.add(CyclingOption.create(
+                "concerto.options.display.coverImg",
+                o -> this.config.options.displayCoverImg,
+                (o, option, value) -> this.config.options.displayCoverImg = value
+        ));
+        this.updaters.add(new DoubleOption(
+                "concerto.options.size.coverImg", 0.0, 300.0, 1.0F,
+                o -> (double) this.config.options.coverImgSize,
+                (o, value) -> this.config.options.coverImgSize = value.intValue(),
+                (o, option) -> getPercentValueText("concerto.options.size.coverImg", option.get(null))
+        ));
+        this.updaters.add(new DoubleOption(
+                "concerto.options.posXPercent.coverImg", 0.0, 1.0, 0.0F,
+                o -> this.config.coverImgPosSupplier.getX().getPercentage(),
+                (o, value) -> {
+                    this.config.coverImgPosSupplier.getX().setPercentage(value);
+                    this.config.options.coverImgPosition = getPositionXYString(this.config.coverImgPosSupplier);
+                },
+                (o, option) -> getPercentValueText("concerto.options.posXPercent.coverImg", option.get(null))
+        ));
+        this.updaters.add(new DoubleOption(
+                "concerto.options.posXDelta.coverImg", -250, 250, 1.0F,
+                o -> (double) this.config.coverImgPosSupplier.getX().getDelta(),
+                (o, value) -> {
+                    this.config.coverImgPosSupplier.getX().setDelta((int) value.doubleValue());
+                    this.config.options.coverImgPosition = getPositionXYString(this.config.coverImgPosSupplier);
+                },
+                (o, option) -> getPixelValueText("concerto.options.posXDelta.coverImg", (int) option.get(null))
+        ));
+        this.updaters.add(new DoubleOption(
+                "concerto.options.posYPercent.coverImg", 0.0, 1.0, 0.0F,
+                o -> this.config.coverImgPosSupplier.getY().getPercentage(),
+                (o, value) -> {
+                    this.config.coverImgPosSupplier.getY().setPercentage(value);
+                    this.config.options.coverImgPosition = getPositionXYString(this.config.coverImgPosSupplier);
+                },
+                (o, option) -> getPercentValueText("concerto.options.posYPercent.coverImg", option.get(null))
+        ));
+        this.updaters.add(new DoubleOption(
+                "concerto.options.posYDelta.coverImg", -250, 250, 1.0F,
+                o -> (double) this.config.coverImgPosSupplier.getY().getDelta(),
+                (o, value) -> {
+                    this.config.coverImgPosSupplier.getY().setDelta((int) value.doubleValue());
+                    this.config.options.coverImgPosition = getPositionXYString(this.config.coverImgPosSupplier);
+                },
+                (o, option) -> getPixelValueText("concerto.options.posYDelta.coverImg", (int) option.get(null))
+        ));
+
+        // ====================================
+
+        this.updaters.add(CyclingOption.create(
+                "concerto.options.coverImgInCircle",
+                o -> this.config.options.coverImgInCircle,
+                (o, option, value) -> this.config.options.coverImgInCircle = value
+        ));
+        this.updaters.add(CyclingOption.create(
+                "concerto.options.coverImgRotate",
+                o -> this.config.options.coverImgRotate,
+                (o, option, value) -> this.config.options.coverImgRotate = value
+        ));
     }
 
     public Option[] getOptions() {

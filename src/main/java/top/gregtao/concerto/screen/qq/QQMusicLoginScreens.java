@@ -9,11 +9,14 @@ import net.minecraft.text.TranslatableText;
 import top.gregtao.concerto.ConcertoClient;
 import top.gregtao.concerto.http.qq.QQMusicApiClient;
 import top.gregtao.concerto.screen.ConcertoScreen;
+import top.gregtao.concerto.screen.login.CookieLoginScreen;
+import top.gregtao.concerto.util.QRCodeRenderer;
 import top.gregtao.concerto.screen.login.QRCodeLoginScreen;
 import top.gregtao.concerto.util.Pair;
 import top.gregtao.concerto.util.QRCodeRenderer;
 
 import java.net.http.HttpResponse;
+import java.util.List;
 
 public class QQMusicLoginScreens extends ConcertoScreen {
 
@@ -33,6 +36,10 @@ public class QQMusicLoginScreens extends ConcertoScreen {
         this.addButton(new ButtonWidget(this.width / 2 - 50, 70, 100, 20,
                 new TranslatableText("concerto.screen.login.type.qrcode.qq"),
                 button -> MinecraftClient.getInstance().openScreen(this.qqQRLogin())
+        ));
+        this.addDrawableChild(new ButtonWidget(this.width / 2 - 50, 100, 100, 20,
+                new TranslatableText("concerto.screen.login.type.cookie"),
+                button -> MinecraftClient.getInstance().setScreen(this.cookieLogin())
         ));
     }
 
@@ -104,6 +111,16 @@ public class QQMusicLoginScreens extends ConcertoScreen {
                     }
                 },
                 111, 111,
+                SOURCE_TEXT,
+                this
+        );
+    }
+
+    public CookieLoginScreen cookieLogin() {
+        return new CookieLoginScreen(
+                QQMusicApiClient.LOCAL_USER::updateLoginStatus,
+                List.of("http://ssl.ptlogin2.qq.com", "http://u.y.qq.com"),
+                QQMusicApiClient.INSTANCE,
                 SOURCE_TEXT,
                 this
         );

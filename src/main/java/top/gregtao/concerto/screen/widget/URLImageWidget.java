@@ -159,13 +159,8 @@ public class URLImageWidget implements Drawable, AutoCloseable {
 
     private void uploadImage(BufferedImage image, Runnable callback) {
         MinecraftClient.getInstance().submit(() -> {
-            if (this.texture == null) {
-                this.texture = new NativeImageBackedTexture(toNativeImage(image));
-                MinecraftClient.getInstance().getTextureManager().registerTexture(this.textureId, this.texture);
-            } else {
-                this.texture.setImage(toNativeImage(image));
-                this.texture.upload();
-            }
+            this.texture = new NativeImageBackedTexture(toNativeImage(image));
+            MinecraftClient.getInstance().getTextureManager().registerTexture(this.textureId, this.texture);
         }).thenRun(callback);
     }
 

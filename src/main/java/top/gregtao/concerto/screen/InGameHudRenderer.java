@@ -176,7 +176,7 @@ public class InGameHudRenderer {
                         matrices.translate(-cx, -cy, 0); // 再平移回来
                     }
 
-                    MusicPlayerHandler.INSTANCE.headPicture.render(context, mouseX, mouseY, delta);
+                    MusicPlayerHandler.INSTANCE.headPicture.render(matrices, mouseX, mouseY, delta);
                     matrices.pop();
                 }
             }

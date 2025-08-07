@@ -4,6 +4,7 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.ChatScreen;
 import net.minecraft.text.Text;
+import org.joml.Quaternionf;
 import org.joml.Vector2i;
 import top.gregtao.concerto.ConcertoClient;
 import top.gregtao.concerto.config.ClientConfig;
@@ -35,7 +36,8 @@ public class InGameHudRenderer {
         }
 
         public void setMaxWidth(int maxWidth) {
-            if (maxWidth != this.maxWidth) this.reset();
+            // 强制 Unicode 字体时，该宽度经常小范围变动，因此设置容许范围
+            if (maxWidth > this.maxWidth + 5 || maxWidth < this.maxWidth - 5) this.reset();
             this.maxWidth = maxWidth;
         }
 
@@ -64,7 +66,7 @@ public class InGameHudRenderer {
         }
     }
 
-    public static void render(DrawContext context) {
+    public static void render(DrawContext context, int mouseX, int mouseY, float delta) {
         MinecraftClient client = MinecraftClient.getInstance();
         if (MusicPlayer.INSTANCE.isPlaying()) {
 
@@ -74,6 +76,8 @@ public class InGameHudRenderer {
             if (!(options.hideWhenChat && client.currentScreen instanceof ChatScreen)) {
                 int scaledWidth = client.getWindow().getScaledWidth(), scaledHeight = client.getWindow().getScaledHeight();
                 String[] texts = MusicPlayerHandler.INSTANCE.getDisplayTexts();
+
+                context = new DrawContext(MinecraftClient.getInstance(), context.getVertexConsumers());
 
                 if (options.displayLyrics) {
                     Vector2i pos = config.lyricsPosSupplier.getPos(scaledWidth, scaledHeight);
@@ -122,13 +126,33 @@ public class InGameHudRenderer {
                         switch (options.timeProgressAlignment) {
                             case LEFT -> x = pos.x + timeWidth + 9;
                             case CENTER -> x = pos.x - blankWidth / 2 + 9;
-                            default -> x = pos.x - blankWidth - 18;
+                            default -> x = pos.x - blankWidth - timeWidth + 9;
                         }
                         context.fill(x, pos.y + 3, x + blankWidth - 20, pos.y + 5,
                                 (int) config.timeProgressBgColor.getNumber());
                         context.fill(x, pos.y + 3, (int) (x + (blankWidth - 20) * MusicPlayerHandler.INSTANCE.progressPercentage),
                                 pos.y + 5, (int) config.timeProgressColor.getNumber());
                     }
+                }
+
+                if (options.displayCoverImg) {
+                    Vector2i pos = config.coverImgPosSupplier.getPos(scaledWidth, scaledHeight);
+                    int size = config.options.coverImgSize;
+                    MusicPlayerHandler.INSTANCE.headPicture.setX(pos.x);
+                    MusicPlayerHandler.INSTANCE.headPicture.setY(pos.y);
+                    MusicPlayerHandler.INSTANCE.headPicture.setSize(size, size);
+
+                    if (options.coverImgRotate) {
+                        float cx = pos.x + size / 2f;
+                        float cy = pos.y + size / 2f;
+                        float angleRad = delta * (float) Math.PI / 180f;
+
+                        context.getMatrices().translate(cx, cy, 0); // 先平移到中心
+                        context.getMatrices().multiply(new Quaternionf().rotateZ(angleRad)); // 旋转
+                        context.getMatrices().translate(-cx, -cy, 0); // 再平移回来
+                    }
+
+                    MusicPlayerHandler.INSTANCE.headPicture.render(context, mouseX, mouseY, delta);
                 }
             }
         }

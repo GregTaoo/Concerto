@@ -16,7 +16,7 @@ public class PresetRadiosScreen extends ConcertoScreen {
     private MetadataListWidget<Playlist> playlistList;
 
     private <T extends WithMetaData> MetadataListWidget<T> initWidget() {
-        return new MetadataListWidget<>(PresetRadiosScreen.this.width, this.height, 18, PresetRadiosScreen.this.height - 35, 18) {
+        return new MetadataListWidget<>(this.width, this.height, 18, this.height - 35, 18) {
             @Override
             public void onDoubleClicked(ConcertoListWidget<T>.Entry entry) {
                 MinecraftClient.getInstance().setScreen(new PlaylistPreviewScreen((Playlist) entry.item, PresetRadiosScreen.this));

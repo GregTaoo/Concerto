@@ -5,7 +5,6 @@ import net.minecraft.client.gui.DrawableHelper;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.gui.widget.PressableTextWidget;
-import net.minecraft.client.gui.widget.TextWidget;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.text.TranslatableText;
 import net.minecraft.client.util.math.MatrixStack;
@@ -16,6 +15,7 @@ import top.gregtao.concerto.config.PresetPlaylistsConfig;
 import top.gregtao.concerto.network.room.MusicRoom;
 import top.gregtao.concerto.screen.qq.QQMusicIndexScreen;
 import top.gregtao.concerto.screen.netease.NeteaseCloudIndexScreen;
+import top.gregtao.concerto.screen.widget.TextWidget;
 
 public class ConcertoIndexScreen extends ConcertoScreen {
     public ConcertoIndexScreen(Screen parent) {
@@ -107,7 +107,7 @@ public class ConcertoIndexScreen extends ConcertoScreen {
         if (ConcertoClient.clientState != ConcertoClient.ClientState.LOCAL) {
             DrawableHelper.drawCenteredTextWithShadow(
                 matrices, this.textRenderer,
-                new TranslatableText("concerto.screen.in_which_room"),
+                new TranslatableText("concerto.screen.in_which_room").asOrderedText(),
                 this.width / 2, 170, 0xffffffff
             );
         }

@@ -159,10 +159,13 @@ public class URLImageWidget implements Drawable, AutoCloseable {
 
     private void uploadImage(BufferedImage image, Runnable callback) {
         MinecraftClient.getInstance().submit(() -> {
-            if (this.texture != null)
-              MinecraftClient.getInstance().getTextureManager().destroyTexture(this.textureId);
-            this.texture = new NativeImageBackedTexture(toNativeImage(image));
-            MinecraftClient.getInstance().getTextureManager().registerTexture(this.textureId, this.texture);
+            if (this.texture == null) {
+                this.texture = new NativeImageBackedTexture(toNativeImage(image));
+                MinecraftClient.getInstance().getTextureManager().registerTexture(this.textureId, this.texture);
+            } else {
+                this.texture.setImage(toNativeImage(image));
+                this.texture.upload();
+            }
         }).thenRun(callback);
     }
 
@@ -226,7 +229,7 @@ public class URLImageWidget implements Drawable, AutoCloseable {
         TextRenderer textRenderer = MinecraftClient.getInstance().textRenderer;
         if (this.url == null || this.texture == null) {
             DrawableHelper.drawCenteredTextWithShadow(
-                    matrices, textRenderer, new TranslatableText("concerto.screen.url_image.empty"),
+                    matrices, textRenderer, new TranslatableText("concerto.screen.url_image.empty").asOrderedText(),
                     this.x + this.width / 2, this.y + (this.height - textRenderer.fontHeight) / 2, 0xffffffff
             );
         } else {
@@ -244,12 +247,12 @@ public class URLImageWidget implements Drawable, AutoCloseable {
                 matrices.pop();
             } else if (this.state == State.LOADING) {
                 DrawableHelper.drawCenteredTextWithShadow(
-                        matrices, textRenderer, new TranslatableText("concerto.screen.loading"),
+                        matrices, textRenderer, new TranslatableText("concerto.screen.loading").asOrderedText(),
                         this.x + this.width / 2, this.y + (this.height - textRenderer.fontHeight) / 2, 0xffffffff
                 );
             } else {
                 DrawableHelper.drawCenteredTextWithShadow(
-                        matrices, textRenderer, new TranslatableText("concerto.fail"),
+                        matrices, textRenderer, new TranslatableText("concerto.fail").asOrderedText(),
                         this.x + this.width / 2, this.y + (this.height - textRenderer.fontHeight) / 2, 0xffffffff
                 );
             }
@@ -261,6 +264,14 @@ public class URLImageWidget implements Drawable, AutoCloseable {
         DrawableHelper.fill(matrices, x, y + height - 1, x + width, y + height, color);
         DrawableHelper.fill(matrices, x, y + 1, x + 1, y + height - 1, color);
         DrawableHelper.fill(matrices, x + width - 1, y + 1, x + width, y + height - 1, color);
+    }
+
+    public void setX(int x) {
+        this.x = x;
+    }
+
+    public void setY(int y) {
+        this.y = y;
     }
 
     public int getWidth() {

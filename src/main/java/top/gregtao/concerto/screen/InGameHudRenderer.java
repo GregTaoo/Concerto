@@ -42,7 +42,8 @@ public class InGameHudRenderer {
         }
 
         public void setMaxWidth(int maxWidth) {
-            if (maxWidth != this.maxWidth) this.reset();
+            // 强制 Unicode 字体时，该宽度经常小范围变动，因此设置容许范围
+            if (maxWidth > this.maxWidth + 5 || maxWidth < this.maxWidth - 5) this.reset();
             this.maxWidth = maxWidth;
         }
 
@@ -93,7 +94,7 @@ public class InGameHudRenderer {
         RenderSystem.disableScissor();
     }
 
-    public static void render(MatrixStack matrices) {
+    public static void render(MatrixStack matrices, float delta) {
         MinecraftClient client = MinecraftClient.getInstance();
         if (MusicPlayer.INSTANCE.isPlaying()) {
 
@@ -159,13 +160,36 @@ public class InGameHudRenderer {
                         switch (options.timeProgressAlignment) {
                             case LEFT -> x = pos.getX() + timeWidth + 9;
                             case CENTER -> x = pos.getX() - blankWidth / 2 + 9;
-                            default -> x = pos.getX() - blankWidth - 18;
+                            default -> x = pos.getX() - blankWidth - timeWidth + 9;
                         }
                         DrawableHelper.fill(matrixStack, x, pos.getY() + 3, x + blankWidth - 20, pos.getY() + 5,
                                 (int) config.timeProgressBgColor.getNumber());
                         DrawableHelper.fill(matrixStack, x, pos.getY() + 3, (int) (x + (blankWidth - 20) * MusicPlayerHandler.INSTANCE.progressPercentage),
                                 pos.getY() + 5, (int) config.timeProgressColor.getNumber());
                     }
+                }
+
+                if (options.displayCoverImg) {
+                    matrices.push();
+
+                    Vector2i pos = config.coverImgPosSupplier.getPos(scaledWidth, scaledHeight);
+                    int size = config.options.coverImgSize;
+                    MusicPlayerHandler.INSTANCE.headPicture.setX(pos.x);
+                    MusicPlayerHandler.INSTANCE.headPicture.setY(pos.y);
+                    MusicPlayerHandler.INSTANCE.headPicture.setSize(size, size);
+
+                    if (options.coverImgRotate) {
+                        float cx = pos.x + size / 2f;
+                        float cy = pos.y + size / 2f;
+                        float angleRad = delta * (float) Math.PI / 180f;
+
+                        matrices.translate(cx, cy, 0); // 先平移到中心
+                        matrices.multiply(new Quaternionf().rotateZ(angleRad)); // 旋转
+                        matrices.translate(-cx, -cy, 0); // 再平移回来
+                    }
+
+                    MusicPlayerHandler.INSTANCE.headPicture.render(matrices, mouseX, mouseY, delta);
+                    matrices.pop();
                 }
                 matrixStack.pop();
             }

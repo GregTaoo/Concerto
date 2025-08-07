@@ -20,4 +20,8 @@ public enum Sources implements SimpleStringIdentifiable {
     public String getKey(String main) {
         return "concerto." + main + "." + this.asString();
     }
+
+    public static String getI18nString(String source) {
+        return Text.translatable("concerto.source." + source).getString();
+    }
 }

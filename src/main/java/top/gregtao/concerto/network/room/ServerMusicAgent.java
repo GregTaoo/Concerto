@@ -42,11 +42,25 @@ public class ServerMusicAgent {
     private int totalBytes = 0;
     private long playTime = 0;
 
+    private final AtomicBoolean isStopped = new AtomicBoolean(false);
     private final AtomicBoolean isPlaying = new AtomicBoolean(false);
     private final AtomicBoolean currentlyFreeTime = new AtomicBoolean(false);
 
     public ArrayList<Music> freeTimePlaylist = new ArrayList<>();
     private int freeTimePlaylistIndex = 0;
+
+    public void stop() {
+        if (this.isStopped.get()) return;
+        this.isStopped.set(true);
+        this.playNextFuture.cancel(false);
+        this.membersForEach(ServerMusicNetworkHandler::musicAgentSendStop);
+    }
+
+    public void start() {
+        if (!this.isStopped.get()) return;
+        this.isStopped.set(false);
+        this.schedulePlayNext(0, false);
+    }
 
     private Music getNextFreeTimeMusic() {
         if (this.freeTimePlaylist.isEmpty()) return null;
@@ -145,7 +159,7 @@ public class ServerMusicAgent {
                 ConcertoServer.LOGGER.info("Start playing music {}, duration {}",
                         this.currentMusic.getMeta().title(), this.currentMusic.getMeta().getDuration());
                 if (ServerConfig.INSTANCE.options.musicAgentUseShared && this.currentMusic instanceof DynamicPath dynamicPath) {
-                    String path = dynamicPath.getLastRawPath();
+                    String path = dynamicPath.updateRawPath();
                     if (path != null) {
                         this.totalBytes = HttpURLInputStream.getTotalBytes(path);
                     } else {
@@ -224,6 +238,7 @@ public class ServerMusicAgent {
     }
 
     public synchronized void schedulePlayNext(int delay, boolean force) {
+        if (this.isStopped.get()) return;
         if (this.playNextFuture != null && !this.playNextFuture.isDone()) {
             this.playNextFuture.cancel(force);
         }

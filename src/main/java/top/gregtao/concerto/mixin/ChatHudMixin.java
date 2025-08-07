@@ -56,6 +56,6 @@ public class ChatHudMixin {
 
     @Inject(method = "render(Lnet/minecraft/client/util/math/MatrixStack;I)V", at = @At("HEAD"))
     public void renderInject(MatrixStack matrices, int tickDelta, CallbackInfo ci) {
-        InGameHudRenderer.render(matrices);
+        InGameHudRenderer.render(matrices, tickDelta);
     }
 }

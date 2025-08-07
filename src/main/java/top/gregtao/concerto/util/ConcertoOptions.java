@@ -260,6 +260,40 @@ public class ConcertoOptions {
                 },
                 (o, option) -> getPixelValueText("concerto.options.posYDelta.timeProgress", (int) option.get(null))
         ));
+
+        this.updaters.add(new TextOptions("timeProgress", (display, align, pos) -> {
+            this.config.options.displayTimeProgress = display;
+            this.config.options.timeProgressAlignment = align;
+            this.config.options.timeProgressPosition = pos;
+            this.config.parseOptions();
+        }, options -> {
+            options.display.setValue(this.config.options.displayTimeProgress);
+            options.align.setValue(this.config.options.timeProgressAlignment.ordinal());
+            TextOptions.setPosition(options, this.config.timeProgressPosSupplier);
+        }));
+
+        this.updaters.add(new ImageOptions("coverImg", (display, size, pos) -> {
+            this.config.options.displayCoverImg = display;
+            this.config.options.coverImgSize = size;
+            this.config.options.coverImgPosition = pos;
+            this.config.parseOptions();
+        }, options -> {
+            options.display.setValue(this.config.options.displayCoverImg);
+            options.size.setValue(this.config.options.coverImgSize);
+            PosOptions.setPosition(options, this.config.coverImgPosSupplier);
+        }));
+
+        this.updaters.add(new SingleBooleanOption(
+                "coverImgInCircle",
+                value -> this.config.options.coverImgInCircle = value,
+                () -> this.config.options.coverImgInCircle
+        ));
+
+        this.updaters.add(new SingleBooleanOption(
+                "coverImgRotate",
+                value -> this.config.options.coverImgRotate = value,
+                () -> this.config.options.coverImgRotate
+        ));
     }
 
     public Option[] getOptions() {
@@ -295,5 +329,203 @@ public class ConcertoOptions {
                 supplier.getX().getPercentage(), supplier.getX().getDelta(),
                 supplier.getY().getPercentage(), supplier.getY().getDelta()
         );
+    }
+
+    private interface OptionsUpdater {
+        void readOptions();
+        void writeOptions();
+        Stream<SimpleOption<?>> streamOptions();
+    }
+
+    private class SingleBooleanOption implements OptionsUpdater {
+        public final SimpleOption<Boolean> option;
+
+        private final Consumer<Boolean> writer;
+        private final Supplier<Boolean> reader;
+
+        public SingleBooleanOption(String name, Consumer<Boolean> writer, Supplier<Boolean> reader) {
+            this.writer = writer;
+            this.reader = reader;
+            this.option = SimpleOption.ofBoolean(
+                    "concerto.options." + name, true,
+                    value -> this.writeOptions()
+            );
+        }
+
+        @Override
+        public void readOptions() {
+            this.option.setValue(this.reader.get());
+        }
+
+        @Override
+        public void writeOptions() {
+            if (!ConcertoOptions.this.canUpdate) return;
+            this.writer.accept(this.option.getValue());
+        }
+
+        @Override
+        public Stream<SimpleOption<?>> streamOptions() {
+            return Stream.of(this.option);
+        }
+    }
+
+    private class PosOptions implements OptionsUpdater {
+        public final SimpleOption<Boolean> display;
+        public final SimpleOption<Double> posXPercent;
+        public final SimpleOption<Integer> posXDelta;
+        public final SimpleOption<Double> posYPercent;
+        public final SimpleOption<Integer> posYDelta;
+
+        private final BiConsumer<Boolean, String> writer;
+        private final Consumer<PosOptions> reader;
+
+        public PosOptions(String name, BiConsumer<Boolean, String> writer, Consumer<PosOptions> reader) {
+            this.writer = writer;
+            this.reader = reader;
+            this.display = SimpleOption.ofBoolean(
+                "concerto.options.display." + name, true,
+                value -> this.writeOptions()
+            );
+            this.posXPercent = new SimpleOption<>(
+                "concerto.options.posXPercent." + name,
+                SimpleOption.emptyTooltip(),
+                ConcertoOptions::getPercentValueText,
+                SimpleOption.DoubleSliderCallbacks.INSTANCE,
+                1.0,
+                value -> this.writeOptions()
+            );
+            this.posXDelta = new SimpleOption<>(
+                "concerto.options.posXDelta." + name,
+                SimpleOption.emptyTooltip(),
+                ConcertoOptions::getPixelValueText,
+                new SimpleOption.ValidatingIntSliderCallbacks(-250, 250),
+                0,
+                value -> this.writeOptions()
+            );
+            this.posYPercent = new SimpleOption<>(
+                "concerto.options.posYPercent." + name,
+                SimpleOption.emptyTooltip(),
+                ConcertoOptions::getPercentValueText,
+                SimpleOption.DoubleSliderCallbacks.INSTANCE,
+                1.0,
+                value -> this.writeOptions()
+            );
+            this.posYDelta = new SimpleOption<>(
+                "concerto.options.posYDelta." + name,
+                SimpleOption.emptyTooltip(),
+                ConcertoOptions::getPixelValueText,
+                new SimpleOption.ValidatingIntSliderCallbacks(-250, 250),
+                0,
+                value -> this.writeOptions()
+            );
+        }
+
+        protected static void setPosition(PosOptions options, ClientConfig.PositionXYSupplier pos) {
+            options.posXPercent.setValue(pos.getX().getPercentage());
+            options.posXDelta.setValue(pos.getX().getDelta());
+            options.posYPercent.setValue(pos.getY().getPercentage());
+            options.posYDelta.setValue(pos.getY().getDelta());
+        }
+
+        public void readOptions() {
+            this.reader.accept(this);
+        }
+
+        public void writeOptions() {
+            if (!ConcertoOptions.this.canUpdate) return;
+            this.writer.accept(
+                this.display.getValue(),
+                getPositionXYString(
+                    this.posXPercent.getValue(), this.posXDelta.getValue(),
+                    this.posYPercent.getValue(), this.posYDelta.getValue()
+                )
+            );
+        }
+
+        public Stream<SimpleOption<?>> streamOptions() {
+            return Stream.of(this.display, this.posXPercent, this.posXDelta, this.posYPercent, this.posYDelta);
+        }
+    }
+
+    private class TextOptions extends PosOptions {
+        public final SimpleOption<Integer> align;
+
+        private final TriConsumer<Boolean, TextAlignment, String> writer;
+        private final Consumer<TextOptions> reader;
+
+        public TextOptions(String name, TriConsumer<Boolean, TextAlignment, String> writer,
+                           Consumer<TextOptions> reader) {
+            super(name, null, null);
+            this.writer = writer;
+            this.reader = reader;
+            this.align = new SimpleOption<>(
+                    "concerto.options.align." + name,
+                    SimpleOption.emptyTooltip(),
+                    ConcertoOptions::getAlignValueText,
+                    new SimpleOption.ValidatingIntSliderCallbacks(0, 2),
+                    0,
+                    value -> this.writeOptions()
+            );
+        }
+
+        public void readOptions() {
+            this.reader.accept(this);
+        }
+
+        public void writeOptions() {
+            if (!ConcertoOptions.this.canUpdate) return;
+            this.writer.accept(
+                    this.display.getValue(), TextAlignment.values()[this.align.getValue()],
+                    getPositionXYString(
+                            this.posXPercent.getValue(), this.posXDelta.getValue(),
+                            this.posYPercent.getValue(), this.posYDelta.getValue()
+                    )
+            );
+        }
+
+        public Stream<SimpleOption<?>> streamOptions() {
+            return Stream.of(this.display, this.align, this.posXPercent, this.posXDelta, this.posYPercent, this.posYDelta);
+        }
+    }
+
+    private class ImageOptions extends PosOptions {
+        public final SimpleOption<Integer> size;
+
+        private final TriConsumer<Boolean, Integer, String> writer;
+        private final Consumer<ImageOptions> reader;
+
+        public ImageOptions(String name, TriConsumer<Boolean, Integer, String> writer,
+                           Consumer<ImageOptions> reader) {
+            super(name, null, null);
+            this.writer = writer;
+            this.reader = reader;
+            this.size = new SimpleOption<>(
+                "concerto.options.size." + name,
+                SimpleOption.emptyTooltip(),
+                ConcertoOptions::getPixelValueText,
+                new SimpleOption.ValidatingIntSliderCallbacks(0, 300),
+                0,
+                value -> this.writeOptions()
+            );
+        }
+
+        public void readOptions() {
+            this.reader.accept(this);
+        }
+
+        public void writeOptions() {
+            if (!ConcertoOptions.this.canUpdate) return;
+            this.writer.accept(
+                this.display.getValue(), this.size.getValue(),
+                getPositionXYString(
+                    this.posXPercent.getValue(), this.posXDelta.getValue(),
+                    this.posYPercent.getValue(), this.posYDelta.getValue()
+                )
+            );
+        }
+
+        public Stream<SimpleOption<?>> streamOptions() {
+            return Stream.of(this.display, this.size, this.posXPercent, this.posXDelta, this.posYPercent, this.posYDelta);
+        }
     }
 }

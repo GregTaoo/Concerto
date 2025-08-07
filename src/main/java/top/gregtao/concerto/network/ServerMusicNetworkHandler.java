@@ -17,7 +17,7 @@ import org.jetbrains.annotations.Nullable;
 import top.gregtao.concerto.ConcertoServer;
 import top.gregtao.concerto.api.MusicJsonParsers;
 import top.gregtao.concerto.command.ConcertoServerCommand;
-import top.gregtao.concerto.config.PresetRadioConfig;
+import top.gregtao.concerto.config.PresetPlaylistsConfig;
 import top.gregtao.concerto.config.ServerConfig;
 import top.gregtao.concerto.music.Music;
 import top.gregtao.concerto.music.meta.music.MusicMetaData;
@@ -116,7 +116,7 @@ public class ServerMusicNetworkHandler {
 
     public static void sendS2CPresetRadiosPacket(ServerPlayerEntity player) {
         PacketByteBuf packetByteBuf = PacketByteBufs.create();
-        packetByteBuf.writeString(PresetRadioConfig.INSTANCE.toString());
+        packetByteBuf.writeString(PresetPlaylistsConfig.PRESET_RADIOS.toString());
         ServerPlayNetworking.send(player, ConcertoNetworking.PRESET_RADIOS, packetByteBuf);
     }
 

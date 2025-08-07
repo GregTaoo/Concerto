@@ -8,7 +8,7 @@ import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.LiteralText;
 import net.minecraft.text.Text;
 import net.minecraft.text.TranslatableText;
-import top.gregtao.concerto.config.PresetRadioConfig;
+import top.gregtao.concerto.config.PresetPlaylistsConfig;
 import top.gregtao.concerto.music.Music;
 import top.gregtao.concerto.music.list.Playlist;
 import top.gregtao.concerto.player.MusicPlayer;
@@ -71,7 +71,7 @@ public class PlaylistPreviewScreen extends ConcertoScreen {
 
         this.addDrawableChild(new ButtonWidget(280, this.height - 30, 60, 20,
                 new TranslatableText("concerto.playlist.export"), button -> {
-            Text text = PresetRadioConfig.saveToTmpFile(this.playlist) ? new TranslatableText("concerto.playlist.export.success") :
+            Text text = PresetPlaylistsConfig.saveToLocalPlaylists(this.playlist) ? new TranslatableText("concerto.playlist.export.success") :
                     new TranslatableText("concerto.playlist.export.fail");
             this.displayAlert(text);
         }));

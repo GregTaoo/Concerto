@@ -14,6 +14,7 @@ import top.gregtao.concerto.command.MusicRoomCommand;
 import top.gregtao.concerto.command.ShareMusicCommand;
 import top.gregtao.concerto.config.ClientConfig;
 import top.gregtao.concerto.config.ConfigFile;
+import top.gregtao.concerto.config.PresetPlaylistsConfig;
 import top.gregtao.concerto.http.netease.NeteaseCloudApiClient;
 import top.gregtao.concerto.http.qq.QQMusicApiClient;
 import top.gregtao.concerto.music.list.Playlist;
@@ -70,6 +71,7 @@ public class ConcertoClient implements ClientModInitializer {
 				MusicPlayer.run(() -> {
 					ClientConfig.INSTANCE.readOptions();
 					MusicPlayer.INSTANCE.reloadConfig(() -> LOGGER.info("Loaded general music playlist"));
+                    PresetPlaylistsConfig.LOCAL_PLAYLISTS.read();
 					NeteaseCloudApiClient.LOCAL_USER.updateLoginStatus();
 					QQMusicApiClient.LOCAL_USER.updateLoginStatus();
 				});

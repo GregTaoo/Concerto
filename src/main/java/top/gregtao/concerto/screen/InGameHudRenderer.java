@@ -9,6 +9,7 @@ import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.LiteralText;
 import net.minecraft.text.Text;
 import net.minecraft.text.TranslatableText;
+import net.minecraft.util.Util;
 import net.minecraft.util.math.Quaternion;
 import net.minecraft.util.math.Vec3f;
 import top.gregtao.concerto.ConcertoClient;
@@ -182,7 +183,7 @@ public class InGameHudRenderer {
                     if (options.coverImgRotate) {
                         float cx = pos.getX() + size / 2f;
                         float cy = pos.getY() + size / 2f;
-                        float angleRad = delta * (float) Math.PI / 180f;
+                        float angleRad = Util.getMeasuringTimeMs() * (float) Math.PI / 180f / 50;
 
                         matrices.translate(cx, cy, 0); // 先平移到中心
                         matrices.multiply(new Quaternion(Vec3f.POSITIVE_Z, angleRad, false)); // 旋转

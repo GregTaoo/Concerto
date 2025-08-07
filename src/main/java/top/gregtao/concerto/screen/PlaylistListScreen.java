@@ -3,6 +3,7 @@ package top.gregtao.concerto.screen;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
+import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.Text;
 import net.minecraft.text.TranslatableText;
 import top.gregtao.concerto.music.list.Playlist;
@@ -26,21 +27,24 @@ public class PlaylistListScreen extends ConcertoScreen {
         this.playlistList = new MetadataListWidget<>(this.width, this.height, 18, this.height - 35, 18) {
             @Override
             public void onDoubleClicked(ConcertoListWidget<Playlist>.Entry entry) {
-                MinecraftClient.getInstance().setScreen(new PlaylistPreviewScreen(entry.item, PlaylistListScreen.this));
+                MinecraftClient.getInstance().openScreen(new PlaylistPreviewScreen(entry.item, PlaylistListScreen.this));
             }
         };
         this.playlistList.reset(this.playlists, null, "");
 
-        this.addDrawableChild(this.playlistList);
-        this.addSelectableChild(this.playlistList);
-
-        this.addDrawableChild(new ButtonWidget(20, this.height - 30, 60, 20,
+        this.addButton(new ButtonWidget(20, this.height - 30, 60, 20,
                 new TranslatableText("concerto.screen.play"), button -> {
-            ConcertoListWidget<Playlist>.Entry entry = this.playlistList.getSelectedOrNull();
+            ConcertoListWidget<Playlist>.Entry entry = this.playlistList.getSelected();
             if (entry != null) {
-                MinecraftClient.getInstance().setScreen(new PlaylistPreviewScreen(entry.item, this));
+                MinecraftClient.getInstance().openScreen(new PlaylistPreviewScreen(entry.item, this));
             }
         }));
+    }
+
+    @Override
+    public void render(MatrixStack matrices, int mouseX, int mouseY, float delta) {
+        this.playlistList.render(matrices, mouseX, mouseY, delta);
+        super.render(matrices, mouseX, mouseY, delta);
     }
 
 }

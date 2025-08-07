@@ -1,7 +1,6 @@
 package top.gregtao.concerto.screen;
 
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.DrawableHelper;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.network.ClientPlayerEntity;
@@ -105,7 +104,7 @@ public class ConcertoIndexScreen extends ConcertoScreen {
     public void render(MatrixStack matrices, int mouseX, int mouseY, float delta) {
         super.render(matrices, mouseX, mouseY, delta);
         if (ConcertoClient.clientState != ConcertoClient.ClientState.LOCAL) {
-            DrawableHelper.drawCenteredTextWithShadow(
+            ConcertoScreen.drawCenteredTextWithShadow(
                 matrices, this.textRenderer,
                 new TranslatableText("concerto.screen.in_which_room").asOrderedText(),
                 this.width / 2, 170, 0xffffffff

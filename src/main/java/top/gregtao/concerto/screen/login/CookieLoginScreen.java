@@ -39,13 +39,13 @@ public class CookieLoginScreen extends ConcertoScreen {
         super.init();
 
         TextWidget textWidget = new TextWidget(this.width / 2 - 200, 20, 400, 10, new TranslatableText("concerto.screen.login.cookie"), this.textRenderer);
-        this.addDrawableChild(textWidget);
+        this.addButton(textWidget);
 
         this.field = new TextFieldWidget(this.textRenderer, this.width / 2 - 125, 30, 250, 20, Text.of(""));
         this.field.setMaxLength(50000);
-        this.addDrawableChild(this.field);
+        this.addButton(this.field);
 
-        this.addDrawableChild(new ButtonWidget(this.width / 2 - 125, 60, 250, 20,
+        this.addButton(new ButtonWidget(this.width / 2 - 125, 60, 250, 20,
                 new TranslatableText("concerto.screen.login.confirm"),
                 button -> this.tryLogin()
         ));
@@ -86,7 +86,7 @@ public class CookieLoginScreen extends ConcertoScreen {
                 if (player != null) {
                     player.sendMessage(new TranslatableText("concerto.screen.login.success"), false);
                 }
-                MinecraftClient.getInstance().setScreen(null);
+                MinecraftClient.getInstance().openScreen(null);
             } else {
                 this.displayAlert(new TranslatableText("concerto.screen.login.cookie.failed"));
             }

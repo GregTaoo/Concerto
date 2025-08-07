@@ -224,7 +224,7 @@ public class URLImageWidget implements Drawable, AutoCloseable {
         if (this.border) drawBorder(matrices, this.x, this.y, this.width, this.height, 0xffffffff);
         TextRenderer textRenderer = MinecraftClient.getInstance().textRenderer;
         if (this.url == null || this.texture == null) {
-            DrawableHelper.drawCenteredTextWithShadow(
+            ConcertoScreen.drawCenteredTextWithShadow(
                     matrices, textRenderer, new TranslatableText("concerto.screen.url_image.empty").asOrderedText(),
                     this.x + this.width / 2, this.y + (this.height - textRenderer.fontHeight) / 2, 0xffffffff
             );
@@ -241,12 +241,12 @@ public class URLImageWidget implements Drawable, AutoCloseable {
                 );
                 matrices.pop();
             } else if (this.state == State.LOADING) {
-                DrawableHelper.drawCenteredTextWithShadow(
+                ConcertoScreen.drawCenteredTextWithShadow(
                         matrices, textRenderer, new TranslatableText("concerto.screen.loading").asOrderedText(),
                         this.x + this.width / 2, this.y + (this.height - textRenderer.fontHeight) / 2, 0xffffffff
                 );
             } else {
-                DrawableHelper.drawCenteredTextWithShadow(
+                ConcertoScreen.drawCenteredTextWithShadow(
                         matrices, textRenderer, new TranslatableText("concerto.fail").asOrderedText(),
                         this.x + this.width / 2, this.y + (this.height - textRenderer.fontHeight) / 2, 0xffffffff
                 );

@@ -260,10 +260,10 @@ public class ConcertoOptions {
 
         // ====================================
 
-        this.updaters.add(CyclingOption.create(
+        this.updaters.add(new BooleanOption(
                 "concerto.options.display.coverImg",
                 o -> this.config.options.displayCoverImg,
-                (o, option, value) -> this.config.options.displayCoverImg = value
+                (o, value) -> this.config.options.displayCoverImg = value
         ));
         this.updaters.add(new DoubleOption(
                 "concerto.options.size.coverImg", 0.0, 300.0, 1.0F,
@@ -310,15 +310,15 @@ public class ConcertoOptions {
 
         // ====================================
 
-        this.updaters.add(CyclingOption.create(
+        this.updaters.add(new BooleanOption(
                 "concerto.options.coverImgInCircle",
                 o -> this.config.options.coverImgInCircle,
-                (o, option, value) -> this.config.options.coverImgInCircle = value
+                (o, value) -> this.config.options.coverImgInCircle = value
         ));
-        this.updaters.add(CyclingOption.create(
+        this.updaters.add(new BooleanOption(
                 "concerto.options.coverImgRotate",
                 o -> this.config.options.coverImgRotate,
-                (o, option, value) -> this.config.options.coverImgRotate = value
+                (o, value) -> this.config.options.coverImgRotate = value
         ));
     }
 
@@ -335,11 +335,11 @@ public class ConcertoOptions {
     }
 
     private static Text getPixelValueText(String prefix, int value) {
-        return new TranslatableText("options.pixel_value", new TranslatableText(prefix), value);
+        return new TranslatableText("options.pixel_value", new TranslatableText(prefix).getString(), value);
     }
 
     private static Text getPercentValueText(String prefix, double value) {
-        return new TranslatableText("options.percent_value", new TranslatableText(prefix), (int)(value * 100.0));
+        return new TranslatableText("options.percent_value", new TranslatableText(prefix).getString(), (int)(value * 100.0));
     }
 
     private static String getPositionString(double percent, int delta) {
@@ -358,8 +358,8 @@ public class ConcertoOptions {
     }
 
     private static Text getAlignValueText(String prefix, TextAlignment value) {
-        return new TranslatableText("concerto.options.align", new TranslatableText(prefix),
-                new TranslatableText("concerto.options.align." + value.name().toLowerCase()));
+        return new TranslatableText("concerto.options.align", new TranslatableText(prefix).getString(),
+                new TranslatableText("concerto.options.align." + value.name().toLowerCase()).getString());
     }
 
     private static TextAlignment getNextAlignment(TextAlignment align) {

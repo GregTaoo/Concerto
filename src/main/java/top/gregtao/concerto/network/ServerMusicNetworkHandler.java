@@ -115,7 +115,7 @@ public class ServerMusicNetworkHandler {
 
     public static void sendS2CPresetRadiosPacket(ServerPlayerEntity player) {
         PacketByteBuf packetByteBuf = PacketByteBufs.create();
-        packetByteBuf.writeString(PresetRadioConfig.INSTANCE.toString());
+        packetByteBuf.writeString(PresetPlaylistsConfig.PRESET_RADIOS.toString());
         ServerPlayNetworking.send(player, ConcertoNetworking.PRESET_RADIOS, packetByteBuf);
     }
 

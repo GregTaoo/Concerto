@@ -200,7 +200,7 @@ public class ClientMusicNetworkHandler {
     public static void presetRadiosReceiver(MinecraftClient client, ClientPlayNetworkHandler handler,
                                             PacketByteBuf buf, PacketSender packetSender) {
         String str = buf.readString(Short.MAX_VALUE << 4);
-        MusicPlayer.run(() -> ConcertoClient.presetRadios = PresetRadioConfig.fromJson(str).stream().filter(playlist ->
+        MusicPlayer.run(() -> ConcertoClient.presetRadios = PresetPlaylistsConfig.fromJson(str).stream().filter(playlist ->
                         playlist.getList().stream().allMatch(MusicDataPacket::isMusicSafe)).toList(), () -> {
 //                .peek(playlist -> MusicPlayerHandler.loadInThreadPool(playlist.getList())).toList(), () -> {
             if (client != null && client.currentScreen instanceof PresetRadiosScreen screen) {

@@ -22,12 +22,14 @@ public class PlaylistListScreen extends ConcertoScreen {
     @Override
     protected void init() {
         super.init();
-        this.playlistList = new MetadataListWidget<>(this.width, this.height - 55, 20, 18) {
+        this.playlistList = new MetadataListWidget<>(this.width, 0, 15, this.height - 35, 18) {
             @Override
             public void onDoubleClicked(ConcertoListWidget<Playlist>.Entry entry) {
                 MinecraftClient.getInstance().setScreen(new PlaylistPreviewScreen(entry.item, PlaylistListScreen.this));
             }
         };
+        this.playlistList.setRenderBackground(false);
+        this.playlistList.setRenderHorizontalShadows(false);
         this.playlistList.reset(this.playlists, null, "");
 
         this.addDrawableChild(this.playlistList);

@@ -54,18 +54,12 @@ public abstract class Playlist implements LazyLoadable, WithMetaData {
     }
 
     public ArrayList<Music> getList() {
-        if (this.isLoaded()) {
-            return this.list;
-        } else {
-            throw new RuntimeException("Calling before being loaded.");
-        }
+        if (!this.isLoaded()) this.load();
+        return this.list;
     }
 
     public PlaylistMetaData getMeta() {
-        if (this.isLoaded()) {
-            return this.meta;
-        } else {
-            throw new RuntimeException("Calling before being loaded.");
-        }
+        if (!this.isLoaded()) this.load();
+        return this.meta;
     }
 }

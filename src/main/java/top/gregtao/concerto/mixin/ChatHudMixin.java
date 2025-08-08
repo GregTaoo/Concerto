@@ -63,6 +63,6 @@ public class ChatHudMixin {
 
     @Inject(method = "render(Lnet/minecraft/client/gui/DrawContext;IIIZ)V", at = @At("HEAD"))
     public void renderInject(DrawContext context, int currentTick, int mouseX, int mouseY, boolean focused, CallbackInfo ci) {
-        InGameHudRenderer.render(context);
+        InGameHudRenderer.render(context, mouseX, mouseY, currentTick);
     }
 }

@@ -14,8 +14,8 @@ import top.gregtao.concerto.command.argument.ShareMusicTargetArgumentType;
 import top.gregtao.concerto.music.Music;
 import top.gregtao.concerto.network.ClientMusicNetworkHandler;
 import top.gregtao.concerto.network.MusicDataPacket;
-import top.gregtao.concerto.player.MusicPlayer;
 import top.gregtao.concerto.player.MusicPlayerHandler;
+import top.gregtao.concerto.util.ConcertoRunner;
 import top.gregtao.concerto.util.TextUtil;
 
 import java.util.Iterator;
@@ -30,7 +30,7 @@ public class ShareMusicCommand {
                         ClientCommandManager.literal("to").then(
                                 ClientCommandManager.argument("target", ShareMusicTargetArgumentType.create()).executes(context -> {
                                     String target = ShareMusicTargetArgumentType.get(context, "target");
-                                    MusicPlayer.run(() -> {
+                                    ConcertoRunner.run(() -> {
                                         Music current = MusicPlayerHandler.INSTANCE.getCurrentMusic();
                                         if (current != null) {
                                             TextUtil.commandMessageClient(context, Text.translatable("concerto.share.sent"));
@@ -68,7 +68,7 @@ public class ShareMusicCommand {
                 ).then(
                         ClientCommandManager.literal("list").then(
                                 ClientCommandManager.argument("page", IntegerArgumentType.integer(1)).executes(context -> {
-                                    MusicPlayer.run(() -> {
+                                    ConcertoRunner.run(() -> {
                                         int page = IntegerArgumentType.getInteger(context, "page");
                                         Map<UUID, MusicDataPacket> map = ClientMusicNetworkHandler.WAIT_CONFIRMATION;
                                         Iterator<Map.Entry<UUID, MusicDataPacket>> iterator = map.entrySet().iterator();

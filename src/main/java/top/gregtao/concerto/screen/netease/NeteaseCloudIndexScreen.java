@@ -6,9 +6,9 @@ import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.text.Text;
 import top.gregtao.concerto.http.netease.NeteaseCloudApiClient;
-import top.gregtao.concerto.player.MusicPlayer;
 import top.gregtao.concerto.screen.ConcertoScreen;
 import top.gregtao.concerto.screen.widget.URLImageWidget;
+import top.gregtao.concerto.util.ConcertoRunner;
 
 import java.net.MalformedURLException;
 import java.net.URI;
@@ -40,7 +40,7 @@ public class NeteaseCloudIndexScreen extends ConcertoScreen {
         }
         this.avatar = new URLImageWidget(64, 64, this.width / 2 - 32, 110,
                 avatarUrl == null ? null : avatarUrl.toString(), false);
-        MusicPlayer.run(() -> this.avatar.loadImage(true, true));
+        ConcertoRunner.run(() -> this.avatar.loadImage(true, true));
     }
 
     @Override

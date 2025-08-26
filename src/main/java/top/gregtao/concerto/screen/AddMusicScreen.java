@@ -12,6 +12,7 @@ import top.gregtao.concerto.music.*;
 import top.gregtao.concerto.music.list.NeteaseCloudPlaylist;
 import top.gregtao.concerto.player.MusicPlayer;
 import top.gregtao.concerto.player.MusicPlayerHandler;
+import top.gregtao.concerto.util.ConcertoRunner;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -46,7 +47,7 @@ public class AddMusicScreen extends ApplyDraggedFileScreen {
                         this.displayAlert(Text.translatable("concerto.error.invalid_path"));
                     }
                 });
-        this.addLabel(Text.translatable("concerto.screen.add.local_file.folder"), this.width / 2, 45, str -> MusicPlayer.run(() -> {
+        this.addLabel(Text.translatable("concerto.screen.add.local_file.folder"), this.width / 2, 45, str -> ConcertoRunner.run(() -> {
             ArrayList<Music> list = LocalFileMusic.getMusicsInFolder(new File(str));
             MusicPlayer.INSTANCE.addMusic(list, () -> MusicPlayer.INSTANCE.skipTo(MusicPlayerHandler.INSTANCE.getMusicList().size() - list.size()));
         }));

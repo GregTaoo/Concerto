@@ -16,8 +16,8 @@ import top.gregtao.concerto.api.MusicJsonParsers;
 import top.gregtao.concerto.music.Music;
 import top.gregtao.concerto.network.ClientMusicNetworkHandler;
 import top.gregtao.concerto.network.MusicDataPacket;
-import top.gregtao.concerto.player.MusicPlayer;
 import top.gregtao.concerto.screen.InGameHudRenderer;
+import top.gregtao.concerto.util.ConcertoRunner;
 import top.gregtao.concerto.util.JsonUtil;
 
 import java.util.Base64;
@@ -53,12 +53,12 @@ public class ChatHudMixin {
 
     @Inject(method = "addMessage(Lnet/minecraft/text/Text;)V", at = @At("HEAD"))
     public void addMessageInject1(Text message, CallbackInfo ci){
-        MusicPlayer.run(() -> handleMessage(message));
+        ConcertoRunner.run(() -> handleMessage(message));
     }
 
     @Inject(method = "addMessage(Lnet/minecraft/text/Text;Lnet/minecraft/network/message/MessageSignatureData;Lnet/minecraft/client/gui/hud/MessageIndicator;)V ", at = @At("HEAD"))
     public void addMessageInject2(Text message, MessageSignatureData signature, MessageIndicator indicator, CallbackInfo ci){
-        MusicPlayer.run(() -> handleMessage(message));
+        ConcertoRunner.run(() -> handleMessage(message));
     }
 
     @Inject(method = "render(Lnet/minecraft/client/util/math/MatrixStack;III)V", at = @At("HEAD"))

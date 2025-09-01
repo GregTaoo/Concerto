@@ -7,9 +7,9 @@ import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.Text;
-import top.gregtao.concerto.player.MusicPlayer;
 import top.gregtao.concerto.screen.ConcertoScreen;
 import top.gregtao.concerto.screen.widget.URLImageWidget;
+import top.gregtao.concerto.util.ConcertoRunner;
 
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -64,7 +64,7 @@ public class QRCodeLoginScreen extends ConcertoScreen {
                 }
                 case WAITING -> {
                     if (!this.updaterLock) {
-                        MusicPlayer.run(() -> {
+                        ConcertoRunner.run(() -> {
                             this.updaterLock = true;
                             this.status = this.statusUpdater.apply(this.key);
                             this.updaterLock = false;
@@ -77,7 +77,7 @@ public class QRCodeLoginScreen extends ConcertoScreen {
     }
 
     public void loadQRCode() {
-        MusicPlayer.run(() -> {
+        ConcertoRunner.run(() -> {
             String link = this.key = this.qrKeySupplier.get();
             this.urlImageWidget.setUrl(link);
             if (this.imageUpdater != null) this.urlImageWidget.loadImage(this.imageUpdater, false);

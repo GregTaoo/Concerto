@@ -21,6 +21,7 @@ import top.gregtao.concerto.screen.PageScreen;
 import top.gregtao.concerto.screen.PlaylistPreviewScreen;
 import top.gregtao.concerto.screen.widget.ConcertoListWidget;
 import top.gregtao.concerto.screen.widget.MetadataListWidget;
+import top.gregtao.concerto.util.ConcertoRunner;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -67,7 +68,7 @@ public class QQMusicSearchScreen extends PageScreen {
     private void search(String keyword, int page) {
         DEFAULT_KEYWORD = keyword;
         if (keyword.isEmpty()) return;
-        MusicPlayer.run(() -> {
+        ConcertoRunner.run(() -> {
             switch (this.searchType) {
                 case MUSIC -> this.musicList.reset(QQMusicApiClient.INSTANCE.searchMusic(keyword, page), null);
                 case PLAYLIST -> this.playlistList.reset(QQMusicApiClient.INSTANCE.searchPlaylist(keyword, page), null);

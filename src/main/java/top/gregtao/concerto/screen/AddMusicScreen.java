@@ -47,7 +47,7 @@ public class AddMusicScreen extends ApplyDraggedFileScreen {
                         this.displayAlert(new TranslatableText("concerto.error.invalid_path"));
                     }
                 });
-        this.addLabel(new TranslatableText("concerto.screen.add.local_file.folder"), this.width / 2, 45, str -> MusicPlayer.run(() -> {
+        this.addLabel(new TranslatableText("concerto.screen.add.local_file.folder"), this.width / 2, 45, str -> ConcertoRunner.run(() -> {
             ArrayList<Music> list = LocalFileMusic.getMusicsInFolder(new File(str));
             MusicPlayer.INSTANCE.addMusic(list, () -> MusicPlayer.INSTANCE.skipTo(MusicPlayerHandler.INSTANCE.getMusicList().size() - list.size()));
         }));

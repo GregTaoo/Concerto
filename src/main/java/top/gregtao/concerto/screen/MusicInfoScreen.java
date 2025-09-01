@@ -10,6 +10,7 @@ import top.gregtao.concerto.music.meta.music.MusicMetaData;
 import top.gregtao.concerto.network.ClientMusicNetworkHandler;
 import top.gregtao.concerto.player.MusicPlayer;
 import top.gregtao.concerto.screen.widget.URLImageWidget;
+import top.gregtao.concerto.util.ConcertoRunner;
 
 public class MusicInfoScreen extends ConcertoScreen {
 
@@ -26,7 +27,7 @@ public class MusicInfoScreen extends ConcertoScreen {
         super.init();
         this.headPicture = new URLImageWidget(140, 140, this.width / 2 - 145, this.height / 2 - 70, null);
 
-        MusicPlayer.run(() -> {
+        ConcertoRunner.run(() -> {
             this.music.getMeta();
             this.initInfo();
         });

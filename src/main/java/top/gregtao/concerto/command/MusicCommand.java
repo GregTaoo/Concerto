@@ -29,6 +29,7 @@ import top.gregtao.concerto.music.Music;
 import top.gregtao.concerto.music.meta.music.list.PlaylistMetaData;
 import top.gregtao.concerto.player.MusicPlayer;
 import top.gregtao.concerto.player.MusicPlayerHandler;
+import top.gregtao.concerto.util.ConcertoRunner;
 import top.gregtao.concerto.util.Pair;
 import top.gregtao.concerto.util.TextUtil;
 
@@ -150,7 +151,7 @@ public class MusicCommand {
                 ClientCommandManager.literal("list").then(
                         ClientCommandManager.argument("page", IntegerArgumentType.integer(1)).executes(context -> {
                             ClientPlayerEntity clientPlayer = context.getSource().getPlayer();
-                            MusicPlayer.run(() -> {
+                            ConcertoRunner.run(() -> {
                                 int page = IntegerArgumentType.getInteger(context, "page");
                                 List<Music> list = MusicPlayerHandler.INSTANCE.getMusicList();
                                 page = Math.min(page, (int) Math.ceil(list.size() / 10f));
@@ -173,7 +174,7 @@ public class MusicCommand {
                     if (MusicPlayerHandler.INSTANCE.currentMusic == null) {
                         clientPlayer.sendMessage(new TranslatableText("concerto.unknown"), false);
                     } else if (MusicPlayerHandler.INSTANCE.currentMusic instanceof CacheableMusic music) {
-                        MusicPlayer.run(() -> {
+                        ConcertoRunner.run(() -> {
                             try {
                                 MusicCacheManager.INSTANCE.addMusic(music);
                                 clientPlayer.sendMessage(new TranslatableText("concerto.success"), false);
@@ -191,10 +192,10 @@ public class MusicCommand {
                     ClientPlayerEntity clientPlayer = context.getSource().getPlayer();
                     Music music = MusicPlayerHandler.INSTANCE.getCurrentMusic();
                     if (music instanceof Likeable likeable) {
-                        CompletableFuture.supplyAsync(likeable::likeIt, MusicPlayer.RUNNERS_POOL).thenAcceptAsync(success ->
+                        CompletableFuture.supplyAsync(likeable::likeIt, ConcertoRunner.RUNNERS_POOL).thenAcceptAsync(success ->
                                 clientPlayer.sendMessage(success ? new TranslatableText("concerto.like",
                                         music.getMeta().title(), music.getMeta().getSource()) :
-                                        new TranslatableText("concerto.fail"), false), MusicPlayer.RUNNERS_POOL);
+                                        new TranslatableText("concerto.fail"), false), ConcertoRunner.RUNNERS_POOL);
                     } else {
                         clientPlayer.sendMessage(new TranslatableText("concerto.error.unsupported_operation"), false);
                     }
@@ -205,10 +206,10 @@ public class MusicCommand {
                     ClientPlayerEntity clientPlayer = context.getSource().getPlayer();
                     Music music = MusicPlayerHandler.INSTANCE.getCurrentMusic();
                     if (music instanceof Likeable likeable) {
-                        CompletableFuture.supplyAsync(likeable::dislikeIt, MusicPlayer.RUNNERS_POOL).thenAcceptAsync(success ->
+                        CompletableFuture.supplyAsync(likeable::dislikeIt, ConcertoRunner.RUNNERS_POOL).thenAcceptAsync(success ->
                                 clientPlayer.sendMessage(success ? new TranslatableText("concerto.dislike",
                                         music.getMeta().title(), music.getMeta().getSource()) :
-                                        new TranslatableText("concerto.fail"), false), MusicPlayer.RUNNERS_POOL);
+                                        new TranslatableText("concerto.fail"), false), ConcertoRunner.RUNNERS_POOL);
                     } else {
                         clientPlayer.sendMessage(new TranslatableText("concerto.error.unsupported_operation"), false);
                     }

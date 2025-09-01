@@ -17,7 +17,7 @@ import top.gregtao.concerto.http.qq.QQMusicApiClient;
 import top.gregtao.concerto.network.MusicDataPacket;
 import top.gregtao.concerto.network.room.ServerMusicAgent;
 import top.gregtao.concerto.network.ServerMusicNetworkHandler;
-import top.gregtao.concerto.player.MusicPlayer;
+import top.gregtao.concerto.util.ConcertoRunner;
 import top.gregtao.concerto.util.TextUtil;
 
 import java.util.Iterator;
@@ -49,7 +49,7 @@ public class ConcertoServerCommand {
                         ).then(
                                 CommandManager.literal("list").then(
                                         CommandManager.argument("page", IntegerArgumentType.integer(1)).executes(context -> {
-                                            MusicPlayer.run(() -> {
+                                            ConcertoRunner.run(() -> {
                                                 int page = IntegerArgumentType.getInteger(context, "page");
                                                 Map<UUID, MusicDataPacket> map = ServerMusicNetworkHandler.WAIT_AUDITION;
                                                 Iterator<Map.Entry<UUID, MusicDataPacket>> iterator = map.entrySet().iterator();

@@ -2,7 +2,7 @@ package top.gregtao.concerto.config;
 
 import top.gregtao.concerto.ConcertoClient;
 import top.gregtao.concerto.ConcertoServer;
-import top.gregtao.concerto.player.MusicPlayer;
+import top.gregtao.concerto.util.ConcertoRunner;
 import top.gregtao.concerto.util.Pair;
 
 import java.io.File;
@@ -121,6 +121,6 @@ public class CacheManager {
             outputStream.write(inputStream.readAllBytes());
         }
         inputStream.close();
-        if (this.getTotalSize() > this.maxSize) MusicPlayer.run(this::removeEarliest);
+        if (this.getTotalSize() > this.maxSize) ConcertoRunner.run(this::removeEarliest);
     }
 }

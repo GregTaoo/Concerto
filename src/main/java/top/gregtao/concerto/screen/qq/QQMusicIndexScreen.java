@@ -8,9 +8,9 @@ import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.Text;
 import net.minecraft.text.TranslatableText;
 import top.gregtao.concerto.http.qq.QQMusicApiClient;
-import top.gregtao.concerto.player.MusicPlayer;
 import top.gregtao.concerto.screen.ConcertoScreen;
 import top.gregtao.concerto.screen.widget.URLImageWidget;
+import top.gregtao.concerto.util.ConcertoRunner;
 
 import java.net.MalformedURLException;
 import java.net.URI;
@@ -42,7 +42,7 @@ public class QQMusicIndexScreen extends ConcertoScreen {
         }
         this.avatar = new URLImageWidget(64, 64, this.width / 2 - 32, 110,
                 avatarUrl == null ? null : avatarUrl.toString(), false);
-        MusicPlayer.run(() -> this.avatar.loadImage(true, true));
+        ConcertoRunner.run(() -> this.avatar.loadImage(true, true));
     }
 
     @Override

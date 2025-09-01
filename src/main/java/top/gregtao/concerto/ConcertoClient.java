@@ -21,6 +21,8 @@ import top.gregtao.concerto.music.list.Playlist;
 import top.gregtao.concerto.network.ClientMusicNetworkHandler;
 import top.gregtao.concerto.player.MusicPlayer;
 import top.gregtao.concerto.util.ConcertoHotkeys;
+import top.gregtao.concerto.util.ConcertoOptions;
+import top.gregtao.concerto.util.ConcertoRunner;
 
 import java.util.List;
 
@@ -68,7 +70,7 @@ public class ConcertoClient implements ClientModInitializer {
 
 			@Override
 			public void reload(ResourceManager manager) {
-				MusicPlayer.run(() -> {
+				ConcertoRunner.run(() -> {
 					ClientConfig.INSTANCE.readOptions();
 					MusicPlayer.INSTANCE.reloadConfig(() -> LOGGER.info("Loaded general music playlist"));
                     PresetPlaylistsConfig.LOCAL_PLAYLISTS.read();

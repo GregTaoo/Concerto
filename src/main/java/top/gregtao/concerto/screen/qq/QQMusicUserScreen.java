@@ -9,12 +9,12 @@ import top.gregtao.concerto.api.WithMetaData;
 import top.gregtao.concerto.http.qq.QQMusicApiClient;
 import top.gregtao.concerto.music.list.Playlist;
 import top.gregtao.concerto.music.list.QQMusicPlaylist;
-import top.gregtao.concerto.player.MusicPlayer;
 import top.gregtao.concerto.screen.ConcertoScreen;
 import top.gregtao.concerto.screen.PageScreen;
 import top.gregtao.concerto.screen.PlaylistPreviewScreen;
 import top.gregtao.concerto.screen.widget.ConcertoListWidget;
 import top.gregtao.concerto.screen.widget.MetadataListWidget;
+import top.gregtao.concerto.util.ConcertoRunner;
 
 public class QQMusicUserScreen extends PageScreen {
     private MetadataListWidget<QQMusicPlaylist> playlistList;
@@ -34,7 +34,7 @@ public class QQMusicUserScreen extends PageScreen {
 
     @Override
     public void onPageTurned(int page) {
-        MusicPlayer.run(() -> {
+        ConcertoRunner.run(() -> {
             QQMusicApiClient.LOCAL_USER.updateLoginStatus();
             this.playlistList.reset(QQMusicApiClient.LOCAL_USER.getUserPlaylists(), null);
         });

@@ -4,7 +4,7 @@ import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import top.gregtao.concerto.api.WithMetaData;
 import top.gregtao.concerto.music.meta.MetaData;
-import top.gregtao.concerto.player.MusicPlayer;
+import top.gregtao.concerto.util.ConcertoRunner;
 
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -29,7 +29,7 @@ public class MetadataListWidget<T extends WithMetaData> extends ConcertoListWidg
         } else {
               if (!this.loadingSet.contains(t)) {
                   this.loadingSet.add(t);
-                  MusicPlayer.run(t::getMeta, () -> this.loadingSet.remove(t));
+                  ConcertoRunner.run(t::getMeta, () -> this.loadingSet.remove(t));
               }
             return Text.translatable("concerto.loading");
         }

@@ -18,6 +18,7 @@ import top.gregtao.concerto.enums.OrderType;
 import top.gregtao.concerto.music.Music;
 import top.gregtao.concerto.music.MusicTimestamp;
 import top.gregtao.concerto.screen.widget.URLImageWidget;
+import top.gregtao.concerto.util.ConcertoRunner;
 import top.gregtao.concerto.util.Pair;
 
 import java.io.*;
@@ -308,7 +309,7 @@ public class MusicPlayerHandler {
     }
 
     public static void downloadMusics(List<Music> musics) {
-        MusicPlayer.run(() -> {
+        ConcertoRunner.run(() -> {
             File folder = new File("Concerto/Downloads");
             if (!folder.exists() || !folder.isDirectory()) {
                 if (folder.mkdirs()) {

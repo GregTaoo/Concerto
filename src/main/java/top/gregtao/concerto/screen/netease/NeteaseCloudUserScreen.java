@@ -9,11 +9,11 @@ import top.gregtao.concerto.api.WithMetaData;
 import top.gregtao.concerto.http.netease.NeteaseCloudApiClient;
 import top.gregtao.concerto.music.list.NeteaseCloudPlaylist;
 import top.gregtao.concerto.music.list.Playlist;
-import top.gregtao.concerto.player.MusicPlayer;
 import top.gregtao.concerto.screen.PageScreen;
 import top.gregtao.concerto.screen.PlaylistPreviewScreen;
 import top.gregtao.concerto.screen.widget.ConcertoListWidget;
 import top.gregtao.concerto.screen.widget.MetadataListWidget;
+import top.gregtao.concerto.util.ConcertoRunner;
 
 import java.util.concurrent.CompletableFuture;
 
@@ -35,7 +35,7 @@ public class NeteaseCloudUserScreen extends PageScreen {
 
     @Override
     public void onPageTurned(int page) {
-        MusicPlayer.run(() -> {
+        ConcertoRunner.run(() -> {
             if (NeteaseCloudApiClient.LOCAL_USER.updateLoginStatus()) {
                 this.playlistList.reset(NeteaseCloudApiClient.LOCAL_USER.getUserPlaylists(page), null);
             }

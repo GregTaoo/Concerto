@@ -14,15 +14,13 @@ import top.gregtao.concerto.ConcertoClient;
 import top.gregtao.concerto.api.MusicJsonParsers;
 import top.gregtao.concerto.music.Music;
 import top.gregtao.concerto.network.room.MusicRoom;
+import top.gregtao.concerto.util.ConcertoRunner;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -83,16 +81,6 @@ public class MusicPlayer extends StreamPlayer implements StreamPlayerListener {
         this.addStreamPlayerListener(this);
     }
 
-    public static final Executor RUNNERS_POOL = Executors.newFixedThreadPool(16);
-
-    public static void run(Runnable runnable) {
-        CompletableFuture.runAsync(runnable, RUNNERS_POOL);
-    }
-
-    public static void run(Runnable runnable, Runnable callback) {
-        CompletableFuture.runAsync(runnable, RUNNERS_POOL).thenRunAsync(callback, RUNNERS_POOL);
-    }
-
     public void addMusic(Music music) {
         this.addMusic(music, () -> {});
     }
@@ -102,15 +90,15 @@ public class MusicPlayer extends StreamPlayer implements StreamPlayerListener {
     }
 
     public void addMusic(Music music, Runnable callback) {
-        run(() -> MusicPlayerHandler.INSTANCE.addMusic(music), callback);
+        ConcertoRunner.run(() -> MusicPlayerHandler.INSTANCE.addMusic(music), callback);
     }
 
     public void addMusic(List<Music> musics, Runnable callback) {
-        run(() -> MusicPlayerHandler.INSTANCE.addMusic(musics), callback);
+        ConcertoRunner.run(() -> MusicPlayerHandler.INSTANCE.addMusic(musics), callback);
     }
 
     public void addMusic(Supplier<List<Music>> musicListAdder, Runnable callback) {
-        run(() -> MusicPlayerHandler.INSTANCE.addMusic(musicListAdder.get()), callback);
+        ConcertoRunner.run(() -> MusicPlayerHandler.INSTANCE.addMusic(musicListAdder.get()), callback);
     }
 
     public void addMusicHere(Music music, boolean skip) {
@@ -118,7 +106,7 @@ public class MusicPlayer extends StreamPlayer implements StreamPlayerListener {
     }
 
     public void addMusicHere(Music music, boolean skip, Runnable callback) {
-        run(() -> {
+        ConcertoRunner.run(() -> {
             MusicPlayerHandler.INSTANCE.addMusicHere(music);
             if (skip) {
                 this.skipTo(MusicPlayerHandler.INSTANCE.getCurrentIndex() + 1);
@@ -214,7 +202,7 @@ public class MusicPlayer extends StreamPlayer implements StreamPlayerListener {
     }
 
     public void playTempMusic(Music music, Runnable callback) {
-        run(() -> {
+        ConcertoRunner.run(() -> {
             ClientPlayerEntity player = MinecraftClient.getInstance().player;
             InputStream source = music.getMusicSourceOrNull();
             if (source == null) return;
@@ -261,7 +249,7 @@ public class MusicPlayer extends StreamPlayer implements StreamPlayerListener {
     }
 
     public void playNext(int forward, Consumer<Integer> callback) {
-        run(() -> {
+        ConcertoRunner.run(() -> {
             ClientPlayerEntity player = MinecraftClient.getInstance().player;
             try {
                 if (!this.started || MusicPlayerHandler.INSTANCE.isEmpty()) {
@@ -330,7 +318,7 @@ public class MusicPlayer extends StreamPlayer implements StreamPlayerListener {
     }
 
     public void clear() {
-        run(() -> {
+        ConcertoRunner.run(() -> {
             this.started = false;
             this.stop();
             MusicPlayerHandler.INSTANCE.clear();
@@ -338,7 +326,7 @@ public class MusicPlayer extends StreamPlayer implements StreamPlayerListener {
     }
 
     public void reloadConfig(Runnable callback) {
-        run(() -> {
+        ConcertoRunner.run(() -> {
             this.started = false;
             this.stop();
             MusicPlayerHandler.INSTANCE = MusicJsonParsers.fromRaw(ConcertoClient.MUSIC_CONFIG.read());
@@ -346,7 +334,7 @@ public class MusicPlayer extends StreamPlayer implements StreamPlayerListener {
     }
 
     public void cut(Runnable callback) {
-        run(() -> {
+        ConcertoRunner.run(() -> {
             if (!this.isPlayingTemp) {
                 MusicPlayerHandler.INSTANCE.removeCurrent();
             }
@@ -357,7 +345,7 @@ public class MusicPlayer extends StreamPlayer implements StreamPlayerListener {
     public void remove(int index, Runnable callback) {
         if (index == MusicPlayerHandler.INSTANCE.getCurrentIndex()) this.cut(callback);
         else {
-            run(() -> {
+            ConcertoRunner.run(() -> {
                 MusicPlayerHandler.INSTANCE.remove(index);
                 if (MusicPlayerHandler.INSTANCE.isEmpty()) this.cut(() -> {});
             }, callback);

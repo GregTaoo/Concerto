@@ -10,7 +10,7 @@ import top.gregtao.concerto.http.HttpURLInputStream;
 import top.gregtao.concerto.music.Music;
 import top.gregtao.concerto.music.SharedMusic;
 import top.gregtao.concerto.network.ServerMusicNetworkHandler;
-import top.gregtao.concerto.player.MusicPlayer;
+import top.gregtao.concerto.util.ConcertoRunner;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -201,7 +201,7 @@ public class ServerMusicAgent {
             player.sendMessage(new TranslatableText("concerto.agent.add.too_quick", wait), false);
             return;
         }
-        MusicPlayer.run(() -> {
+        ConcertoRunner.run(() -> {
             ConcertoServer.LOGGER.info("Added music {}", music.getMeta().title());
             this.musicQueue.offer(music);
             this.members.put(player, System.currentTimeMillis());
@@ -220,7 +220,7 @@ public class ServerMusicAgent {
         if (!this.isPlaying.get() && this.hasNextMusic()) {
             this.schedulePlayNext(0, false);
         } else if (this.isPlaying.get() && this.currentSharedMusic != null) {
-            MusicPlayer.run(() -> {
+            ConcertoRunner.run(() -> {
                 if (this.currentSharedMusic instanceof SharedMusic shared) {
                     shared.startTime = System.currentTimeMillis() - this.playTime;
                     shared.startByte = this.totalBytes * (System.currentTimeMillis() - this.playTime) /

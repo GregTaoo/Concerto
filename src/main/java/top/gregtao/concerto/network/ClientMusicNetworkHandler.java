@@ -24,6 +24,7 @@ import top.gregtao.concerto.player.MusicPlayer;
 import top.gregtao.concerto.player.MusicPlayerHandler;
 import top.gregtao.concerto.screen.MusicAuditionScreen;
 import top.gregtao.concerto.screen.PresetRadiosScreen;
+import top.gregtao.concerto.util.ConcertoRunner;
 import top.gregtao.concerto.util.JsonUtil;
 import top.gregtao.concerto.util.TextUtil;
 
@@ -125,7 +126,7 @@ public class ClientMusicNetworkHandler {
         if (WAIT_CONFIRMATION.size() > ConcertoNetworking.WAIT_LIST_MAX_SIZE) {
             removeFirst();
         }
-        MusicPlayer.run(() -> {
+        ConcertoRunner.run(() -> {
             if (ClientConfig.INSTANCE.options.confirmAfterReceived) {
                 self.sendMessage(TextUtil.PAGE_SPLIT, false);
                 self.sendMessage(ShareMusicCommand.chatMessageBuilder(uuid, packet.from, packet.music.getMeta().title()), false);
@@ -201,7 +202,7 @@ public class ClientMusicNetworkHandler {
     public static void presetRadiosReceiver(MinecraftClient client, ClientPlayNetworkHandler handler,
                                             PacketByteBuf buf, PacketSender packetSender) {
         String str = buf.readString(Short.MAX_VALUE << 4);
-        MusicPlayer.run(() -> ConcertoClient.presetRadios = PresetPlaylistsConfig.fromJson(str).stream().filter(playlist ->
+        ConcertoRunner.run(() -> ConcertoClient.presetRadios = PresetPlaylistsConfig.fromJson(str).stream().filter(playlist ->
                         playlist.getList().stream().allMatch(MusicDataPacket::isMusicSafe)).toList(), () -> {
 //                .peek(playlist -> MusicPlayerHandler.loadInThreadPool(playlist.getList())).toList(), () -> {
             if (client != null && client.currentScreen instanceof PresetRadiosScreen screen) {
@@ -254,7 +255,7 @@ public class ClientMusicNetworkHandler {
                                                PacketByteBuf buf, PacketSender packetSender) {
         String str = buf.readString(Short.MAX_VALUE << 4);
         if (ConcertoClient.clientState != ConcertoClient.ClientState.MUSIC_AGENT) return;
-        MusicPlayer.run(() -> {
+        ConcertoRunner.run(() -> {
             if (str.equals("Stop")) {
                 MusicPlayer.INSTANCE.stop();
             } else {

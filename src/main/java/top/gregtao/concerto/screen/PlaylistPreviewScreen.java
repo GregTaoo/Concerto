@@ -15,6 +15,7 @@ import top.gregtao.concerto.player.MusicPlayer;
 import top.gregtao.concerto.player.MusicPlayerHandler;
 import top.gregtao.concerto.screen.widget.ConcertoListWidget;
 import top.gregtao.concerto.screen.widget.MetadataListWidget;
+import top.gregtao.concerto.util.ConcertoRunner;
 
 public class PlaylistPreviewScreen extends ConcertoScreen {
     private final Playlist playlist;
@@ -37,7 +38,7 @@ public class PlaylistPreviewScreen extends ConcertoScreen {
         };
         this.addDrawableChild(this.widget);
         this.addSelectableChild(this.widget);
-        MusicPlayer.run(() -> this.widget.reset(this.playlist.getList(), null));
+        ConcertoRunner.run(() -> this.widget.reset(this.playlist.getList(), null));
 
         this.addDrawableChild(new ButtonWidget(20, this.height - 30, 60, 20,
                 new TranslatableText("concerto.screen.playlist.add"), button ->

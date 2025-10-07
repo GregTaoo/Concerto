@@ -5,6 +5,7 @@ import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.NarratedMultilineTextWidget;
 import net.minecraft.client.gui.widget.PressableTextWidget;
+import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.Style;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
@@ -74,6 +75,11 @@ public class ConcertoScreen extends Screen {
     public void render(DrawContext matrices, int mouseX, int mouseY, float delta) {
         super.render(matrices, mouseX, mouseY, delta);
         matrices.drawCenteredTextWithShadow(this.textRenderer, this.title, this.width / 2, 5, 0xffffffff);
+        // 修复 message 背景被遮挡的问题
+        MatrixStack matrixStack = matrices.getMatrices();
+        matrixStack.push();
+        matrixStack.translate(0, 0, 200);
         this.message.render(matrices, mouseX, mouseY, delta);
+        matrixStack.pop();
     }
 }

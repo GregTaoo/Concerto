@@ -47,6 +47,8 @@ public class MusicJsonParsers {
 
     public static final JsonParser<Music> QQ_MUSIC = registerMusicParser(new QQMusicJsonParser());
 
+    public static final JsonParser<Music> KUGOU_MUSIC = registerMusicParser(new KuGouMusicJsonParser());
+
     public static final JsonParser<Music> BILIBILI = registerMusicParser(new BilibiliMusicJsonParser());
 
     public static final JsonParser<Music> SHARED = registerMusicParser(new SharedMusicJsonParser());

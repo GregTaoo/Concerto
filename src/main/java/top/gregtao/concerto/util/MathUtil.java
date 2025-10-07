@@ -25,6 +25,12 @@ public class MathUtil {
         return formattedTime(parseIntOrElse(timestamp, 0));
     }
 
+    public static String formattedTime(long timestamp) {
+        Date date = new Date(timestamp);
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
+        return dateFormat.format(date);
+    }
+
     public static <T> int lowerBound(ArrayList<T> a, T key, Comparator<? super T> c) {
         return lowerBound(a, 0, a.size() - 1, key, c);
     }

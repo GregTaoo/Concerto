@@ -15,6 +15,7 @@ import top.gregtao.concerto.command.ShareMusicCommand;
 import top.gregtao.concerto.config.ClientConfig;
 import top.gregtao.concerto.config.ConfigFile;
 import top.gregtao.concerto.config.PresetPlaylistsConfig;
+import top.gregtao.concerto.http.kugou.KuGouMusicApiClient;
 import top.gregtao.concerto.http.netease.NeteaseCloudApiClient;
 import top.gregtao.concerto.http.qq.QQMusicApiClient;
 import top.gregtao.concerto.music.list.Playlist;
@@ -76,6 +77,20 @@ public class ConcertoClient implements ClientModInitializer {
                     PresetPlaylistsConfig.LOCAL_PLAYLISTS.read();
 					NeteaseCloudApiClient.LOCAL_USER.updateLoginStatus();
 					QQMusicApiClient.LOCAL_USER.updateLoginStatus();
+					KuGouMusicApiClient.LOCAL_USER.updateLoginStatus();
+					// 刷新 token, 延长 token 有效时间
+					KuGouMusicApiClient.INSTANCE.refreshToken();
+					// 更新 VIP 状态
+					KuGouMusicApiClient.LOCAL_USER.updateVIPStatus();
+					// 自动获取每日酷狗音乐 VIP
+					ClientConfig.ClientConfigOptions options = ClientConfig.INSTANCE.options;
+					if (
+							options.kuGouMusicLite
+							&& KuGouMusicApiClient.LOCAL_USER.isLoggedIn()
+							&& options.autoGetKuGouDailyVIP
+					) {
+						KuGouMusicApiClient.INSTANCE.receiveVip();
+					}
 				});
 			}
 		});

@@ -17,7 +17,8 @@ public class MusicDataPacket {
 
     public static List<String> ALLOWED_SOURCES = List.of(
             Sources.NETEASE_CLOUD.asString(),
-            Sources.QQ_MUSIC.asString()
+            Sources.QQ_MUSIC.asString(),
+            Sources.KUGOU_MUSIC.asString()
     );
 
     public static boolean isMusicSafe(Music music) {

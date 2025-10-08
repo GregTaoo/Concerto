@@ -10,9 +10,6 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 public class LyricsUtil {
-
-    private final static Gson GSON = new Gson();
-
     public static Pair<String, String> krcToLrc(String krc) {
         String[] lines = krc.split("\n|\r|\r\n");
         List<Pair<String, String>> pairList = new ArrayList<>();
@@ -71,7 +68,7 @@ public class LyricsUtil {
 
     public static List<String> getTransLyric(String language) {
         String json = TextUtil.fromBase64(language);
-        JsonObject jsonObject = GSON.fromJson(json, JsonObject.class);
+        JsonObject jsonObject = new Gson().fromJson(json, JsonObject.class);
 
         return Optional.ofNullable(jsonObject)
                 .map(obj -> obj.getAsJsonArray("content"))

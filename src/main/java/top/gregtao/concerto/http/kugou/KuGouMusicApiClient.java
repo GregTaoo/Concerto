@@ -17,8 +17,6 @@ import top.gregtao.concerto.music.meta.music.list.PlaylistMetaData;
 import top.gregtao.concerto.player.MusicPlayerHandler;
 import top.gregtao.concerto.util.*;
 
-import java.io.IOException;
-import java.net.URISyntaxException;
 import java.net.URLEncoder;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
@@ -104,13 +102,13 @@ public class KuGouMusicApiClient extends HttpApiClient {
     }
 
     @Override
-    public void setCookie(String url, String key, String value) throws IOException, URISyntaxException {
+    public void setCookie(String url, String key, String value) {
         COOKIES.put(key, value);
         writeCookie();
     }
 
     @Override
-    public void setCookies(String url, Map<String, String> cookies) throws IOException, URISyntaxException {
+    public void setCookies(String url, Map<String, String> cookies) {
         COOKIES.putAll(cookies);
         writeCookie();
     }
@@ -335,7 +333,7 @@ public class KuGouMusicApiClient extends HttpApiClient {
 
         if (json != null) {
             JsonArray dataArray = json.getAsJsonArray("data");
-            if (dataArray != null && dataArray.size() > 0) {
+            if (dataArray != null && !dataArray.isEmpty()) {
                 return Optional.ofNullable(dataArray.get(0).getAsJsonObject());
             }
         }

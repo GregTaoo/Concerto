@@ -1,15 +1,17 @@
-package top.gregtao.concerto.util;
+package top.gregtao.concerto.http.kugou;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import top.gregtao.concerto.util.Pair;
+import top.gregtao.concerto.util.TextUtil;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-public class LyricsUtil {
+public class KuGouLyricsUtil {
     public static Pair<String, String> krcToLrc(String krc) {
         String[] lines = krc.split("\n|\r|\r\n");
         List<Pair<String, String>> pairList = new ArrayList<>();

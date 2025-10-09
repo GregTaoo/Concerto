@@ -15,20 +15,18 @@ public class MathUtil {
         }
     }
 
-    public static String formattedTime(int timestamp) {
-        Date date = new Date(timestamp);
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
-        return dateFormat.format(date);
-    }
-
-    public static String formattedTime(String timestamp) {
-        return formattedTime(parseIntOrElse(timestamp, 0));
-    }
-
     public static String formattedTime(long timestamp) {
         Date date = new Date(timestamp);
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
         return dateFormat.format(date);
+    }
+
+    public static String formattedTime(int timestamp) {
+        return formattedTime((long) timestamp);
+    }
+
+    public static String formattedTime(String timestamp) {
+        return formattedTime(parseIntOrElse(timestamp, 0));
     }
 
     public static <T> int lowerBound(ArrayList<T> a, T key, Comparator<? super T> c) {

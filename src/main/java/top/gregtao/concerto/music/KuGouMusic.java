@@ -14,7 +14,7 @@ import top.gregtao.concerto.music.meta.music.BasicMusicMetaData;
 import top.gregtao.concerto.music.meta.music.MusicMetaData;
 import top.gregtao.concerto.music.meta.music.UnknownMusicMeta;
 import top.gregtao.concerto.util.FileUtil;
-import top.gregtao.concerto.util.LyricsUtil;
+import top.gregtao.concerto.http.kugou.KuGouLyricsUtil;
 import top.gregtao.concerto.util.Optionals;
 import top.gregtao.concerto.util.Pair;
 
@@ -31,7 +31,7 @@ public class KuGouMusic extends Music implements CacheableMusic, DynamicPath {
 
     private String rawPath, rawLyrics, rawSubLyrics, format;
 
-    private Map<Level, String> hashMap = new HashMap<>();
+    private final Map<Level, String> hashMap = new HashMap<>();
 
     public KuGouMusic(String id, String hash, boolean isEncodeAlbumAudioId) {
         this.albumAudioId = isEncodeAlbumAudioId ? toAlbumAudioId(id) : id;
@@ -150,7 +150,7 @@ public class KuGouMusic extends Music implements CacheableMusic, DynamicPath {
 
             Pair<String, String> pair = KuGouMusicApiClient.INSTANCE.getLyric(bestLyric.getFirst(), bestLyric.getSecond())
                     .map(KuGouMusicApiCrypto::decodeLyrics)
-                    .map(LyricsUtil::krcToLrc)
+                    .map(KuGouLyricsUtil::krcToLrc)
                     .orElseThrow();
 
             this.rawLyrics = pair.getFirst();

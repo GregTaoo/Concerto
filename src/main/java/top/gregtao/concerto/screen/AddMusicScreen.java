@@ -36,41 +36,51 @@ public class AddMusicScreen extends ApplyDraggedFileScreen {
         this.addSelectableChild(widget);
     }
 
+    private Consumer<String> methodSafeWrapper(Consumer<String> method) {
+        return str -> {
+            try {
+                method.accept(str);
+            } catch (Exception e) {
+                AddMusicScreen.this.displayAlert(Text.translatable("concerto.fail"));
+            }
+        };
+    }
+
     @Override
     protected void init() {
         super.init();
         this.addLabel(Text.translatable("concerto.screen.add.local_file"), this.width / 2, 20,
-                str -> {
+                methodSafeWrapper(str -> {
                     try {
                         MusicPlayer.INSTANCE.addMusicHere(new LocalFileMusic(str), true);
                     } catch (UnsafeMusicException e) {
                         this.displayAlert(Text.translatable("concerto.error.invalid_path"));
                     }
-                });
+                }));
         this.addLabel(Text.translatable("concerto.screen.add.local_file.folder"), this.width / 2, 45, str -> ConcertoRunner.run(() -> {
             ArrayList<Music> list = LocalFileMusic.getMusicsInFolder(new File(str));
             MusicPlayer.INSTANCE.addMusic(list, () -> MusicPlayer.INSTANCE.skipTo(MusicPlayerHandler.INSTANCE.getMusicList().size() - list.size()));
         }));
         this.addLabel(Text.translatable("concerto.screen.add.internet"), this.width / 2, 70,
-                str -> MusicPlayer.INSTANCE.addMusicHere(new HttpFileMusic(str), true));
+                methodSafeWrapper(str -> MusicPlayer.INSTANCE.addMusicHere(new HttpFileMusic(str), true)));
         this.addLabel(Text.translatable("concerto.screen.add.netease_cloud"), this.width / 2, 95,
-                str -> MusicPlayer.INSTANCE.addMusicHere(new NeteaseCloudMusic(str, ClientConfig.INSTANCE.options.neteaseMusicQuality), true));
-        this.addLabel(Text.translatable("concerto.screen.add.netease_cloud.playlist"), this.width / 2, 120, str -> {
+                methodSafeWrapper(str -> MusicPlayer.INSTANCE.addMusicHere(new NeteaseCloudMusic(str, ClientConfig.INSTANCE.options.neteaseMusicQuality), true)));
+        this.addLabel(Text.translatable("concerto.screen.add.netease_cloud.playlist"), this.width / 2, 120, methodSafeWrapper(str -> {
             NeteaseCloudPlaylist playlist = new NeteaseCloudPlaylist(str, false);
             playlist.load(() -> MinecraftClient.getInstance().setScreen(new PlaylistPreviewScreen(playlist, this)));
-        });
-        this.addLabel(Text.translatable("concerto.screen.add.netease_cloud.album"), this.width / 2, 145, str -> {
+        }));
+        this.addLabel(Text.translatable("concerto.screen.add.netease_cloud.album"), this.width / 2, 145, methodSafeWrapper(str -> {
             NeteaseCloudPlaylist playlist = new NeteaseCloudPlaylist(str, false);
             playlist.load(() -> MinecraftClient.getInstance().setScreen(new PlaylistPreviewScreen(playlist, this)));
-        });
+        }));
         this.addLabel(Text.translatable("concerto.screen.add.qq"), this.width / 2, 170,
-                str -> MusicPlayer.INSTANCE.addMusicHere(new QQMusic(str), true, () -> {
+                methodSafeWrapper(str -> MusicPlayer.INSTANCE.addMusicHere(new QQMusic(str), true, () -> {
                     if (!MusicPlayer.INSTANCE.started) MusicPlayer.INSTANCE.start();
-                }));
+                })));
 
         this.addLabel(
                 Text.translatable("concerto.screen.add.kugou"), this.width / 2, 195,
-                str -> MusicPlayer.INSTANCE.addMusicHere(new KuGouMusic(str, true), true)
+                methodSafeWrapper(str -> MusicPlayer.INSTANCE.addMusicHere(new KuGouMusic(str, true), true))
         );
 //        this.addLabel(Text.translatable("concerto.screen.add.bilibili"), this.width / 2, 195,
 //                str -> MusicPlayer.INSTANCE.addMusicHere(new BilibiliMusic(str), true));

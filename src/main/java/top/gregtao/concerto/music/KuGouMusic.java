@@ -275,25 +275,14 @@ public class KuGouMusic extends Music implements CacheableMusic, DynamicPath {
                     .map(JsonElement::getAsLong)
                     .orElseThrow();
 
-            List<String> authorList = optional.map(json -> json.getAsJsonArray("authors"))
-                    .map(arr -> arr.asList().stream()
-                            .map(JsonElement::getAsJsonObject)
-                            .map(Optional::of)
-                            .map(authorOpt -> Optionals
-                                    .flatFirstOf(
-                                        authorOpt,
-                                        // getDetail 接口会再套一层 base 对象
-                                        json -> Optional.ofNullable(json.getAsJsonObject("base")),
-                                        Optional::ofNullable
-                                    )
-                                    // 获取到 author_name 所在对象
-                                    .map(base -> base.get("author_name"))
-                            )
-                            .filter(nameElementOpt -> nameElementOpt.isPresent() && !nameElementOpt.get().isJsonNull())
-                            .map(nameElementOpt -> nameElementOpt.get().getAsString())
-                            .collect(Collectors.toList())
-                    )
-                    .orElseThrow();
+            List<String> authorList = Optionals
+                    .flatFirstOf(
+                            optional,
+                            // 先尝试从 authors 中提取
+                            KuGouMusic::getAuthorsList,
+                            // 再尝试从 base 中提取
+                            KuGouMusic::getAuthorsListFromBase
+                    ).orElseThrow();
 
             String headPic = optional.map(json -> json.getAsJsonObject("album_info"))
                     .map(albumInfo -> albumInfo.get("cover"))
@@ -308,6 +297,39 @@ public class KuGouMusic extends Music implements CacheableMusic, DynamicPath {
         } catch (Exception e) {
             return new UnknownMusicMeta(Sources.KUGOU_MUSIC.getName().getString());
         }
+    }
+
+    /**
+     * 尝试从 authors 中提取作者列表, 可能有 authors 不存在的情况 (作者信息未上传)
+     */
+    private static Optional<List<String>> getAuthorsList(JsonObject jsonObject) {
+        return Optional.ofNullable(jsonObject)
+                .map(json -> json.getAsJsonArray("authors"))
+                .map(arr -> arr.asList().stream()
+                        .map(JsonElement::getAsJsonObject)
+                        .map(Optional::of)
+                        .map(authorOpt -> Optionals
+                                .flatFirstOf(
+                                        authorOpt,
+                                        // getDetail 接口会再套一层 base 对象
+                                        json -> Optional.ofNullable(json.getAsJsonObject("base")),
+                                        Optional::ofNullable
+                                )
+                                // 获取到 author_name 所在对象
+                                .map(base -> base.get("author_name"))
+                        )
+                        .filter(nameElementOpt -> nameElementOpt.isPresent() && !nameElementOpt.get().isJsonNull())
+                        .map(nameElementOpt -> nameElementOpt.get().getAsString())
+                        .collect(Collectors.toList())
+                );
+    }
+
+    public static Optional<List<String>> getAuthorsListFromBase(JsonObject jsonObject) {
+        return Optional.ofNullable(jsonObject)
+                .map(json -> json.getAsJsonObject("base"))
+                .map(base -> base.get("author_name"))
+                .map(JsonElement::getAsString)
+                .map(names -> Arrays.asList(names.split("、")));
     }
 
     /**

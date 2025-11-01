@@ -168,7 +168,7 @@ public class KuGouMusicApiClient extends HttpApiClient {
             String signature;
             switch (config.getEncryptType()) {
                 case WEB -> signature = KuGouMusicApiCrypto.signWebParams(paramsMap);
-                case null, default -> signature = KuGouMusicApiCrypto.signAndroidParams(paramsMap, dataJson);
+                default -> signature = KuGouMusicApiCrypto.signAndroidParams(paramsMap, dataJson);
             }
             paramsMap.put("signature", signature);
         }

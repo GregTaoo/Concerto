@@ -1,11 +1,11 @@
 package top.gregtao.concerto.screen.kugou;
 
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.gui.widget.CyclingButtonWidget;
 import net.minecraft.client.gui.widget.TextFieldWidget;
+import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.Text;
 import org.lwjgl.glfw.GLFW;
 import top.gregtao.concerto.ConcertoClient;
@@ -37,7 +37,7 @@ public class KuGouMusicSearchScreen extends PageScreen {
     private SearchType searchType = SearchType.MUSIC;
 
     private <T extends WithMetaData> MetadataListWidget<T> initListsWidget() {
-        return new MetadataListWidget<>(this.width, this.height - 75, 40, 18) {
+        MetadataListWidget<T> widget = new MetadataListWidget<>(this.width, this.height, 38, this.height - 35, 18) {
             @Override
             public void onDoubleClicked(ConcertoListWidget<T>.Entry entry) {
                 try {
@@ -56,6 +56,9 @@ public class KuGouMusicSearchScreen extends PageScreen {
                 }
             }
         };
+        widget.setRenderBackground(false);
+        widget.setRenderHorizontalShadows(false);
+        return widget;
     }
 
     public KuGouMusicSearchScreen(Screen parent) {
@@ -71,7 +74,7 @@ public class KuGouMusicSearchScreen extends PageScreen {
                 case PLAYLIST -> this.playlistList.reset(KuGouMusicApiClient.INSTANCE.searchPlaylist(keyword, page), null);
                 case ALBUM -> this.albumList.reset(KuGouMusicApiClient.INSTANCE.searchAlbum(keyword, page), null);
             }
-            this.listWidgetsMap.get(this.searchType).setScrollY(0);
+            this.listWidgetsMap.get(this.searchType).setScrollAmount(0);
         });
     }
 
@@ -179,7 +182,7 @@ public class KuGouMusicSearchScreen extends PageScreen {
     }
 
     @Override
-    public void render(DrawContext matrices, int mouseX, int mouseY, float delta) {
+    public void render(MatrixStack matrices, int mouseX, int mouseY, float delta) {
         super.render(matrices, mouseX, mouseY, delta);
         switch (this.searchType) {
             case PLAYLIST -> this.playlistList.render(matrices, mouseX, mouseY, delta);

@@ -1,9 +1,10 @@
 package top.gregtao.concerto.screen.kugou;
 
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.DrawContext;
+import net.minecraft.client.gui.DrawableHelper;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
+import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.Text;
 import top.gregtao.concerto.config.ClientConfig;
 import top.gregtao.concerto.http.kugou.KuGouMusicApiClient;
@@ -52,20 +53,22 @@ public class KuGouMusicIndexScreen extends ConcertoScreen {
 
         if (loggedIn() && isVersionSame()) {
             this.vipStatusWidget = this.addSelectableChild(new ModifiablePressableTextWidget(
-                    0, 0, 0, 0,
+                    0, 0, 0, textRenderer.fontHeight,
                     Text.empty(),
                     button -> {
-                        // 更新 VIP 状态
-                        KuGouMusicUser localUser = KuGouMusicApiClient.LOCAL_USER;
-                        if (localUser.isLoggedIn() && localUser.isVersionSame()) {
-                            Text tip;
-                            if (localUser.updateVIPStatus()) {
-                                tip = Text.translatable("concerto.screen.kugou.vip.update_success");
-                            } else {
-                                tip = Text.translatable("concerto.screen.kugou.vip.update_failed");
+                        ConcertoRunner.run(() -> {
+                            // 更新 VIP 状态
+                            KuGouMusicUser localUser = KuGouMusicApiClient.LOCAL_USER;
+                            if (localUser.isLoggedIn() && localUser.isVersionSame()) {
+                                Text tip;
+                                if (localUser.updateVIPStatus()) {
+                                    tip = Text.translatable("concerto.screen.kugou.vip.update_success");
+                                } else {
+                                    tip = Text.translatable("concerto.screen.kugou.vip.update_failed");
+                                }
+                                displayAlert(tip);
                             }
-                            displayAlert(tip);
-                        }
+                        });
                     },
                     textRenderer
             ));
@@ -81,11 +84,11 @@ public class KuGouMusicIndexScreen extends ConcertoScreen {
     }
 
     @Override
-    public void render(DrawContext matrices, int mouseX, int mouseY, float delta) {
+    public void render(MatrixStack matrices, int mouseX, int mouseY, float delta) {
         super.render(matrices, mouseX, mouseY, delta);
         Text text = this.loggedIn() ? Text.translatable("concerto.screen.kugou.welcome", KuGouMusicApiClient.LOCAL_USER.getUserName()) :
                 Text.translatable("concerto.screen.kugou.not_login");
-        matrices.drawCenteredTextWithShadow(this.textRenderer, text, this.width / 2, 90, 0xffffffff);
+        DrawableHelper.drawCenteredTextWithShadow(matrices, this.textRenderer, text, this.width / 2, 90, 0xffffffff);
 
         if (this.loggedIn()) {
             boolean isVersionSame = isVersionSame();
@@ -107,7 +110,7 @@ public class KuGouMusicIndexScreen extends ConcertoScreen {
                 if (vipLevel != KuGouMusicUser.VIPLevel.NONE && vipExpireTime != null) {
                     Text expireTime = Text.translatable("concerto.screen.kugou.vip.expire_time", KuGouMusicUser.FORMATTER.format(vipExpireTime));
                     bottom -= fontHeight;
-                    matrices.drawText(this.textRenderer, expireTime, x, bottom, 0xffffffff, true);
+                    DrawableHelper.drawTextWithShadow(matrices, this.textRenderer, expireTime, x, bottom, 0xffffffff);
                     bottom -= 1;
                 }
 
@@ -124,9 +127,9 @@ public class KuGouMusicIndexScreen extends ConcertoScreen {
                 bottom -= 1;
             }
 
-            matrices.drawText(this.textRenderer, versionStatus, x, bottom - fontHeight, isVersionSame ? 5635925 : 16733525, true);
-            matrices.drawText(this.textRenderer, apiVersion, x, bottom - fontHeight * 2 - 1, 0xffffffff, true);
-            matrices.drawText(this.textRenderer, currentVersion, x, bottom - fontHeight * 3 - 2, 0xffffffff, true);
+            DrawableHelper.drawTextWithShadow(matrices, this.textRenderer, versionStatus, x, bottom - fontHeight, isVersionSame ? 5635925 : 16733525);
+            DrawableHelper.drawTextWithShadow(matrices, this.textRenderer, apiVersion, x, bottom - fontHeight * 2 - 1, 0xffffffff);
+            DrawableHelper.drawTextWithShadow(matrices, this.textRenderer, currentVersion, x, bottom - fontHeight * 3 - 2, 0xffffffff);
         }
 
         this.avatar.render(matrices, mouseX, mouseY, delta);

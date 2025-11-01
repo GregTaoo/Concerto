@@ -21,7 +21,7 @@ public class ModifiablePressableTextWidget extends PressableTextWidget {
     }
 
     @Override
-    public void renderWidget(DrawContext context, int mouseX, int mouseY, float deltaTicks) {
+    public void renderButton(DrawContext context, int mouseX, int mouseY, float delta) {
         Text text = this.isSelected() ? this.hoverText : this.text;
         context.drawTextWithShadow(this.textRenderer, text, this.getX(), this.getY(), 16777215 | MathHelper.ceil(this.alpha * 255.0F) << 24);
     }
@@ -30,6 +30,5 @@ public class ModifiablePressableTextWidget extends PressableTextWidget {
         this.text = text;
         this.hoverText = Texts.setStyleIfAbsent(text.copy(), Style.EMPTY.withUnderline(true));
         this.setWidth(this.textRenderer.getWidth(text));
-        this.setHeight(this.textRenderer.fontHeight);
     }
 }

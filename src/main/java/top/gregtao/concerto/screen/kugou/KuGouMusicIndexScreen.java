@@ -52,20 +52,22 @@ public class KuGouMusicIndexScreen extends ConcertoScreen {
 
         if (loggedIn() && isVersionSame()) {
             this.vipStatusWidget = this.addSelectableChild(new ModifiablePressableTextWidget(
-                    0, 0, 0, 0,
+                    0, 0, 0, textRenderer.fontHeight,
                     Text.empty(),
                     button -> {
-                        // 更新 VIP 状态
-                        KuGouMusicUser localUser = KuGouMusicApiClient.LOCAL_USER;
-                        if (localUser.isLoggedIn() && localUser.isVersionSame()) {
-                            Text tip;
-                            if (localUser.updateVIPStatus()) {
-                                tip = Text.translatable("concerto.screen.kugou.vip.update_success");
-                            } else {
-                                tip = Text.translatable("concerto.screen.kugou.vip.update_failed");
+                        ConcertoRunner.run(() -> {
+                            // 更新 VIP 状态
+                            KuGouMusicUser localUser = KuGouMusicApiClient.LOCAL_USER;
+                            if (localUser.isLoggedIn() && localUser.isVersionSame()) {
+                                Text tip;
+                                if (localUser.updateVIPStatus()) {
+                                    tip = Text.translatable("concerto.screen.kugou.vip.update_success");
+                                } else {
+                                    tip = Text.translatable("concerto.screen.kugou.vip.update_failed");
+                                }
+                                displayAlert(tip);
                             }
-                            displayAlert(tip);
-                        }
+                        });
                     },
                     textRenderer
             ));

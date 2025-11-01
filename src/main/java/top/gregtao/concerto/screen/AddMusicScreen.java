@@ -25,14 +25,14 @@ public class AddMusicScreen extends ApplyDraggedFileScreen {
     }
 
     private void addLabel(Text text, int centerX, int y, Consumer<String> onClick) {
-        TextFieldWidget widget = new TextFieldWidget(this.textRenderer, centerX - 30, y, 90, 20, text);
+        TextFieldWidget widget = new TextFieldWidget(this.textRenderer, centerX - 15, y, 90, 20, text);
         widget.setMaxLength(1024);
-        TextWidget textWidget = new TextWidget(centerX - 120, y + 2, 90, 20, text, this.textRenderer);
+        TextWidget textWidget = new TextWidget(centerX - 135, y + 2, 120, 20, text, this.textRenderer);
         textWidget.alignLeft();
         this.addDrawableChild(widget);
         this.addDrawableChild(textWidget);
         this.addDrawableChild(ButtonWidget.builder(Text.translatable("concerto.screen.add"),
-                button -> onClick.accept(widget.getText())).position(centerX + 65, y).size(60, 20).build());
+                button -> onClick.accept(widget.getText())).position(centerX + 80, y).size(60, 20).build());
         this.addSelectableChild(widget);
     }
 

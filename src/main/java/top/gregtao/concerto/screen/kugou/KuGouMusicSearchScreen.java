@@ -71,7 +71,7 @@ public class KuGouMusicSearchScreen extends PageScreen {
                 case PLAYLIST -> this.playlistList.reset(KuGouMusicApiClient.INSTANCE.searchPlaylist(keyword, page), null);
                 case ALBUM -> this.albumList.reset(KuGouMusicApiClient.INSTANCE.searchAlbum(keyword, page), null);
             }
-            this.listWidgetsMap.get(this.searchType).setScrollY(0);
+            this.listWidgetsMap.get(this.searchType).setScrollAmount(0);
         });
     }
 

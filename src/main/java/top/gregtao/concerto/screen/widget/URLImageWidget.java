@@ -159,10 +159,13 @@ public class URLImageWidget implements Drawable, Widget, AutoCloseable {
     }
 
     private void uploadImage(BufferedImage image, Runnable callback) {
+        // ImageIO.write() 是耗时操作, 会卡住渲染线程
+        NativeImage nativeImage = toNativeImage(image);
         MinecraftClient.getInstance().submit(() -> {
-            if (this.texture != null)
-              MinecraftClient.getInstance().getTextureManager().destroyTexture(this.textureId);
-            this.texture = new NativeImageBackedTexture(toNativeImage(image));
+            if (this.texture != null) {
+                MinecraftClient.getInstance().getTextureManager().destroyTexture(this.textureId);
+            }
+            this.texture = new NativeImageBackedTexture(nativeImage);
             MinecraftClient.getInstance().getTextureManager().registerTexture(this.textureId, this.texture);
         }).thenRun(callback);
     }

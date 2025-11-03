@@ -5,8 +5,7 @@ import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.gui.widget.CyclingButtonWidget;
 import net.minecraft.client.gui.widget.TextFieldWidget;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.text.Text;
+import net.minecraft.text.TranslatableText;
 import org.lwjgl.glfw.GLFW;
 import top.gregtao.concerto.ConcertoClient;
 import top.gregtao.concerto.api.WithMetaData;
@@ -33,11 +32,12 @@ public class KuGouMusicSearchScreen extends PageScreen {
     private MetadataListWidget<KuGouMusicPlaylist> albumList;
     private Map<SearchType, ConcertoListWidget<?>> listWidgetsMap = new HashMap<>();
     protected TextFieldWidget searchBox;
-    private ButtonWidget infoButton;
+    private ButtonWidget infoButton, searchButton, playButton, addButton;
+    private CyclingButtonWidget<SearchType> typeButton;
     private SearchType searchType = SearchType.MUSIC;
 
     private <T extends WithMetaData> MetadataListWidget<T> initListsWidget() {
-        MetadataListWidget<T> widget = new MetadataListWidget<>(this.width, this.height, 38, this.height - 35, 18) {
+        return new MetadataListWidget<>(KuGouMusicSearchScreen.this.width, KuGouMusicSearchScreen.this.height, 45, KuGouMusicSearchScreen.this.height - 35, 18) {
             @Override
             public void onDoubleClicked(ConcertoListWidget<T>.Entry entry) {
                 try {
@@ -56,13 +56,10 @@ public class KuGouMusicSearchScreen extends PageScreen {
                 }
             }
         };
-        widget.setRenderBackground(false);
-        widget.setRenderHorizontalShadows(false);
-        return widget;
     }
 
     public KuGouMusicSearchScreen(Screen parent) {
-        super(Text.translatable("concerto.screen.search.kugou"), parent);
+        super(new TranslatableText("concerto.screen.search.kugou"), parent);
     }
 
     private void search(String keyword, int page) {
@@ -87,10 +84,31 @@ public class KuGouMusicSearchScreen extends PageScreen {
         try {
             this.remove(this.listWidgetsMap.get(this.searchType));
         } catch (NullPointerException ignored) {}
-        this.addSelectableChild(this.listWidgetsMap.get(type));
+        this.addDrawableChild(this.listWidgetsMap.get(type));
+        this.refreshDrawable();
         this.searchType = type;
         this.infoButton.active = type == SearchType.MUSIC;
         this.toggleSearch();
+    }
+
+    @Override
+    public void refreshDrawable() {
+        try {
+            super.refreshDrawable();
+            this.remove(this.searchBox);
+            this.addDrawableChild(this.searchBox);
+            this.addSelectableChild(this.searchBox);
+            this.remove(this.infoButton);
+            this.addDrawableChild(this.infoButton);
+            this.remove(this.searchButton);
+            this.addDrawableChild(this.searchButton);
+            this.remove(this.typeButton);
+            this.addDrawableChild(this.typeButton);
+            this.remove(this.playButton);
+            this.addDrawableChild(this.playButton);
+            this.remove(this.addButton);
+            this.addDrawableChild(this.addButton);
+        } catch (NullPointerException ignored) {}
     }
 
     @Override
@@ -112,29 +130,24 @@ public class KuGouMusicSearchScreen extends PageScreen {
         );
 
         this.searchBox = new TextFieldWidget(this.textRenderer, this.width / 2 - 155, 17, 200, 20,
-                this.searchBox, Text.translatable("concerto.screen.search"));
-        this.addSelectableChild(this.searchBox);
-        this.addDrawableChild(this.searchBox);
+                this.searchBox, new TranslatableText("concerto.screen.search"));
         this.searchBox.setText(DEFAULT_KEYWORD);
 
-        this.infoButton = ButtonWidget.builder(Text.translatable("concerto.screen.info"), button -> {
+        this.infoButton = new ButtonWidget(this.width / 2 + 120, this.height - 30, 50, 20, new TranslatableText("concerto.screen.info"), button -> {
             ConcertoListWidget<Music>.Entry entry = this.musicList.getSelectedOrNull();
             if (entry != null) {
                 MinecraftClient.getInstance().setScreen(new MusicInfoScreen(entry.item, this));
             }
-        }).position(this.width / 2 + 120, this.height - 30).size(50, 20).build();
-        this.addDrawableChild(this.infoButton);
+        });
 
-        this.updateSearchType(this.searchType);
+        this.searchButton = new ButtonWidget(this.width / 2 + 50, 17, 52, 20, new TranslatableText("concerto.screen.search"),
+                button -> this.toggleSearch());
 
-        this.addDrawableChild(ButtonWidget.builder(Text.translatable("concerto.screen.search"),
-                button -> this.toggleSearch()).position(this.width / 2 + 50, 17).size(52, 20).build());
+        this.typeButton = CyclingButtonWidget.builder(SearchType::getName).values(SearchType.values()).initially(this.searchType).build(
+                this.width / 2 + 105, 17, 65, 20, new TranslatableText("concerto.search_type"),
+                (widget, type) -> this.updateSearchType(type));
 
-        this.addDrawableChild(CyclingButtonWidget.builder(SearchType::getName).values(SearchType.values()).initially(this.searchType).build(
-                this.width / 2 + 105, 17, 65, 20, Text.translatable("concerto.search_type"),
-                (widget, type) -> this.updateSearchType(type)));
-
-        this.addDrawableChild(ButtonWidget.builder(Text.translatable("concerto.screen.play"), button -> {
+        this.playButton = new ButtonWidget(this.width / 2 + 65, this.height - 30, 50, 20, new TranslatableText("concerto.screen.play"), button -> {
             switch (this.searchType) {
                 case MUSIC: {
                     ConcertoListWidget<Music>.Entry entry = this.musicList.getSelectedOrNull();
@@ -155,9 +168,9 @@ public class KuGouMusicSearchScreen extends PageScreen {
                     }
                 }
             }
-        }).position(this.width / 2 + 65, this.height - 30).size(50, 20).build());
+        });
 
-        this.addDrawableChild(ButtonWidget.builder(Text.translatable("concerto.screen.add"), button -> {
+        this.addButton = new ButtonWidget(this.width / 2 + 10, this.height - 30, 50, 20, new TranslatableText("concerto.screen.add"), button -> {
             switch (this.searchType) {
                 case MUSIC: {
                     ConcertoListWidget<Music>.Entry entry = this.musicList.getSelectedOrNull();
@@ -178,17 +191,8 @@ public class KuGouMusicSearchScreen extends PageScreen {
                     }
                 }
             }
-        }).position(this.width / 2 + 10, this.height - 30).size(50, 20).build());
-    }
-
-    @Override
-    public void render(MatrixStack matrices, int mouseX, int mouseY, float delta) {
-        super.render(matrices, mouseX, mouseY, delta);
-        switch (this.searchType) {
-            case PLAYLIST -> this.playlistList.render(matrices, mouseX, mouseY, delta);
-            case MUSIC -> this.musicList.render(matrices, mouseX, mouseY, delta);
-            case ALBUM -> this.albumList.render(matrices, mouseX, mouseY, delta);
-        }
+        });
+        this.updateSearchType(this.searchType);
     }
 
     @Override
@@ -196,7 +200,7 @@ public class KuGouMusicSearchScreen extends PageScreen {
         if (super.keyPressed(keyCode, scanCode, modifiers)) {
             return true;
         }
-        if (keyCode == GLFW.GLFW_KEY_ENTER && this.searchBox.isSelected()) {
+        if (keyCode == GLFW.GLFW_KEY_ENTER && this.searchBox.isActive()) {
             this.toggleSearch();
             return true;
         }

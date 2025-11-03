@@ -126,7 +126,7 @@ public class KuGouMusicIndexScreen extends ConcertoScreen {
                 bottom -= 1;
             }
 
-            matrices.drawText(this.textRenderer, versionStatus, x, bottom - fontHeight, isVersionSame ? 5635925 : 16733525, true);
+            matrices.drawText(this.textRenderer, versionStatus, x, bottom - fontHeight, isVersionSame ? 0xff55ff55 : 0xffff5555, true);
             matrices.drawText(this.textRenderer, apiVersion, x, bottom - fontHeight * 2 - 1, 0xffffffff, true);
             matrices.drawText(this.textRenderer, currentVersion, x, bottom - fontHeight * 3 - 2, 0xffffffff, true);
         }

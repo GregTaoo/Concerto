@@ -5,7 +5,9 @@ import net.minecraft.client.gui.DrawableHelper;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.text.LiteralText;
 import net.minecraft.text.Text;
+import net.minecraft.text.TranslatableText;
 import top.gregtao.concerto.config.ClientConfig;
 import top.gregtao.concerto.http.kugou.KuGouMusicApiClient;
 import top.gregtao.concerto.http.kugou.KuGouMusicUser;
@@ -25,18 +27,18 @@ public class KuGouMusicIndexScreen extends ConcertoScreen {
     private ModifiablePressableTextWidget vipStatusWidget;
 
     public KuGouMusicIndexScreen(Screen parent) {
-        super(Text.translatable("concerto.screen.index.kugou"), parent);
+        super(new TranslatableText("concerto.screen.index.kugou"), parent);
     }
 
     @Override
     protected void init() {
         super.init();
-        this.addDrawableChild(ButtonWidget.builder(Text.translatable("concerto.screen.user"),
-                button -> MinecraftClient.getInstance().setScreen(new KuGouMusicUserScreen(this))
-        ).size(100, 20).position(this.width / 2 - 50, 40).build());
-        this.addDrawableChild(ButtonWidget.builder(Text.translatable("concerto.screen.search"),
-                button -> MinecraftClient.getInstance().setScreen(new KuGouMusicSearchScreen(this))
-        ).size(100, 20).position(this.width / 2 - 50, 65).build());
+        this.addButton(new ButtonWidget(this.width / 2 - 50, 40, 100, 20, new TranslatableText("concerto.screen.user"),
+                button -> MinecraftClient.getInstance().openScreen(new KuGouMusicUserScreen(this))
+        ));
+        this.addButton(new ButtonWidget(this.width / 2 - 50, 65, 100, 20, new TranslatableText("concerto.screen.search"),
+                button -> MinecraftClient.getInstance().openScreen(new KuGouMusicSearchScreen(this))
+        ));
 
         URL avatarUrl;
         try {
@@ -52,9 +54,9 @@ public class KuGouMusicIndexScreen extends ConcertoScreen {
         });
 
         if (loggedIn() && isVersionSame()) {
-            this.vipStatusWidget = this.addSelectableChild(new ModifiablePressableTextWidget(
+            this.vipStatusWidget = this.addButton(new ModifiablePressableTextWidget(
                     0, 0, 0, textRenderer.fontHeight,
-                    Text.empty(),
+                    LiteralText.EMPTY,
                     button -> {
                         ConcertoRunner.run(() -> {
                             // 更新 VIP 状态
@@ -62,9 +64,9 @@ public class KuGouMusicIndexScreen extends ConcertoScreen {
                             if (localUser.isLoggedIn() && localUser.isVersionSame()) {
                                 Text tip;
                                 if (localUser.updateVIPStatus()) {
-                                    tip = Text.translatable("concerto.screen.kugou.vip.update_success");
+                                    tip = new TranslatableText("concerto.screen.kugou.vip.update_success");
                                 } else {
-                                    tip = Text.translatable("concerto.screen.kugou.vip.update_failed");
+                                    tip = new TranslatableText("concerto.screen.kugou.vip.update_failed");
                                 }
                                 displayAlert(tip);
                             }
@@ -86,9 +88,9 @@ public class KuGouMusicIndexScreen extends ConcertoScreen {
     @Override
     public void render(MatrixStack matrices, int mouseX, int mouseY, float delta) {
         super.render(matrices, mouseX, mouseY, delta);
-        Text text = this.loggedIn() ? Text.translatable("concerto.screen.kugou.welcome", KuGouMusicApiClient.LOCAL_USER.getUserName()) :
-                Text.translatable("concerto.screen.kugou.not_login");
-        DrawableHelper.drawCenteredTextWithShadow(matrices, this.textRenderer, text, this.width / 2, 90, 0xffffffff);
+        Text text = this.loggedIn() ? new TranslatableText("concerto.screen.kugou.welcome", KuGouMusicApiClient.LOCAL_USER.getUserName()) :
+                new TranslatableText("concerto.screen.kugou.not_login");
+        ConcertoScreen.drawCenteredTextWithShadow(matrices, this.textRenderer, text.asOrderedText(), this.width / 2, 90, 0xffffffff);
 
         if (this.loggedIn()) {
             boolean isVersionSame = isVersionSame();
@@ -96,11 +98,11 @@ public class KuGouMusicIndexScreen extends ConcertoScreen {
             int x = 5;
             int bottom = this.height - 5;
 
-            Text currentVersion = Text.translatable("concerto.screen.kugou.version.current", getVersionName(KuGouMusicApiClient.LOCAL_USER.isLite()));
-            Text apiVersion = Text.translatable("concerto.screen.kugou.version.options", getVersionName(ClientConfig.INSTANCE.options.kuGouMusicLite));
+            Text currentVersion = new TranslatableText("concerto.screen.kugou.version.current", getVersionName(KuGouMusicApiClient.LOCAL_USER.isLite()));
+            Text apiVersion = new TranslatableText("concerto.screen.kugou.version.options", getVersionName(ClientConfig.INSTANCE.options.kuGouMusicLite));
             Text versionStatus = isVersionSame ?
-                    Text.translatable("concerto.screen.kugou.version.correct") :
-                    Text.translatable("concerto.screen.kugou.version.warning");
+                    new TranslatableText("concerto.screen.kugou.version.correct") :
+                    new TranslatableText("concerto.screen.kugou.version.warning");
 
             // 避免 VIP 适用平台歧义, 只有版本匹配时才显示
             if (isVersionSame) {
@@ -108,19 +110,19 @@ public class KuGouMusicIndexScreen extends ConcertoScreen {
 
                 LocalDateTime vipExpireTime = KuGouMusicApiClient.LOCAL_USER.getVipExpireTime();
                 if (vipLevel != KuGouMusicUser.VIPLevel.NONE && vipExpireTime != null) {
-                    Text expireTime = Text.translatable("concerto.screen.kugou.vip.expire_time", KuGouMusicUser.FORMATTER.format(vipExpireTime));
+                    Text expireTime = new TranslatableText("concerto.screen.kugou.vip.expire_time", KuGouMusicUser.FORMATTER.format(vipExpireTime));
                     bottom -= fontHeight;
                     DrawableHelper.drawTextWithShadow(matrices, this.textRenderer, expireTime, x, bottom, 0xffffffff);
                     bottom -= 1;
                 }
 
                 String levelPrefix = "concerto.screen.kugou.vip.level.";
-                String  levelText = Text.translatable(levelPrefix + vipLevel.name().toLowerCase()).getString();
-                Text vipStatus = Text.translatable("concerto.screen.kugou.vip.vip_level", levelText);
+                String  levelText = new TranslatableText(levelPrefix + vipLevel.name().toLowerCase()).getString();
+                Text vipStatus = new TranslatableText("concerto.screen.kugou.vip.vip_level", levelText);
                 bottom -= fontHeight;
                 if (vipStatusWidget != null) {
-                    vipStatusWidget.setX(x);
-                    vipStatusWidget.setY(bottom);
+                    vipStatusWidget.x = x;
+                    vipStatusWidget.y = bottom;
                     vipStatusWidget.setText(vipStatus);
                     vipStatusWidget.render(matrices, mouseX, mouseY, delta);
                 }
@@ -136,6 +138,6 @@ public class KuGouMusicIndexScreen extends ConcertoScreen {
     }
 
     public String getVersionName(boolean isLite) {
-        return Text.translatable("concerto.screen.kugou.version." + (isLite ? "lite" : "normal")).getString();
+        return new TranslatableText("concerto.screen.kugou.version." + (isLite ? "lite" : "normal")).getString();
     }
 }

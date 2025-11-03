@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 public class KuGouMusicPlaylist extends Playlist {
 
@@ -101,7 +102,7 @@ public class KuGouMusicPlaylist extends Playlist {
                         // getAlbumDetail 接口
                         json -> json.getAsJsonArray("authors")
                 )
-                .map(arr -> arr.asList().stream())
+                .map(arr -> StreamSupport.stream(arr.spliterator(), false))
                 // 作者/歌手列表中字段不一样, 需要分别处理
                 .map(stream -> stream
                         .map(JsonElement::getAsJsonObject)

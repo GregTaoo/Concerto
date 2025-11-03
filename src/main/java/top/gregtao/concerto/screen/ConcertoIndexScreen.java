@@ -11,6 +11,7 @@ import net.minecraft.util.Util;
 import top.gregtao.concerto.ConcertoClient;
 import top.gregtao.concerto.config.PresetPlaylistsConfig;
 import top.gregtao.concerto.network.room.MusicRoom;
+import top.gregtao.concerto.screen.kugou.KuGouMusicIndexScreen;
 import top.gregtao.concerto.screen.qq.QQMusicIndexScreen;
 import top.gregtao.concerto.screen.netease.NeteaseCloudIndexScreen;
 import top.gregtao.concerto.screen.widget.PressableTextWidget;
@@ -49,6 +50,10 @@ public class ConcertoIndexScreen extends ConcertoScreen {
                 button -> MinecraftClient.getInstance().openScreen(new QQMusicIndexScreen(this))
         ));
 
+        this.addButton(new ButtonWidget(this.width / 2 - 120, 110, 115, 20, new TranslatableText("concerto.screen.index.kugou"),
+                button -> MinecraftClient.getInstance().openScreen(new KuGouMusicIndexScreen(this))
+        ));
+
         ButtonWidget widget1 = new ButtonWidget(this.width / 2 + 5, 80, 115, 20, new TranslatableText("concerto.screen.preset_radios"),
                 button -> MinecraftClient.getInstance().openScreen(new PresetRadiosScreen(this))
         );
@@ -57,7 +62,7 @@ public class ConcertoIndexScreen extends ConcertoScreen {
             widget1.active = false;
         }
 
-        this.addButton(new ButtonWidget(this.width / 2 - 120, 110, 115, 20, new TranslatableText("concerto.screen.add"),
+        this.addButton(new ButtonWidget(this.width / 2 - 120, 140, 115, 20, new TranslatableText("concerto.screen.add"),
                 button -> MinecraftClient.getInstance().openScreen(new AddMusicScreen(this)))
         );
 
@@ -70,7 +75,7 @@ public class ConcertoIndexScreen extends ConcertoScreen {
                 button -> Util.getOperatingSystem().open("https://github.com/GregTaoo/Concerto/issues")
         ));
 
-        this.addButton(new ButtonWidget(this.width / 2 - 120, 140, 115, 20, new TranslatableText("concerto.screen.options"),
+        this.addButton(new ButtonWidget(this.width / 2 - 120, 170, 115, 20, new TranslatableText("concerto.screen.options"),
                 button -> MinecraftClient.getInstance().openScreen(new ConcertoOptionsScreen(this))
         ));
 
@@ -81,7 +86,7 @@ public class ConcertoIndexScreen extends ConcertoScreen {
                     Text text = new TranslatableText("concerto.screen.in_music_room", uuid);
                     int width = this.textRenderer.getWidth(text);
                     this.addButton(new PressableTextWidget(
-                        (this.width - width) / 2, 185, width,
+                        (this.width - width) / 2, 215, width,
                         this.textRenderer.fontHeight, text,
                         button -> this.client.keyboard.setClipboard(uuid),
                         this.textRenderer
@@ -91,7 +96,7 @@ public class ConcertoIndexScreen extends ConcertoScreen {
                     Text text = new TranslatableText("concerto.screen.in_music_agent");
                     int width = this.textRenderer.getWidth(text);
                     this.addButton(new TextWidget(
-                        (this.width - width) / 2, 185, width,
+                        (this.width - width) / 2, 215, width,
                         this.textRenderer.fontHeight, text,
                         this.textRenderer
                     ));
@@ -107,7 +112,7 @@ public class ConcertoIndexScreen extends ConcertoScreen {
             ConcertoScreen.drawCenteredTextWithShadow(
                 matrices, this.textRenderer,
                 new TranslatableText("concerto.screen.in_which_room").asOrderedText(),
-                this.width / 2, 170, 0xffffffff
+                this.width / 2, 200, 0xffffffff
             );
         }
     }

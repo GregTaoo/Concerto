@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 public class KuGouMusicUser {
 
@@ -191,7 +192,7 @@ public class KuGouMusicUser {
 
         return optional.map(json -> json.getAsJsonObject("data"))
                 .map(data -> data.getAsJsonArray("info"))
-                .map(info -> info.asList().stream()
+                .map(info -> StreamSupport.stream(info.spliterator(), false)
                         .map(element -> new KuGouMusicPlaylist(element.getAsJsonObject(), false, true))
                         .collect(Collectors.toList())
                 )

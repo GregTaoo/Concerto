@@ -23,8 +23,8 @@ public class ModifiablePressableTextWidget extends PressableTextWidget {
 
     @Override
     public void renderButton(MatrixStack matrixStack, int mouseX, int mouseY, float deltaTicks) {
-        Text text = this.isSelected() ? this.hoverText : this.text;
-        DrawableHelper.drawTextWithShadow(matrixStack, this.textRenderer, text, this.getX(), this.getY(), 16777215 | MathHelper.ceil(this.alpha * 255.0F) << 24);
+        Text text = this.isHovered() ? this.hoverText : this.text;
+        DrawableHelper.drawTextWithShadow(matrixStack, this.textRenderer, text, this.x, this.y, 16777215 | MathHelper.ceil(this.alpha * 255.0F) << 24);
     }
 
     public void setText(Text text) {

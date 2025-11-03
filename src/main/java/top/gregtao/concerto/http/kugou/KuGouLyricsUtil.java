@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 public class KuGouLyricsUtil {
     public static Pair<String, String> krcToLrc(String krc) {
@@ -74,7 +75,7 @@ public class KuGouLyricsUtil {
 
         return Optional.ofNullable(jsonObject)
                 .map(obj -> obj.getAsJsonArray("content"))
-                .flatMap(arr -> arr.asList().stream()
+                .flatMap(arr -> StreamSupport.stream(arr.spliterator(), false)
                         .filter(el -> Optional.ofNullable(el.getAsJsonObject())
                                 .map(object -> object.get("type"))
                                 .map(type -> type.getAsInt() == 1)
@@ -84,7 +85,7 @@ public class KuGouLyricsUtil {
                 )
                 .map(JsonElement::getAsJsonObject)
                 .map(lyric -> lyric.getAsJsonArray("lyricContent"))
-                .map(arr -> arr.asList().stream()
+                .map(arr -> StreamSupport.stream(arr.spliterator(), false)
                         .map(JsonElement::getAsJsonArray)
                         .map(timeAndLyric -> timeAndLyric.isEmpty() ? "" : timeAndLyric.get(0).getAsString())
                         .collect(Collectors.toList())

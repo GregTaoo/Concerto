@@ -22,6 +22,7 @@ import java.io.InputStream;
 import java.net.URI;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 public class KuGouMusic extends Music implements CacheableMusic, DynamicPath {
 
@@ -167,8 +168,7 @@ public class KuGouMusic extends Music implements CacheableMusic, DynamicPath {
 
     public Pair<String, String> getBestLyric(JsonArray jsonArray) {
         if (jsonArray.isEmpty()) return null;
-        List<JsonElement> list = jsonArray.asList();
-        for (JsonElement jsonElement : list) {
+        for (JsonElement jsonElement : jsonArray) {
             Optional<JsonObject> object = Optional.of(jsonElement.getAsJsonObject());
             Optional<Integer> contentFormat = object.map(obj -> obj.get("content_format"))
                     .map(JsonElement::getAsInt);
@@ -186,7 +186,7 @@ public class KuGouMusic extends Music implements CacheableMusic, DynamicPath {
             }
         }
 
-        Optional<JsonObject> object = Optional.ofNullable(list.get(0))
+        Optional<JsonObject> object = Optional.ofNullable(jsonArray.get(0))
                 .map(JsonElement::getAsJsonObject);
         String id = object.map(obj -> obj.get("id"))
                 .map(JsonElement::getAsString)
@@ -306,7 +306,7 @@ public class KuGouMusic extends Music implements CacheableMusic, DynamicPath {
     private static Optional<List<String>> getAuthorsList(JsonObject jsonObject) {
         return Optional.ofNullable(jsonObject)
                 .map(json -> json.getAsJsonArray("authors"))
-                .map(arr -> arr.asList().stream()
+                .map(arr -> StreamSupport.stream(arr.spliterator(), false)
                         .map(JsonElement::getAsJsonObject)
                         .map(Optional::of)
                         .map(authorOpt -> Optionals
@@ -366,7 +366,7 @@ public class KuGouMusic extends Music implements CacheableMusic, DynamicPath {
                     .map(JsonElement::getAsJsonArray)
                     .map(arr ->
                             // 提取歌手名称
-                            arr.asList().stream()
+                            StreamSupport.stream(arr.spliterator(), false)
                                     .map(JsonElement::getAsJsonObject)
                                     .map(json -> json.get("name"))
                                     .filter(Objects::nonNull)

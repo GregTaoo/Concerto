@@ -29,5 +29,6 @@ public class ServerConfig extends ConfigFile {
         public int musicRoomCommandPermission = 2;
         public int musicAgentAddTimeLimit = 60;
         public boolean musicAgentUseShared = true;
+        public boolean kuGouMusicLite = false;
     }
 }

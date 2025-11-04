@@ -2,6 +2,7 @@
   "concerto.source.netease_cloud": "网易云",
   "concerto.source.qq_music": "QQ音乐",
   "concerto.source.bilibili": "哔哩哔哩",
+  "concerto.source.kugou_music": "酷狗音乐",
   "concerto.source.local_file": "本地文件",
   "concerto.source.internet": "网络资源",
 
@@ -98,6 +99,10 @@
   "concerto.screen.confirmation": "接受音乐分享",
   "concerto.screen.audition.permission_denied": "你没有权限",
   "concerto.screen.daily_recommendation": "每日推荐",
+  "concerto.screen.daily_vip": "领取每日VIP",
+  "concerto.screen.daily_vip.success": "领取今日 VIP 成功！",
+  "concerto.screen.daily_vip.duplicate": "今日已领取过 VIP！",
+  "concerto.screen.daily_vip.failed": "领取今日 VIP 失败！",
 
   "concerto.screen.add.local_file": "本地文件:",
   "concerto.screen.add.local_file.folder": "本地文件夹:",
@@ -106,6 +111,7 @@
   "concerto.screen.add.netease_cloud.playlist": "网易云歌单:",
   "concerto.screen.add.netease_cloud.album": "网易云专辑:",
   "concerto.screen.add.qq": "QQ音乐（MID）:",
+  "concerto.screen.add.kugou": "酷狗音乐（EMixSongID）:",
   "concerto.screen.add.bilibili": "B站（BV号）",
 
   "concerto.screen.login": "登录到: ",
@@ -132,11 +138,30 @@
   "concerto.screen.search.163": "网易云音乐 搜索",
   "concerto.screen.index.qq": "QQ音乐 索引",
   "concerto.screen.search.qq": "QQ音乐 搜索",
+  "concerto.screen.index.kugou": "酷狗音乐 索引",
+  "concerto.screen.search.kugou": "酷狗音乐 搜索",
   "concerto.screen.user": "用户",
   "concerto.screen.163.welcome": "%s 您好！欢迎使用网易云音乐",
   "concerto.screen.163.not_login": "你尚未登录网易云音乐账户",
   "concerto.screen.qq.welcome": "%s 您好！欢迎使用QQ音乐",
   "concerto.screen.qq.not_login": "你尚未登录QQ音乐账户",
+  "concerto.screen.kugou.welcome": "%s 您好！欢迎使用酷狗音乐",
+  "concerto.screen.kugou.not_login": "你尚未登录酷狗音乐账户",
+  "concerto.screen.kugou.version.correct": "版本已匹配！",
+  "concerto.screen.kugou.version.warning": "版本不匹配！请重新登录或修改配置中的接口版本！",
+  "concerto.screen.kugou.version.normal": "普通版",
+  "concerto.screen.kugou.version.lite": "概念版",
+  "concerto.screen.kugou.version.current": "当前用户版本: %s",
+  "concerto.screen.kugou.version.options": "接口版本: %s",
+  "concerto.screen.kugou.vip.vip_level": "VIP 等级: %s (点击刷新)",
+  "concerto.screen.kugou.vip.expire_time": "VIP 到期时间: %s",
+  "concerto.screen.kugou.vip.update_success": "VIP 状态更新成功！",
+  "concerto.screen.kugou.vip.update_failed": "VIP 状态更新失败！",
+  "concerto.screen.kugou.vip.level.none": "无 VIP 或 VIP 已过期",
+  "concerto.screen.kugou.vip.level.vip": "豪华 VIP",
+  "concerto.screen.kugou.vip.level.s_vip": "超级 VIP",
+  "concerto.screen.kugou.vip.level.busi_s_vip": "概念版 VIP",
+  "concerto.screen.kugou.vip.level.busi_t_vip": "畅听 VIP",
   "concerto.screen.login.type.qrcode.qq": "QQ 二维码登录",
   "concerto.screen.login.type.qrcode.wechat": "微信 二维码登录",
   "concerto.screen.general_list": "全局歌单",
@@ -181,6 +206,10 @@
   "concerto.login.163.failed.501": "该手机号码尚未被注册",
   "concerto.login.163.failed.502": "密码或手机号/邮箱错误",
   "concerto.login.163.failed.503": "验证码错误",
+
+  "concerto.login.kugou.success": "成功登录了酷狗音乐",
+  "concerto.login.kugou.failed": "登录失败",
+  "concerto.login.kugou.error": "尝试登录时发生错误",
 
   "concerto.hotkey": "Concerto 热键",
   "concerto.hotkey.general_music_list": "打开全局歌单",
@@ -275,5 +304,8 @@
   "concerto.options.align": "%s: %s",
   "concerto.options.align.left": "左",
   "concerto.options.align.center": "中",
-  "concerto.options.align.right": "右"
+  "concerto.options.align.right": "右",
+
+  "concerto.options.kugouIsLite": "使用酷狗概念版接口",
+  "concerto.options.autoGetKuGouDailyVIP": "自动领取酷狗每日VIP"
 }

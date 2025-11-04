@@ -12,6 +12,7 @@ import net.minecraft.text.TranslatableText;
 import net.minecraft.util.Formatting;
 import top.gregtao.concerto.ConcertoServer;
 import top.gregtao.concerto.config.CacheManager;
+import top.gregtao.concerto.http.kugou.KuGouMusicApiClient;
 import top.gregtao.concerto.http.netease.NeteaseCloudApiClient;
 import top.gregtao.concerto.http.qq.QQMusicApiClient;
 import top.gregtao.concerto.network.MusicDataPacket;
@@ -82,6 +83,7 @@ public class ConcertoServerCommand {
                                 .executes(context -> {
                                     NeteaseCloudApiClient.INSTANCE.readCookie();
                                     QQMusicApiClient.INSTANCE.readCookie();
+                                    KuGouMusicApiClient.INSTANCE.readCookie();
                                     return 0;
                                 })
                 ).then(

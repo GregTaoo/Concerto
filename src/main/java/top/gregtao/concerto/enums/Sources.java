@@ -9,6 +9,7 @@ public enum Sources implements SimpleStringIdentifiable {
     INTERNET,
     NETEASE_CLOUD,
     QQ_MUSIC,
+    KUGOU_MUSIC,
     BILIBILI,
     SHARED
     ;

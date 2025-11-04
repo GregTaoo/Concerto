@@ -126,6 +126,18 @@ public class ConcertoOptions {
                 value -> this.config.options.coverImgRotate = value,
                 () -> this.config.options.coverImgRotate
         ));
+
+        this.updaters.add(new SingleBooleanOption(
+                "kugouIsLite",
+                value -> this.config.options.kuGouMusicLite = value,
+                () -> this.config.options.kuGouMusicLite
+        ));
+
+        this.updaters.add(new SingleBooleanOption(
+                "autoGetKuGouDailyVIP",
+                value -> this.config.options.autoGetKuGouDailyVIP = value,
+                () -> this.config.options.autoGetKuGouDailyVIP
+        ));
     }
 
     public SimpleOption<?>[] getOptions() {

@@ -1,6 +1,7 @@
 {
   "concerto.source.netease_cloud": "Netease Cloud",
   "concerto.source.qq_music": "QQ Music",
+  "concerto.source.kugou_music": "KuGou Music",
   "concerto.source.bilibili": "Bilibili",
   "concerto.source.local_file": "Local File",
   "concerto.source.internet": "Internet Resources",
@@ -99,6 +100,10 @@
   "concerto.screen.audition.permission_denied": "You don't have such permissions",
   "concerto.screen.daily_recommendation": "Daily Recommendation",
   "concerto.screen.copy_link": "Copy link",
+  "concerto.screen.daily_vip": "Daily VIP",
+  "concerto.screen.daily_vip.success": "Successfully got Daily VIP!",
+  "concerto.screen.daily_vip.duplicate": "You've got Daily VIP today!",
+  "concerto.screen.daily_vip.failed": "Failed to get Daily VIP!",
 
   "concerto.screen.add.local_file": "Local File:",
   "concerto.screen.add.local_file.folder": "Local Folder:",
@@ -107,6 +112,7 @@
   "concerto.screen.add.netease_cloud.playlist": "Netease Playlist:",
   "concerto.screen.add.netease_cloud.album": "Netease Album:",
   "concerto.screen.add.qq": "QQ Music (MID):",
+  "concerto.screen.add.kugou": "KuGou Music (EMixSongID):",
   "concerto.screen.add.bilibili": "Bilibili (BVID):",
 
   "concerto.screen.login": "Login: ",
@@ -133,11 +139,30 @@
   "concerto.screen.search.163": "NeteaseCloud Search",
   "concerto.screen.index.qq": "QQ Music Index",
   "concerto.screen.search.qq": "QQ Music Search",
+  "concerto.screen.index.kugou": "KuGou Music Index",
+  "concerto.screen.search.kugou": "KuGou Music Search",
   "concerto.screen.user": "User",
   "concerto.screen.163.welcome": "Welcome, %s, this is NeteaseCloud Music",
   "concerto.screen.163.not_login": "You haven't logged in to NeteaseCloud Music",
   "concerto.screen.qq.welcome": "Welcome, %s, this is QQ Music",
   "concerto.screen.qq.not_login": "You haven't logged in to QQ Music",
+  "concerto.screen.kugou.welcome": "Welcome, %s, this is KuGou Music",
+  "concerto.screen.kugou.not_login": "You haven't logged in to KuGou Music",
+  "concerto.screen.kugou.version.correct": "Version matched!",
+  "concerto.screen.kugou.version.warning": "Incompatible versions! Please re-login or change the configuration version!",
+  "concerto.screen.kugou.version.normal": "Normal",
+  "concerto.screen.kugou.version.lite": "Lite",
+  "concerto.screen.kugou.version.current": "Current User Version: %s",
+  "concerto.screen.kugou.version.options": "API Version: %s",
+  "concerto.screen.kugou.vip.vip_level": "VIP Level: %s (Click to update)",
+  "concerto.screen.kugou.vip.expire_time": "VIP Expire Time: %s",
+  "concerto.screen.kugou.vip.update_success": "VIP Status Updated!",
+  "concerto.screen.kugou.vip.update_failed": "VIP Status Update Failed!",
+  "concerto.screen.kugou.vip.level.none": "No VIP or VIP Expired",
+  "concerto.screen.kugou.vip.level.vip": "VIP",
+  "concerto.screen.kugou.vip.level.s_vip": "Super VIP",
+  "concerto.screen.kugou.vip.level.busi_s_vip": "Lite VIP",
+  "concerto.screen.kugou.vip.level.busi_t_vip": "Ting VIP",
   "concerto.screen.login.type.qrcode.qq": "QQ QR Code",
   "concerto.screen.login.type.qrcode.wechat": "WeChat QR Code",
   "concerto.screen.general_list": "General Playlist",
@@ -181,6 +206,10 @@
   "concerto.login.163.failed.501": "Your phone number haven't been registered",
   "concerto.login.163.failed.502": "Incorrect password",
   "concerto.login.163.failed.503": "Incorrect code (captcha)",
+
+  "concerto.login.kugou.success": "Successfully logged in to KuGou Music",
+  "concerto.login.kugou.failed": "Failed to log in",
+  "concerto.login.kugou.error": "Error occurs while trying to login",
 
   "concerto.hotkey": "Concerto Hotkeys",
   "concerto.hotkey.general_music_list": "Open General playlist",
@@ -275,5 +304,8 @@
   "concerto.options.align": "%s: %s",
   "concerto.options.align.left": "Left",
   "concerto.options.align.center": "Center",
-  "concerto.options.align.right": "Right"
+  "concerto.options.align.right": "Right",
+
+  "concerto.options.kugouIsLite": "Use KuGou Lite API",
+  "concerto.options.autoGetKuGouDailyVIP": "Auto Get KuGou Daily VIP"
 }

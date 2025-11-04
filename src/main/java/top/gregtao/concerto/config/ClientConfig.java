@@ -97,6 +97,12 @@ public class ClientConfig extends ConfigFile {
 
         public boolean textShadow = true;
         public boolean handshakeRequired = true;
+
+        // 是否为概念版
+        public boolean kuGouMusicLite = false;
+
+        // 是否自动领取酷狗每日VIP
+        public boolean autoGetKuGouDailyVIP = false;
     }
 
     public static class PositionXYSupplier {

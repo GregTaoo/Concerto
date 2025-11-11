@@ -211,7 +211,7 @@
   "concerto.login.kugou.failed": "登录失败",
   "concerto.login.kugou.error": "尝试登录时发生错误",
 
-  "concerto.hotkey": "Concerto 热键",
+  "key.category.minecraft.concerto.hotkey": "Concerto 热键",
   "concerto.hotkey.general_music_list": "打开全局歌单",
   "concerto.hotkey.index": "打开Concerto索引页",
 

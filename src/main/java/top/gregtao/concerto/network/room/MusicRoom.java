@@ -111,7 +111,7 @@ public class MusicRoom {
 
     public static void serverReceiver(ConcertoPayload payload, ServerPlayNetworking.Context context) {
         ServerPlayerEntity player = context.player();
-        MinecraftServer server = context.player().getServer();
+        MinecraftServer server = context.player().getEntityWorld().getServer();
         String[] args = payload.string.split(":");
         switch (args[0]) {
             case "CRE": {

@@ -1,6 +1,7 @@
 package top.gregtao.concerto.screen.widget;
 
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.gui.Click;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.widget.AlwaysSelectedEntryListWidget;
 import net.minecraft.text.Text;
@@ -58,12 +59,12 @@ public class ConcertoListWidget<T> extends AlwaysSelectedEntryListWidget<Concert
     }
 
     @Override
-    public boolean removeEntryWithoutScrolling(Entry entry) {
+    public void removeEntryWithoutScrolling(Entry entry) {
         ListIterator<Entry> iterator = this.children().listIterator(entry.entryIndex + 1);
         while (iterator.hasNext()) {
             iterator.next().index--;
         }
-        return super.removeEntryWithoutScrolling(entry);
+        super.removeEntryWithoutScrolling(entry);
     }
 
     @Override
@@ -83,8 +84,8 @@ public class ConcertoListWidget<T> extends AlwaysSelectedEntryListWidget<Concert
         }
 
         @Override
-        public boolean mouseClicked(double mouseX, double mouseY, int button) {
-            if (button == 0) {
+        public boolean mouseClicked(Click click, boolean doubled) {
+            if (click.button() == 0) {
                 if (Util.getMeasuringTimeMs() - this.lastClickTime < 250) {
                     ConcertoListWidget.this.onDoubleClicked(this);
                 } else {
@@ -102,8 +103,8 @@ public class ConcertoListWidget<T> extends AlwaysSelectedEntryListWidget<Concert
         }
 
         @Override
-        public void render(DrawContext context, int index, int y, int x, int entryWidth, int entryHeight, int mouseX, int mouseY, boolean hovered, float tickDelta) {
-            context.drawText(MinecraftClient.getInstance().textRenderer, this.getNarration(), x, y + 3, ConcertoListWidget.this.color, false);
+        public void render(DrawContext context, int mouseX, int mouseY, boolean hovered, float deltaTicks) {
+            context.drawText(MinecraftClient.getInstance().textRenderer, this.getNarration(), getContentX(), getContentY() + 3, ConcertoListWidget.this.color, false);
         }
     }
 }

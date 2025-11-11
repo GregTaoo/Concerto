@@ -1,12 +1,12 @@
 plugins {
-	id 'fabric-loom' version '1.10-SNAPSHOT'
+    id 'fabric-loom' version "${loom_version}"
 	id 'maven-publish'
 }
 
-sourceCompatibility = JavaVersion.VERSION_21
-targetCompatibility = JavaVersion.VERSION_21
+base {
+    archivesName = project.archives_base_name
+}
 
-archivesBaseName = project.archives_base_name
 project.mod_version += "-mc" + project.minecraft_version
 version = project.mod_version
 group = project.maven_group
@@ -57,11 +57,16 @@ java {
 	// if it is present.
 	// If you remove this line, sources will not be generated.
     // withSourcesJar()
+
+    sourceCompatibility = JavaVersion.VERSION_21
+    targetCompatibility = JavaVersion.VERSION_21
 }
 
 jar {
+    inputs.property "archivesName", project.base.archivesName
+
 	from("LICENSE") {
-		rename { "${it}_${project.archivesBaseName}"}
+		rename { "${it}_${inputs.properties.archivesName}"}
 	}
 	duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 	from {
@@ -74,9 +79,10 @@ jar {
 // configure the maven publication
 publishing {
 	publications {
-		mavenJava(MavenPublication) {
-			from components.java
-		}
+        create("mavenJava", MavenPublication) {
+            artifactId = project.archives_base_name
+            from components.java
+        }
 	}
 
 	// See https://docs.gradle.org/current/userguide/publishing_maven.html for information on how to set up publishing.

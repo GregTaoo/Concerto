@@ -6,6 +6,8 @@ import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.gui.widget.CyclingButtonWidget;
 import net.minecraft.client.gui.widget.TextFieldWidget;
+import net.minecraft.client.input.CharInput;
+import net.minecraft.client.input.KeyInput;
 import net.minecraft.text.Text;
 import org.lwjgl.glfw.GLFW;
 import top.gregtao.concerto.ConcertoClient;
@@ -194,19 +196,19 @@ public class QQMusicSearchScreen extends PageScreen {
     }
 
     @Override
-    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-        if (super.keyPressed(keyCode, scanCode, modifiers)) {
+    public boolean keyPressed(KeyInput input) {
+        if (super.keyPressed(input)) {
             return true;
         }
-        if (keyCode == GLFW.GLFW_KEY_ENTER && this.searchBox.isSelected()) {
+        if (input.key() == GLFW.GLFW_KEY_ENTER && this.searchBox.isSelected()) {
             this.toggleSearch();
             return true;
         }
-        return this.searchBox.keyPressed(keyCode, scanCode, modifiers);
+        return this.searchBox.keyPressed(input);
     }
 
     @Override
-    public boolean charTyped(char chr, int modifiers) {
-        return this.searchBox.charTyped(chr, modifiers);
+    public boolean charTyped(CharInput input) {
+        return this.searchBox.charTyped(input);
     }
 }

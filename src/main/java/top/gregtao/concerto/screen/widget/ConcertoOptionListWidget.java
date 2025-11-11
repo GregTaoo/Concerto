@@ -134,19 +134,6 @@ public class ConcertoOptionListWidget extends ElementListWidget<ConcertoOptionLi
         }
 
         @Override
-        public void render(DrawContext context, int index, int y, int x, int entryWidth, int entryHeight,
-                           int mouseX, int mouseY, boolean hovered, float tickProgress) {
-            int i = 0;
-            int j = this.screen.width / 2 - 155;
-
-            for (ClickableWidget clickableWidget : this.widgets) {
-                clickableWidget.setPosition(j + i, y);
-                clickableWidget.render(context, mouseX, mouseY, tickProgress);
-                i += 160;
-            }
-        }
-
-        @Override
         public List<? extends Element> children() {
             return this.widgets;
         }
@@ -154,6 +141,18 @@ public class ConcertoOptionListWidget extends ElementListWidget<ConcertoOptionLi
         @Override
         public List<? extends Selectable> selectableChildren() {
             return this.widgets;
+        }
+
+        @Override
+        public void render(DrawContext context, int mouseX, int mouseY, boolean hovered, float deltaTicks) {
+            int i = 0;
+            int j = this.screen.width / 2 - 155;
+
+            for (ClickableWidget clickableWidget : this.widgets) {
+                clickableWidget.setPosition(j + i, getContentY());
+                clickableWidget.render(context, mouseX, mouseY, deltaTicks);
+                i += 160;
+            }
         }
     }
 }

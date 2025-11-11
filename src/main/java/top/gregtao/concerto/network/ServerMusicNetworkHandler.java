@@ -155,7 +155,7 @@ public class ServerMusicNetworkHandler {
 
     public static void musicDataReceiver(ConcertoPayload payload, ServerPlayNetworking.Context context) {
         ServerPlayerEntity player = context.player();
-        MinecraftServer server = context.player().getServer();
+        MinecraftServer server = context.player().getEntityWorld().getServer();
         try {
             MusicDataPacket packet = MusicDataPacket.fromPacket(payload, false);
             if (packet != null && packet.music != null && server != null) {

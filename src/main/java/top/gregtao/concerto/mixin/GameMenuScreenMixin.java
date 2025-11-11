@@ -11,7 +11,7 @@ import top.gregtao.concerto.util.ConcertoRunner;
 @Mixin(GameMenuScreen.class)
 public class GameMenuScreenMixin {
 
-    @Inject(at = @At("HEAD"), method = "disconnect(Lnet/minecraft/client/MinecraftClient;Lnet/minecraft/text/Text;)V")
+    @Inject(at = @At("HEAD"), method = "method_19836")
     private static void disconnectInject(CallbackInfo ci) {
         ConcertoRunner.run(MusicPlayer.INSTANCE::pause);
     }

@@ -28,7 +28,6 @@ public class AddMusicScreen extends ApplyDraggedFileScreen {
         TextFieldWidget widget = new TextFieldWidget(this.textRenderer, centerX - 15, y, 90, 20, text);
         widget.setMaxLength(1024);
         TextWidget textWidget = new TextWidget(centerX - 135, y + 2, 120, 20, text, this.textRenderer);
-        textWidget.alignLeft();
         this.addDrawableChild(widget);
         this.addDrawableChild(textWidget);
         this.addDrawableChild(ButtonWidget.builder(Text.translatable("concerto.screen.add"),

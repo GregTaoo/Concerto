@@ -228,7 +228,7 @@ public class URLImageWidget implements Drawable, Widget, AutoCloseable {
 
     @Override
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
-        if (this.border) context.drawBorder(this.x, this.y, this.width, this.height, 0xffffffff);
+        if (this.border) context.drawStrokedRectangle(this.x, this.y, this.width, this.height, 0xffffffff);
         TextRenderer textRenderer = MinecraftClient.getInstance().textRenderer;
         if (this.url == null || this.texture == null) {
             context.drawCenteredTextWithShadow(

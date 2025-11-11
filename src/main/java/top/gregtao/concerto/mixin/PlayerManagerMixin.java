@@ -36,14 +36,14 @@ public class PlayerManagerMixin {
             if (entry.getValue().owner.equals(player.getName().getString())) {
                 removeList.add(entry.getKey());
                 try {
-                    entry.getValue().serverOnRemove(player.getName().getString(), player.getServer());
+                    entry.getValue().serverOnRemove(player.getName().getString(), player.getEntityWorld().getServer());
                 } catch (IllegalAccessException e) {
                     throw new RuntimeException(e);
                 }
                 break;
             }
             if (entry.getValue().members.containsKey(player.getName().getString())) {
-                entry.getValue().serverOnQuit(player.getName().getString(), player.getServer());
+                entry.getValue().serverOnQuit(player.getName().getString(), player.getEntityWorld().getServer());
                 break;
             }
         }

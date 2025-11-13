@@ -1,0 +1,146 @@
+name: Publish Fabric Builds
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  generate-branches:
+    name: Generate Branch Matrix
+    runs-on: ubuntu-latest
+    outputs:
+      branches: ${{ steps.set-branches.outputs.branches }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get Fabric-* branches from remote
+        id: set-branches
+        run: |
+          # 列出远程 Fabric-* 分支并构造 JSON 数组
+          readarray -t arr <<< "$(git ls-remote --heads origin 'Fabric-*' | awk '{print $2}' | sed 's|refs/heads/||')"
+          json="["
+          first=true
+          for b in "${arr[@]}"; do
+            if [ -n "$b" ]; then
+              if [ "$first" = true ]; then
+                first=false
+              else
+                json="${json},"
+              fi
+              # 转义双引号-理论上分支名不会包含特殊字符
+              json="${json}\"${b}\""
+            fi
+          done
+          json="${json},\"dev\"]"
+          echo "branches=$json" >> $GITHUB_OUTPUT
+
+  build:
+    name: Build & Publish
+    needs: generate-branches
+    runs-on: ubuntu-latest
+    environment:
+      name: MODRINTH_TOKEN
+    strategy:
+      fail-fast: false
+      matrix:
+        branch: ${{ fromJson(needs.generate-branches.outputs.branches) }}
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ matrix.branch }}
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          java-version: 21
+          distribution: temurin
+          cache: gradle
+
+      - name: Cache Gradle
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-${{ runner.os }}-${{ hashFiles('**/gradle/wrapper/gradle-wrapper.properties') }}
+          restore-keys: gradle-${{ runner.os }}-
+
+      - name: Build
+        id: build-run
+        run: |
+          set -euo pipefail
+
+          echo "Processing branch: ${{ matrix.branch }}"
+
+          echo "Detected Gradle project"
+          chmod +x ./gradlew || true
+          ./gradlew clean build
+          ARTIFACT=$(ls build/libs/*.jar 2>/dev/null | grep -v -- '-dev.jar' | grep -v -- '-sources.jar' | head -n1 || true)
+
+          if [ -z "$ARTIFACT" ]; then
+            echo "No artifact found (non -dev jar). Skipping branch."
+            exit 0
+          fi
+
+          echo "Built artifact: $ARTIFACT"
+
+          filename=$(basename "$ARTIFACT")
+          version="${filename%.jar}"
+
+          # 提取 mc 版本（形如 mc1.16.5 -> 1.16.5）
+          # 先尝试用 grep -P（Ubuntu runner 支持），fallback 用 sed
+          fabric_mc=""
+          if echo "$filename" | grep -oP 'mc\K[0-9]+\.[0-9]+(\.[0-9]+)?' >/dev/null 2>&1; then
+            fabric_mc=$(echo "$filename" | grep -oP 'mc\K[0-9]+\.[0-9]+(\.[0-9]+)?')
+          else
+            fabric_mc=$(echo "$filename" | sed -n 's/.*mc\([0-9]\+\.[0-9]\+\(\.[0-9]\+\)\?\).*/\1/p')
+          fi
+
+          echo "version=${version}" >> $GITHUB_OUTPUT
+          echo "artifact=${ARTIFACT}" >> $GITHUB_OUTPUT
+          echo "mc_version=${fabric_mc}" >> $GITHUB_OUTPUT
+
+          # 根据 mc 版本生成 JSON 数组形式的 game_versions
+          case "$fabric_mc" in
+            1.16.5) gv='["1.16.x"]';;
+            1.17.1) gv='["1.17.x"]';;
+            1.18.2) gv='["1.18.x"]';;
+            1.19.4) gv='["1.19.x"]';;
+            1.20.1) gv='["1.20.1","1.20.2","1.20.3","1.20.4","1.20.5"]';;
+            1.20.6) gv='["1.20.6"]';;
+            1.21.1) gv='["1.21.1","1.21.2","1.21.3"]';;
+            1.21.4) gv='["1.21.4","1.21.5"]';;
+            1.21.6) gv='["1.21.6","1.21.7","1.21.8","1.21.9"]';;
+            1.21.10) gv='["1.21.10"]';;
+            "") echo "Could not parse mc version from filename: $filename"; gv='[]' ;;
+            *) echo "Unknown Fabric mc version: $fabric_mc" ; gv='[]' ;;
+          esac
+
+          echo "game_versions=${gv}" >> $GITHUB_OUTPUT
+          echo "Computed game_versions: ${gv}"
+
+      - name: Publish to Modrinth
+        if: steps.build-run.outputs.artifact != ''
+        uses: cloudnode-pro/modrinth-publish@v2
+        with:
+          token: ${{ secrets.MODRINTH_TOKEN }}
+          project: A0VZd1kW
+          name: ${{ github.event.release.name }}
+          version: ${{ steps.build-run.outputs.version }}
+          changelog: ${{ github.event.release.body }}
+          loaders: '["fabric"]'
+          game-versions: ${{ steps.build-run.outputs.game_versions }}
+          files: ${{ steps.build-run.outputs.artifact }}
+
+      - name: Summary
+        if: steps.build-run.outputs.artifact != ''
+        run: |
+          echo "Branch: ${{ matrix.branch }}"
+          echo "Artifact: ${{ steps.build-run.outputs.artifact }}"
+          echo "Version: ${{ steps.build-run.outputs.version }}"
+          echo "Game versions: ${{ steps.build-run.outputs.game_versions }}"

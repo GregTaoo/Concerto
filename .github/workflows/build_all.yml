@@ -91,6 +91,7 @@ jobs:
 
           filename=$(basename "$ARTIFACT")
           version="${filename%.jar}"
+          shorter_version=$(echo "$filename" | sed -E 's/^[Cc]oncerto-[Ff]abric-//; s/\.jar$//')
 
           # 提取 mc 版本（形如 mc1.16.5 -> 1.16.5）
           # 先尝试用 grep -P（Ubuntu runner 支持），fallback 用 sed
@@ -102,6 +103,7 @@ jobs:
           fi
 
           echo "version=${version}" >> $GITHUB_OUTPUT
+          echo "shorter_version=${shorter_version}" >> $GITHUB_OUTPUT
           echo "artifact=${ARTIFACT}" >> $GITHUB_OUTPUT
           echo "mc_version=${fabric_mc}" >> $GITHUB_OUTPUT
 
@@ -114,7 +116,8 @@ jobs:
             1.20.1) gv='["1.20.1","1.20.2","1.20.3","1.20.4","1.20.5"]';;
             1.20.6) gv='["1.20.6"]';;
             1.21.1) gv='["1.21.1","1.21.2","1.21.3"]';;
-            1.21.4) gv='["1.21.4","1.21.5"]';;
+            1.21.4) gv='["1.21.4"]';;
+            1.21.5) gv='["1.21.5"]';;
             1.21.6) gv='["1.21.6","1.21.7","1.21.8","1.21.9"]';;
             1.21.10) gv='["1.21.10"]';;
             "") echo "Could not parse mc version from filename: $filename"; gv='[]' ;;
@@ -130,8 +133,8 @@ jobs:
         with:
           token: ${{ secrets.MODRINTH_TOKEN }}
           project: A0VZd1kW
-          name: ${{ github.event.release.name }}
-          version: ${{ steps.build-run.outputs.version }}
+          name: ${{ steps.build-run.outputs.version }}
+          version: ${{ steps.build-run.outputs.shorter_version }}
           changelog: ${{ github.event.release.body }}
           loaders: '["fabric"]'
           game-versions: ${{ steps.build-run.outputs.game_versions }}

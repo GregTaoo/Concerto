@@ -17,14 +17,13 @@ public class PresetRadiosScreen extends ConcertoScreen {
     private MetadataListWidget<Playlist> playlistList;
 
     private <T extends WithMetaData> MetadataListWidget<T> initWidget() {
-        MetadataListWidget<T> widget = new MetadataListWidget<>(this.width, 0, 15, this.height - 35, 18) {
+        MetadataListWidget<T> widget = new MetadataListWidget<>(this.width, this.height - 35, 15, 18) {
             @Override
             public void onDoubleClicked(ConcertoListWidget<T>.Entry entry) {
                 MinecraftClient.getInstance().setScreen(new PlaylistPreviewScreen((Playlist) entry.item, PresetRadiosScreen.this));
             }
         };
         widget.setRenderBackground(false);
-        widget.setRenderHorizontalShadows(false);
         return widget;
     }
 

@@ -32,7 +32,6 @@ public class MusicConfirmationScreen extends ConcertoScreen {
         super.init();
         this.widget = new MusicWithUUIDListWidget(this.width, 0, 18, this.height - 35, 18);
         this.widget.setRenderBackground(false);
-        this.widget.setRenderHorizontalShadows(false);
         this.refresh();
         this.addSelectableChild(this.widget);
 

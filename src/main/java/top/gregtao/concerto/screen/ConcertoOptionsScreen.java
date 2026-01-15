@@ -17,7 +17,7 @@ public class ConcertoOptionsScreen extends ConcertoScreen {
 
     @Override
     protected void init() {
-        this.buttonList = new OptionListWidget(this.client, this.width, this.height, 18, this.height - 32, 25);
+        this.buttonList = new OptionListWidget(this.client, this.width, this.height, 18, 25);
         this.buttonList.addAll(ConcertoOptions.INSTANCE.getOptions());
         this.addSelectableChild(this.buttonList);
         this.addDrawableChild(this.buttonList);

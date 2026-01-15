@@ -13,12 +13,12 @@ public class MetadataListWidget<T extends WithMetaData> extends ConcertoListWidg
 
     private final Set<T> loadingSet = ConcurrentHashMap.newKeySet();
 
-    public MetadataListWidget(int width, int height, int top, int bottom, int itemHeight) {
-        this(width, height, top, bottom, itemHeight, 0xffffffff);
+    public MetadataListWidget(int width, int height, int top, int itemHeight) {
+        this(width, height, top, itemHeight, 0xffffffff);
     }
 
-    public MetadataListWidget(int width, int height, int top, int bottom, int itemHeight, int color) {
-        super(width, height, top, bottom, itemHeight, color);
+    public MetadataListWidget(int width, int height, int top, int itemHeight, int color) {
+        super(width, height, top, itemHeight, color);
     }
 
     @Override

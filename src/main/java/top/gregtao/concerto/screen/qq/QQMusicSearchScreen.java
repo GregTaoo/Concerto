@@ -37,7 +37,7 @@ public class QQMusicSearchScreen extends PageScreen {
     private SearchType searchType = SearchType.MUSIC;
 
     private <T extends WithMetaData> MetadataListWidget<T> initListsWidget() {
-        MetadataListWidget<T> widget =  new MetadataListWidget<>(this.width, this.height, 38, this.height - 35, 18) {
+        MetadataListWidget<T> widget =  new MetadataListWidget<>(this.width, this.height - 75, 38, 18) {
             @Override
             public void onDoubleClicked(ConcertoListWidget<T>.Entry entry) {
                 try {
@@ -57,7 +57,6 @@ public class QQMusicSearchScreen extends PageScreen {
             }
         };
         widget.setRenderBackground(false);
-        widget.setRenderHorizontalShadows(false);
         return widget;
     }
 

@@ -81,7 +81,7 @@ public class ConcertoClient implements ClientModInitializer {
 					QQMusicApiClient.LOCAL_USER.updateLoginStatus();
 
 					// 酷狗音乐相关
-					KuGouMusicApiClient.LOCAL_USER.updateLoginStatus();
+					KuGouMusicApiClient.LOCAL_USER.updateLoginStatusAndDfid();
 					// 刷新 token, 延长 token 有效时间
 					KuGouMusicApiClient.INSTANCE.refreshToken();
 					// 更新 VIP 状态

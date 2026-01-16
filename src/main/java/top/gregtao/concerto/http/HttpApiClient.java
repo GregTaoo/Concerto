@@ -119,4 +119,7 @@ public class HttpApiClient {
         return string;
     }
 
+    public void setClient(HttpClient client) {
+        this.client = client;
+    }
 }

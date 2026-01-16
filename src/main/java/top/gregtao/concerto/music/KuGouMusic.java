@@ -168,25 +168,24 @@ public class KuGouMusic extends Music implements CacheableMusic, DynamicPath {
     public Pair<String, String> getBestLyric(JsonArray jsonArray) {
         if (jsonArray.isEmpty()) return null;
         List<JsonElement> list = jsonArray.asList();
-        for (JsonElement jsonElement : list) {
-            Optional<JsonObject> object = Optional.of(jsonElement.getAsJsonObject());
-            Optional<Integer> contentFormat = object.map(obj -> obj.get("content_format"))
-                    .map(JsonElement::getAsInt);
+        Optional<JsonElement> bestLyricWithTrans = list.stream()
+                .filter(jsonElement -> {
+                    Optional<JsonObject> object = Optional.of(jsonElement.getAsJsonObject());
+                    Optional<Integer> contentFormat = object.map(obj -> obj.get("content_format"))
+                            .map(JsonElement::getAsInt);
 
-            if (contentFormat.isPresent() && contentFormat.get() > 1) {
-                String id = object.map(obj -> obj.get("id"))
-                        .map(JsonElement::getAsString)
-                        .orElseThrow();
+                    // content_format:
+                    // 1: 无翻译
+                    // 2: 只有翻译
+                    // 3: 只有注音
+                    // 4: 翻译和注音都有
+                    return contentFormat.isPresent() && (contentFormat.get() == 2 || contentFormat.get() == 4);
+                })
+                .findFirst();
 
-                String accessKey = object.map(obj -> obj.get("accesskey"))
-                        .map(JsonElement::getAsString)
-                        .orElseThrow();
-
-                return Pair.of(id, accessKey);
-            }
-        }
-
-        Optional<JsonObject> object = Optional.ofNullable(list.getFirst().getAsJsonObject());
+        Optional<JsonObject> object = bestLyricWithTrans
+                .or(() -> Optional.ofNullable(list.get(0)))
+                .map(JsonElement::getAsJsonObject);
         String id = object.map(obj -> obj.get("id"))
                 .map(JsonElement::getAsString)
                 .orElseThrow();

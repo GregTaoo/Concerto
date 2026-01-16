@@ -152,6 +152,7 @@ public class KuGouMusicLoginScreen extends ConcertoScreen {
 
     public void setCookies(Long userId, String token) throws IOException, URISyntaxException {
         KuGouMusicApiClient.LOCAL_USER.setUserId(userId);
+        KuGouMusicApiClient.INSTANCE.clearCookie();
         KuGouMusicApiClient.INSTANCE.setCookies(
                 "https://www.kugou.com/",
                 new HashMap<>(Map.of(
@@ -159,14 +160,14 @@ public class KuGouMusicLoginScreen extends ConcertoScreen {
                         "token", token
                 ))
         );
-        KuGouMusicApiClient.LOCAL_USER.updateLoginStatus();
+        KuGouMusicApiClient.LOCAL_USER.updateLoginStatusAndDfid();
         KuGouMusicApiClient.LOCAL_USER.updateVIPStatus();
     }
 
     public CookieLoginScreen cookieLogin() {
         return new CookieLoginScreen(
                 () -> {
-                    boolean updated = KuGouMusicApiClient.LOCAL_USER.updateLoginStatus();
+                    boolean updated = KuGouMusicApiClient.LOCAL_USER.updateLoginStatusAndDfid();
                     if (updated) {
                         KuGouMusicApiClient.LOCAL_USER.updateVIPStatus();
                     }

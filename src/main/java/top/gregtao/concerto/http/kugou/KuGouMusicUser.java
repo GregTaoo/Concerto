@@ -95,9 +95,14 @@ public class KuGouMusicUser {
             this.isLite = ClientConfig.INSTANCE.options.kuGouMusicLite;
             return true;
         } catch (Exception e) {
-            this.loggedIn = false;
+            this.logout();
             return false;
         }
+    }
+
+    public boolean updateLoginStatusAndDfid() {
+        this.apiClient.updateDfid();
+        return updateLoginStatus();
     }
 
     public boolean updateVIPStatus() {
@@ -183,6 +188,7 @@ public class KuGouMusicUser {
     public void logout() {
         this.apiClient.clearCookie();
         this.loggedIn = false;
+        this.apiClient.updateDfid();
     }
 
     public List<KuGouMusicPlaylist> getUserPlaylists(int page) {

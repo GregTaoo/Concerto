@@ -17,6 +17,7 @@ import java.security.spec.InvalidKeySpecException;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.Base64;
 import java.util.Map;
+import java.util.stream.Collectors;
 import java.util.zip.Inflater;
 import java.util.zip.InflaterInputStream;
 
@@ -51,6 +52,13 @@ public class KuGouMusicApiCrypto {
                 .orElse("");
 
         return HashUtil.md5(str + paramsString + str);
+    }
+
+    public static String signRegisterParams(Map<String, String> params) {
+        String paramsString = params.values().stream()
+                .sorted()
+                .collect(Collectors.joining());
+        return HashUtil.md5("1014" + paramsString + "1014");
     }
 
     public static String signKey(String hash, String mid, String userid, String appid) {

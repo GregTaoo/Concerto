@@ -129,6 +129,7 @@ public class KuGouRequestConfig {
 
     public enum EncryptType {
         WEB,
-        ANDROID
+        ANDROID,
+        REGISTER
     }
 }

@@ -2,6 +2,7 @@ package top.gregtao.concerto.http;
 
 import com.google.gson.GsonBuilder;
 import top.gregtao.concerto.config.ClientConfig;
+import top.gregtao.concerto.util.TextUtil;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -80,13 +81,14 @@ public class HttpRequestBuilder {
         this.builder.GET();
         this.setHeaders(this.fixedHeaders);
         HttpRequest request = this.builder.setHeader("Cookie", this.client.getCookieFile().readAsHeader()).build();
+        String logUrl = TextUtil.maskUrl(this.url);
         try {
             HttpResponse<InputStream> response = this.client.getClient().send(request, HttpResponse.BodyHandlers.ofInputStream());
-            this.client.getLogger().info("STREAM {} GET {}", response.statusCode(), this.url);
+            this.client.getLogger().info("STREAM {} GET {}", response.statusCode(), logUrl);
             this.client.writeCookie();
             return response;
         } catch (IOException | InterruptedException e) {
-            this.client.getLogger().error("ERROR GET STREAM {} : {}", this.url, e.getMessage());
+            this.client.getLogger().error("ERROR GET STREAM {} : {}", logUrl, e.getMessage());
             return null;
         }
     }
@@ -95,17 +97,18 @@ public class HttpRequestBuilder {
         this.builder.GET();
         this.setHeaders(this.fixedHeaders);
         HttpRequest request = this.builder.setHeader("Cookie", this.client.getCookieFile().readAsHeader()).build();
+        String logUrl = TextUtil.maskUrl(this.url);
         try {
             HttpResponse<T> response = this.client.getClient().send(request, bodyHandler);
             if (ClientConfig.INSTANCE.options.printRequestResults && bodyHandler == HttpResponse.BodyHandlers.ofString()) {
-                this.client.getLogger().info("{} GET {} : {}", response.statusCode(), this.url, response.body());
+                this.client.getLogger().info("{} GET {} : {}", response.statusCode(), logUrl, response.body());
             } else {
-                this.client.getLogger().info("{} GET {}", response.statusCode(), this.url);
+                this.client.getLogger().info("{} GET {}", response.statusCode(), logUrl);
             }
             this.client.writeCookie();
             return response;
         } catch (IOException | InterruptedException e) {
-            this.client.getLogger().error("ERROR GET {} : {}", this.url, e.getMessage());
+            this.client.getLogger().error("ERROR GET {} : {}", logUrl, e.getMessage());
             return null;
         }
     }
@@ -119,17 +122,18 @@ public class HttpRequestBuilder {
         this.builder.POST(HttpRequest.BodyPublishers.ofString(data, StandardCharsets.UTF_8));
         this.setHeaders(this.fixedHeaders);
         HttpRequest request = this.builder.setHeader("Cookie", this.client.getCookieFile().readAsHeader()).build();
+        String logUrl = TextUtil.maskUrl(this.url);
         try {
             HttpResponse<T> response = this.client.getClient().send(request, bodyHandler);
             if (ClientConfig.INSTANCE.options.printRequestResults && bodyHandler == HttpResponse.BodyHandlers.ofString()) {
-                this.client.getLogger().info("{} POST {} - {} : {}", response.statusCode(), this.url, data, response.body());
+                this.client.getLogger().info("{} POST {} - {} : {}", response.statusCode(), logUrl, data, response.body());
             } else {
-                this.client.getLogger().info("{} POST {}", response.statusCode(), this.url);
+                this.client.getLogger().info("{} POST {}", response.statusCode(), logUrl);
             }
             this.client.writeCookie();
             return response;
         } catch (IOException | InterruptedException e) {
-            this.client.getLogger().error("ERROR POST {} : {}", this.url, e.getMessage());
+            this.client.getLogger().error("ERROR POST {} : {}", logUrl, e.getMessage());
             return null;
         }
     }

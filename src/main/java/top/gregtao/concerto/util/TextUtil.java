@@ -14,6 +14,7 @@ import top.gregtao.concerto.enums.TextAlignment;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
+import java.util.regex.Pattern;
 
 public class TextUtil {
 
@@ -78,5 +79,15 @@ public class TextUtil {
             return s.substring(r1.length(), s.length() - r2.length());
         }
         return s;
+    }
+
+    private static final Pattern SENSITIVE_PARAM = Pattern.compile("(?i)(token|userid)=([^&]+)");
+
+    /**
+     * 过滤 URL 中的敏感参数
+     */
+    public static String maskUrl(String url) {
+        if (url == null) return null;
+        return SENSITIVE_PARAM.matcher(url).replaceAll("$1=***");
     }
 }

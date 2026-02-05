@@ -3,7 +3,11 @@ package top.gregtao.concerto.command;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import net.minecraft.command.CommandRegistryAccess;
+import net.minecraft.command.DefaultPermissions;
 import net.minecraft.command.argument.UuidArgumentType;
+import net.minecraft.command.permission.Permission;
+import net.minecraft.command.permission.PermissionLevel;
+import net.minecraft.command.permission.Permissions;
 import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
@@ -30,7 +34,7 @@ public class ConcertoServerCommand {
                                 CommandManager.RegistrationEnvironment environment) {
         dispatcher.register(
                 CommandManager.literal("concerto-server").then(
-                        CommandManager.literal("audit").requires(source -> source.hasPermissionLevel(2)).then(
+                        CommandManager.literal("audit").requires(source -> PermissionHelper.hasPermission(source, 2)).then(
                                 CommandManager.argument("uuid", UuidArgumentType.uuid()).executes(context -> {
                                     UUID uuid = UuidArgumentType.getUuid(context, "uuid");
                                     ServerMusicNetworkHandler.passAudition(context.getSource().getPlayer(), uuid);
@@ -73,13 +77,13 @@ public class ConcertoServerCommand {
                                 )
                         )
                 ).then(
-                        CommandManager.literal("reload").requires(source -> source.hasPermissionLevel(2))
+                        CommandManager.literal("reload").requires(source -> PermissionHelper.hasPermission(source, 2))
                                 .executes(context -> {
                                     ConcertoServer.reload();
                                     return 0;
                                 })
                 ).then(
-                        CommandManager.literal("reload-cookie").requires(source -> source.hasPermissionLevel(2))
+                        CommandManager.literal("reload-cookie").requires(source -> PermissionHelper.hasPermission(source, 2))
                                 .executes(context -> {
                                     NeteaseCloudApiClient.INSTANCE.readCookie();
                                     QQMusicApiClient.INSTANCE.readCookie();
@@ -87,20 +91,20 @@ public class ConcertoServerCommand {
                                     return 0;
                                 })
                 ).then(
-                        CommandManager.literal("clean-cache").requires(source -> source.hasPermissionLevel(2))
+                        CommandManager.literal("clean-cache").requires(source -> PermissionHelper.hasPermission(source, 2))
                                 .executes(context -> {
                                     CacheManager.cleanAllCache();
                                     return 0;
                                 })
                 ).then(
                         CommandManager.literal("fetch-radios")
-                                .requires(source -> source.hasPermissionLevel(0)).executes(context -> {
+                                .requires(source -> PermissionHelper.hasPermission(source, 0)).executes(context -> {
                                     ServerPlayerEntity player = context.getSource().getPlayer();
                                     if (player != null) ServerMusicNetworkHandler.sendS2CPresetRadiosPacket(player);
                                     return 0;
                                 })
                 ).then(
-                        CommandManager.literal("agent").requires(source -> source.hasPermissionLevel(2)).then(
+                        CommandManager.literal("agent").requires(source -> PermissionHelper.hasPermission(source, 0)).then(
                                 CommandManager.literal("reset").executes(context -> {
                                     ServerMusicAgent.INSTANCE.reset();
                                     return 0;

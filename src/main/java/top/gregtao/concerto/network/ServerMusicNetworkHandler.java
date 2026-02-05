@@ -2,6 +2,7 @@ package top.gregtao.concerto.network;
 
 import com.google.gson.JsonObject;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
+import net.minecraft.command.permission.Permission;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.PlayerManager;
@@ -12,6 +13,7 @@ import org.jetbrains.annotations.Nullable;
 import top.gregtao.concerto.ConcertoServer;
 import top.gregtao.concerto.api.MusicJsonParsers;
 import top.gregtao.concerto.command.ConcertoServerCommand;
+import top.gregtao.concerto.command.PermissionHelper;
 import top.gregtao.concerto.config.PresetPlaylistsConfig;
 import top.gregtao.concerto.config.ServerConfig;
 import top.gregtao.concerto.music.Music;
@@ -104,7 +106,7 @@ public class ServerMusicNetworkHandler {
     public static void sendS2CAuditionSyncData(UUID uuid, MusicDataPacket packet, boolean isDelete) {
         PlayerManager playerManager = packet.server.getPlayerManager();
         for (ServerPlayerEntity player : playerManager.getPlayerList()) {
-            if (player.hasPermissionLevel(packet.server.getOpPermissionLevel())) {
+            if (PermissionHelper.hasPermission(player, packet.server.getOpPermissionLevel().getLevel().getLevel())) {
                 sendAuditionSyncPacket(uuid, player, packet, isDelete);
             }
         }
@@ -172,7 +174,7 @@ public class ServerMusicNetworkHandler {
                     if (audit) {
                         UUID uuid = UUID.randomUUID();
                         for (ServerPlayerEntity player1 : playerManager.getPlayerList()) {
-                            if (player1.hasPermissionLevel(server.getOpPermissionLevel())) {
+                            if (PermissionHelper.hasPermission(player1, packet.server.getOpPermissionLevel().getLevel().getLevel())) {
                                 player1.sendMessage(TextUtil.PAGE_SPLIT);
                                 player1.sendMessage(ConcertoServerCommand.chatMessageBuilder(
                                         uuid, packet.from, packet.music.getMeta().title()

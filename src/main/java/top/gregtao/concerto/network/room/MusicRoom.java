@@ -4,6 +4,9 @@ import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
+import net.minecraft.command.DefaultPermissions;
+import net.minecraft.command.permission.Permission;
+import net.minecraft.command.permission.PermissionLevel;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
@@ -11,6 +14,7 @@ import top.gregtao.concerto.ConcertoClient;
 import top.gregtao.concerto.ConcertoServer;
 import top.gregtao.concerto.api.DynamicPath;
 import top.gregtao.concerto.api.MusicJsonParsers;
+import top.gregtao.concerto.command.PermissionHelper;
 import top.gregtao.concerto.config.ServerConfig;
 import top.gregtao.concerto.music.Music;
 import top.gregtao.concerto.music.SharedMusic;
@@ -115,7 +119,7 @@ public class MusicRoom {
         String[] args = payload.string.split(":");
         switch (args[0]) {
             case "CRE": {
-                if (!player.hasPermissionLevel(ServerConfig.INSTANCE.options.musicRoomCommandPermission)) {
+                if (!PermissionHelper.hasPermission(player, ServerConfig.INSTANCE.options.musicRoomCommandPermission)) {
                     player.sendMessage(Text.translatable("concerto.room.permission_denied"));
                     break;
                 }

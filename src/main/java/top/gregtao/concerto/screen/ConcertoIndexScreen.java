@@ -10,6 +10,7 @@ import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.text.Text;
 import net.minecraft.util.Util;
 import top.gregtao.concerto.ConcertoClient;
+import top.gregtao.concerto.command.PermissionHelper;
 import top.gregtao.concerto.config.PresetPlaylistsConfig;
 import top.gregtao.concerto.network.room.MusicRoom;
 import top.gregtao.concerto.screen.kugou.KuGouMusicIndexScreen;
@@ -33,7 +34,7 @@ public class ConcertoIndexScreen extends ConcertoScreen {
         ).position(this.width / 2 + 5, 20).size(115, 20).build();
         this.addDrawableChild(widget);
         ClientPlayerEntity player = MinecraftClient.getInstance().player;
-        if (player == null || !player.hasPermissionLevel(2) || !ConcertoClient.isServerAvailable()) {
+        if (player == null || !PermissionHelper.hasPermission(player, 2) || !ConcertoClient.isServerAvailable()) {
             widget.active = false;
         }
 

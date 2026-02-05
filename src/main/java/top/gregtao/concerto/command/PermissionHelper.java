@@ -15,19 +15,16 @@ import net.minecraft.entity.player.PlayerEntity;
  * @author fireboy637
  */
 public class PermissionHelper {
-    private static final Int2ObjectMap<Permission> PERMISSIONS = new Int2ObjectOpenHashMap<>(
-            new int[]{0, 1, 2, 3, 4},
-            new Permission[]{
-                    new Permission.Level(PermissionLevel.ALL),
-                    DefaultPermissions.MODERATORS,
-                    DefaultPermissions.GAMEMASTERS,
-                    DefaultPermissions.ADMINS,
-                    DefaultPermissions.OWNERS,
-            }
-            );
+    private static final Permission[] PERMISSIONS = new Permission[]{
+            new Permission.Level(PermissionLevel.ALL),
+            DefaultPermissions.MODERATORS,
+            DefaultPermissions.GAMEMASTERS,
+            DefaultPermissions.ADMINS,
+            DefaultPermissions.OWNERS
+    };
 
     public static Permission getPermission(int level) {
-        return PERMISSIONS.getOrDefault(level, null);
+        return PERMISSIONS[level];
     }
 
     public static boolean hasPermission(PermissionSource source, int level) {

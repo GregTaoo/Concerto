@@ -104,7 +104,7 @@ public class ConcertoServerCommand {
                                     return 0;
                                 })
                 ).then(
-                        CommandManager.literal("agent").requires(source -> PermissionHelper.hasPermission(source, 0)).then(
+                        CommandManager.literal("agent").requires(source -> PermissionHelper.hasPermission(source, 2)).then(
                                 CommandManager.literal("reset").executes(context -> {
                                     ServerMusicAgent.INSTANCE.reset();
                                     return 0;

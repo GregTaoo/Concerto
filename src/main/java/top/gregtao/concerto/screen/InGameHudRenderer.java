@@ -77,7 +77,7 @@ public class InGameHudRenderer {
                 int scaledWidth = client.getWindow().getScaledWidth(), scaledHeight = client.getWindow().getScaledHeight();
                 String[] texts = MusicPlayerHandler.INSTANCE.getDisplayTexts();
 
-                context = new DrawContext(MinecraftClient.getInstance(), context.state);
+                context = new DrawContext(MinecraftClient.getInstance(), context.state, mouseX, mouseY);
 
                 if (options.displayLyrics) {
                     Vector2i pos = config.lyricsPosSupplier.getPos(scaledWidth, scaledHeight);

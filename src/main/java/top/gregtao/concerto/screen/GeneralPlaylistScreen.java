@@ -72,8 +72,9 @@ public class GeneralPlaylistScreen extends ApplyDraggedFileScreen {
             }
         }).position(this.width / 2 - 85, this.height - 30).size(50, 20).build());
 
-        this.addDrawableChild(CyclingButtonWidget.builder(OrderType::getName).values(OrderType.values())
-                .initially(MusicPlayerHandler.INSTANCE.getOrderType()).build(
+        this.addDrawableChild(CyclingButtonWidget.builder(OrderType::getName, MusicPlayerHandler.INSTANCE.getOrderType())
+                .values(OrderType.values())
+                .build(
                         this.width / 2 - 35, this.height - 30, 60, 20, Text.translatable("concerto.screen.order"),
                         (widget, orderType) -> MusicPlayerHandler.INSTANCE.setOrderType(orderType)));
 

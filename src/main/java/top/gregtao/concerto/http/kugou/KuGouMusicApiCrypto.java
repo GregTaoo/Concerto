@@ -203,4 +203,67 @@ public class KuGouMusicApiCrypto {
             throw new RuntimeException(e);
         }
     }
+
+    public static Pair<String, String> playlistAesEncrypt(String data) {
+        try {
+            String key = RandomUtil.randomString(6).toLowerCase();
+            String md5 = HashUtil.md5(key);
+
+            String encryptKey = md5.substring(0, 16);
+            String iv = md5.substring(16, 32);
+
+            Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
+            SecretKeySpec keySpec = new SecretKeySpec(encryptKey.getBytes(StandardCharsets.UTF_8), "AES");
+            IvParameterSpec ivSpec = new IvParameterSpec(iv.getBytes(StandardCharsets.UTF_8));
+
+            cipher.init(Cipher.ENCRYPT_MODE, keySpec, ivSpec);
+
+            byte[] encrypted = cipher.doFinal(data.getBytes(StandardCharsets.UTF_8));
+            String base64 = Base64.getEncoder().encodeToString(encrypted);
+
+            return new Pair<>(key, base64);
+        } catch (Exception e) {
+            throw new RuntimeException("AES encrypt error", e);
+        }
+    }
+
+    public static String playlistAesDecrypt(String base64CipherText, String key) {
+        try {
+            String md5 = HashUtil.md5(key);
+
+            String encryptKey = md5.substring(0, 16);
+            String iv = md5.substring(16, 32);
+
+            Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
+            SecretKeySpec keySpec = new SecretKeySpec(encryptKey.getBytes(StandardCharsets.UTF_8), "AES");
+            IvParameterSpec ivSpec = new IvParameterSpec(iv.getBytes(StandardCharsets.UTF_8));
+
+            cipher.init(Cipher.DECRYPT_MODE, keySpec, ivSpec);
+
+            byte[] encryptedBytes = Base64.getDecoder().decode(base64CipherText);
+            byte[] decrypted = cipher.doFinal(encryptedBytes);
+
+            return new String(decrypted, StandardCharsets.UTF_8);
+        } catch (Exception e) {
+            throw new RuntimeException("AES decrypt error", e);
+        }
+    }
+
+    public static String rsaEncrypt2(String data) {
+        boolean isLite = ClientConfig.INSTANCE.options.kuGouMusicLite;
+        String pubKey = isLite ? LITE_RSA_PUBKEY : RSA_PUBKEY;
+
+        try {
+            byte[] buffer = data.getBytes(StandardCharsets.UTF_8);
+
+            Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
+            cipher.init(Cipher.ENCRYPT_MODE, loadPublicKey(pubKey));
+
+            byte[] encrypted = cipher.doFinal(buffer);
+
+            return bytesToHex(encrypted);
+        } catch (GeneralSecurityException e) {
+            throw new RuntimeException(e);
+        }
+    }
 }

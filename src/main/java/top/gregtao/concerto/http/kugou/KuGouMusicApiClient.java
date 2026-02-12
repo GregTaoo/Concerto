@@ -21,6 +21,7 @@ import java.net.URLEncoder;
 import java.net.http.HttpClient;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -39,7 +40,7 @@ public class KuGouMusicApiClient extends HttpApiClient {
 
     public static final String APPID = "1005";
 
-    public static final String LITE_CLIENT_VER = "11436";
+    public static final String LITE_CLIENT_VER = "11440";
 
     public static final String CLIENT_VER = "20489";
 
@@ -51,6 +52,14 @@ public class KuGouMusicApiClient extends HttpApiClient {
 
     public static final String LITE_IV = "adc01946dba4fdf7";
 
+    public static final String LITE_T2_KEY = "fd14b35e3f81af3817a20ae7adae7020";
+
+    public static final String LITE_T2_IV = "17a20ae7adae7020";
+
+    public static final String LITE_T1_KEY = "5e4ef500e9597fe004bd09a46d8add98";
+
+    public static final String LITE_T1_IV = "04bd09a46d8add98";
+
     public static Map<String, String> HEADERS = Map.of(
             "User-Agent", "Android15-1070-11083-46-0-DiscoveryDRADProtocol-wifi",
             "Referer", ""
@@ -61,6 +70,14 @@ public class KuGouMusicApiClient extends HttpApiClient {
     public static KuGouMusicApiClient INSTANCE = new KuGouMusicApiClient();
 
     public static KuGouMusicUser LOCAL_USER = new KuGouMusicUser(INSTANCE);
+
+    public static String GUID = HashUtil.md5(RandomUtil.getGuid());
+
+    public static String MID = RandomUtil.calculateMid(GUID);
+
+    public static String SERVER_DEV = RandomUtil.randomString(10).toUpperCase();
+
+    public static String MAC = "02:00:00:00:00:00";
 
     public KuGouMusicApiClient() {
         // 不直接使用 Cookies
@@ -87,7 +104,14 @@ public class KuGouMusicApiClient extends HttpApiClient {
 
     @Override
     public void clearCookie() {
+        // 不清除 KUGOU_API_MID, KUGOU_API_GUID, KUGOU_API_DEV, KUGOU_API_MAC
+        HashMap<String, String> cacheMap = new HashMap<>();
+        COOKIES.computeIfPresent("KUGOU_API_MID", cacheMap::put);
+        COOKIES.computeIfPresent("KUGOU_API_GUID", cacheMap::put);
+        COOKIES.computeIfPresent("KUGOU_API_DEV", cacheMap::put);
+        COOKIES.computeIfPresent("KUGOU_API_MAC", cacheMap::put);
         COOKIES.clear();
+        COOKIES.putAll(cacheMap);
         writeCookie();
     }
 
@@ -106,6 +130,10 @@ public class KuGouMusicApiClient extends HttpApiClient {
     @Override
     public void readCookie() {
         COOKIES = parseCookies(getCookieFile().readAsHeader());
+        COOKIES.computeIfAbsent("KUGOU_API_MID", k -> MID);
+        COOKIES.computeIfAbsent("KUGOU_API_GUID", k -> GUID);
+        COOKIES.computeIfAbsent("KUGOU_API_DEV", k -> SERVER_DEV);
+        COOKIES.computeIfAbsent("KUGOU_API_MAC", k -> MAC);
     }
 
     @Override
@@ -121,10 +149,13 @@ public class KuGouMusicApiClient extends HttpApiClient {
     }
 
     public HttpResponse<String> request(String url, Map<String, String> params, KuGouRequestConfig config) {
+        return request(url, params, config, HttpResponse.BodyHandlers.ofString());
+    }
+
+    public <T> HttpResponse<T> request(String url, Map<String, String> params, KuGouRequestConfig config, HttpResponse.BodyHandler<T> bodyHandler) {
         String dfid = getCookie("dfid", "-");
-        String md5Dfid = HashUtil.md5(dfid);
-        String mid = md5Dfid + md5Dfid.substring(0, 7);
-        String uuid = HashUtil.md5(dfid + mid);
+        String mid = getCookie("KUGOU_API_MID");
+        String uuid = "-";
         String token = getCookie("token", "");
         String userid = getCookie("userid", "0");
         String clientTime = String.valueOf((long)(Math.floor((double) System.currentTimeMillis() / 1000)));
@@ -132,7 +163,11 @@ public class KuGouMusicApiClient extends HttpApiClient {
         Map<String, String> headers = new HashMap<>(Map.of(
                 "dfid", dfid,
                 "mid", mid,
-                "clienttime", clientTime
+                "clienttime", clientTime,
+                "kg-rc", "1",
+                "kg-thash", "5d816a0",
+                "kg-rec", "1",
+                "kg-rf", "B9EDA08A64250DEFFBCADDEE00F8F25F"
         ));
 
         String appid = getUseAppid();
@@ -143,12 +178,15 @@ public class KuGouMusicApiClient extends HttpApiClient {
                 "uuid", uuid,
                 "appid", appid,
                 "clientver", clientVer,
-                "userid", userid,
                 "clienttime", clientTime
         ));
 
         if (!StringUtils.isEmpty(token)) {
             defaultParams.put("token", token);
+        }
+
+        if (!userid.equals("0")) {
+            defaultParams.put("userid", userid);
         }
 
         if (!config.isClearDefaultParams()) {
@@ -195,9 +233,9 @@ public class KuGouMusicApiClient extends HttpApiClient {
         headers.putAll(config.getHeaders());
         HttpRequestBuilder builder = open().url(fullUrl).setHeaders(headers);
         if (config.getRequestType().equals(KuGouRequestConfig.RequestType.GET)) {
-            return builder.get();
+            return builder.get(bodyHandler);
         } else {
-            return builder.post(HttpResponse.BodyHandlers.ofString(), HttpRequestBuilder.ContentType.JSON, dataJson);
+            return builder.post(bodyHandler, HttpRequestBuilder.ContentType.JSON, dataJson);
         }
     }
 
@@ -294,7 +332,7 @@ public class KuGouMusicApiClient extends HttpApiClient {
                 "data", data,
                 "dfid", dfId,
                 "key", KuGouMusicApiCrypto.signParamsKey(clientTime),
-                "mid", HashUtil.md5(dfId),
+                "mid", getCookie("KUGOU_API_MID"),
                 "token", token,
                 "userid", userId
         );
@@ -673,7 +711,11 @@ public class KuGouMusicApiClient extends HttpApiClient {
                 )
         );
 
-        return json != null;
+        return Optional.ofNullable(json)
+                .map(obj -> obj.get("error_code"))
+                .map(JsonElement::getAsInt)
+                .map(code -> code == 0)
+                .orElse(false);
     }
 
     public Optional<Pair<Long, String>> cellphoneLogin(String mobile, String code) {
@@ -683,45 +725,62 @@ public class KuGouMusicApiClient extends HttpApiClient {
                 "mobile", mobile,
                 "code", code
         )), null, null);
+        String maskMobile = mobile.substring(0, 2) + "*****" + mobile.substring(10);
+        String dfid = getCookie("dfid", RandomUtil.randomString(24));
         boolean isLite = ClientConfig.INSTANCE.options.kuGouMusicLite;
+
+        String guid = getCookie("KUGOU_API_GUID");
+        String mac = getCookie("KUGOU_API_MAC");
+        String dev = getCookie("KUGOU_API_DEV");
+        String t2 = KuGouMusicApiCrypto.cryptoAesEncrypt(
+                guid + "|" +
+                "0f607264fc6318a92b9e13c65db7cd3c" + "|" +
+                mac + "|" +
+                dev + "|" +
+                dateTime,
+                LITE_T2_KEY,
+                LITE_T2_IV
+        ).getFirst();
+
+        String t1 = KuGouMusicApiCrypto.cryptoAesEncrypt(
+                "|" + dateTime,
+                LITE_T1_KEY,
+                LITE_T1_IV
+        ).getFirst();
 
         Map<String, Object> dataMap = new HashMap<>(Map.of(
                 "plat", 1,
                 "support_multi", 1,
-                "t1", 0,
-                "t2", 0,
+                "t1", isLite ? t1 : 0,
+                "t2", isLite ? t2 : 0,
                 "clienttime_ms", dateTime,
-                "mobile", mobile,
-                "key", KuGouMusicApiCrypto.signParamsKey(String.valueOf(dateTime))
+                "mobile", maskMobile,
+                "key", KuGouMusicApiCrypto.signParamsKey(String.valueOf(dateTime)),
+                "pk", KuGouMusicApiCrypto.cryptoRSAEncrypt(GSON.toJson(Map.of(
+                        "clienttime_ms", dateTime,
+                        "key", encrypt.getSecond()
+                ))).toUpperCase(),
+                "params", encrypt.getFirst()
         ));
 
         if (isLite) {
-            dataMap.put(
-                    "p2", KuGouMusicApiCrypto.cryptoRSAEncrypt(GSON.toJson(Map.of(
-                            "clienttime_ms", dateTime,
-                            "code", code,
-                            "mobile", mobile
-                    ))).toUpperCase()
-            );
+            dataMap.put("dfid", dfid);
+            dataMap.put("dev", getCookie("KUGOU_API_DEV"));
+            dataMap.put("gitversion", "5f0b7c4");
         } else {
-            String mobileStr = mobile.substring(0, 2) + "*****" + mobile.substring(10);
-            dataMap.put("mobile", mobileStr);
             dataMap.put("t3", "MCwwLDAsMCwwLDAsMCwwLDA=");
-            dataMap.put("params", encrypt.getFirst());
-            dataMap.put("pk", KuGouMusicApiCrypto.cryptoRSAEncrypt(GSON.toJson(Map.of(
-                    "clienttime_ms", dateTime,
-                    "key", encrypt.getSecond()
-            ))).toUpperCase());
         }
 
         JsonObject json = parseJson(
                 request(
-                         "/" + (isLite ? "v6" : "v7") + "/login_by_verifycode",
+                         "/v7/login_by_verifycode",
                         Map.of(),
                         KuGouRequestConfig.builder()
                                 .requestType(KuGouRequestConfig.RequestType.POST)
                                 .data(dataMap)
-                                .addHeaders("x-router", "login.user.kugou.com")
+                                .baseUrl("https://loginserviceretry.kugou.com")
+                                .addHeaders("SUPPORT-CALM", "1")
+                                .addHeaders("User-Agent", "Android16-1070-11440-130-0-LOGIN-wifi")
                                 .build()
                 )
         );
@@ -742,8 +801,18 @@ public class KuGouMusicApiClient extends HttpApiClient {
                 "plat", 1,
                 "support_multi", 1,
                 "clienttime_ms", dateNow,
-                "t1", 0,
-                "t2", 0,
+                "t1", "562a6f12a6e803453647d16a08f5f0c2ff7eee692cba2ab74cc4" +
+                              "c8ab47fc467561a7c6b586ce7dc46a63613b246737c03a1dc8f8" +
+                              "d162d8ce1d2c71893d19f1d4b797685a4c6d3d81341cbde65e48" +
+                              "8c4829a9b4d42ef2df470eb102979fa5adcdd9b4eecfea8b909f" +
+                              "f7599abeb49867640f10c3c70fc444effca9d15db44a9a6c9077" +
+                              "31e2bb0f22cd9b3536380169995693e5f0e2424e3378097d3813" +
+                              "186e3fe96bbe7023808a0981b4e2b6135a76faac",
+                "t2", "31c4daf4cf480169ccea1cb7d4a209295865a9d2b78851030169" +
+                              "4db229b87807469ea0d41b4d4b9173c2151da7294aeebfc9738d" +
+                              "f154bbdf11a4e117bb5dff6a3af8ce5ce333e681c1f29a44038f" +
+                              "27567d58992eb81283e080778ac77db1400fdf49b7cf7e26be2e" +
+                              "5af4da7830cc3be4",
                 "t3", "MCwwLDAsMCwwLDAsMCwwLDA=",
                 "username", userName,
                 "params", encrypt.getFirst(),
@@ -785,28 +854,50 @@ public class KuGouMusicApiClient extends HttpApiClient {
         )));
         boolean isLite = ClientConfig.INSTANCE.options.kuGouMusicLite;
 
-        Map<String, Object> dataMap = Map.of(
+        String guid = getCookie("KUGOU_API_GUID");
+        String mac = getCookie("KUGOU_API_MAC");
+        String dev = getCookie("KUGOU_API_DEV");
+        String t2 = KuGouMusicApiCrypto.cryptoAesEncrypt(
+                guid + "|" +
+                        "0f607264fc6318a92b9e13c65db7cd3c" + "|" +
+                        mac + "|" +
+                        dev + "|" +
+                        dateNow,
+                LITE_T2_KEY,
+                LITE_T2_IV
+        ).getFirst();
+
+        String t1 = KuGouMusicApiCrypto.cryptoAesEncrypt(
+                "|" + dateNow,
+                LITE_T1_KEY,
+                LITE_T1_IV
+        ).getFirst();
+
+        Map<String, Object> dataMap = new HashMap<>(Map.of(
                 "dfid", getCookie("dfid", "-"),
                 "p3", encrypt.getFirst(),
                 "plat", 1,
-                "t1", 0,
-                "t2", 0,
+                "t1", isLite ? t1 : 0,
+                "t2", isLite ? t2 : 0,
                 "t3", "MCwwLDAsMCwwLDAsMCwwLDA=",
                 "pk", pk,
                 "params", encryptParams.getFirst(),
                 "userid", userId,
                 "clienttime_ms", dateNow
-        );
+        ));
+
+        if (isLite) {
+            dataMap.put("dev", getCookie("KUGOU_API_DEV"));
+        }
 
         JsonObject json = parseJson(
                 request(
-                        "/" + (isLite ? "v4" : "v5") + "/login_by_token",
+                        "/v5/login_by_token",
                         Map.of(),
                         KuGouRequestConfig.builder()
                                 .baseUrl("http://login.user.kugou.com")
                                 .requestType(KuGouRequestConfig.RequestType.POST)
                                 .data(dataMap)
-                                .addHeaders("x-router", "login.user.kugou.com")
                                 .build()
                 )
         );
@@ -871,7 +962,8 @@ public class KuGouMusicApiClient extends HttpApiClient {
         if (!ClientConfig.INSTANCE.options.kuGouMusicLite) return Optional.empty();
 
         Map<String, String> params = Map.of(
-                "source_id", "90137"
+                "source_id", "90139",
+                "receive_day", LocalDate.now().toString()
         );
         JsonObject json = parseJson(
                 request(
@@ -959,34 +1051,69 @@ public class KuGouMusicApiClient extends HttpApiClient {
     }
 
     public Optional<JsonObject> getDfid() {
-        String dfid = getCookie("dfid", "-");
-        String mid = HashUtil.md5(dfid);
-        String uuid = HashUtil.md5(dfid + mid);
         String userid = getCookie("userid", "0");
+        String token = getCookie("token");
+        String guid = getCookie("KUGOU_API_GUID");
 
-        Map<String, String> dataMap = Map.of(
-                "mid", mid,
-                "uuid", uuid,
-                "appid", "1014",
-                "userid", userid
+        Map<String, Object> dataMap = new HashMap<>();
+        dataMap.put("availableRamSize", 4983533568L);
+        dataMap.put("availableRomSize", 48114719);
+        dataMap.put("availableSDSize", 48114717);
+        dataMap.put("basebandVer", "");
+        dataMap.put("batteryLevel", 100);
+        dataMap.put("batteryStatus", 3);
+        dataMap.put("brand", "Redmi");
+        dataMap.put("buildSerial", "unknown");
+        dataMap.put("device", "marble");
+        dataMap.put("imei", guid);
+        dataMap.put("imsi", "");
+        dataMap.put("manufacturer", "Xiaomi");
+        dataMap.put("uuid", guid);
+        dataMap.put("accelerometer", false);
+        dataMap.put("accelerometerValue", "");
+        dataMap.put("gravity", false);
+        dataMap.put("gravityValue", "");
+        dataMap.put("gyroscope", false);
+        dataMap.put("gyroscopeValue", "");
+        dataMap.put("light", false);
+        dataMap.put("lightValue", "");
+        dataMap.put("magnetic", false);
+        dataMap.put("magneticValue", "");
+        dataMap.put("orientation", false);
+        dataMap.put("orientationValue", "");
+        dataMap.put("pressure", false);
+        dataMap.put("pressureValue", "");
+        dataMap.put("step_counter", false);
+        dataMap.put("step_counterValue", "");
+        dataMap.put("temperature", false);
+        dataMap.put("temperatureValue", "");
+
+        Pair<String, String> aesEncrypt = KuGouMusicApiCrypto.playlistAesEncrypt(GSON.toJson(dataMap));
+
+        String p = KuGouMusicApiCrypto.rsaEncrypt2(GSON.toJson(Map.of(
+                "aes", aesEncrypt.getFirst(),
+                "uid", userid,
+                "token", token)));
+
+        Map<String, String> paramsMap = new HashMap<>();
+        paramsMap.put("part", "1");
+        paramsMap.put("platid", "1");
+        paramsMap.put("p", p);
+
+        HttpResponse<byte[]> response = request(
+                "/risk/v2/r_register_dev",
+                paramsMap,
+                KuGouRequestConfig.builder()
+                        .baseUrl("https://userservice.kugou.com")
+                        .requestType(KuGouRequestConfig.RequestType.POST)
+                        .data(aesEncrypt.getSecond())
+                        .encryptType(KuGouRequestConfig.EncryptType.ANDROID)
+                        .build(),
+                HttpResponse.BodyHandlers.ofByteArray()
         );
-
-        Map<String, String> paramsMap = new HashMap<>(dataMap);
-        paramsMap.put("p.token", "");
-        paramsMap.put("platid", "4");
-
-        JsonObject json = parseJson(
-                request(
-                        "/risk/v1/r_register_dev",
-                        paramsMap,
-                        KuGouRequestConfig.builder()
-                                .baseUrl("https://userservice.kugou.com")
-                                .requestType(KuGouRequestConfig.RequestType.POST)
-                                .data(TextUtil.toBase64(GSON.toJson(dataMap)))
-                                .encryptType(KuGouRequestConfig.EncryptType.REGISTER)
-                                .build()
-                )
-        );
+        String bodyBase64 = Base64.getEncoder().encodeToString(response.body());
+        String body = KuGouMusicApiCrypto.playlistAesDecrypt(bodyBase64, aesEncrypt.getFirst());
+        JsonObject json = response.statusCode() == 200 ? JsonUtil.from(escapeChars(body)) : null;
 
         return Optional.ofNullable(json);
     }

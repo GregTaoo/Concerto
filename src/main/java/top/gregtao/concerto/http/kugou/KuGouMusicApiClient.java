@@ -67,10 +67,6 @@ public class KuGouMusicApiClient extends HttpApiClient {
 
     public static Map<String, String> COOKIES;
 
-    public static KuGouMusicApiClient INSTANCE = new KuGouMusicApiClient();
-
-    public static KuGouMusicUser LOCAL_USER = new KuGouMusicUser(INSTANCE);
-
     public static String GUID = HashUtil.md5(RandomUtil.getGuid());
 
     public static String MID = RandomUtil.calculateMid(GUID);
@@ -78,6 +74,10 @@ public class KuGouMusicApiClient extends HttpApiClient {
     public static String SERVER_DEV = RandomUtil.randomString(10).toUpperCase();
 
     public static String MAC = "02:00:00:00:00:00";
+
+    public static KuGouMusicApiClient INSTANCE = new KuGouMusicApiClient();
+
+    public static KuGouMusicUser LOCAL_USER = new KuGouMusicUser(INSTANCE);
 
     public KuGouMusicApiClient() {
         // 不直接使用 Cookies

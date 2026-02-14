@@ -188,7 +188,6 @@ public class KuGouMusicUser {
     public void logout() {
         this.apiClient.clearCookie();
         this.loggedIn = false;
-        this.apiClient.updateDfid();
     }
 
     public List<KuGouMusicPlaylist> getUserPlaylists(int page) {

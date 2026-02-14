@@ -7,6 +7,7 @@ import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.gui.widget.PressableTextWidget;
 import net.minecraft.client.gui.widget.TextWidget;
 import net.minecraft.client.network.ClientPlayerEntity;
+import net.minecraft.command.DefaultPermissions;
 import net.minecraft.text.Text;
 import net.minecraft.util.Util;
 import top.gregtao.concerto.ConcertoClient;
@@ -33,7 +34,7 @@ public class ConcertoIndexScreen extends ConcertoScreen {
         ).position(this.width / 2 + 5, 20).size(115, 20).build();
         this.addDrawableChild(widget);
         ClientPlayerEntity player = MinecraftClient.getInstance().player;
-        if (player == null || !player.hasPermissionLevel(2) || !ConcertoClient.isServerAvailable()) {
+        if (player == null || !player.getPermissions().hasPermission(DefaultPermissions.GAMEMASTERS) || !ConcertoClient.isServerAvailable()) {
             widget.active = false;
         }
 

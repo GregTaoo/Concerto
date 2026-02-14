@@ -129,7 +129,7 @@ public class NeteaseCloudSearchScreen extends PageScreen {
         this.addDrawableChild(ButtonWidget.builder(Text.translatable("concerto.screen.search"),
                 button -> this.toggleSearch()).position(this.width / 2 + 50, 17).size(52, 20).build());
 
-        this.addDrawableChild(CyclingButtonWidget.builder(SearchType::getName).values(SearchType.values()).initially(this.searchType).build(
+        this.addDrawableChild(CyclingButtonWidget.builder(SearchType::getName, this.searchType).values(SearchType.values()).build(
                 this.width / 2 + 105, 17, 65, 20, Text.translatable("concerto.search_type"),
                 (widget, type) -> this.updateSearchType(type)));
 

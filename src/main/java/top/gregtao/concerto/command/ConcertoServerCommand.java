@@ -30,7 +30,7 @@ public class ConcertoServerCommand {
                                 CommandManager.RegistrationEnvironment environment) {
         dispatcher.register(
                 CommandManager.literal("concerto-server").then(
-                        CommandManager.literal("audit").requires(source -> source.hasPermissionLevel(2)).then(
+                        CommandManager.literal("audit").requires(CommandManager.requirePermissionLevel(CommandManager.GAMEMASTERS_CHECK)).then(
                                 CommandManager.argument("uuid", UuidArgumentType.uuid()).executes(context -> {
                                     UUID uuid = UuidArgumentType.getUuid(context, "uuid");
                                     ServerMusicNetworkHandler.passAudition(context.getSource().getPlayer(), uuid);
@@ -73,13 +73,13 @@ public class ConcertoServerCommand {
                                 )
                         )
                 ).then(
-                        CommandManager.literal("reload").requires(source -> source.hasPermissionLevel(2))
+                        CommandManager.literal("reload").requires(CommandManager.requirePermissionLevel(CommandManager.GAMEMASTERS_CHECK))
                                 .executes(context -> {
                                     ConcertoServer.reload();
                                     return 0;
                                 })
                 ).then(
-                        CommandManager.literal("reload-cookie").requires(source -> source.hasPermissionLevel(2))
+                        CommandManager.literal("reload-cookie").requires(CommandManager.requirePermissionLevel(CommandManager.GAMEMASTERS_CHECK))
                                 .executes(context -> {
                                     NeteaseCloudApiClient.INSTANCE.readCookie();
                                     QQMusicApiClient.INSTANCE.readCookie();
@@ -87,20 +87,20 @@ public class ConcertoServerCommand {
                                     return 0;
                                 })
                 ).then(
-                        CommandManager.literal("clean-cache").requires(source -> source.hasPermissionLevel(2))
+                        CommandManager.literal("clean-cache").requires(CommandManager.requirePermissionLevel(CommandManager.GAMEMASTERS_CHECK))
                                 .executes(context -> {
                                     CacheManager.cleanAllCache();
                                     return 0;
                                 })
                 ).then(
                         CommandManager.literal("fetch-radios")
-                                .requires(source -> source.hasPermissionLevel(0)).executes(context -> {
+                                .requires(CommandManager.requirePermissionLevel(CommandManager.ALWAYS_PASS_CHECK)).executes(context -> {
                                     ServerPlayerEntity player = context.getSource().getPlayer();
                                     if (player != null) ServerMusicNetworkHandler.sendS2CPresetRadiosPacket(player);
                                     return 0;
                                 })
                 ).then(
-                        CommandManager.literal("agent").requires(source -> source.hasPermissionLevel(2)).then(
+                        CommandManager.literal("agent").requires(CommandManager.requirePermissionLevel(CommandManager.GAMEMASTERS_CHECK)).then(
                                 CommandManager.literal("reset").executes(context -> {
                                     ServerMusicAgent.INSTANCE.reset();
                                     return 0;

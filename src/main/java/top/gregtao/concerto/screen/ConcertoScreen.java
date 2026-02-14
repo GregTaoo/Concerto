@@ -46,15 +46,15 @@ public class ConcertoScreen extends Screen {
             );
         }
 
-        this.message = this.addSelectableChild(new NarratedMultilineTextWidget(
-                this.width, Text.empty(), this.textRenderer, 12));
+        this.message = this.addSelectableChild(
+                NarratedMultilineTextWidget.builder(Text.empty(), this.textRenderer).width(12).build());
         this.message.visible = false;
         this.initTabNavigation();
     }
 
     protected void initTabNavigation() {
         if (this.message != null) {
-            this.message.initMaxWidth(this.width);
+            this.message.setMaxWidth(this.width);
             this.message.setPosition(this.width / 2 - this.message.getWidth() / 2,
                     this.height / 2 - this.textRenderer.fontHeight / 2);
         }

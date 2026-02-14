@@ -5,6 +5,7 @@ import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.network.ClientPlayerEntity;
+import net.minecraft.command.DefaultPermissions;
 import net.minecraft.text.Text;
 import top.gregtao.concerto.music.Music;
 import top.gregtao.concerto.screen.widget.ConcertoListWidget;
@@ -76,7 +77,7 @@ public class MusicAuditionScreen extends ConcertoScreen {
         super.render(matrices, mouseX, mouseY, delta);
         this.widget.render(matrices, mouseX, mouseY, delta);
         ClientPlayerEntity player = MinecraftClient.getInstance().player;
-        if (player == null || !player.hasPermissionLevel(2)) {
+        if (player == null || !player.getPermissions().hasPermission(DefaultPermissions.GAMEMASTERS)) {
             matrices.drawCenteredTextWithShadow(this.textRenderer, Text.translatable("concerto.screen.audition.permission_denied"),
                     this.width / 2, this.height / 2, 0xffffffff);
         }

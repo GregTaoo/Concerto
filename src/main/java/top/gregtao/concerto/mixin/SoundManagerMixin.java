@@ -21,7 +21,7 @@ public class SoundManagerMixin {
         MusicPlayer.INSTANCE.resume();
     }
 
-    @Inject(at = @At("TAIL"), method = "updateSoundVolume(Lnet/minecraft/sound/SoundCategory;)V")
+    @Inject(at = @At("TAIL"), method = "refreshSoundVolumes(Lnet/minecraft/sound/SoundCategory;)V")
     private void updateSoundVolumeInject(SoundCategory category, CallbackInfo ci) {
         if (category == SoundCategory.MASTER || category == SoundCategory.MUSIC) {
             MusicPlayer.INSTANCE.syncVolume();

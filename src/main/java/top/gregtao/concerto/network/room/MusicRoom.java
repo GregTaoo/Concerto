@@ -4,6 +4,8 @@ import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
+import net.minecraft.command.permission.Permission;
+import net.minecraft.command.permission.PermissionLevel;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
@@ -115,7 +117,9 @@ public class MusicRoom {
         String[] args = payload.string.split(":");
         switch (args[0]) {
             case "CRE": {
-                if (!player.hasPermissionLevel(ServerConfig.INSTANCE.options.musicRoomCommandPermission)) {
+                Permission permission = new Permission.Level(PermissionLevel.fromLevel(
+                        ServerConfig.INSTANCE.options.musicRoomCommandPermission));
+                if (!player.getPermissions().hasPermission(permission)) {
                     player.sendMessage(Text.translatable("concerto.room.permission_denied"));
                     break;
                 }

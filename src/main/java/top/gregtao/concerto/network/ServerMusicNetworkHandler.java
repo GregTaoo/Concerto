@@ -2,6 +2,7 @@ package top.gregtao.concerto.network;
 
 import com.google.gson.JsonObject;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
+import net.minecraft.command.permission.Permission;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.PlayerManager;
@@ -104,7 +105,8 @@ public class ServerMusicNetworkHandler {
     public static void sendS2CAuditionSyncData(UUID uuid, MusicDataPacket packet, boolean isDelete) {
         PlayerManager playerManager = packet.server.getPlayerManager();
         for (ServerPlayerEntity player : playerManager.getPlayerList()) {
-            if (player.hasPermissionLevel(packet.server.getOpPermissionLevel())) {
+            Permission permission = new Permission.Level(packet.server.getOpPermissionLevel().getLevel());
+            if (player.getPermissions().hasPermission(permission)) {
                 sendAuditionSyncPacket(uuid, player, packet, isDelete);
             }
         }
@@ -172,7 +174,8 @@ public class ServerMusicNetworkHandler {
                     if (audit) {
                         UUID uuid = UUID.randomUUID();
                         for (ServerPlayerEntity player1 : playerManager.getPlayerList()) {
-                            if (player1.hasPermissionLevel(server.getOpPermissionLevel())) {
+                            Permission permission = new Permission.Level(server.getOpPermissionLevel().getLevel());
+                            if (player1.getPermissions().hasPermission(permission)) {
                                 player1.sendMessage(TextUtil.PAGE_SPLIT);
                                 player1.sendMessage(ConcertoServerCommand.chatMessageBuilder(
                                         uuid, packet.from, packet.music.getMeta().title()

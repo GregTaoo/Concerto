@@ -7,13 +7,18 @@ public class Event {
 
     private final List<Runnable> listeners = new ArrayList<>();
 
-    public void register(Runnable listener) {
+    public Subscription subscribe(Runnable listener) {
         this.listeners.add(listener);
+        return () -> this.listeners.remove(listener);
     }
 
     public void emit() {
         for (Runnable listener : this.listeners) {
             listener.run();
         }
+    }
+
+    public interface Subscription {
+        void unsubscribe();
     }
 }

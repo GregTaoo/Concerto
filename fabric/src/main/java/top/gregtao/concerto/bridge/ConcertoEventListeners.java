@@ -11,25 +11,25 @@ public class ConcertoEventListeners {
 
     public static void registerClientListeners() {
 
-        ConcertoEvents.ON_PLAYER_START.register(() -> {
+        ConcertoEvents.ON_PLAYER_START.subscribe(() -> {
             MinecraftClient client = MinecraftClient.getInstance();
             client.getMusicTracker().stop();
             ConcertoClient.syncPlayerVolume();
         });
 
-        ConcertoEvents.ON_PLAYER_PAUSE.register(() -> MusicRoom.clientPause(true));
+        ConcertoEvents.ON_PLAYER_PAUSE.subscribe(() -> MusicRoom.clientPause(true));
 
-        ConcertoEvents.ON_PLAYER_RESUME.register(() -> MusicRoom.clientPause(false));
+        ConcertoEvents.ON_PLAYER_RESUME.subscribe(() -> MusicRoom.clientPause(false));
 
-        ConcertoEvents.ON_MUSIC_INFO_RESET.register(() -> ConcertoClient.COVER_IMAGE.setUrl(null));
+        ConcertoEvents.ON_MUSIC_INFO_RESET.subscribe(() -> ConcertoClient.COVER_IMAGE.setUrl(null));
 
-        ConcertoEvents.ON_MUSIC_INFO_UPDATE.register(() -> {
+        ConcertoEvents.ON_MUSIC_INFO_UPDATE.subscribe(() -> {
             if (!MusicPlayerHandler.INSTANCE.currentMeta.headPictureUrl().isEmpty()) {
                 ConcertoClient.COVER_IMAGE.setUrl(MusicPlayerHandler.INSTANCE.currentMeta.headPictureUrl());
                 ConcertoClient.COVER_IMAGE.loadImage(true, ClientConfig.INSTANCE.options.coverImgInCircle);
             }
         });
 
-        ConcertoEvents.ON_NEXT_MUSIC.register(MusicRoom::clientUpdate);
+        ConcertoEvents.ON_NEXT_MUSIC.subscribe(MusicRoom::clientUpdate);
     }
 }

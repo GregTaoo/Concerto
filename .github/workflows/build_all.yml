@@ -80,7 +80,7 @@ jobs:
           echo "Detected Gradle project"
           chmod +x ./gradlew || true
           ./gradlew clean build
-          ARTIFACT=$(ls build/libs/*.jar 2>/dev/null | grep -v -- '-dev.jar' | grep -v -- '-sources.jar' | head -n1 || true)
+          ARTIFACT=$(ls fabric/build/libs/*.jar 2>/dev/null | grep -v -- '-dev.jar' | grep -v -- '-sources.jar' | head -n1 || true)
 
           if [ -z "$ARTIFACT" ]; then
             echo "No artifact found (non -dev jar). Skipping branch."
@@ -113,13 +113,15 @@ jobs:
             1.17.1) gv='["1.17.x"]';;
             1.18.2) gv='["1.18.x"]';;
             1.19.4) gv='["1.19.x"]';;
-            1.20.1) gv='["1.20.1","1.20.2","1.20.3","1.20.4","1.20.5"]';;
+            1.20.1) gv='["1.20.1","1.20.2","1.20.3"]';;
+            1.20.4) gv='["1.20.4","1.20.5"]';;
             1.20.6) gv='["1.20.6"]';;
             1.21.1) gv='["1.21.1","1.21.2","1.21.3"]';;
             1.21.4) gv='["1.21.4"]';;
             1.21.5) gv='["1.21.5"]';;
             1.21.6) gv='["1.21.6","1.21.7","1.21.8","1.21.9"]';;
             1.21.10) gv='["1.21.10"]';;
+            1.21.11) gv='["1.21.11"]';;
             "") echo "Could not parse mc version from filename: $filename"; gv='[]' ;;
             *) echo "Unknown Fabric mc version: $fabric_mc" ; gv='[]' ;;
           esac

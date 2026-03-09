@@ -76,18 +76,17 @@ public class MusicPlayerHandler {
     }
 
     public static <T extends LazyLoadable> void loadInThreadPool(List<T> objects, boolean force) {
-        try (ExecutorService service = Executors.newFixedThreadPool(32)) {
-            objects.forEach(object -> {
-                if (force || !object.isLoaded()) service.submit(() -> object.load());
-            });
-            service.shutdown();
-            try {
-                if (!service.awaitTermination(Integer.MAX_VALUE, TimeUnit.SECONDS)) {
-                    throw new TimeoutException();
-                }
-            } catch (InterruptedException | TimeoutException e) {
-                throw new RuntimeException(e);
+        ExecutorService service = Executors.newFixedThreadPool(32);
+        objects.forEach(object -> {
+            if (force || !object.isLoaded()) service.submit(() -> object.load());
+        });
+        service.shutdown();
+        try {
+            if (!service.awaitTermination(Integer.MAX_VALUE, TimeUnit.SECONDS)) {
+                throw new TimeoutException();
             }
+        } catch (InterruptedException | TimeoutException e) {
+            throw new RuntimeException(e);
         }
     }
 
@@ -315,61 +314,60 @@ public class MusicPlayerHandler {
                     return;
                 }
             }
-            try (ExecutorService service = Executors.newFixedThreadPool(16)) {
-                musics.forEach(music -> {
-                    if (music instanceof CacheableMusic cacheableMusic) {
-                        service.submit(() -> {
-                            MusicMetaData metaData = music.getMeta();
-                            String filename = filenameFilter(metaData.title() + " - " + metaData.author() + " - " + metaData.getSource());
-                            File file = folder.toPath().resolve(filename + "." + cacheableMusic.getSuffix()).toFile();
-                            File lrcFile = folder.toPath().resolve(filename + ".lrc").toFile();
-                            try {
-                                if (!file.exists()) {
-                                    if (file.createNewFile()) {
-                                        try (FileOutputStream stream = new FileOutputStream(file)) {
-                                            stream.write(music.getMusicSource().readAllBytes());
-                                        }
+            ExecutorService service = Executors.newFixedThreadPool(16);
+            musics.forEach(music -> {
+                if (music instanceof CacheableMusic cacheableMusic) {
+                    service.submit(() -> {
+                        MusicMetaData metaData = music.getMeta();
+                        String filename = filenameFilter(metaData.title() + " - " + metaData.author() + " - " + metaData.getSource());
+                        File file = folder.toPath().resolve(filename + "." + cacheableMusic.getSuffix()).toFile();
+                        File lrcFile = folder.toPath().resolve(filename + ".lrc").toFile();
+                        try {
+                            if (!file.exists()) {
+                                if (file.createNewFile()) {
+                                    try (FileOutputStream stream = new FileOutputStream(file)) {
+                                        stream.write(music.getMusicSource().readAllBytes());
                                     }
-                                    Concerto.getLogger().info("Downloaded: {}", filename);
                                 }
-                                String lyrics = music.getLyrics().getFirst().toString();
-                                try {
-                                    AudioFile audioFile = AudioFileIO.read(file);
-                                    Tag tag = audioFile.getTagOrCreateAndSetDefault();
-                                    tag.setField(FieldKey.TITLE, metaData.title());
-                                    tag.setField(FieldKey.ARTISTS, metaData.author());
-                                    tag.setField(FieldKey.LYRICS, lyrics);
-                                    if (!metaData.headPictureUrl().isEmpty()) {
-                                        tag.setField(ArtworkFactory.createLinkedArtworkFromURL(metaData.headPictureUrl()));
-                                    }
-                                    audioFile.commit();
-                                } catch (Exception e) {
-                                    Concerto.getLogger().warn("Cannot write tags into file: {}", file);
-                                }
-                                if (!lrcFile.exists()) {
-                                    if (lrcFile.createNewFile()) {
-                                        try (FileOutputStream stream = new FileOutputStream(lrcFile)) {
-                                            stream.write(lyrics.getBytes(StandardCharsets.UTF_8));
-                                        }
-                                    }
-                                    Concerto.getLogger().info("Downloaded LRC: {}", filename);
-                                }
-                            } catch (IOException e) {
-                                Concerto.getLogger().error("{} - {}", e, file.getAbsolutePath());
+                                Concerto.getLogger().info("Downloaded: {}", filename);
                             }
-                        });
-                    } else {
-                        Concerto.getLogger().info("Detected non-cacheable music");
-                    }
-                });
-                service.shutdown();
-                try {
-                    if (!service.awaitTermination(Integer.MAX_VALUE, TimeUnit.SECONDS)) {
-                        throw new TimeoutException();
-                    }
-                } catch (InterruptedException | TimeoutException e) {
-                    throw new RuntimeException(e);
+                            String lyrics = music.getLyrics().getFirst().toString();
+                            try {
+                                AudioFile audioFile = AudioFileIO.read(file);
+                                Tag tag = audioFile.getTagOrCreateAndSetDefault();
+                                tag.setField(FieldKey.TITLE, metaData.title());
+                                tag.setField(FieldKey.ARTISTS, metaData.author());
+                                tag.setField(FieldKey.LYRICS, lyrics);
+                                if (!metaData.headPictureUrl().isEmpty()) {
+                                    tag.setField(ArtworkFactory.createLinkedArtworkFromURL(metaData.headPictureUrl()));
+                                }
+                                audioFile.commit();
+                            } catch (Exception e) {
+                                Concerto.getLogger().warn("Cannot write tags into file: {}", file);
+                            }
+                            if (!lrcFile.exists()) {
+                                if (lrcFile.createNewFile()) {
+                                    try (FileOutputStream stream = new FileOutputStream(lrcFile)) {
+                                        stream.write(lyrics.getBytes(StandardCharsets.UTF_8));
+                                    }
+                                }
+                                Concerto.getLogger().info("Downloaded LRC: {}", filename);
+                            }
+                        } catch (IOException e) {
+                            Concerto.getLogger().error("{} - {}", e, file.getAbsolutePath());
+                        }
+                    });
+                } else {
+                    Concerto.getLogger().info("Detected non-cacheable music");
                 }
+            });
+            service.shutdown();
+            try {
+                if (!service.awaitTermination(Integer.MAX_VALUE, TimeUnit.SECONDS)) {
+                    throw new TimeoutException();
+                }
+            } catch (InterruptedException | TimeoutException e) {
+                throw new RuntimeException(e);
             }
         });
     }

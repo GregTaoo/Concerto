@@ -11,9 +11,9 @@ import javax.sound.sampled.UnsupportedAudioFileException;
 import org.jaudiotagger.audio.mp3.MP3AudioHeader;
 import org.jaudiotagger.audio.mp3.MP3File;
 
-//import org.kc7bfi.jflac.FLACDecoder;
-//import org.kc7bfi.jflac.io.RandomFileInputStream;
-//import org.kc7bfi.jflac.metadata.StreamInfo;
+import org.kc7bfi.jflac.FLACDecoder;
+import org.kc7bfi.jflac.io.RandomFileInputStream;
+import org.kc7bfi.jflac.metadata.StreamInfo;
 import top.gregtao.concerto.core.player.streamplayer.enums.AudioType;
 
 public final class TimeTool {
@@ -147,22 +147,22 @@ public final class TimeTool {
 				} catch (IOException | UnsupportedAudioFileException ex) {
 					System.err.println("Problem getting the time of-> " + file.getAbsolutePath());
 				}
-//			} else if ("flac".equals(extension)) {
-//				try {
-//					FLACDecoder decoder = new FLACDecoder(new RandomFileInputStream(file));
-//					StreamInfo streamInfo = decoder.readStreamInfo();
-//
-//					if (streamInfo != null) {
-//						long totalSamples = streamInfo.getTotalSamples();
-//						int sampleRate = streamInfo.getSampleRate();
-//
-//						if (sampleRate > 0) {
-//							return totalSamples / sampleRate * 1000;
-//						}
-//					}
-//				} catch (Exception e) {
-//					milliseconds = 0;
-//				}
+			} else if ("flac".equals(extension)) {
+				try {
+					FLACDecoder decoder = new FLACDecoder(new RandomFileInputStream(file));
+					StreamInfo streamInfo = decoder.readStreamInfo();
+
+					if (streamInfo != null) {
+						long totalSamples = streamInfo.getTotalSamples();
+						int sampleRate = streamInfo.getSampleRate();
+
+						if (sampleRate > 0) {
+							return totalSamples / sampleRate * 1000;
+						}
+					}
+				} catch (Exception e) {
+					milliseconds = 0;
+				}
 			}
 		}
 

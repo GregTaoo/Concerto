@@ -366,15 +366,15 @@ public class StreamPlayer implements StreamPlayerInterface, Callable<Void> {
 		this.speedFactor = speedFactor;
 	}
 
-//	public AudioInputStream decodeFlacToInputStream(InputStream inputStream, AudioFormat targetFormat, int bit) {
-//		try {
-//			logger.info(() -> "Entered decodeFlacToInputStream(" + inputStream + ")\n");
-//			return new AudioInputStream(new FlacDecoderStream(inputStream, targetFormat, bit, logger), targetFormat, AudioSystem.NOT_SPECIFIED);
-//		} catch (IOException e) {
-//			logger.log(Level.SEVERE, e.getMessage(), e);
-//			throw new RuntimeException(e);
-//		}
-//	}
+	public AudioInputStream decodeFlacToInputStream(InputStream inputStream, AudioFormat targetFormat, int bit) {
+		try {
+			logger.info(() -> "Entered decodeFlacToInputStream(" + inputStream + ")\n");
+			return new AudioInputStream(new FlacDecoderStream(inputStream, targetFormat, bit, logger), targetFormat, AudioSystem.NOT_SPECIFIED);
+		} catch (IOException e) {
+			logger.log(Level.SEVERE, e.getMessage(), e);
+			throw new RuntimeException(e);
+		}
+	}
 
 	/**
 	 * Init a DateLine.<br>
@@ -437,8 +437,8 @@ public class StreamPlayer implements StreamPlayerInterface, Callable<Void> {
 			// Create decoded Stream
 			if (!sourceFormat.toString().toLowerCase().startsWith("flac")) {
 				audioInputStream = AudioSystem.getAudioInputStream(targetFormat, audioInputStream);
-//			} else {
-//				audioInputStream = decodeFlacToInputStream(audioInputStream, targetFormat, bitBackup);
+			} else {
+				audioInputStream = decodeFlacToInputStream(audioInputStream, targetFormat, bitBackup);
 			}
 			final DataLine.Info lineInfo = new DataLine.Info(SourceDataLine.class, audioInputStream.getFormat(),
 				AudioSystem.NOT_SPECIFIED);

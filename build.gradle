@@ -1,4 +1,4 @@
-subprojects {
+allprojects {
 
     apply plugin: "java"
 
@@ -7,8 +7,9 @@ subprojects {
 //        maven { url 'https://jitpack.io' }
     }
 
-    java {
-        toolchain.languageVersion = JavaLanguageVersion.of(21)
+    configurations {
+        my.canBeResolved(true)
+        api.extendsFrom(my)
     }
 
 }

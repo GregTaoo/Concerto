@@ -1,11 +1,11 @@
 package top.gregtao.concerto.core.event;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 public class Event {
 
-    private final List<Runnable> listeners = new ArrayList<>();
+    private final List<Runnable> listeners = new CopyOnWriteArrayList<>();
 
     public Subscription subscribe(Runnable listener) {
         this.listeners.add(listener);

@@ -15,6 +15,7 @@ import top.gregtao.concerto.core.music.meta.music.MusicMetaData;
 import top.gregtao.concerto.core.enums.OrderType;
 import top.gregtao.concerto.core.music.Music;
 import top.gregtao.concerto.core.music.MusicTimestamp;
+import top.gregtao.concerto.core.network.SyncRecord;
 import top.gregtao.concerto.core.util.ConcertoRunner;
 import top.gregtao.concerto.core.util.MathUtil;
 import top.gregtao.concerto.core.util.Pair;
@@ -36,9 +37,10 @@ public class MusicPlayerHandler {
 
     public static int MAX_SIZE = 10000;
 
-    private ArrayList<Music> musicList = new ArrayList<>();
-
-    private int currentIndex = -1;
+    public SyncRecord<MusicPlayerState> playerState;
+//    private ArrayList<Music> musicList = new ArrayList<>();
+//    private int currentIndex = -1;
+//    private OrderType orderType = OrderType.NORMAL;
 
     public Music currentMusic = null;
 
@@ -54,8 +56,6 @@ public class MusicPlayerHandler {
 
     private String timeFormat = "%s" + " ".repeat(30) + "%s";
 
-    private OrderType orderType = OrderType.NORMAL;
-
     public float progressPercentage = 0;
 
     private long startTime = 0;
@@ -65,14 +65,14 @@ public class MusicPlayerHandler {
     public MusicPlayerHandler() {}
 
     public MusicPlayerHandler(ArrayList<Music> musics, int currentIndex, OrderType orderType) {
-        this.currentIndex = currentIndex;
-        this.orderType = orderType;
+//        this.currentIndex = currentIndex;
+//        this.orderType = orderType;
         if (musics.size() > MAX_SIZE) {
-            this.musicList = (ArrayList<Music>) musics.subList(0, MAX_SIZE - 1);
-        } else {
-            this.musicList = musics;
+            musics = (ArrayList<Music>) musics.subList(0, MAX_SIZE - 1);
         }
-        loadInThreadPool(this.musicList);
+        loadInThreadPool(musics);
+        MusicPlayerState state = new MusicPlayerState(musics, currentIndex, orderType, true);
+        this.playerState = MusicPlayerState.createLocalRecord(state);
     }
 
     public static <T extends LazyLoadable> void loadInThreadPool(List<T> objects, boolean force) {
@@ -113,50 +113,66 @@ public class MusicPlayerHandler {
             throw new RuntimeException(e);
         }
         this.resetInfo();
-        this.musicList.clear();
-        this.orderType = OrderType.NORMAL;
-        this.currentIndex = -1;
+        this.playerState.set((state) -> new MusicPlayerState());
         this.writeConfig();
     }
 
     public boolean addMusic(Music music) {
-        if (this.musicList.size() - this.maxRemovable() >= MAX_SIZE) return false;
-        this.removeMusic(this.musicList.size() + 1 - MAX_SIZE);
-        if (!music.isLoaded()) music.load();
-        this.musicList.add(music);
+        if (this.playerState.get().musicList.size() - this.maxRemovable() >= MAX_SIZE) {
+            return false;
+        }
+        this.playerState.set((state) -> {
+            this.removeMusic(state.musicList.size() + 1 - MAX_SIZE);
+            if (!music.isLoaded()) music.load();
+            state.musicList.add(music);
+            return state;
+        });
         this.writeConfig();
         return true;
     }
 
     public boolean addMusic(List<Music> musics) {
-        if (musics.size() + this.musicList.size() - this.maxRemovable() > MAX_SIZE) return false;
-        this.removeMusic(this.musicList.size() + musics.size() - MAX_SIZE);
-        loadInThreadPool(musics);
-        this.musicList.addAll(musics);
+        if (musics.size() + this.playerState.get().musicList.size() - this.maxRemovable() > MAX_SIZE) {
+            return false;
+        }
+        this.playerState.set((state) -> {
+            this.removeMusic(state.musicList.size() + musics.size() - MAX_SIZE);
+            loadInThreadPool(musics);
+            state.musicList.addAll(musics);
+            return state;
+        });
         this.writeConfig();
         return true;
     }
 
     public void addMusicHere(Music music) {
         if (!music.isLoaded()) music.load();
-        this.musicList.add(this.getCurrentIndex() + 1, music);
+        this.playerState.set((state) -> {
+            state.musicList.add(this.getCurrentIndex() + 1, music);
+            return state;
+        });
         this.writeConfig();
     }
 
     private int maxRemovable() {
-        return this.orderType == OrderType.REVERSED ? this.musicList.size() - this.currentIndex - 1 : this.currentIndex;
+        MusicPlayerState state = this.playerState.get();
+        return state.orderType == OrderType.REVERSED ? state.musicList.size() - state.currentIndex - 1 : state.currentIndex;
     }
 
-    private void removeMusic(int size) {
-        if (this.orderType == OrderType.REVERSED) {
-            while (size-- > 0) {
-                this.musicList.remove(this.musicList.size() - 1);
+    private void removeMusic(int n) {
+        this.playerState.set((state) -> {
+            int i = n;
+            if (state.orderType == OrderType.REVERSED) {
+                while (i-- > 0) {
+                    state.musicList.remove(state.musicList.size() - 1);
+                }
+            } else {
+                while (i-- > 0) {
+                    state.musicList.remove(0);
+                }
             }
-        } else {
-            while (size-- > 0) {
-                this.musicList.remove(0);
-            }
-        }
+            return state;
+        });
     }
 
     public void updateDisplayTexts() {
@@ -191,11 +207,14 @@ public class MusicPlayerHandler {
     }
 
     public Music playNext(int forward) {
-        if (this.musicList.isEmpty()) return null;
+        if (this.playerState.get().musicList.isEmpty()) return null;
         this.displayTexts[2] = Concerto.getMinecraft().getTranslatableText("concerto.loading");
-        this.currentIndex = this.getNext(forward);
         try {
-            this.currentMusic = this.musicList.get(this.currentIndex);
+            this.playerState.set((state) -> {
+                state.currentIndex = this.getNext(forward);
+                this.currentMusic = state.musicList.get(state.currentIndex);
+                return state;
+            });
         } catch (IndexOutOfBoundsException e) {
             return this.currentMusic = null;
         }
@@ -225,50 +244,60 @@ public class MusicPlayerHandler {
     }
 
     public void removeCurrent() {
-        if (this.musicList.size() == 1) {
-            this.clear();
-        } else if (this.currentIndex < this.musicList.size()) {
-            this.musicList.remove(this.currentIndex);
-        }
+        this.playerState.set((state) -> {
+            if (state.musicList.size() == 1) {
+                this.clear();
+            } else if (state.currentIndex < state.musicList.size()) {
+                state.musicList.remove(state.currentIndex);
+            }
+            return state;
+        });
     }
 
     public void remove(int index) {
-        if (index <= this.currentIndex) this.currentIndex--;
-        if (index < this.musicList.size()) {
-            this.musicList.remove(index);
-        }
+        this.playerState.set((state) -> {
+            if (index <= state.currentIndex) state.currentIndex--;
+            if (index < state.musicList.size()) {
+                state.musicList.remove(index);
+            }
+            return state;
+        });
     }
 
     private int getNext(int forward) {
+        MusicPlayerState state = this.playerState.get();
         if (forward == 0) {
-            return MathUtil.clamp(this.currentIndex, 0, this.getMusicList().size() - 1);
-        } else if (this.orderType == OrderType.NORMAL) {
-            return (this.currentIndex + forward) % this.musicList.size();
-        } else if (this.orderType == OrderType.REVERSED) {
-            forward %= this.musicList.size();
-            if (this.currentIndex - forward < 0) {
-                return this.musicList.size() - (forward - this.currentIndex);
+            return MathUtil.clamp(state.currentIndex, 0, this.getMusicList().size() - 1);
+        } else if (state.orderType == OrderType.NORMAL) {
+            return (state.currentIndex + forward) % state.musicList.size();
+        } else if (state.orderType == OrderType.REVERSED) {
+            forward %= state.musicList.size();
+            if (state.currentIndex - forward < 0) {
+                return state.musicList.size() - (forward - state.currentIndex);
             } else {
-                return this.currentIndex - forward;
+                return state.currentIndex - forward;
             }
-        } else if (this.orderType == OrderType.LOOP) {
-            return this.currentIndex;
+        } else if (state.orderType == OrderType.LOOP) {
+            return state.currentIndex;
         } else {
-            return this.musicList.isEmpty() ? -1 : this.random.nextInt(this.musicList.size());
+            return state.musicList.isEmpty() ? -1 : this.random.nextInt(state.musicList.size());
         }
     }
 
     public void setOrderType(OrderType type) {
-        this.orderType = type;
+        this.playerState.set((state) -> {
+            state.orderType = type;
+            return state;
+        });
         this.writeConfig();
     }
 
     public OrderType getOrderType() {
-        return this.orderType;
+        return this.playerState.get().orderType;
     }
 
     public boolean isEmpty() {
-        return this.musicList.isEmpty();
+        return this.playerState.get().musicList.isEmpty();
     }
 
     public String[] getDisplayTexts() {
@@ -280,15 +309,18 @@ public class MusicPlayerHandler {
     }
 
     public int getCurrentIndex() {
-        return MathUtil.clamp(0, this.currentIndex, this.musicList.size() - 1);
+        return MathUtil.clamp(0, this.playerState.get().currentIndex, this.playerState.get().musicList.size() - 1);
     }
 
     public ArrayList<Music> getMusicList() {
-        return this.musicList;
+        return this.playerState.get().musicList;
     }
 
     public void setCurrentIndex(int index) {
-        this.currentIndex = index;
+        this.playerState.set((state) -> {
+            state.currentIndex = index;
+            return state;
+        });
     }
 
     public void writeConfig() {

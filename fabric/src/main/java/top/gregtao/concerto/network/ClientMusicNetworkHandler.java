@@ -18,6 +18,7 @@ import top.gregtao.concerto.core.util.TextUtil;
 import top.gregtao.concerto.network.room.MusicRoom;
 import top.gregtao.concerto.core.player.MusicPlayer;
 import top.gregtao.concerto.core.player.MusicPlayerHandler;
+import top.gregtao.concerto.network.room.ServerMusicAgent;
 import top.gregtao.concerto.screen.MusicAuditionScreen;
 import top.gregtao.concerto.screen.PresetRadiosScreen;
 import top.gregtao.concerto.core.util.ConcertoRunner;
@@ -210,13 +211,11 @@ public class ClientMusicNetworkHandler {
     }
 
     public static void musicAgentJoin() {
-        ClientPlayNetworking.send(new ConcertoPayload(ConcertoPayload.Channel.MUSIC_AGENT, "Join"));
-        ConcertoClient.clientState = ConcertoClient.ClientState.MUSIC_AGENT;
+        MusicRoom.clientJoin(ServerMusicAgent.ROOM_UUID.toString());
     }
 
     public static void musicAgentQuit() {
-        ClientPlayNetworking.send(new ConcertoPayload(ConcertoPayload.Channel.MUSIC_AGENT, "Quit"));
-        ConcertoClient.clientState = ConcertoClient.ClientState.LOCAL;
+        MusicRoom.clientQuit();
     }
 
     public static void musicAgentNewVote() {

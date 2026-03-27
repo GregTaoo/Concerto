@@ -8,7 +8,6 @@ import top.gregtao.concerto.core.music.LocalFileMusic;
 import top.gregtao.concerto.core.music.Music;
 import top.gregtao.concerto.core.api.UnsafeMusicException;
 import top.gregtao.concerto.core.music.list.Playlist;
-import top.gregtao.concerto.core.player.MusicPlayer;
 import top.gregtao.concerto.core.player.MusicPlayerHandler;
 
 import java.io.File;
@@ -17,7 +16,6 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 public abstract class ApplyDraggedFileScreen extends ConcertoScreen {
@@ -32,8 +30,7 @@ public abstract class ApplyDraggedFileScreen extends ConcertoScreen {
         String message = paths.stream().map(Path::getFileName).map(Path::toString).collect(Collectors.joining(", "));
         this.client.setScreen(new ConfirmScreen(confirmed -> {
             if (confirmed) {
-                AtomicInteger integer = new AtomicInteger(0);
-                MusicPlayer.INSTANCE.addMusic(() -> {
+                MusicPlayerHandler.INSTANCE.addMusicAsync(() -> {
                     ArrayList<Music> list = new ArrayList<>();
                     paths.forEach(path -> {
                         File file = path.toFile();
@@ -54,10 +51,8 @@ public abstract class ApplyDraggedFileScreen extends ConcertoScreen {
                             this.displayAlert(Text.translatable("concerto.error.invalid_path"));
                         }
                     });
-                    integer.set(list.size());
                     return list;
-                }, () -> {
-                    MusicPlayer.INSTANCE.skipTo(MusicPlayerHandler.INSTANCE.getMusicList().size() - integer.get());
+                }, true, () -> {
                     if (this instanceof GeneralPlaylistScreen screen) {
                         screen.toggleSearch();
                     }

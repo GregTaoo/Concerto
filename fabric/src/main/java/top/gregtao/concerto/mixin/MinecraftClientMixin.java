@@ -7,9 +7,9 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import top.gregtao.concerto.ConcertoClient;
+import top.gregtao.concerto.core.player.MusicPlayerHandler;
 import top.gregtao.concerto.network.ClientMusicNetworkHandler;
 import top.gregtao.concerto.network.room.MusicRoom;
-import top.gregtao.concerto.core.player.MusicPlayer;
 import top.gregtao.concerto.screen.MusicAuditionScreen;
 
 @Mixin(MinecraftClient.class)
@@ -20,9 +20,11 @@ public class MinecraftClientMixin {
         ConcertoClient.serverAvailable = false;
         ClientMusicNetworkHandler.WAIT_CONFIRMATION.clear();
         MusicAuditionScreen.WAIT_AUDITION.clear();
-        MusicPlayer.INSTANCE.pause();
         MusicRoom.CLIENT_ROOM = null;
         ConcertoClient.clientState = ConcertoClient.ClientState.LOCAL;
+        if (MusicPlayerHandler.INSTANCE != null) {
+            MusicPlayerHandler.INSTANCE.setPaused(true);
+        }
         ConcertoClient.LOGGER.info("Exited from server. Functions of server side are unavailable now.");
     }
 }

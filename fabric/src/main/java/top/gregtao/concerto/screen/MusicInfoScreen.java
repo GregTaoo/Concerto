@@ -7,8 +7,8 @@ import net.minecraft.text.Text;
 import top.gregtao.concerto.ConcertoClient;
 import top.gregtao.concerto.core.music.Music;
 import top.gregtao.concerto.core.music.meta.music.MusicMetaData;
+import top.gregtao.concerto.core.player.MusicPlayerHandler;
 import top.gregtao.concerto.network.ClientMusicNetworkHandler;
-import top.gregtao.concerto.core.player.MusicPlayer;
 import top.gregtao.concerto.screen.widget.URLImageWidget;
 import top.gregtao.concerto.core.util.ConcertoRunner;
 
@@ -41,12 +41,12 @@ public class MusicInfoScreen extends ConcertoScreen {
 
         this.addDrawableChild(ButtonWidget.builder(
                 Text.translatable("concerto.screen.play"),
-                button -> MusicPlayer.INSTANCE.addMusicHere(this.music, true)
+                button -> MusicPlayerHandler.INSTANCE.addMusicHereAsync(this.music, true, () -> {})
         ).position(this.width - 190, this.height - 30).size(50, 20).build());
 
         this.addDrawableChild(ButtonWidget.builder(
                 Text.translatable("concerto.screen.add"),
-                button -> MusicPlayer.INSTANCE.addMusic(this.music)
+                button -> MusicPlayerHandler.INSTANCE.addMusicAsync(this.music, false, () -> {})
         ).position(this.width - 135, this.height - 30).size(50, 20).build());
 
         this.addDrawableChild(ButtonWidget.builder(

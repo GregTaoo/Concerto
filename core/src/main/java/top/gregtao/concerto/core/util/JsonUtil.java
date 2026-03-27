@@ -5,6 +5,7 @@ import com.google.gson.JsonParser;
 import com.google.gson.stream.JsonReader;
 
 import java.io.StringReader;
+import java.util.UUID;
 
 public class JsonUtil {
 
@@ -17,6 +18,14 @@ public class JsonUtil {
     public static String getStringOrElse(JsonObject object, String name, String def) {
         try {
             return object.get(name).getAsString();
+        } catch (Exception e) {
+            return def;
+        }
+    }
+
+    public static UUID getUUIDOrElse(JsonObject object, String name, UUID def) {
+        try {
+            return UUID.fromString(object.get(name).getAsString());
         } catch (Exception e) {
             return def;
         }

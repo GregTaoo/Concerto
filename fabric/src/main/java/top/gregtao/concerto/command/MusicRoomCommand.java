@@ -40,8 +40,8 @@ public class MusicRoomCommand {
                         })).then(ClientCommandManager.literal("members").executes(context -> {
                             if (MusicRoom.CLIENT_ROOM != null) {
                                 context.getSource().getPlayer().sendMessage(Text.translatable(
-                                        "concerto.room.members", MusicRoom.CLIENT_ROOM.owner,
-                                        String.join(",", MusicRoom.CLIENT_ROOM.members.keySet())
+                                        "concerto.room.members", MusicRoom.CLIENT_ROOM.clientGetOwner(),
+                                        String.join(",", MusicRoom.CLIENT_ROOM.clientGetMembers().keySet())
                                 ), false);
                             }
                             return 0;

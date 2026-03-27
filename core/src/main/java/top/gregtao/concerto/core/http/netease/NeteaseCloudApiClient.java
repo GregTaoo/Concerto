@@ -14,7 +14,6 @@ import top.gregtao.concerto.core.music.list.FixedPlaylist;
 import top.gregtao.concerto.core.music.list.NeteaseCloudPlaylist;
 import top.gregtao.concerto.core.music.meta.music.TimelessMusicMetaData;
 import top.gregtao.concerto.core.music.meta.music.list.PlaylistMetaData;
-import top.gregtao.concerto.core.player.MusicPlayerHandler;
 import top.gregtao.concerto.core.util.HashUtil;
 import top.gregtao.concerto.core.util.JsonUtil;
 import top.gregtao.concerto.core.util.MathUtil;
@@ -183,7 +182,7 @@ public class NeteaseCloudApiClient extends HttpApiClient {
 
     public Pair<ArrayList<Music>, PlaylistMetaData> getPlaylist(String id, NeteaseCloudMusic.Level level) {
         try {
-            String url = "http://music.163.com/api/v6/playlist/detail?id=" + id + "&n=" + MusicPlayerHandler.MAX_SIZE;
+            String url = "http://music.163.com/api/v6/playlist/detail?id=" + id + "&n=1000000";
             JsonObject object = Objects.requireNonNull(parseJson(this.open().url(url).get()))
                     .getAsJsonObject("playlist");
             return this.parsePlaylistJson(object, level, false);

@@ -4,6 +4,9 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.text.Text;
 import top.gregtao.concerto.core.bridge.Minecraft;
+import top.gregtao.concerto.core.network.SyncRecord;
+import top.gregtao.concerto.core.player.MusicPlayerState;
+import top.gregtao.concerto.network.room.MusicRoom;
 
 public class MinecraftImpl implements Minecraft {
 
@@ -18,5 +21,10 @@ public class MinecraftImpl implements Minecraft {
         if (player != null) {
             player.sendMessage(Text.literal(message), overlay);
         }
+    }
+
+    @Override
+    public SyncRecord<MusicPlayerState> getCurrentState() {
+        return MusicRoom.CLIENT_ROOM != null ? MusicRoom.CLIENT_ROOM.clientState : null;
     }
 }

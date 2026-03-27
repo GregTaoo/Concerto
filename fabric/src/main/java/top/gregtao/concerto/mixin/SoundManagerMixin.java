@@ -7,19 +7,19 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import top.gregtao.concerto.ConcertoClient;
-import top.gregtao.concerto.core.player.MusicPlayer;
+import top.gregtao.concerto.core.player.MusicPlayerHandler;
 
 @Mixin(SoundManager.class)
 public class SoundManagerMixin {
 
     @Inject(at = @At("HEAD"), method = "pauseAll()V")
     private void pauseAllInject(CallbackInfo ci) {
-        MusicPlayer.INSTANCE.pause();
+        MusicPlayerHandler.INSTANCE.setPaused(true);
     }
 
     @Inject(at = @At("HEAD"), method = "resumeAll()V")
     private void resumeAllInject(CallbackInfo ci) {
-        MusicPlayer.INSTANCE.resume();
+        MusicPlayerHandler.INSTANCE.setPaused(false);
     }
 
     @Inject(at = @At("TAIL"), method = "updateSoundVolume(Lnet/minecraft/sound/SoundCategory;F)V")

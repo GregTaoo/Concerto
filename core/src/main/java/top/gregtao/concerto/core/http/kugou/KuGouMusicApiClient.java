@@ -14,7 +14,6 @@ import top.gregtao.concerto.core.music.list.KuGouMusicPlaylist;
 import top.gregtao.concerto.core.music.meta.music.MusicMetaData;
 import top.gregtao.concerto.core.music.meta.music.UnknownMusicMeta;
 import top.gregtao.concerto.core.music.meta.music.list.PlaylistMetaData;
-import top.gregtao.concerto.core.player.MusicPlayerHandler;
 
 import java.math.BigInteger;
 import java.net.URLEncoder;
@@ -192,7 +191,7 @@ public class KuGouMusicApiClient extends HttpApiClient {
         String uuid = "-";
         String token = getCookie("token", "");
         String userid = getCookie("userid", "0");
-        String clientTime = String.valueOf((long)(Math.floor((double) System.currentTimeMillis() / 1000)));
+        String clientTime = String.valueOf((long) (Math.floor((double) System.currentTimeMillis() / 1000)));
         Map<String, String> paramsMap = new HashMap<>(params);
         Map<String, String> headers = new HashMap<>(Map.of(
                 "dfid", dfid,
@@ -307,7 +306,7 @@ public class KuGouMusicApiClient extends HttpApiClient {
         String ppageId = isLite ? "356753938,823673182,967485191" : "463467626,350369493,788954147";
         String pid = isLite ? "411" : "2";
 
-        Map<String, String> params = new HashMap<>(){{
+        Map<String, String> params = new HashMap<>() {{
             put("album_id", "0");
             put("area_code", "1");
             put("hash", hash);
@@ -345,8 +344,8 @@ public class KuGouMusicApiClient extends HttpApiClient {
         if (isStringEmpty(hash)) return Optional.empty();
         return getSongUrl(hash, isFreePart)
                 .map(songUrlResponse -> songUrlResponse.getAsJsonArray("url"))
-                .map(url -> url.size() > 0 ? url.get(0).getAsString() : null)
-                .map(link -> !link.isEmpty() ? link : null );
+                .map(url -> !url.isEmpty() ? url.get(0).getAsString() : null)
+                .map(link -> !link.isEmpty() ? link : null);
     }
 
     public Optional<JsonObject> getMusicHash(String hash) {
@@ -418,7 +417,7 @@ public class KuGouMusicApiClient extends HttpApiClient {
 
         if (json != null) {
             JsonArray dataArray = json.getAsJsonArray("data");
-            if (dataArray != null && dataArray.size() > 0) {
+            if (dataArray != null && !dataArray.isEmpty()) {
                 return Optional.ofNullable(dataArray.get(0).getAsJsonObject());
             }
         }
@@ -483,7 +482,7 @@ public class KuGouMusicApiClient extends HttpApiClient {
                 "mode", "1",
                 "personal_switch", "1",
                 "extend_fields", "",
-                "pagesize", String.valueOf(MusicPlayerHandler.MAX_SIZE),
+                "pagesize", "1000000",
                 "global_collection_id", id
         );
 
@@ -579,7 +578,7 @@ public class KuGouMusicApiClient extends HttpApiClient {
         Optional<JsonObject> albumSongs = getAlbumSongs(id);
 
         PlaylistMetaData playlistMetaData = albumDetail.map(json -> json.getAsJsonArray("data"))
-                .map(arr -> arr.size() > 0 ? arr.get(0).getAsJsonObject() : null)
+                .map(arr -> !arr.isEmpty() ? arr.get(0).getAsJsonObject() : null)
                 .map(KuGouMusicPlaylist::parseAlbumInfo)
                 .orElse(PlaylistMetaData.EMPTY);
 
@@ -993,6 +992,7 @@ public class KuGouMusicApiClient extends HttpApiClient {
 
     /**
      * 领取酷狗音乐概念版一天畅听 vip, 仅限概念版用户使用
+     *
      * @return 领取结果
      */
     public Optional<JsonObject> receiveVip() {
@@ -1177,7 +1177,7 @@ public class KuGouMusicApiClient extends HttpApiClient {
     }
 
     public String getClientTime() {
-        return String.valueOf((long)(Math.floor((double) System.currentTimeMillis() / 1000)));
+        return String.valueOf((long) (Math.floor((double) System.currentTimeMillis() / 1000)));
     }
 
     public String getKey() {

@@ -23,6 +23,7 @@ import top.gregtao.concerto.core.http.kugou.KuGouMusicApiClient;
 import top.gregtao.concerto.core.http.netease.NeteaseCloudApiClient;
 import top.gregtao.concerto.core.http.qq.QQMusicApiClient;
 import top.gregtao.concerto.core.music.list.Playlist;
+import top.gregtao.concerto.core.player.MusicPlayerHandler;
 import top.gregtao.concerto.network.ClientMusicNetworkHandler;
 import top.gregtao.concerto.core.player.MusicPlayer;
 import top.gregtao.concerto.screen.widget.URLImageWidget;
@@ -88,7 +89,7 @@ public class ConcertoClient implements ClientModInitializer {
 				ConcertoRunner.run(() -> {
 					ClientConfig.INSTANCE.readOptions();
 					ConcertoOptions.INSTANCE.readOptions();
-					MusicPlayer.INSTANCE.reloadConfig(() -> LOGGER.info("Loaded general music playlist"));
+					MusicPlayerHandler.reloadConfig(() -> LOGGER.info("Loaded general music playlist"));
                     PresetPlaylistsConfig.LOCAL_PLAYLISTS.read();
 					NeteaseCloudApiClient.LOCAL_USER.updateLoginStatus();
 					QQMusicApiClient.LOCAL_USER.updateLoginStatus();

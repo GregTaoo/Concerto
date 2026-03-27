@@ -8,7 +8,6 @@ import net.minecraft.text.Text;
 import top.gregtao.concerto.config.PresetPlaylistsConfig;
 import top.gregtao.concerto.core.music.Music;
 import top.gregtao.concerto.core.music.list.Playlist;
-import top.gregtao.concerto.core.player.MusicPlayer;
 import top.gregtao.concerto.core.player.MusicPlayerHandler;
 import top.gregtao.concerto.screen.widget.ConcertoListWidget;
 import top.gregtao.concerto.screen.widget.MetadataListWidget;
@@ -30,28 +29,27 @@ public class PlaylistPreviewScreen extends ConcertoScreen {
         this.widget = new MetadataListWidget<>(this.width, this.height - 55, 20, 18) {
             @Override
             public void onDoubleClicked(ConcertoListWidget<Music>.Entry entry) {
-                MusicPlayer.INSTANCE.addMusicHere(entry.item, true);
+                MusicPlayerHandler.INSTANCE.addMusicHereAsync(entry.item, true);
             }
         };
         this.addSelectableChild(this.widget);
         ConcertoRunner.run(() -> this.widget.reset(this.playlist.getList(), null));
 
         this.addDrawableChild(ButtonWidget.builder(Text.translatable("concerto.screen.playlist.add"), button ->
-            MusicPlayer.INSTANCE.addMusic(this.playlist.getList(), () ->
-                    MusicPlayer.INSTANCE.skipTo(MusicPlayerHandler.INSTANCE.getMusicList().size() - this.playlist.getList().size())
-        )).position(20, this.height - 30).size(60, 20).build());
+            MusicPlayerHandler.INSTANCE.addMusicAsync(this.playlist.getList(), true))
+                .position(20, this.height - 30).size(60, 20).build());
 
         this.addDrawableChild(ButtonWidget.builder(Text.translatable("concerto.screen.play"), button -> {
             ConcertoListWidget<Music>.Entry entry = this.widget.getSelectedOrNull();
             if (entry != null) {
-                MusicPlayer.INSTANCE.addMusicHere(entry.item, true);
+                MusicPlayerHandler.INSTANCE.addMusicHereAsync(entry.item, true);
             }
         }).position(85, this.height - 30).size(60, 20).build());
 
         this.addDrawableChild(ButtonWidget.builder(Text.translatable("concerto.screen.add"), button -> {
             ConcertoListWidget<Music>.Entry entry = this.widget.getSelectedOrNull();
             if (entry != null) {
-                MusicPlayer.INSTANCE.addMusic(entry.item);
+                MusicPlayerHandler.INSTANCE.addMusicAsync(entry.item, false);
             }
         }).position(150, this.height - 30).size(60, 20).build());
 

@@ -4,15 +4,16 @@
   "package": "top.gregtao.concerto.mixin",
   "compatibilityLevel": "JAVA_21",
   "mixins": [
+    "MinecraftServerMixin",
     "PlayerManagerMixin"
   ],
   "client": [
     "ChatHudMixin",
-    "MinecraftClientMixin",
+    "DrawContextAccessor",
     "GameMenuScreenMixin",
+    "MinecraftClientMixin",
     "MusicTrackerMixin",
-    "SoundManagerMixin",
-    "DrawContextAccessor"
+    "SoundManagerMixin"
   ],
   "server": [
   ],

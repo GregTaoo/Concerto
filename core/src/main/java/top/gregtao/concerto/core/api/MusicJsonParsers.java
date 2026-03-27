@@ -16,11 +16,13 @@ import top.gregtao.concerto.core.music.meta.music.list.PlaylistMetaData;
 import top.gregtao.concerto.core.music.parser.*;
 import top.gregtao.concerto.core.music.parser.meta.BasicMusicMetaJsonParser;
 import top.gregtao.concerto.core.music.parser.meta.TimelessMusicMetaJsonParser;
+import top.gregtao.concerto.core.player.ConcertoPlayerList;
 import top.gregtao.concerto.core.player.MusicPlayerHandler;
 import top.gregtao.concerto.core.util.JsonUtil;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.UUID;
 
 public class MusicJsonParsers {
     private static final HashMap<String, JsonParser<Music>> MUSIC_PARSERS = new HashMap<>();
@@ -191,15 +193,11 @@ public class MusicJsonParsers {
     public static MusicPlayerHandler fromRaw(String json) {
         try {
             if (json.isEmpty()) return new MusicPlayerHandler();
-            ArrayList<Music> list = new ArrayList<>();
             JsonObject object = JsonUtil.from(json);
-            JsonArray array = object.get("data").getAsJsonArray();
-            array.forEach(element -> {
-                Music music = from(element.getAsJsonObject());
-                if (music != null) list.add(music);
-            });
+            ConcertoPlayerList.GsonAdapter adapter = new ConcertoPlayerList.GsonAdapter();
+            ConcertoPlayerList list = adapter.deserialize(object.get("data"), null, null);
             return new MusicPlayerHandler(list,
-                    Math.min(JsonUtil.getIntOrElse(object, "cur", -1), array.size() - 1),
+                    JsonUtil.getUUIDOrElse(object, "cur", null),
                     OrderType.valueOf(JsonUtil.getStringOrElse(object, "ord", OrderType.NORMAL.toString()))
             );
         } catch (Exception e) {
@@ -209,14 +207,14 @@ public class MusicJsonParsers {
     }
 
     public static String toRaw(MusicPlayerHandler status) {
-        JsonArray array = new JsonArray();
-        status.getMusicList().forEach(music -> {
-            JsonObject object = to(music);
-            if (object != null) array.add(object);
-        });
+        ConcertoPlayerList.GsonAdapter adapter = new ConcertoPlayerList.GsonAdapter();
+        JsonElement data = adapter.serialize(status.getMusicList(), null, null);
         JsonObject object = new JsonObject();
-        object.add("data", array);
-        object.addProperty("cur", status.getCurrentIndex());
+        object.add("data", data);
+        UUID currentIndex = status.getCurrentIndex();
+        if (currentIndex != null) {
+            object.addProperty("cur", status.getCurrentIndex().toString());
+        }
         object.addProperty("ord", status.getOrderType().toString());
         return object.toString();
     }

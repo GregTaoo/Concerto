@@ -6,6 +6,7 @@ import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.util.InputUtil;
 import org.lwjgl.glfw.GLFW;
 import top.gregtao.concerto.core.player.MusicPlayer;
+import top.gregtao.concerto.core.player.MusicPlayerHandler;
 import top.gregtao.concerto.screen.ConcertoIndexScreen;
 import top.gregtao.concerto.screen.GeneralPlaylistScreen;
 
@@ -46,12 +47,11 @@ public class ConcertoHotkeys {
             } else if (INDEX_SCREEN.wasPressed()) {
                 client.setScreen(new ConcertoIndexScreen(null));
             } else if (NEXT_MUSIC.wasPressed()) {
-                if (!MusicPlayer.INSTANCE.started) MusicPlayer.INSTANCE.start();
-                else if (!MusicPlayer.INSTANCE.playNextLock.get()) MusicPlayer.INSTANCE.playNext(1);
+                MusicPlayerHandler.INSTANCE.playNext(1);
             } else if (PAUSE_RESUME.wasPressed()) {
                 if (MusicPlayer.INSTANCE.started) {
-                    if (MusicPlayer.INSTANCE.forcePaused) MusicPlayer.INSTANCE.forceResume();
-                    else MusicPlayer.INSTANCE.forcePause();
+                    if (MusicPlayerHandler.INSTANCE.isForcePaused()) MusicPlayerHandler.INSTANCE.forceResume();
+                    else MusicPlayerHandler.INSTANCE.forcePause();
                 }
             }
         });

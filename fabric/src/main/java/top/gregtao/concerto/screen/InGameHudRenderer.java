@@ -123,7 +123,7 @@ public class InGameHudRenderer {
                             pos.x, pos.y, context, client.textRenderer, (int) config.timeProgressTextColor.getNumber());
                     int blankWidth = client.textRenderer.getWidth("                              "); // 兼容不同字体
                     int timeWidth = (text3Width - blankWidth) / 2;
-                    if (MusicPlayerHandler.INSTANCE.currentMeta != null && MusicPlayerHandler.INSTANCE.currentMeta.getDuration() != null) {
+                    if (MusicPlayer.INSTANCE.currentMeta != null && MusicPlayer.INSTANCE.currentMeta.getDuration() != null) {
                         int x;
                         switch (options.timeProgressAlignment) {
                             case LEFT -> x = pos.x + timeWidth + 9;
@@ -132,7 +132,7 @@ public class InGameHudRenderer {
                         }
                         context.fill(x, pos.y + 3, x + blankWidth - 20, pos.y + 5,
                                 (int) config.timeProgressBgColor.getNumber());
-                        context.fill(x, pos.y + 3, (int) (x + (blankWidth - 20) * MusicPlayerHandler.INSTANCE.progressPercentage),
+                        context.fill(x, pos.y + 3, (int) (x + (blankWidth - 20) * MusicPlayer.INSTANCE.progressPercentage),
                                 pos.y + 5, (int) config.timeProgressColor.getNumber());
                     }
                 }

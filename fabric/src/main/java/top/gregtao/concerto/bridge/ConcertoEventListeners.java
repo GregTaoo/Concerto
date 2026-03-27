@@ -4,8 +4,7 @@ import net.minecraft.client.MinecraftClient;
 import top.gregtao.concerto.ConcertoClient;
 import top.gregtao.concerto.core.config.ClientConfig;
 import top.gregtao.concerto.core.event.ConcertoEvents;
-import top.gregtao.concerto.core.player.MusicPlayerHandler;
-import top.gregtao.concerto.network.room.MusicRoom;
+import top.gregtao.concerto.core.player.MusicPlayer;
 
 public class ConcertoEventListeners {
 
@@ -17,19 +16,19 @@ public class ConcertoEventListeners {
             ConcertoClient.syncPlayerVolume();
         });
 
-        ConcertoEvents.ON_PLAYER_PAUSE.subscribe(() -> MusicRoom.clientPause(true));
+//        ConcertoEvents.ON_PLAYER_PAUSE.subscribe(() -> MusicRoom.clientPause(true));
 
-        ConcertoEvents.ON_PLAYER_RESUME.subscribe(() -> MusicRoom.clientPause(false));
+//        ConcertoEvents.ON_PLAYER_RESUME.subscribe(() -> MusicRoom.clientPause(false));
 
         ConcertoEvents.ON_MUSIC_INFO_RESET.subscribe(() -> ConcertoClient.COVER_IMAGE.setUrl(null));
 
         ConcertoEvents.ON_MUSIC_INFO_UPDATE.subscribe(() -> {
-            if (!MusicPlayerHandler.INSTANCE.currentMeta.headPictureUrl().isEmpty()) {
-                ConcertoClient.COVER_IMAGE.setUrl(MusicPlayerHandler.INSTANCE.currentMeta.headPictureUrl());
+            if (!MusicPlayer.INSTANCE.currentMeta.headPictureUrl().isEmpty()) {
+                ConcertoClient.COVER_IMAGE.setUrl(MusicPlayer.INSTANCE.currentMeta.headPictureUrl());
                 ConcertoClient.COVER_IMAGE.loadImage(true, ClientConfig.INSTANCE.options.coverImgInCircle);
             }
         });
 
-        ConcertoEvents.ON_NEXT_MUSIC.subscribe(MusicRoom::clientUpdate);
+//        ConcertoEvents.ON_NEXT_MUSIC.subscribe(MusicRoom::clientUpdate);
     }
 }

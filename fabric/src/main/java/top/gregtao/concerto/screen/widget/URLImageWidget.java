@@ -192,7 +192,7 @@ public class URLImageWidget implements Drawable, Widget, AutoCloseable {
         } catch (MalformedURLException e) {
             ConcertoClient.LOGGER.error("Malformed URL: {}", this.url, e);
             this.state = State.FAILED;
-        } catch (IOException e) {
+        } catch (IOException | NullPointerException e) {
             ConcertoClient.LOGGER.error("Error while loading image: {}", this.url, e);
             this.state = State.FAILED;
         }
@@ -213,7 +213,7 @@ public class URLImageWidget implements Drawable, Widget, AutoCloseable {
                 if (useCache) this.writeCacheFile(image);
             }
             this.uploadImage(image, () -> this.state = State.READY);
-        } catch (IOException e) {
+        } catch (IOException | NullPointerException e) {
             ConcertoClient.LOGGER.error("Error while loading image: {}", this.url, e);
             this.state = State.FAILED;
         }

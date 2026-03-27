@@ -2,23 +2,19 @@ package top.gregtao.concerto.core.player;
 
 import top.gregtao.concerto.core.Concerto;
 import top.gregtao.concerto.core.event.ConcertoEvents;
-import top.gregtao.concerto.core.player.streamplayer.enums.Status;
-import top.gregtao.concerto.core.player.streamplayer.stream.StreamPlayer;
-import top.gregtao.concerto.core.player.streamplayer.stream.StreamPlayerEvent;
-import top.gregtao.concerto.core.player.streamplayer.stream.StreamPlayerException;
-import top.gregtao.concerto.core.player.streamplayer.stream.StreamPlayerListener;
-import top.gregtao.concerto.core.api.MusicJsonParsers;
 import top.gregtao.concerto.core.music.Music;
+import top.gregtao.concerto.core.music.MusicTimestamp;
+import top.gregtao.concerto.core.music.lyrics.Lyrics;
+import top.gregtao.concerto.core.music.meta.music.MusicMetaData;
+import top.gregtao.concerto.core.player.streamplayer.enums.Status;
+import top.gregtao.concerto.core.player.streamplayer.stream.*;
 import top.gregtao.concerto.core.util.ConcertoRunner;
+import top.gregtao.concerto.core.util.Pair;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.List;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.function.Consumer;
-import java.util.function.Supplier;
 import java.util.logging.FileHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -29,12 +25,25 @@ public class MusicPlayer extends StreamPlayer implements StreamPlayerListener {
     public static MusicPlayer INSTANCE;
     public static final Logger PLAYER_LOGGER;
 
+    public Music currentMusic = null;
+    public InputStream currentSource = null;
+    public Lyrics currentLyrics = null, currentSubLyrics = null;
+    public MusicMetaData currentMeta = null;
+    private MusicTimestamp currentTime = null;
+    private String[] displayTexts = new String[]{"", "", "", ""};
+    private String timeFormat = "%s" + " ".repeat(30) + "%s";
+    public float progressPercentage = 0;
+    private long startTime = 0;
+
+    public boolean started = false;
+    public final Object playNextLock = new Object();
+    public boolean isPlayingTemp = false;
+    private volatile Music pendingMusic = null;
+
     static {
         PLAYER_LOGGER = Logger.getLogger(MusicPlayer.class.getName());
         File file = new File("Concerto");
-        if (!file.exists() && !file.isDirectory() && !file.mkdir()) {
-            throw new RuntimeException("Cannot mkdir!");
-        }
+        if (!file.exists() && !file.isDirectory() && !file.mkdir()) throw new RuntimeException("Cannot mkdir!");
         FileHandler fileHandler;
         try {
             fileHandler = new FileHandler("Concerto/player.log", false);
@@ -49,26 +58,12 @@ public class MusicPlayer extends StreamPlayer implements StreamPlayerListener {
 
     public static void resetInstance() {
         try {
-            if (MusicPlayerHandler.INSTANCE.currentSource != null) {
-                MusicPlayerHandler.INSTANCE.currentSource.close();
-            }
+            if (INSTANCE != null && INSTANCE.currentSource != null)
+                INSTANCE.currentSource.close();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
         INSTANCE = new MusicPlayer(PLAYER_LOGGER);
-    }
-
-    public boolean forcePaused = false;
-
-    public boolean started = false;
-
-    public AtomicBoolean playNextLock = new AtomicBoolean(false);
-
-    public boolean isPlayingTemp = false;
-
-    public MusicPlayer() {
-        super();
-        this.addStreamPlayerListener(this);
     }
 
     public MusicPlayer(Logger logger) {
@@ -76,258 +71,194 @@ public class MusicPlayer extends StreamPlayer implements StreamPlayerListener {
         this.addStreamPlayerListener(this);
     }
 
-    public void addMusic(Music music) {
-        this.addMusic(music, () -> {});
-    }
-
-    public void addMusic(List<Music> musics) {
-        this.addMusic(musics, () -> {});
-    }
-
-    public void addMusic(Music music, Runnable callback) {
-        ConcertoRunner.run(() -> MusicPlayerHandler.INSTANCE.addMusic(music), callback);
-    }
-
-    public void addMusic(List<Music> musics, Runnable callback) {
-        ConcertoRunner.run(() -> MusicPlayerHandler.INSTANCE.addMusic(musics), callback);
-    }
-
-    public void addMusic(Supplier<List<Music>> musicListAdder, Runnable callback) {
-        ConcertoRunner.run(() -> MusicPlayerHandler.INSTANCE.addMusic(musicListAdder.get()), callback);
-    }
-
-    public void addMusicHere(Music music, boolean skip) {
-        this.addMusicHere(music, skip, () -> {});
-    }
-
-    public void addMusicHere(Music music, boolean skip, Runnable callback) {
+    public synchronized void internalPlayMusic(Music music) {
+        if (music == null) return;
+        this.pendingMusic = music;
         ConcertoRunner.run(() -> {
-            MusicPlayerHandler.INSTANCE.addMusicHere(music);
-            if (skip) {
-                this.skipTo(MusicPlayerHandler.INSTANCE.getCurrentIndex() + 1);
+            synchronized (this.playNextLock) {
+                // 如果不匹配直接忽略
+                if (this.pendingMusic != music) return;
+                try {
+                    this.isPlayingTemp = false;
+                    this.stop();
+                    this.resetInfo();
+                    
+                    this.currentMusic = music;
+                    this.initMusicStatus();
+                    this.updateDisplayTexts();
+                    this.updateDisplayTexts(0);
+
+                    InputStream source = music.getMusicSourceOrNull();
+                    if (source == null) {
+                        this.resetInfo();
+                        Concerto.getLogger().error("Unable to play music: {} - {}", music.getMeta().title(), music.getMeta().author());
+                        Concerto.getMinecraft().sendMessageToClientPlayer(
+                                Concerto.getMinecraft().getTranslatableText("concerto.player.unable", music.getMeta().title(), music.getMeta().author(), music.getMeta().getSource()), false);
+
+                        MusicPlayerHandler.INSTANCE.playNext(1);
+                        return;
+                    }
+
+                    this.currentSource = source;
+
+                    this.open(source);
+                    this.play();
+                    if (MusicPlayerHandler.INSTANCE.isForcePaused()) {
+                        this.pause();
+                    }
+                    this.started = true;
+
+                    Concerto.getLogger().info("Start playing music {} - {}", music.getMeta().title(), music.getMeta().author());
+                    ConcertoEvents.ON_NEXT_MUSIC.emit(music);
+                } catch (Exception e) {
+                    Concerto.getLogger().error("Internal player error: " + e);
+                    Concerto.getMinecraft().sendMessageToClientPlayer(
+                            Concerto.getMinecraft().getTranslatableText("concerto.player.error", e.getMessage()), false);
+                }
             }
-        }, callback);
+        });
     }
 
-    @Override
-    public void play() throws StreamPlayerException {
-        ConcertoEvents.ON_PLAYER_START.emit();
-        super.play();
-    }
-
-    public void forcePause() {
-        this.forcePaused = true;
-        this.pause();
-    }
-
-    public void forceResume() {
-        this.forcePaused = false;
-        ConcertoEvents.ON_PLAYER_RESUME.emit();
-        super.resume();
-    }
-
-    @Override
-    public boolean pause() {
-        if (!super.isPaused()) {
-            MusicPlayerHandler.INSTANCE.writeConfig();
-            ConcertoEvents.ON_PLAYER_PAUSE.emit();
-            return super.pause();
-        } else {
-            return false;
-        }
-    }
-
-    @Override
-    public boolean resume() {
-        if (this.forcePaused) return false;
-        if (super.isPaused()) {
-            ConcertoEvents.ON_PLAYER_RESUME.emit();
-            return super.resume();
-        } else {
-            return false;
-        }
-    }
-
-    public boolean musicRoomPause() {
-        this.forcePaused = true;
+    public boolean internalPause() {
+        ConcertoEvents.ON_PLAYER_PAUSE.emit();
         return super.pause();
     }
 
-    public boolean musicRoomResume() {
-        this.forcePaused = false;
+    public boolean internalResume() {
+        ConcertoEvents.ON_PLAYER_RESUME.emit();
         return super.resume();
     }
 
-    @Override
-    public void opened(Object dataSource, Map<String, Object> properties) {}
+    public void resetInfo() {
+        this.currentLyrics = this.currentSubLyrics = null;
+        this.currentMeta = null;
+        this.currentTime = MusicTimestamp.of(0);
+        this.displayTexts = new String[]{"", "", "", ""};
+        this.timeFormat = "%s" + " ".repeat(30) + "%s";
+        this.progressPercentage = 0;
+        this.startTime = 0;
+        ConcertoEvents.ON_MUSIC_INFO_RESET.emit();
+    }
 
-    @Override
-    public void progress(int nEncodedBytes, long microsecondPosition, byte[] pcmData, Map<String, Object> properties) {
-        MusicPlayerHandler.INSTANCE.updateDisplayTexts(microsecondPosition / 1000);
+    public void initMusicStatus() {
+        if (this.currentMusic == null) return;
+        this.currentMeta = this.currentMusic.getMeta();
+        try {
+            Pair<Lyrics, Lyrics> lyrics = this.currentMusic.getLyrics();
+            if (lyrics != null) {
+                this.currentLyrics = (lyrics.getFirst() == null || lyrics.getFirst().isEmpty()) ? null : lyrics.getFirst();
+                this.currentSubLyrics = (lyrics.getSecond() == null || lyrics.getSecond().isEmpty()) ? null : lyrics.getSecond();
+            }
+        } catch (Exception e) {
+            this.currentLyrics = this.currentSubLyrics = null;
+        }
+        this.displayTexts[2] = "";
+    }
+
+    public void initMusicStatus(long startTime) {
+        this.initMusicStatus();
+        this.startTime = startTime;
+    }
+
+    public void updateDisplayTexts() {
+        if (this.currentMeta != null) {
+            this.displayTexts[2] = this.currentMeta.title() + " | " + this.currentMeta.author() + " | " + this.currentMeta.getSource();
+            MusicTimestamp timestamp = this.currentMeta.getDuration();
+            this.timeFormat = "%s" + (timestamp == null ? "" : " ".repeat(30) + timestamp.toShortString());
+            ConcertoEvents.ON_MUSIC_INFO_UPDATE.emit();
+        } else this.displayTexts[2] = "";
+    }
+
+    public void updateDisplayTexts(long millisecond) {
+        millisecond += this.startTime;
+        if (this.currentMeta == null) return;
+        MusicTimestamp duration = this.currentMeta.getDuration();
+        this.progressPercentage = duration == null ? 0 : ((float) millisecond / duration.asMilliseconds());
+        this.currentTime = MusicTimestamp.ofMilliseconds(millisecond);
+        this.displayTexts[3] = this.timeFormat.formatted(this.currentTime.toShortString());
+
+        if (this.currentLyrics != null) this.displayTexts[0] = this.currentLyrics.stayOrNext(millisecond);
+        else if (millisecond < 5000)
+            this.displayTexts[0] = Concerto.getMinecraft().getTranslatableText("concerto.no_subtitle");
+        else this.displayTexts[0] = "";
+
+        if (this.currentSubLyrics != null) this.displayTexts[1] = this.currentSubLyrics.stayOrNext(millisecond);
+        else this.displayTexts[1] = "";
+    }
+
+    public String[] getDisplayTexts() {
+        return this.displayTexts;
     }
 
     @Override
     public void statusUpdated(StreamPlayerEvent event) {
         Status status = event.getPlayerStatus();
         if (status == Status.EOM) {
-            if (!this.playNextLock.get()) {
-                MusicPlayerHandler.INSTANCE.resetInfo();
-            }
             if (MusicPlayerHandler.INSTANCE.isEmpty()) {
-                this.started = false;
-            } else if (!this.playNextLock.get() && !this.isPlayingTemp) {
-                this.playNext(1);
+                this.stop();
+            } else if (!this.isPlayingTemp) {
+                MusicPlayerHandler.INSTANCE.playNext(1);
             }
-            this.forcePaused = this.isPlayingTemp = false;
+            this.isPlayingTemp = false;
         }
+    }
+
+    @Override
+    public void opened(Object dataSource, Map<String, Object> properties) {
+    }
+
+    @Override
+    public void progress(int nEncodedBytes, long microsecondPosition, byte[] pcmData, Map<String, Object> properties) {
+        this.updateDisplayTexts(microsecondPosition / 1000);
+    }
+
+    @Override
+    public void play() throws StreamPlayerException {
+        super.play();
+        ConcertoEvents.ON_PLAYER_START.emit();
+    }
+
+    public void stop() {
+        this.started = false;
+        super.stop();
     }
 
     public void playTempMusic(Music music, Runnable callback) {
         ConcertoRunner.run(() -> {
-            InputStream source = music.getMusicSourceOrNull();
-            if (source == null) return;
-            this.forcePaused = false;
-            this.playNextLock.set(true);
-            this.started = true;
-            this.stop();
-            MusicPlayerHandler status = MusicPlayerHandler.INSTANCE;
-            status.resetInfo();
-            status.currentMusic = music;
-            status.currentSource = source;
-            status.initMusicStatus();
-            status.updateDisplayTexts();
-            try {
-                this.open(source);
-                this.play();
-                Concerto.getLogger().info(
-                    "Start playing temporary music {} - {} from {}",
-                    music.getMeta().title(), music.getMeta().author(),
-                    music.getMeta().getSource()
-                );
-            } catch (StreamPlayerException e) {
-                this.started = this.isPlayingTemp = this.forcePaused = false;
-                Concerto.getLogger().error(e.toString());
-                Concerto.getMinecraft().sendMessageToClientPlayer(
-                        Concerto.getMinecraft().getTranslatableText("concerto.player.error", e.toString()), false);
+            synchronized (this.playNextLock) {
+                this.started = true;
+                this.stop();
+                this.resetInfo();
+                
+                this.currentMusic = music;
+                this.initMusicStatus();
+                this.updateDisplayTexts();
+                this.updateDisplayTexts(0);
+                
+                InputStream source = music.getMusicSourceOrNull();
+                if (source == null) {
+                    this.started = false;
+                    this.resetInfo();
+                    return;
+                }
+                
+                this.currentSource = source;
+                try {
+                    this.open(source);
+                    this.play();
+                    if (MusicPlayerHandler.INSTANCE.isForcePaused()) {
+                        this.pause();
+                    }
+                    this.isPlayingTemp = true;
+                } catch (StreamPlayerException e) {
+                    this.started = this.isPlayingTemp = false;
+                }
             }
-            this.isPlayingTemp = true;
-            this.playNextLock.set(false);
         }, callback);
     }
 
     public void playTempMusic(Music music) {
-        this.playTempMusic(music, () -> {});
-    }
-
-    public void playNext(int forward) {
-        this.playNext(forward, () -> {});
-    }
-
-    public void playNext(int forward, Runnable callback) {
-        this.playNext(forward, index -> callback.run());
-    }
-
-    public void playNext(int forward, Consumer<Integer> callback) {
-        ConcertoRunner.run(() -> {
-            try {
-                if (!this.started || MusicPlayerHandler.INSTANCE.isEmpty()) {
-                    this.started = false;
-                    return;
-                }
-                this.playNextLock.set(true);
-                this.stop();
-                Music music = MusicPlayerHandler.INSTANCE.playNext(forward);
-                if (music != null) {
-                    InputStream source;
-                    while ((source = music.getMusicSourceOrNull()) == null) {
-                        Concerto.getLogger().error(
-                            "Unable to play music: {} - {} from {}",
-                            music.getMeta().title(), music.getMeta().author(),
-                            music.getMeta().getSource()
-                        );
-                        Concerto.getMinecraft().sendMessageToClientPlayer(
-                                Concerto.getMinecraft().getTranslatableText(
-                                        "concerto.player.unable",
-                                        music.getMeta().title(),
-                                        music.getMeta().author(),
-                                        music.getMeta().getSource()
-                                ),
-                                false
-                        );
-                        MusicPlayerHandler.INSTANCE.setCurrentIndex((MusicPlayerHandler.INSTANCE.getCurrentIndex() + 1)
-                                % MusicPlayerHandler.INSTANCE.getMusicList().size());
-                        MusicPlayerHandler.INSTANCE.resetInfo();
-                        music = MusicPlayerHandler.INSTANCE.playNext(0);
-                        if (music == null) {
-                            return;
-                        }
-                    }
-                    MusicPlayerHandler.INSTANCE.currentSource = source;
-                    this.open(source);
-                    this.play();
-                    Concerto.getLogger().info("Start playing music {} - {}", music.getMeta().title(), music.getMeta().author());
-                    ConcertoEvents.ON_NEXT_MUSIC.emit(music);
-                    callback.accept(MusicPlayerHandler.INSTANCE.getCurrentIndex());
-                }
-                this.playNextLock.set(false);
-                this.isPlayingTemp = this.forcePaused = false;
-            } catch (Exception e) {
-                Concerto.getLogger().error(e.toString());
-                Concerto.getMinecraft().sendMessageToClientPlayer(
-                        Concerto.getMinecraft().getTranslatableText("concerto.player.error", e.toString()), false);
-                this.playNextLock.set(false);
-                this.isPlayingTemp = this.forcePaused = false;
-                playNext(1);
-            }
+        this.playTempMusic(music, () -> {
         });
-    }
-
-    public void skipTo(int index) {
-        MusicPlayerHandler.INSTANCE.setCurrentIndex(
-                Math.min(MusicPlayerHandler.INSTANCE.getMusicList().size(), index));
-        MusicPlayerHandler.INSTANCE.resetInfo();
-        this.start();
-    }
-
-    public void start() {
-        this.started = true;
-        this.forcePaused = false;
-        this.playNextLock.set(false);
-        this.playNext(0);
-    }
-
-    public void clear() {
-        ConcertoRunner.run(() -> {
-            this.started = false;
-            this.stop();
-            MusicPlayerHandler.INSTANCE.clear();
-        });
-    }
-
-    public void reloadConfig(Runnable callback) {
-        ConcertoRunner.run(() -> {
-            this.started = false;
-            this.stop();
-            MusicPlayerHandler.INSTANCE = MusicJsonParsers.fromRaw(Concerto.MUSIC_CONFIG.read());
-        }, callback);
-    }
-
-    public void cut(Runnable callback) {
-        ConcertoRunner.run(() -> {
-            if (!this.isPlayingTemp) {
-                MusicPlayerHandler.INSTANCE.removeCurrent();
-            }
-            this.playNext(0);
-        }, callback);
-    }
-
-    public void remove(int index, Runnable callback) {
-        if (index == MusicPlayerHandler.INSTANCE.getCurrentIndex()) this.cut(callback);
-        else {
-            ConcertoRunner.run(() -> {
-                MusicPlayerHandler.INSTANCE.remove(index);
-                if (MusicPlayerHandler.INSTANCE.isEmpty()) this.cut(() -> {});
-            }, callback);
-        }
     }
 }

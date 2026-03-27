@@ -9,8 +9,6 @@ import net.minecraft.client.gui.widget.TextFieldWidget;
 import net.minecraft.text.Text;
 import org.lwjgl.glfw.GLFW;
 import top.gregtao.concerto.core.enums.OrderType;
-import top.gregtao.concerto.core.music.Music;
-import top.gregtao.concerto.core.player.MusicPlayer;
 import top.gregtao.concerto.core.player.MusicPlayerHandler;
 import top.gregtao.concerto.screen.widget.ConcertoListWidget;
 import top.gregtao.concerto.screen.widget.GeneralPlaylistWidget;
@@ -46,27 +44,20 @@ public class GeneralPlaylistScreen extends ApplyDraggedFileScreen {
         this.addDrawableChild(ButtonWidget.builder(Text.translatable("concerto.screen.search"), button ->
                 this.toggleSearch()).position(this.width / 2 + 125, 17).size(50, 20).build());
 
-        this.addDrawableChild(ButtonWidget.builder(Text.translatable("concerto.screen.next"), button -> {
-            if (!MusicPlayer.INSTANCE.started) MusicPlayer.INSTANCE.start();
-            else if (!MusicPlayer.INSTANCE.playNextLock.get()) MusicPlayer.INSTANCE.playNext(1, index -> {
-                this.widget.reset();
-                this.widget.setSelected(index);
-            });
-        }).position(this.width / 2 - 185, this.height - 30).size(50, 20).build());
+        this.addDrawableChild(ButtonWidget.builder(Text.translatable("concerto.screen.next"),
+                button -> MusicPlayerHandler.INSTANCE.playNext(1)).position(this.width / 2 - 185, this.height - 30).size(50, 20).build());
 
         this.addDrawableChild(ButtonWidget.builder(Text.translatable("concerto.screen.play"), button -> {
-            ConcertoListWidget<Music>.Entry entry = this.widget.getSelectedOrNull();
+            ConcertoListWidget<GeneralPlaylistWidget.Entry>.Entry entry = this.widget.getSelectedOrNull();
             if (entry != null) {
-                MusicPlayer.INSTANCE.skipTo(entry.index);
-            } else if (!MusicPlayer.INSTANCE.started) {
-                MusicPlayer.INSTANCE.start();
+                MusicPlayerHandler.INSTANCE.setCurrentIndex(entry.item.index());
             }
         }).position(this.width / 2 - 135, this.height - 30).size(50, 20).build());
 
         this.addDrawableChild(ButtonWidget.builder(Text.translatable("concerto.screen.delete"), button -> {
-            ConcertoListWidget<Music>.Entry entry = this.widget.getSelectedOrNull();
+            ConcertoListWidget<GeneralPlaylistWidget.Entry>.Entry entry = this.widget.getSelectedOrNull();
             if (entry != null) {
-                MusicPlayer.INSTANCE.remove(entry.index, () -> this.widget.removeEntryWithoutScrolling(entry));
+                MusicPlayerHandler.INSTANCE.removeAsync(entry.item.index(), () -> this.widget.removeEntryWithoutScrolling(entry));
             }
         }).position(this.width / 2 - 85, this.height - 30).size(50, 20).build());
 
@@ -76,21 +67,19 @@ public class GeneralPlaylistScreen extends ApplyDraggedFileScreen {
                         (widget, orderType) -> MusicPlayerHandler.INSTANCE.setOrderType(orderType)));
 
         this.addDrawableChild(ButtonWidget.builder(Text.translatable("concerto.screen.pause"), button -> {
-            if (MusicPlayer.INSTANCE.started) {
-                if (MusicPlayer.INSTANCE.forcePaused) MusicPlayer.INSTANCE.forceResume();
-                else MusicPlayer.INSTANCE.forcePause();
-            }
+            if (MusicPlayerHandler.INSTANCE.isForcePaused()) MusicPlayerHandler.INSTANCE.forceResume();
+            else MusicPlayerHandler.INSTANCE.forcePause();
         }).position(this.width / 2 + 25, this.height - 30).size(50, 20).build());
 
         this.addDrawableChild(ButtonWidget.builder(Text.translatable("concerto.screen.info"), button -> {
-            ConcertoListWidget<Music>.Entry entry = this.widget.getSelectedOrNull();
+            ConcertoListWidget<GeneralPlaylistWidget.Entry>.Entry entry = this.widget.getSelectedOrNull();
             if (entry != null) {
-                MinecraftClient.getInstance().setScreen(new MusicInfoScreen(entry.item, this));
+                MinecraftClient.getInstance().setScreen(new MusicInfoScreen(entry.item.music(), this));
             }
         }).position(this.width / 2 + 75, this.height - 30).size(50, 20).build());
 
         this.addDrawableChild(ButtonWidget.builder(Text.translatable("concerto.screen.clear"), button -> {
-            MusicPlayer.INSTANCE.clear();
+            MusicPlayerHandler.INSTANCE.clear();
             MinecraftClient.getInstance().setScreen(null);
         }).position(this.width / 2 + 125, this.height - 30).size(50, 20).build());
     }

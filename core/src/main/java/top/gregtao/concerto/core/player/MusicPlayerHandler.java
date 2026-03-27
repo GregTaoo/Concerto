@@ -9,327 +9,402 @@ import top.gregtao.concerto.core.Concerto;
 import top.gregtao.concerto.core.api.CacheableMusic;
 import top.gregtao.concerto.core.api.LazyLoadable;
 import top.gregtao.concerto.core.api.MusicJsonParsers;
-import top.gregtao.concerto.core.event.ConcertoEvents;
-import top.gregtao.concerto.core.music.lyrics.Lyrics;
-import top.gregtao.concerto.core.music.meta.music.MusicMetaData;
 import top.gregtao.concerto.core.enums.OrderType;
 import top.gregtao.concerto.core.music.Music;
-import top.gregtao.concerto.core.music.MusicTimestamp;
+import top.gregtao.concerto.core.music.meta.music.MusicMetaData;
 import top.gregtao.concerto.core.network.SyncRecord;
 import top.gregtao.concerto.core.util.ConcertoRunner;
-import top.gregtao.concerto.core.util.MathUtil;
-import top.gregtao.concerto.core.util.Pair;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.function.Supplier;
 import java.util.regex.Pattern;
 
 public class MusicPlayerHandler {
 
-    public static MusicPlayerHandler INSTANCE = new MusicPlayerHandler();
+    public static MusicPlayerHandler INSTANCE = null;
 
-    public static int MAX_SIZE = 10000;
+    private final SyncRecord<MusicPlayerState> localRecord;
+    private boolean forcePaused = false;
 
-    public SyncRecord<MusicPlayerState> playerState;
-//    private ArrayList<Music> musicList = new ArrayList<>();
-//    private int currentIndex = -1;
-//    private OrderType orderType = OrderType.NORMAL;
+    public MusicPlayerHandler() {
+        this.localRecord = SyncRecord.createLocalRecord(new MusicPlayerState());
+        registerSyncRecordListeners(this.localRecord);
+    }
 
-    public Music currentMusic = null;
+    public MusicPlayerHandler(ConcertoPlayerList musics, UUID currentIndex, OrderType orderType) {
+        loadInThreadPool(musics.snapshotMusics());
 
-    public InputStream currentSource = null;
-
-    public Lyrics currentLyrics = null, currentSubLyrics = null;
-
-    public MusicMetaData currentMeta = null;
-
-    private MusicTimestamp currentTime = null;
-
-    private String[] displayTexts = new String[]{ "", "", "", ""}; // Lyrics; SubLyrics; Title | Author; Source | Time;
-
-    private String timeFormat = "%s" + " ".repeat(30) + "%s";
-
-    public float progressPercentage = 0;
-
-    private long startTime = 0;
-
-    private final Random random = new Random();
-
-    public MusicPlayerHandler() {}
-
-    public MusicPlayerHandler(ArrayList<Music> musics, int currentIndex, OrderType orderType) {
-//        this.currentIndex = currentIndex;
-//        this.orderType = orderType;
-        if (musics.size() > MAX_SIZE) {
-            musics = (ArrayList<Music>) musics.subList(0, MAX_SIZE - 1);
-        }
-        loadInThreadPool(musics);
         MusicPlayerState state = new MusicPlayerState(musics, currentIndex, orderType, true);
-        this.playerState = MusicPlayerState.createLocalRecord(state);
+        this.localRecord = SyncRecord.createLocalRecord(state);
+        registerSyncRecordListeners(this.localRecord);
     }
 
-    public static <T extends LazyLoadable> void loadInThreadPool(List<T> objects, boolean force) {
-        ExecutorService service = Executors.newFixedThreadPool(32);
-        objects.forEach(object -> {
-            if (force || !object.isLoaded()) service.submit(() -> object.load());
-        });
-        service.shutdown();
-        try {
-            if (!service.awaitTermination(Integer.MAX_VALUE, TimeUnit.SECONDS)) {
-                throw new TimeoutException();
-            }
-        } catch (InterruptedException | TimeoutException e) {
-            throw new RuntimeException(e);
+    public SyncRecord<MusicPlayerState> getState() {
+        SyncRecord<MusicPlayerState> remote = Concerto.getMinecraft().getCurrentState();
+        return remote == null ? this.localRecord : remote;
+    }
+
+    public boolean isForcePaused() {
+        return this.forcePaused;
+    }
+
+    public void forcePause() {
+        this.forcePaused = true;
+        this.setPaused(true);
+        if (MusicPlayer.INSTANCE.isPlaying()) {
+            MusicPlayer.INSTANCE.internalPause();
         }
     }
 
-    public static <T extends LazyLoadable> void loadInThreadPool(List<T> objects) {
-        loadInThreadPool(objects, false);
+    public void forceResume() {
+        this.forcePaused = false;
+        this.setPaused(false);
+        if (MusicPlayer.INSTANCE.started) {
+            MusicPlayer.INSTANCE.internalResume();
+        }
     }
 
-    public void resetInfo() {
-        this.currentLyrics = this.currentSubLyrics = null;
-        this.currentMeta = null;
-        this.currentTime = MusicTimestamp.of(0);
-        this.displayTexts = new String[]{ "", "", "", ""};
-        this.timeFormat = "%s" + " ".repeat(30) + "%s";
-        this.progressPercentage = 0;
-        this.startTime = 0;
-        ConcertoEvents.ON_MUSIC_INFO_RESET.emit();
+    public static void registerSyncRecordListeners(SyncRecord<MusicPlayerState> record) {
+        record.addListener(MusicPlayerState.MUSIC_LIST, (o, state, oldVal, newVal) -> {
+            UUID current = state.currentIndex;
+            ConcertoPlayerList list = state.musicList;
+
+            UUID next = current;
+            if (list.isEmpty()) {
+                next = null;
+            } else if (!list.contains(current)) {
+                next = state.orderType == OrderType.REVERSED ? list.lastUuid() : list.firstUuid();
+            }
+
+            if (!Objects.equals(next, current)) {
+                UUID finalNext = next;
+                o.set((s) -> {
+                    s.currentIndex = finalNext;
+                    return s;
+                }, List.of(MusicPlayerState.CURRENT_INDEX));
+            }
+        });
+
+        record.addListener(MusicPlayerState.CURRENT_INDEX, (o, state, oldVal, newVal) -> {
+            UUID current = state.currentIndex;
+            if (current == null) {
+                if (MusicPlayer.INSTANCE.started) {
+                    MusicPlayer.INSTANCE.stop();
+                }
+                return;
+            }
+
+            if (!state.musicList.contains(current)) return;
+
+            Music targetMusic = state.musicList.get(current);
+            if (targetMusic == null) return;
+
+            MusicPlayer.INSTANCE.internalPlayMusic(targetMusic);
+        });
+
+        record.addListener(MusicPlayerState.PAUSED, (o, state, oldVal, newVal) -> {
+            if (INSTANCE != null && INSTANCE.forcePaused) {
+                if (!state.paused) return;
+            }
+
+            if (state.paused && MusicPlayer.INSTANCE.isPlaying()) {
+                MusicPlayer.INSTANCE.internalPause();
+            } else if (!state.paused && MusicPlayer.INSTANCE.isPaused()) {
+                MusicPlayer.INSTANCE.internalResume();
+            }
+        });
     }
 
     public void clear() {
-        try {
-            if (this.currentSource != null)
-                this.currentSource.close();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-        this.resetInfo();
-        this.playerState.set((state) -> new MusicPlayerState());
+        this.getState().set(
+                (state) -> new MusicPlayerState(),
+                List.of(MusicPlayerState.MUSIC_LIST, MusicPlayerState.PAUSED, MusicPlayerState.ORDER_TYPE, MusicPlayerState.CURRENT_INDEX)
+        );
         this.writeConfig();
     }
 
-    public boolean addMusic(Music music) {
-        if (this.playerState.get().musicList.size() - this.maxRemovable() >= MAX_SIZE) {
-            return false;
-        }
-        this.playerState.set((state) -> {
-            this.removeMusic(state.musicList.size() + 1 - MAX_SIZE);
-            if (!music.isLoaded()) music.load();
-            state.musicList.add(music);
-            return state;
-        });
-        this.writeConfig();
-        return true;
-    }
-
-    public boolean addMusic(List<Music> musics) {
-        if (musics.size() + this.playerState.get().musicList.size() - this.maxRemovable() > MAX_SIZE) {
-            return false;
-        }
-        this.playerState.set((state) -> {
-            this.removeMusic(state.musicList.size() + musics.size() - MAX_SIZE);
-            loadInThreadPool(musics);
-            state.musicList.addAll(musics);
-            return state;
-        });
-        this.writeConfig();
-        return true;
-    }
-
-    public void addMusicHere(Music music) {
-        if (!music.isLoaded()) music.load();
-        this.playerState.set((state) -> {
-            state.musicList.add(this.getCurrentIndex() + 1, music);
-            return state;
-        });
-        this.writeConfig();
-    }
-
-    private int maxRemovable() {
-        MusicPlayerState state = this.playerState.get();
-        return state.orderType == OrderType.REVERSED ? state.musicList.size() - state.currentIndex - 1 : state.currentIndex;
-    }
-
-    private void removeMusic(int n) {
-        this.playerState.set((state) -> {
-            int i = n;
-            if (state.orderType == OrderType.REVERSED) {
-                while (i-- > 0) {
-                    state.musicList.remove(state.musicList.size() - 1);
-                }
-            } else {
-                while (i-- > 0) {
-                    state.musicList.remove(0);
-                }
-            }
-            return state;
-        });
-    }
-
-    public void updateDisplayTexts() {
-        if (this.currentMeta != null) {
-            this.displayTexts[2] = this.currentMeta.title() + " | " + this.currentMeta.author() + " | " + this.currentMeta.getSource();
-            MusicTimestamp timestamp = this.currentMeta.getDuration();
-            this.timeFormat = "%s" + (timestamp == null ? "" : " ".repeat(30) + this.currentMeta.getDuration().toShortString());
-            ConcertoEvents.ON_MUSIC_INFO_UPDATE.emit();
-        } else {
-            this.displayTexts[2] = "";
-        }
-    }
-
-    public void updateDisplayTexts(long millisecond) {
-        millisecond += this.startTime;
-        MusicTimestamp duration = this.currentMeta.getDuration();
-        this.progressPercentage = duration == null ? 0 : ((float) millisecond / duration.asMilliseconds());
-        this.currentTime = MusicTimestamp.ofMilliseconds(millisecond);
-        this.displayTexts[3] = this.timeFormat.formatted(this.currentTime.toShortString());
-        if (this.currentLyrics != null) {
-            this.displayTexts[0] = this.currentLyrics.stayOrNext(millisecond);
-        } else if (millisecond < 5000) {
-            this.displayTexts[0] = Concerto.getMinecraft().getTranslatableText("concerto.no_subtitle");
-        } else {
-            this.displayTexts[0] = "";
-        }
-        if (this.currentSubLyrics != null) {
-            this.displayTexts[1] = this.currentSubLyrics.stayOrNext(millisecond);
-        } else {
-            this.displayTexts[1] = "";
-        }
-    }
-
-    public Music playNext(int forward) {
-        if (this.playerState.get().musicList.isEmpty()) return null;
-        this.displayTexts[2] = Concerto.getMinecraft().getTranslatableText("concerto.loading");
-        try {
-            this.playerState.set((state) -> {
-                state.currentIndex = this.getNext(forward);
-                this.currentMusic = state.musicList.get(state.currentIndex);
+    public void setPaused(boolean paused) {
+        if (this.getState().get().paused != paused) {
+            this.getState().set((state) -> {
+                state.paused = paused;
                 return state;
-            });
-        } catch (IndexOutOfBoundsException e) {
-            return this.currentMusic = null;
+            }, List.of(MusicPlayerState.PAUSED));
         }
-        this.initMusicStatus();
-        this.updateDisplayTexts();
+    }
+
+    public boolean addMusic(Music music, boolean skip) {
+        this.getState().set((state) -> {
+            if (!music.isLoaded()) music.load();
+            UUID added = state.musicList.addLast(music);
+            if (skip)
+                state.currentIndex = added;
+            return state;
+        }, skip ? List.of(MusicPlayerState.MUSIC_LIST, MusicPlayerState.CURRENT_INDEX) : List.of(MusicPlayerState.MUSIC_LIST));
         this.writeConfig();
-        return this.currentMusic;
+
+        return true;
     }
 
-    public void initMusicStatus(long startTime) {
-        this.initMusicStatus();
-        this.startTime = startTime;
+    public void addMusicAsync(Music music, boolean skip, Runnable callback) {
+        ConcertoRunner.run(() -> this.addMusic(music, skip), callback);
     }
 
-    public void initMusicStatus() {
-        this.currentMeta = this.currentMusic.getMeta();
-        try {
-            Pair<Lyrics, Lyrics> lyrics = this.currentMusic.getLyrics();
-            if (lyrics != null) {
-                this.currentLyrics = (lyrics.getFirst() == null || lyrics.getFirst().isEmpty()) ? null : lyrics.getFirst();
-                this.currentSubLyrics = (lyrics.getSecond() == null || lyrics.getSecond().isEmpty()) ? null : lyrics.getSecond();
+    public void addMusicAsync(Music music, boolean skip) {
+        ConcertoRunner.run(() -> this.addMusic(music, skip));
+    }
+
+    public boolean addMusic(List<Music> musics, boolean skip) {
+        this.getState().set((state) -> {
+            loadInThreadPool(musics);
+            List<UUID> ids = state.musicList.addAllLast(musics);
+            if (skip && !ids.isEmpty())
+                state.currentIndex = ids.get(0);
+            return state;
+        }, skip ? List.of(MusicPlayerState.MUSIC_LIST, MusicPlayerState.CURRENT_INDEX) : List.of(MusicPlayerState.MUSIC_LIST));
+        this.writeConfig();
+
+        return true;
+    }
+
+    public void addMusicAsync(List<Music> musics, boolean skip, Runnable callback) {
+        ConcertoRunner.run(() -> this.addMusic(musics, skip), callback);
+    }
+
+    public void addMusicAsync(Supplier<List<Music>> musics, boolean skip, Runnable callback) {
+        ConcertoRunner.run(() -> this.addMusic(musics.get(), skip), callback);
+    }
+
+    public void addMusicAsync(List<Music> musics, boolean skip) {
+        ConcertoRunner.run(() -> this.addMusic(musics, skip));
+    }
+
+    public void addMusicAsync(Supplier<List<Music>> musics, boolean skip) {
+        ConcertoRunner.run(() -> this.addMusic(musics.get(), skip));
+    }
+
+    public void addMusicHere(Music music, boolean skip) {
+        if (!music.isLoaded()) music.load();
+        this.getState().set((state) -> {
+            UUID inserted;
+            if (state.currentIndex == null || !state.musicList.contains(state.currentIndex)) {
+                inserted = state.musicList.addLast(music);
+            } else {
+                List<UUID> ids = state.musicList.addAfter(state.currentIndex, List.of(music));
+                inserted = ids.isEmpty() ? state.musicList.addLast(music) : ids.get(0);
             }
-        } catch (Exception e) {
-            this.currentLyrics = this.currentSubLyrics = null;
-        }
-        this.displayTexts[2] = "";
+            if (skip || state.currentIndex == null) {
+                state.currentIndex = inserted;
+            }
+            return state;
+        }, skip ? List.of(MusicPlayerState.MUSIC_LIST, MusicPlayerState.CURRENT_INDEX) : List.of(MusicPlayerState.MUSIC_LIST));
+        this.writeConfig();
+    }
+
+    public void addMusicHereAsync(Music music, boolean skip, Runnable callback) {
+        ConcertoRunner.run(() -> this.addMusicHere(music, skip), callback);
+    }
+
+    public void addMusicHereAsync(Music music, boolean skip) {
+        ConcertoRunner.run(() -> this.addMusicHere(music, skip));
+    }
+
+    public void start() {
+        this.playNext(0);
+    }
+
+    public void stop() {
+        this.setCurrentIndex(null);
+    }
+
+    public void playNext(int forward) {
+        MusicPlayerState currentState = this.getState().get();
+        if (currentState.musicList.isEmpty()) return;
+
+        this.getState().set((state) -> {
+            state.currentIndex = this.getNextUuid(state, forward);
+            state.paused = false;
+            return state;
+        }, List.of(MusicPlayerState.CURRENT_INDEX, MusicPlayerState.PAUSED));
+
+        this.writeConfig();
     }
 
     public void removeCurrent() {
-        this.playerState.set((state) -> {
-            if (state.musicList.size() == 1) {
-                this.clear();
-            } else if (state.currentIndex < state.musicList.size()) {
-                state.musicList.remove(state.currentIndex);
-            }
-            return state;
-        });
-    }
-
-    public void remove(int index) {
-        this.playerState.set((state) -> {
-            if (index <= state.currentIndex) state.currentIndex--;
-            if (index < state.musicList.size()) {
-                state.musicList.remove(index);
-            }
-            return state;
-        });
-    }
-
-    private int getNext(int forward) {
-        MusicPlayerState state = this.playerState.get();
-        if (forward == 0) {
-            return MathUtil.clamp(state.currentIndex, 0, this.getMusicList().size() - 1);
-        } else if (state.orderType == OrderType.NORMAL) {
-            return (state.currentIndex + forward) % state.musicList.size();
-        } else if (state.orderType == OrderType.REVERSED) {
-            forward %= state.musicList.size();
-            if (state.currentIndex - forward < 0) {
-                return state.musicList.size() - (forward - state.currentIndex);
-            } else {
-                return state.currentIndex - forward;
-            }
-        } else if (state.orderType == OrderType.LOOP) {
-            return state.currentIndex;
-        } else {
-            return state.musicList.isEmpty() ? -1 : this.random.nextInt(state.musicList.size());
+        MusicPlayerState state = this.getState().get();
+        if (state.currentIndex != null && state.musicList.contains(state.currentIndex)) {
+            this.getState().set((s) -> {
+                UUID removing = s.currentIndex;
+                UUID replacement = pickReplacementAfterRemove(s, removing);
+                s.musicList.remove(removing);
+                s.currentIndex = replacement;
+                return s;
+            }, List.of(MusicPlayerState.MUSIC_LIST, MusicPlayerState.CURRENT_INDEX));
         }
     }
 
-    public void setOrderType(OrderType type) {
-        this.playerState.set((state) -> {
-            state.orderType = type;
-            return state;
-        });
-        this.writeConfig();
+    public void remove(UUID uuid) {
+        MusicPlayerState state = this.getState().get();
+        if (uuid == null || !state.musicList.contains(uuid)) return;
+
+        this.getState().set((s) -> {
+                    UUID replacement = s.currentIndex;
+                    if (Objects.equals(s.currentIndex, uuid)) {
+                        replacement = pickReplacementAfterRemove(s, uuid);
+                    }
+                    s.musicList.remove(uuid);
+                    s.currentIndex = replacement;
+                    return s;
+                }, (s) ->
+                        Objects.equals(s.currentIndex, uuid) ?
+                                List.of(MusicPlayerState.CURRENT_INDEX, MusicPlayerState.MUSIC_LIST) :
+                                List.of(MusicPlayerState.MUSIC_LIST)
+        );
     }
 
-    public OrderType getOrderType() {
-        return this.playerState.get().orderType;
+    public void removeAsync(UUID uuid, Runnable callback) {
+        ConcertoRunner.run(() -> this.remove(uuid), callback);
     }
 
-    public boolean isEmpty() {
-        return this.playerState.get().musicList.isEmpty();
+    private UUID getNextUuid(MusicPlayerState state, int forward) {
+        if (state.musicList.isEmpty()) return null;
+
+        UUID cur = state.currentIndex;
+        if (cur == null || !state.musicList.contains(cur)) {
+            cur = switch (state.orderType) {
+                case LOOP, NORMAL -> state.musicList.firstUuid();
+                case RANDOM -> state.musicList.randomUuid();
+                case REVERSED -> state.musicList.lastUuid();
+            };
+            if (cur == null) return null;
+        }
+
+        if (forward == 0) return cur;
+
+        return switch (state.orderType) {
+            case LOOP -> cur;
+            case RANDOM -> state.musicList.randomUuid();
+            case NORMAL -> advanceCircular(state.musicList, cur, true, Math.abs(forward));
+            case REVERSED -> advanceCircular(state.musicList, cur, false, Math.abs(forward));
+        };
+    }
+
+    private UUID advanceCircular(ConcertoPlayerList list, UUID start, boolean nextDir, int steps) {
+        UUID cur = start;
+        for (int i = 0; i < steps; i++) {
+            UUID n = nextDir ? list.nextUuid(cur) : list.previousUuid(cur);
+            if (n == null) {
+                n = nextDir ? list.firstUuid() : list.lastUuid();
+            }
+            cur = n;
+        }
+        return cur;
+    }
+
+    private UUID pickReplacementAfterRemove(MusicPlayerState state, UUID removing) {
+        UUID next = state.musicList.nextUuid(removing);
+        UUID prev = state.musicList.previousUuid(removing);
+        if (state.orderType == OrderType.REVERSED) {
+            return prev != null ? prev : next;
+        }
+        return next != null ? next : prev;
+    }
+
+    private int maxRemovable() {
+        MusicPlayerState state = this.getState().get();
+        UUID cur = state.currentIndex;
+        if (cur == null || !state.musicList.contains(cur)) return 0;
+
+        int count = 0;
+        if (state.orderType == OrderType.REVERSED) {
+            UUID p = state.musicList.nextUuid(cur);
+            while (p != null) {
+                count++;
+                p = state.musicList.nextUuid(p);
+            }
+        } else {
+            UUID p = state.musicList.previousUuid(cur);
+            while (p != null) {
+                count++;
+                p = state.musicList.previousUuid(p);
+            }
+        }
+        return count;
     }
 
     public String[] getDisplayTexts() {
-        return this.displayTexts;
+        return MusicPlayer.INSTANCE.getDisplayTexts();
     }
 
     public Music getCurrentMusic() {
-        return this.currentMusic;
+        return MusicPlayer.INSTANCE.currentMusic;
     }
 
-    public int getCurrentIndex() {
-        return MathUtil.clamp(0, this.playerState.get().currentIndex, this.playerState.get().musicList.size() - 1);
+    public UUID getCurrentIndex() {
+        return this.getState().get().currentIndex;
     }
 
-    public ArrayList<Music> getMusicList() {
-        return this.playerState.get().musicList;
+    public ConcertoPlayerList getMusicList() {
+        return this.getState().get().musicList;
     }
 
-    public void setCurrentIndex(int index) {
-        this.playerState.set((state) -> {
-            state.currentIndex = index;
+    public OrderType getOrderType() {
+        return this.getState().get().orderType;
+    }
+
+    public boolean isEmpty() {
+        return this.getState().get().musicList.isEmpty();
+    }
+
+    public void setOrderType(OrderType type) {
+        this.getState().set((s) -> {
+            s.orderType = type;
+            return s;
+        }, List.of(MusicPlayerState.ORDER_TYPE));
+        this.writeConfig();
+    }
+
+    public void setCurrentIndex(UUID uuid) {
+        this.getState().set((state) -> {
+            state.currentIndex = uuid == null ? null : (state.musicList.contains(uuid) ? uuid : state.musicList.firstUuid());
+            state.paused = false;
             return state;
-        });
+        }, List.of(MusicPlayerState.CURRENT_INDEX, MusicPlayerState.PAUSED));
+    }
+
+    public static void reloadConfig(Runnable callback) {
+        ConcertoRunner.run(() ->
+                MusicPlayerHandler.INSTANCE = MusicJsonParsers.fromRaw(Concerto.MUSIC_CONFIG.read()), callback);
     }
 
     public void writeConfig() {
-        Concerto.MUSIC_CONFIG.write(MusicJsonParsers.toRaw(this));
+        if (this.getState() == this.localRecord) {
+            Concerto.MUSIC_CONFIG.write(MusicJsonParsers.toRaw(this));
+        }
     }
 
     private static final Pattern ILLEGAL_CHARS = Pattern.compile("[\\\\/:*?\"<>|]");
+
     public static String filenameFilter(String str) {
         return ILLEGAL_CHARS.matcher(str).replaceAll(" ");
+    }
+
+    public static <T extends LazyLoadable> void loadInThreadPool(List<T> objects) {
+        if (objects.isEmpty()) return;
+        ExecutorService service = Executors.newFixedThreadPool(Math.min(objects.size(), 32));
+        objects.forEach(obj -> {
+            if (!obj.isLoaded()) service.submit(() -> obj.load());
+        });
+        service.shutdown();
+        try {
+            service.awaitTermination(10, TimeUnit.SECONDS);
+        } catch (InterruptedException ignored) {
+        }
     }
 
     public static void downloadMusics(List<Music> musics) {

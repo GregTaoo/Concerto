@@ -1,6 +1,5 @@
 package top.gregtao.concerto.network;
 
-import com.google.gson.JsonObject;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.server.MinecraftServer;
@@ -218,42 +217,13 @@ public class ServerMusicNetworkHandler {
         return name.equals("@a") || (manager.getPlayer(name) != null);
     }
 
-    public static void musicAgentSendMusic(ServerPlayerEntity player, Music music) {
-        JsonObject object = MusicJsonParsers.to(music, true);
-        if (object == null) return;
-        musicAgentSendMusic(player, object.toString());
-    }
-
-    public static void musicAgentSendMusic(ServerPlayerEntity player, String music) {
-        ConcertoPayload payload = new ConcertoPayload(ConcertoPayload.Channel.MUSIC_AGENT,
-                TextUtil.toBase64(music));
-        ServerPlayNetworking.send(player, payload);
-    }
-
-    public static void musicAgentSendStop(ServerPlayerEntity player) {
-        ConcertoPayload payload = new ConcertoPayload(ConcertoPayload.Channel.MUSIC_AGENT, "Stop");
-        ServerPlayNetworking.send(player, payload);
-    }
-
-    public static void musicAgentSendMusic(List<ServerPlayerEntity> players, Music music) {
-        JsonObject object = MusicJsonParsers.to(music, true);
-        if (object == null) return;
-        players.forEach(player -> musicAgentSendMusic(player, object.toString()));
-    }
-
     public static void musicAgentReceiver(ConcertoPayload payload, ServerPlayNetworking.Context context) {
         if (!ServerConfig.INSTANCE.options.serverMusicAgent) {
             context.player().sendMessage(Text.translatable("concerto.agent.not_available"));
             return;
         }
         String[] args = payload.string.split(":");
-        if (args[0].equals("Join")) {
-            ServerMusicAgent.INSTANCE.playerJoin(context.player());
-            context.player().sendMessage(Text.translatable("concerto.agent.join"));
-        } else if (args[0].equals("Quit")) {
-            ServerMusicAgent.INSTANCE.playerQuit(context.player());
-            context.player().sendMessage(Text.translatable("concerto.agent.quit"));
-        } else if (args[0].equals("Query")) {
+        if (args[0].equals("Query")) {
             List<Music> list = ServerMusicAgent.INSTANCE.getMusicQueue();
             context.player().sendMessage(MinecraftTextUtil.PAGE_SPLIT);
             list.forEach(music -> context.player().sendMessage(Text.literal(

@@ -15,7 +15,7 @@ import top.gregtao.concerto.core.http.kugou.KuGouMusicApiClient;
 import top.gregtao.concerto.core.music.Music;
 import top.gregtao.concerto.core.music.list.KuGouMusicPlaylist;
 import top.gregtao.concerto.core.music.list.Playlist;
-import top.gregtao.concerto.core.player.MusicPlayer;
+import top.gregtao.concerto.core.player.MusicPlayerHandler;
 import top.gregtao.concerto.screen.MusicInfoScreen;
 import top.gregtao.concerto.screen.PageScreen;
 import top.gregtao.concerto.screen.PlaylistPreviewScreen;
@@ -43,7 +43,7 @@ public class KuGouMusicSearchScreen extends PageScreen {
                 try {
                     switch (KuGouMusicSearchScreen.this.searchType) {
                         case MUSIC: {
-                            MusicPlayer.INSTANCE.addMusicHere((Music) entry.item, true);
+                            MusicPlayerHandler.INSTANCE.addMusicHereAsync((Music) entry.item, true, () -> {});
                             break;
                         }
                         case PLAYLIST, ALBUM: {
@@ -137,7 +137,7 @@ public class KuGouMusicSearchScreen extends PageScreen {
                 case MUSIC: {
                     ConcertoListWidget<Music>.Entry entry = this.musicList.getSelectedOrNull();
                     if (entry != null) {
-                        MusicPlayer.INSTANCE.addMusicHere(entry.item, true);
+                        MusicPlayerHandler.INSTANCE.addMusicHereAsync(entry.item, true, () -> {});
                     }
                 }
                 case PLAYLIST: {
@@ -160,19 +160,19 @@ public class KuGouMusicSearchScreen extends PageScreen {
                 case MUSIC: {
                     ConcertoListWidget<Music>.Entry entry = this.musicList.getSelectedOrNull();
                     if (entry != null) {
-                        MusicPlayer.INSTANCE.addMusic(entry.item);
+                        MusicPlayerHandler.INSTANCE.addMusicAsync(entry.item, false, () -> {});
                     }
                 }
                 case PLAYLIST: {
                     ConcertoListWidget<KuGouMusicPlaylist>.Entry entry = this.playlistList.getSelectedOrNull();
                     if (entry != null) {
-                        MusicPlayer.INSTANCE.addMusic(() -> entry.item.getList(), () -> {});
+                        MusicPlayerHandler.INSTANCE.addMusicAsync(() -> entry.item.getList(), false, () -> {});
                     }
                 }
                 case ALBUM: {
                     ConcertoListWidget<KuGouMusicPlaylist>.Entry entry = this.albumList.getSelectedOrNull();
                     if (entry != null) {
-                        MusicPlayer.INSTANCE.addMusic(() -> entry.item.getList(), () -> {});
+                        MusicPlayerHandler.INSTANCE.addMusicAsync(() -> entry.item.getList(), false, () -> {});
                     }
                 }
             }

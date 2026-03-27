@@ -17,7 +17,7 @@ public abstract class ServerRemoteRecord<T extends Copyable<T>> extends ClientRe
 
     @Override
     public boolean receivePatch(JsonObject patch) {
-        System.out.println("Server received Patch: " + patch.toString());
+        // System.out.println("Server received Patch: " + patch.toString());
         long clientVersion = patch.get("version").getAsLong();
         synchronized (this.lock) {
             long currentVersion = this.version.get();

@@ -76,10 +76,8 @@ public abstract class ClientRemoteRecord<T extends Copyable<T>> extends SyncReco
         try {
             if (updatedFields != null) {
                 for (Field f : updatedFields) {
-                    System.out.println("Field " + f.getName());
                     Object newVal = f.get(newState);
                     diff.add(f.getName(), this.gson.toJsonTree(newVal));
-                    System.out.println("Field " + f.getName() + " has been updated: " + this.gson.toJsonTree(newVal));
                 }
             } else {
                 for (Field f : this.fields.values()) {
@@ -118,7 +116,7 @@ public abstract class ClientRemoteRecord<T extends Copyable<T>> extends SyncReco
     }
 
     public boolean receivePatch(JsonObject patch) {
-        System.out.println("Client received Patch: " + patch.toString());
+        // System.out.println("Client received Patch: " + patch.toString());
         synchronized (this.lock) {
             long newVersion = patch.get("version").getAsLong();
             long version = this.version.get();

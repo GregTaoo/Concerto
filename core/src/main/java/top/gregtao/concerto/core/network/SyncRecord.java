@@ -36,11 +36,6 @@ public abstract class SyncRecord<T extends Copyable<T>> {
     }
 
     public void onFieldUpdate(Field field, Object oldVal, Object newVal) {
-        try {
-            System.out.println("Field " + field.getName() + " has been updated: " + field.get(this.state));
-        } catch (IllegalAccessException e) {
-            throw new RuntimeException(e);
-        }
         this.listeners.computeIfAbsent(field, k -> new ArrayList<>()).forEach(
                 l -> l.update(this, this.state, oldVal, newVal));
     }
@@ -73,7 +68,7 @@ public abstract class SyncRecord<T extends Copyable<T>> {
                 )) {
             @Override
             protected void sendPackage(JsonObject patch) {
-                System.out.println("Client sending Patch: " + patch.toString());
+                // System.out.println("Client sending Patch: " + patch.toString());
                 packageSender.accept(patch);
             }
         };
@@ -86,7 +81,7 @@ public abstract class SyncRecord<T extends Copyable<T>> {
                 )) {
             @Override
             protected void sendPackage(JsonObject patch) {
-                System.out.println("Server sending Patch: " + patch.toString());
+                // System.out.println("Server sending Patch: " + patch.toString());
                 packageSender.accept(patch, server);
             }
         };

@@ -8,9 +8,8 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import top.gregtao.concerto.network.room.MusicRoom;
+import top.gregtao.concerto.core.room.MusicRoom;
 import top.gregtao.concerto.network.ServerMusicNetworkHandler;
-import top.gregtao.concerto.network.room.ServerMusicRoomManager;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -32,14 +31,9 @@ public class PlayerManagerMixin {
     @Inject(at = @At("HEAD"), method = "remove(Lnet/minecraft/server/network/ServerPlayerEntity;)V")
     public void removeInject(ServerPlayerEntity player, CallbackInfo ci) {
         List<UUID> removeList = new ArrayList<>();
-        for (Map.Entry<UUID, MusicRoom> entry : ServerMusicRoomManager.ROOMS.entrySet()) {
+        for (Map.Entry<UUID, MusicRoom> entry : MusicRoom.ROOMS.entrySet()) {
             if (entry.getValue().serverGetOwner().equals(player.getName().getString())) {
                 removeList.add(entry.getKey());
-                try {
-                    entry.getValue().serverOnRemove(player.getName().getString(), player.server);
-                } catch (IllegalAccessException e) {
-                    throw new RuntimeException(e);
-                }
                 break;
             }
             if (entry.getValue().serverGetMembers().containsKey(player.getName().getString())) {
@@ -47,6 +41,6 @@ public class PlayerManagerMixin {
                 break;
             }
         }
-        removeList.forEach(ServerMusicRoomManager.ROOMS::remove);
+        removeList.forEach(MusicRoom.ROOMS::remove);
     }
 }

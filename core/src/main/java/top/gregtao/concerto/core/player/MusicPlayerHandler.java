@@ -227,7 +227,10 @@ public class MusicPlayerHandler {
 
     public void playNext(int forward) {
         MusicPlayerState currentState = this.getState().get();
-        if (currentState.musicList.isEmpty()) return;
+        if (currentState.musicList.isEmpty()) {
+            this.stop();
+            return;
+        }
 
         this.getState().set((state) -> {
             state.currentIndex = this.getNextUuid(state, forward);

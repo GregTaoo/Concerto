@@ -15,7 +15,7 @@ import top.gregtao.concerto.core.config.ClientConfig;
 import top.gregtao.concerto.config.PresetPlaylistsConfig;
 import top.gregtao.concerto.core.music.Music;
 import top.gregtao.concerto.core.util.TextUtil;
-import top.gregtao.concerto.network.room.MusicRoom;
+import top.gregtao.concerto.network.room.MusicRoomManager;
 import top.gregtao.concerto.core.player.MusicPlayer;
 import top.gregtao.concerto.core.player.MusicPlayerHandler;
 import top.gregtao.concerto.network.room.ServerMusicAgent;
@@ -47,7 +47,7 @@ public class ClientMusicNetworkHandler {
             case MUSIC_DATA -> musicDataReceiver(payload, context);
             case HANDSHAKE -> playerJoinHandshake(payload, context);
             case AUDITION_SYNC -> auditionDataSyncReceiver(payload, context);
-            case MUSIC_ROOM -> MusicRoom.clientReceiver(payload, context);
+            case MUSIC_ROOM -> MusicRoomManager.clientReceiver(payload, context);
             case PRESET_RADIOS -> presetRadiosReceiver(payload, context);
             case MUSIC_AGENT -> musicAgentMusicReceiver(payload, context);
         }
@@ -211,11 +211,11 @@ public class ClientMusicNetworkHandler {
     }
 
     public static void musicAgentJoin() {
-        MusicRoom.clientJoin(ServerMusicAgent.ROOM_UUID.toString());
+        MusicRoomManager.clientJoin(ServerMusicAgent.ROOM_UUID.toString());
     }
 
     public static void musicAgentQuit() {
-        MusicRoom.clientQuit();
+        MusicRoomManager.clientQuit();
     }
 
     public static void musicAgentNewVote() {

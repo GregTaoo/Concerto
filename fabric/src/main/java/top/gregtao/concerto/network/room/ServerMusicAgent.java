@@ -10,7 +10,8 @@ import top.gregtao.concerto.core.config.ServerConfig;
 import top.gregtao.concerto.core.music.Music;
 import top.gregtao.concerto.core.music.SharedMusic;
 import top.gregtao.concerto.core.player.ConcertoPlayerList;
-import top.gregtao.concerto.core.room.AbstractMusicRoom.*;
+import top.gregtao.concerto.core.room.MusicRoom;
+import top.gregtao.concerto.core.room.MusicRoom.*;
 import top.gregtao.concerto.network.ServerMusicNetworkHandler;
 import top.gregtao.concerto.core.util.ConcertoRunner;
 import top.gregtao.concerto.core.player.MusicPlayerState;
@@ -49,7 +50,7 @@ public class ServerMusicAgent {
     private final MinecraftServer server;
 
     public ServerMusicAgent(Supplier<MinecraftServer> serverSupplier) {
-        this.room = new MusicRoom("#Server", ROOM_UUID, serverSupplier);
+        this.room = new MusicRoom("#Server", ROOM_UUID, MusicRoomManager.createServerBridge(serverSupplier));
         this.server = serverSupplier.get();
         MusicRoom.ROOMS.put(this.room.uuid, this.room);
 
@@ -58,16 +59,16 @@ public class ServerMusicAgent {
         this.room.serverState.addListener(MusicPlayerState.PAUSED, (o, state, oldVal, newVal) -> this.syncPauseState());
     }
 
-    private void updateState(Consumer<RoomPlayerState> consumer, List<Field> changeList) {
+    private void updateState(Consumer<MusicRoomState> consumer, List<Field> changeList) {
         this.room.serverState.set(state -> {
-            consumer.accept((RoomPlayerState) state);
+            consumer.accept((MusicRoomState) state);
             return state;
         }, changeList);
 
-        if (changeList.contains(RoomPlayerState.CURRENT_INDEX)) {
+        if (changeList.contains(MusicRoomState.CURRENT_INDEX)) {
             this.syncIndexState();
         }
-        if (changeList.contains(RoomPlayerState.PAUSED)) {
+        if (changeList.contains(MusicRoomState.PAUSED)) {
             this.syncPauseState();
         }
     }
@@ -97,7 +98,7 @@ public class ServerMusicAgent {
         if (this.isStopped.getAndSet(true)) return;
         if (this.playNextFuture != null) this.playNextFuture.cancel(false);
 
-        this.updateState(s -> s.paused = true, List.of(RoomPlayerState.PAUSED));
+        this.updateState(s -> s.paused = true, List.of(MusicRoomState.PAUSED));
     }
 
     public void start() {
@@ -210,7 +211,7 @@ public class ServerMusicAgent {
                     this.currentlyFreeTime.set(false);
                 }
             }
-        }, List.of(RoomPlayerState.MUSIC_LIST, RoomPlayerState.CURRENT_INDEX, RoomPlayerState.PAUSED));
+        }, List.of(MusicRoomState.MUSIC_LIST, MusicRoomState.CURRENT_INDEX, MusicRoomState.PAUSED));
     }
 
     private void resolveAndPlayCurrentMusic() {
@@ -222,7 +223,7 @@ public class ServerMusicAgent {
             this.updateState(s -> {
                 s.resolvedMedia = null;
                 s.paused = true;
-            }, List.of(RoomPlayerState.RESOLVED_MEDIA, RoomPlayerState.PAUSED));
+            }, List.of(MusicRoomState.RESOLVED_MEDIA, MusicRoomState.PAUSED));
             return;
         }
 
@@ -255,7 +256,7 @@ public class ServerMusicAgent {
                 this.updateState(s -> {
                     s.resolvedMedia = media;
                     s.paused = false;
-                }, List.of(RoomPlayerState.RESOLVED_MEDIA, RoomPlayerState.PAUSED));
+                }, List.of(MusicRoomState.RESOLVED_MEDIA, MusicRoomState.PAUSED));
                 
                 // If the paused state is already false, syncPauseState won't schedule playNext. We must manually schedule it.
                 if (!this.trackedPauseState) {
@@ -304,7 +305,7 @@ public class ServerMusicAgent {
                 if (state.currentIndex == null) {
                     state.currentIndex = addedUuid;
                 }
-            }, List.of(RoomPlayerState.MUSIC_LIST, RoomPlayerState.CURRENT_INDEX));
+            }, List.of(MusicRoomState.MUSIC_LIST, MusicRoomState.CURRENT_INDEX));
 
             this.addMusicTimeRecord.put(playerUuid, System.currentTimeMillis());
             this.broadcast(Text.translatable("concerto.agent.add", playerName, music.getMeta().title(), music.getMeta().author()));
@@ -339,11 +340,11 @@ public class ServerMusicAgent {
             s.currentIndex = null;
             s.resolvedMedia = null;
             s.paused = true;
-        }, List.of(RoomPlayerState.MUSIC_LIST, RoomPlayerState.CURRENT_INDEX, RoomPlayerState.RESOLVED_MEDIA, RoomPlayerState.PAUSED));
+        }, List.of(MusicRoomState.MUSIC_LIST, MusicRoomState.CURRENT_INDEX, MusicRoomState.RESOLVED_MEDIA, MusicRoomState.PAUSED));
     }
 
     public Map<String, Integer> getMembers() {
-        return ((RoomPlayerState) this.room.serverState.get()).members;
+        return ((MusicRoomState) this.room.serverState.get()).members;
     }
 
     public void membersForEach(Consumer<String> consumer) {

@@ -10,7 +10,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -74,7 +73,7 @@ public abstract class SyncRecord<T extends Copyable<T>> {
         };
     }
 
-    public static <T extends Copyable<T>, S> ServerRemoteRecord<T> createServerRecord(T init, BiConsumer<JsonObject, S> packageSender, S server) {
+    public static <T extends Copyable<T>> ServerRemoteRecord<T> createServerRecord(T init, Consumer<JsonObject> packageSender) {
         return new ServerRemoteRecord<>(init,
                 (gson) -> gson.registerTypeHierarchyAdapter(
                         ConcertoPlayerList.class, new ConcertoPlayerList.GsonAdapter()
@@ -82,7 +81,7 @@ public abstract class SyncRecord<T extends Copyable<T>> {
             @Override
             protected void sendPackage(JsonObject patch) {
                 // System.out.println("Server sending Patch: " + patch.toString());
-                packageSender.accept(patch, server);
+                packageSender.accept(patch);
             }
         };
     }

@@ -11,7 +11,7 @@ import net.minecraft.text.Text;
 import net.minecraft.util.Util;
 import top.gregtao.concerto.ConcertoClient;
 import top.gregtao.concerto.config.PresetPlaylistsConfig;
-import top.gregtao.concerto.network.room.MusicRoom;
+import top.gregtao.concerto.core.room.MusicRoom;
 import top.gregtao.concerto.screen.kugou.KuGouMusicIndexScreen;
 import top.gregtao.concerto.screen.qq.QQMusicIndexScreen;
 import top.gregtao.concerto.screen.netease.NeteaseCloudIndexScreen;

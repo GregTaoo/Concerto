@@ -8,8 +8,8 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import top.gregtao.concerto.ConcertoClient;
 import top.gregtao.concerto.core.player.MusicPlayerHandler;
+import top.gregtao.concerto.core.room.MusicRoom;
 import top.gregtao.concerto.network.ClientMusicNetworkHandler;
-import top.gregtao.concerto.network.room.MusicRoom;
 import top.gregtao.concerto.screen.MusicAuditionScreen;
 
 @Mixin(MinecraftClient.class)

@@ -65,6 +65,9 @@ public class GeneralPlaylistWidget extends MetadataListWidget<GeneralPlaylistWid
         this.children().stream()
                 .filter(child -> child.item.index().equals(uuid))
                 .findFirst()
-                .ifPresent(this::setSelected);
+                .ifPresent((entry) -> {
+                    this.setSelected(entry);
+                    this.centerScrollOn(entry);
+                });
     }
 }

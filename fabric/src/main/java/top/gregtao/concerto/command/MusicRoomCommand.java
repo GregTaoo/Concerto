@@ -9,8 +9,9 @@ import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.command.CommandRegistryAccess;
 import net.minecraft.text.Text;
 import top.gregtao.concerto.ConcertoClient;
+import top.gregtao.concerto.core.room.MusicRoom;
 import top.gregtao.concerto.network.ClientMusicNetworkHandler;
-import top.gregtao.concerto.network.room.MusicRoom;
+import top.gregtao.concerto.network.room.MusicRoomManager;
 
 public class MusicRoomCommand {
 
@@ -20,22 +21,25 @@ public class MusicRoomCommand {
                         .then(ClientCommandManager.literal("create").executes(context -> {
                             ClientPlayerEntity player = context.getSource().getPlayer();
                             if (checkServerAvailable(player) && checkLocal(player)) {
-                                MusicRoom.clientCreate();
+                                MusicRoomManager.clientCreate();
                             }
                             return 0;
                         })).then(ClientCommandManager.literal("join").then(
                                 ClientCommandManager.argument("uuid", StringArgumentType.string()).executes(context -> {
                                     ClientPlayerEntity player = context.getSource().getPlayer();
                                     if (checkServerAvailable(player) && checkLocal(player)) {
-                                        MusicRoom.clientJoin(StringArgumentType.getString(context, "uuid"));
+                                        MusicRoomManager.clientJoin(StringArgumentType.getString(context, "uuid"));
                                     }
                                     return 0;
                                 })
                         )).then(ClientCommandManager.literal("quit").executes(context -> {
                             switch (ConcertoClient.clientState) {
                                 case MUSIC_AGENT -> ClientMusicNetworkHandler.musicAgentQuit();
-                                case MUSIC_ROOM -> MusicRoom.clientQuit();
+                                case MUSIC_ROOM -> MusicRoomManager.clientQuit();
                             }
+                            return 0;
+                        })).then(ClientCommandManager.literal("remove").executes(context -> {
+                            MusicRoomManager.clientRemove();
                             return 0;
                         })).then(ClientCommandManager.literal("members").executes(context -> {
                             if (MusicRoom.CLIENT_ROOM != null) {
@@ -47,7 +51,7 @@ public class MusicRoomCommand {
                             return 0;
                         })).then(ClientCommandManager.literal("op").then(
                                 ClientCommandManager.argument("player", StringArgumentType.string()).executes(context -> {
-                                    MusicRoom.clientSetOp(StringArgumentType.getString(context, "player"));
+                                    MusicRoomManager.clientSetOp(StringArgumentType.getString(context, "player"));
                                     return 0;
                                 })
                         )).then(

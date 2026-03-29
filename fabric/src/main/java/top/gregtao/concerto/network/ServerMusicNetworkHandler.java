@@ -16,7 +16,7 @@ import top.gregtao.concerto.core.config.ServerConfig;
 import top.gregtao.concerto.core.music.Music;
 import top.gregtao.concerto.core.music.meta.music.MusicMetaData;
 import top.gregtao.concerto.core.util.TextUtil;
-import top.gregtao.concerto.network.room.MusicRoom;
+import top.gregtao.concerto.network.room.MusicRoomManager;
 import top.gregtao.concerto.network.room.ServerMusicAgent;
 import top.gregtao.concerto.util.MinecraftTextUtil;
 
@@ -40,7 +40,7 @@ public class ServerMusicNetworkHandler {
     public static void generalReceiver(ConcertoPayload payload, ServerPlayNetworking.Context context) {
         switch (payload.channel) {
             case MUSIC_DATA -> musicDataReceiver(payload, context);
-            case MUSIC_ROOM -> MusicRoom.serverReceiver(payload, context);
+            case MUSIC_ROOM -> MusicRoomManager.serverReceiver(payload, context);
             case MUSIC_AGENT -> musicAgentReceiver(payload, context);
         }
     }

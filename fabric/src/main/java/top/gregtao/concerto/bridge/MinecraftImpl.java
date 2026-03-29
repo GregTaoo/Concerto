@@ -6,7 +6,7 @@ import net.minecraft.text.Text;
 import top.gregtao.concerto.core.bridge.Minecraft;
 import top.gregtao.concerto.core.network.SyncRecord;
 import top.gregtao.concerto.core.player.MusicPlayerState;
-import top.gregtao.concerto.network.room.MusicRoom;
+import top.gregtao.concerto.core.room.MusicRoom;
 
 public class MinecraftImpl implements Minecraft {
 

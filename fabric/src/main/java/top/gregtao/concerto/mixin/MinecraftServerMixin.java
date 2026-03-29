@@ -7,22 +7,22 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import top.gregtao.concerto.ConcertoClient;
 import top.gregtao.concerto.core.room.MusicRoom;
-import top.gregtao.concerto.network.room.ServerMusicAgent;
+import top.gregtao.concerto.network.room.ServerMusicAgentManager;
 
 @Mixin(MinecraftServer.class)
 public class MinecraftServerMixin {
 
     @Inject(at = @At("HEAD"), method = "runServer()V")
     public void runServerInject(CallbackInfo ci) {
-        ServerMusicAgent.INSTANCE = new ServerMusicAgent((MinecraftServer)(Object) this);
+        ServerMusicAgentManager.init((MinecraftServer)(Object) this);
         ConcertoClient.LOGGER.info("Server launching.");
     }
 
     @Inject(at = @At("HEAD"), method = "shutdown()V")
     public void shutdownInject(CallbackInfo ci) {
         MusicRoom.ROOMS.clear();
-        ServerMusicAgent.INSTANCE.reset();
-        ServerMusicAgent.INSTANCE = null;
+        ServerMusicAgentManager.INSTANCE.reset();
+        ServerMusicAgentManager.INSTANCE = null;
         ConcertoClient.LOGGER.info("Server shutting down.");
     }
 }

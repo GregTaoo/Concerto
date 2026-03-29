@@ -15,9 +15,9 @@ import top.gregtao.concerto.core.http.kugou.KuGouMusicApiClient;
 import top.gregtao.concerto.core.http.netease.NeteaseCloudApiClient;
 import top.gregtao.concerto.core.http.qq.QQMusicApiClient;
 import top.gregtao.concerto.network.MusicDataPacket;
-import top.gregtao.concerto.network.room.ServerMusicAgent;
 import top.gregtao.concerto.network.ServerMusicNetworkHandler;
 import top.gregtao.concerto.core.util.ConcertoRunner;
+import top.gregtao.concerto.network.room.ServerMusicAgentManager;
 import top.gregtao.concerto.util.MinecraftTextUtil;
 
 import java.util.Iterator;
@@ -102,22 +102,22 @@ public class ConcertoServerCommand {
                 ).then(
                         CommandManager.literal("agent").requires(source -> source.hasPermissionLevel(2)).then(
                                 CommandManager.literal("reset").executes(context -> {
-                                    ServerMusicAgent.INSTANCE.reset();
+                                    ServerMusicAgentManager.INSTANCE.reset();
                                     return 0;
                                 })
                         ).then(
                                 CommandManager.literal("cut").executes(context -> {
-                                    ServerMusicAgent.INSTANCE.schedulePlayNext(0, false);
+                                    ServerMusicAgentManager.INSTANCE.schedulePlayNext(0, false);
                                     return 0;
                                 })
                         ).then(
                                 CommandManager.literal("stop").executes(context -> {
-                                    ServerMusicAgent.INSTANCE.stop();
+                                    ServerMusicAgentManager.INSTANCE.stop();
                                     return 0;
                                 })
                         ).then(
                                 CommandManager.literal("start").executes(context -> {
-                                    ServerMusicAgent.INSTANCE.start();
+                                    ServerMusicAgentManager.INSTANCE.start();
                                     return 0;
                                 })
                         )

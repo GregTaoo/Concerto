@@ -17,7 +17,7 @@ import top.gregtao.concerto.core.music.Music;
 import top.gregtao.concerto.core.music.meta.music.MusicMetaData;
 import top.gregtao.concerto.core.util.TextUtil;
 import top.gregtao.concerto.network.room.MusicRoomManager;
-import top.gregtao.concerto.network.room.ServerMusicAgent;
+import top.gregtao.concerto.network.room.ServerMusicAgentManager;
 import top.gregtao.concerto.util.MinecraftTextUtil;
 
 import java.util.*;
@@ -224,25 +224,26 @@ public class ServerMusicNetworkHandler {
         }
         String[] args = payload.string.split(":");
         if (args[0].equals("Query")) {
-            List<Music> list = ServerMusicAgent.INSTANCE.getMusicQueue();
+            List<Music> list = ServerMusicAgentManager.INSTANCE.getMusicQueue();
             context.player().sendMessage(MinecraftTextUtil.PAGE_SPLIT);
             list.forEach(music -> context.player().sendMessage(Text.literal(
                     music.getMeta().title() + " - " + music.getMeta().author())));
             context.player().sendMessage(MinecraftTextUtil.PAGE_SPLIT);
-        } else if (args.length < 2 || !ServerMusicAgent.INSTANCE.isMember(context.player())) {
+        } else if (args.length < 2 || !ServerMusicAgentManager.INSTANCE.isMember(context.player().getName().getString())) {
             context.player().sendMessage(Text.translatable("concerto.agent.error"));
         } else if (args[0].equals("Vote")) {
             if (args[1].equals("New")) {
-                ServerMusicAgent.INSTANCE.receiveVoteRequest(context.player());
+                ServerMusicAgentManager.INSTANCE.receiveVoteRequest(context.player().getName().getString());
             } else if (args[1].length() == 1) {
-                ServerMusicAgent.INSTANCE.receiveVote(context.player(), args[1].equals("1"));
+                ServerMusicAgentManager.INSTANCE.receiveVote(context.player().getName().getString(), args[1].equals("1"));
             } else {
                 context.player().sendMessage(Text.translatable("concerto.agent.error"));
             }
         } else if (args[0].equals("Add")) {
             Music music = MusicJsonParsers.from(TextUtil.fromBase64(args[1]), false);
             if (music != null && MusicDataPacket.isMusicSafe(music)) {
-                ServerMusicAgent.INSTANCE.addMusic(context.player(), music);
+                ServerMusicAgentManager.INSTANCE.addMusic(
+                        context.player().getUuid(), context.player().getName().getString(), music);
             } else {
                 context.player().sendMessage(Text.translatable("concerto.agent.error"));
             }

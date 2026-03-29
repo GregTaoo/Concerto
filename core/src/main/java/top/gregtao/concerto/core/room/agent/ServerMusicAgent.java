@@ -1,9 +1,6 @@
-package top.gregtao.concerto.network.room;
+package top.gregtao.concerto.core.room.agent;
 
-import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.text.Text;
-import top.gregtao.concerto.ConcertoServer;
+import top.gregtao.concerto.core.Concerto;
 import top.gregtao.concerto.core.api.DynamicPath;
 import top.gregtao.concerto.core.api.MusicJsonParsers;
 import top.gregtao.concerto.core.config.ServerConfig;
@@ -12,7 +9,6 @@ import top.gregtao.concerto.core.music.SharedMusic;
 import top.gregtao.concerto.core.player.ConcertoPlayerList;
 import top.gregtao.concerto.core.room.MusicRoom;
 import top.gregtao.concerto.core.room.MusicRoom.*;
-import top.gregtao.concerto.network.ServerMusicNetworkHandler;
 import top.gregtao.concerto.core.util.ConcertoRunner;
 import top.gregtao.concerto.core.player.MusicPlayerState;
 
@@ -27,16 +23,22 @@ import java.util.function.Consumer;
 public class ServerMusicAgent {
 
     public static final UUID ROOM_UUID = UUID.fromString("00000000-0000-0000-0000-000000000000");
-    public static ServerMusicAgent INSTANCE;
 
     public final MusicRoom room;
+
+    public interface AgentBridge {
+        void sendMessage(String playerName, String translationKey, Object... args);
+        void sendVoteRequest(String playerName);
+    }
+
+    private final AgentBridge bridge;
 
     private final Map<UUID, Long> addMusicTimeRecord = new ConcurrentHashMap<>();
     private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(2);
     private final Lock voteLock = new ReentrantLock();
     private volatile boolean isVoting = false;
-    private final Set<ServerPlayerEntity> yesVoters = ConcurrentHashMap.newKeySet();
-    private final Set<ServerPlayerEntity> noVoters = ConcurrentHashMap.newKeySet();
+    private final Set<String> yesVoters = ConcurrentHashMap.newKeySet();
+    private final Set<String> noVoters = ConcurrentHashMap.newKeySet();
     private ScheduledFuture<?> voteFuture;
 
     private ScheduledFuture<?> playNextFuture;
@@ -46,11 +48,10 @@ public class ServerMusicAgent {
     private final AtomicBoolean isStopped = new AtomicBoolean(false);
     private final AtomicBoolean currentlyFreeTime = new AtomicBoolean(false);
     public List<Music> freeTimePlaylist = new CopyOnWriteArrayList<>();
-    private final MinecraftServer server;
 
-    public ServerMusicAgent(MinecraftServer server) {
-        this.room = new MusicRoom("#Server", ROOM_UUID, MusicRoomManager.createServerBridge(server));
-        this.server = server;
+    public ServerMusicAgent(AgentBridge bridge, ServerNetworkBridge roomServerBridge) {
+        this.bridge = bridge;
+        this.room = new MusicRoom("#Server", ROOM_UUID, roomServerBridge);
         MusicRoom.ROOMS.put(this.room.uuid, this.room);
 
         // Listeners for manual triggers or unexpected external state changes
@@ -107,13 +108,13 @@ public class ServerMusicAgent {
         this.playNextMusic();
     }
 
-    public void receiveVoteRequest(ServerPlayerEntity player) {
+    public void receiveVoteRequest(String playerName) {
         if (this.isVoting) {
-            player.sendMessage(Text.translatable("concerto.agent.vote.voting"));
+            this.bridge.sendMessage(playerName, "concerto.agent.vote.voting");
             return;
         }
         if (this.trackedPauseState) {
-            player.sendMessage(Text.translatable("concerto.agent.not_playing"));
+            this.bridge.sendMessage(playerName, "concerto.agent.not_playing");
             return;
         }
         this.voteLock.lock();
@@ -126,26 +127,23 @@ public class ServerMusicAgent {
         } finally {
             this.voteLock.unlock();
         }
-        this.membersForEach((playerName) -> {
-            ServerPlayerEntity p = this.server.getPlayerManager().getPlayer(playerName);
-            if (p != null) ServerMusicNetworkHandler.sendVote2Member(p);
-        });
-        ConcertoServer.LOGGER.info("Vote request created");
+        this.membersForEach(this.bridge::sendVoteRequest);
+        Concerto.getLogger().info("Vote request created");
     }
 
-    public void receiveVote(ServerPlayerEntity player, boolean vote) {
+    public void receiveVote(String playerName, boolean vote) {
         if (!this.isVoting) {
-            player.sendMessage(Text.translatable("concerto.agent.vote.ended"));
+            this.bridge.sendMessage(playerName, "concerto.agent.vote.ended");
             return;
         }
-        if (this.yesVoters.contains(player) || this.noVoters.contains(player)) {
-            player.sendMessage(Text.translatable("concerto.agent.vote.duplicate"));
+        if (this.yesVoters.contains(playerName) || this.noVoters.contains(playerName)) {
+            this.bridge.sendMessage(playerName, "concerto.agent.vote.duplicate");
             return;
         }
 
         this.voteLock.lock();
         try {
-            (vote ? this.yesVoters : this.noVoters).add(player);
+            (vote ? this.yesVoters : this.noVoters).add(playerName);
             if (this.yesVoters.size() + this.noVoters.size() >= this.getMembers().size() - 1) {
                 if (this.voteFuture != null) this.voteFuture.cancel(false);
                 this.endVoting();
@@ -154,8 +152,8 @@ public class ServerMusicAgent {
             this.voteLock.unlock();
         }
 
-        player.sendMessage(Text.translatable("concerto.agent.vote_for", vote ?
-                Text.translatable("concerto.accept") : Text.translatable("concerto.reject")));
+        this.bridge.sendMessage(playerName, "concerto.agent.vote_for", 
+                vote ? "concerto.accept" : "concerto.reject");
     }
 
     private void endVoting() {
@@ -173,12 +171,12 @@ public class ServerMusicAgent {
         }
 
         if (success) {
-            ConcertoServer.LOGGER.info("Vote: Play the next music");
+            Concerto.getLogger().info("Vote: Play the next music");
             this.playNextMusic();
         } else {
-            ConcertoServer.LOGGER.info("Vote: Keep current music");
+            Concerto.getLogger().info("Vote: Keep current music");
         }
-        this.broadcast(Text.translatable(success ? "concerto.agent.vote.success" : "concerto.agent.vote.failed", yes, no));
+        this.broadcast(success ? "concerto.agent.vote.success" : "concerto.agent.vote.failed", yes, no);
     }
 
     public void playNextMusic() {
@@ -232,7 +230,7 @@ public class ServerMusicAgent {
             try {
                 if (!(taskMusic instanceof DynamicPath dynamicPath)) {
                     if (!Objects.equals(this.room.serverState.get().currentIndex, currentUUID)) return;
-                    this.broadcast(Text.translatable("concerto.agent.play.failed", taskMusic.getMeta().title(), taskMusic.getMeta().author()));
+                    this.broadcast("concerto.agent.play.failed", taskMusic.getMeta().title(), taskMusic.getMeta().author());
                     this.playNextMusic();
                     return;
                 }
@@ -242,7 +240,7 @@ public class ServerMusicAgent {
                     String path = dynamicPath.updateRawPath();
                     if (!Objects.equals(this.room.serverState.get().currentIndex, currentUUID)) return;
                     if (path == null) {
-                        this.broadcast(Text.translatable("concerto.agent.play.failed", taskMusic.getMeta().title(), taskMusic.getMeta().author()));
+                        this.broadcast("concerto.agent.play.failed", taskMusic.getMeta().title(), taskMusic.getMeta().author());
                         this.playNextMusic();
                         return;
                     }
@@ -258,7 +256,7 @@ public class ServerMusicAgent {
                     s.resolvedMedia = media;
                     s.paused = false;
                 }, List.of(MusicRoomState.RESOLVED_MEDIA, MusicRoomState.PAUSED));
-                
+
                 // If the paused state is already false, syncPauseState won't schedule playNext. We must manually schedule it.
                 if (!this.trackedPauseState) {
                     this.schedulePlayNext(taskMusic.getMeta().getDuration().asSeconds(), true);
@@ -266,32 +264,26 @@ public class ServerMusicAgent {
 
             } catch (Exception e) {
                 if (Objects.equals(this.room.serverState.get().currentIndex, currentUUID)) {
-                    ConcertoServer.LOGGER.error("Resolve media failed", e);
+                    Concerto.getLogger().error("Resolve media failed", e);
                     this.playNextMusic();
                 }
             }
         });
     }
 
-    public void broadcast(Text text) {
-        this.membersForEach((playerName) -> {
-            ServerPlayerEntity p = this.server.getPlayerManager().getPlayer(playerName);
-            if (p != null) p.sendMessage(text, false);
-        });
+    public void broadcast(String translationKey, Object... args) {
+        this.membersForEach((playerName) -> this.bridge.sendMessage(playerName, translationKey, args));
     }
 
-    public boolean isMember(ServerPlayerEntity player) {
-        return this.getMembers().containsKey(player.getName().getString());
+    public boolean isMember(String playerName) {
+        return this.getMembers().containsKey(playerName);
     }
 
-    public void addMusic(ServerPlayerEntity player, Music music) {
-        UUID playerUuid = player.getUuid();
-        String playerName = player.getName().getString();
-        
+    public void addMusic(UUID playerUuid, String playerName, Music music) {
         long lastAdd = this.addMusicTimeRecord.getOrDefault(playerUuid, 0L);
         int wait = (int) (ServerConfig.INSTANCE.options.musicAgentAddTimeLimit - (System.currentTimeMillis() - lastAdd) / 1000);
         if (wait > 0) {
-            player.sendMessage(Text.translatable("concerto.agent.add.too_quick", wait));
+            this.bridge.sendMessage(playerName, "concerto.agent.add.too_quick", wait);
             return;
         }
 
@@ -309,7 +301,7 @@ public class ServerMusicAgent {
             }, List.of(MusicRoomState.MUSIC_LIST, MusicRoomState.CURRENT_INDEX));
 
             this.addMusicTimeRecord.put(playerUuid, System.currentTimeMillis());
-            this.broadcast(Text.translatable("concerto.agent.add", playerName, music.getMeta().title(), music.getMeta().author()));
+            this.broadcast("concerto.agent.add", playerName, music.getMeta().title(), music.getMeta().author());
         });
     }
 

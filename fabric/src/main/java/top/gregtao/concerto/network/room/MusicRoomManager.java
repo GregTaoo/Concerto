@@ -10,6 +10,7 @@ import top.gregtao.concerto.ConcertoClient;
 import top.gregtao.concerto.ConcertoServer;
 import top.gregtao.concerto.core.config.ServerConfig;
 import top.gregtao.concerto.core.player.MusicPlayerHandler;
+import top.gregtao.concerto.core.room.agent.ServerMusicAgent;
 import top.gregtao.concerto.network.ConcertoPayload;
 
 import top.gregtao.concerto.core.room.MusicRoom;

@@ -11,5 +11,6 @@ public class ConcertoEvents {
     public static final Event ON_MUSIC_INFO_RESET = new Event();
     public static final Event ON_MUSIC_INFO_UPDATE = new Event();
 
-    public static final PayloadEvent<Music> ON_NEXT_MUSIC = new PayloadEvent<>();
+    public static final PayloadEvent<Music> ON_NEW_MUSIC_STARTED = new PayloadEvent<>();
+    public static final Event ON_MUSIC_LIST_UPDATE = new Event();
 }

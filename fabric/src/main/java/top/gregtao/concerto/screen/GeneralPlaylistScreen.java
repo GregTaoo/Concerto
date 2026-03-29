@@ -9,6 +9,8 @@ import net.minecraft.client.gui.widget.TextFieldWidget;
 import net.minecraft.text.Text;
 import org.lwjgl.glfw.GLFW;
 import top.gregtao.concerto.core.enums.OrderType;
+import top.gregtao.concerto.core.event.ConcertoEvents;
+import top.gregtao.concerto.core.event.Event;
 import top.gregtao.concerto.core.player.MusicPlayerHandler;
 import top.gregtao.concerto.screen.widget.ConcertoListWidget;
 import top.gregtao.concerto.screen.widget.GeneralPlaylistWidget;
@@ -16,6 +18,7 @@ import top.gregtao.concerto.screen.widget.GeneralPlaylistWidget;
 public class GeneralPlaylistScreen extends ApplyDraggedFileScreen {
     private GeneralPlaylistWidget widget;
     protected TextFieldWidget searchBox;
+    private Event.Subscription listSubscription, musicSubscription;
 
     public GeneralPlaylistScreen(Screen parent) {
         super(Text.translatable("concerto.screen.general_list"), parent);
@@ -57,7 +60,7 @@ public class GeneralPlaylistScreen extends ApplyDraggedFileScreen {
         this.addDrawableChild(ButtonWidget.builder(Text.translatable("concerto.screen.delete"), button -> {
             ConcertoListWidget<GeneralPlaylistWidget.Entry>.Entry entry = this.widget.getSelectedOrNull();
             if (entry != null) {
-                MusicPlayerHandler.INSTANCE.removeAsync(entry.item.index(), () -> this.widget.removeEntryWithoutScrolling(entry));
+                MusicPlayerHandler.INSTANCE.removeAsync(entry.item.index(), () -> {});
             }
         }).position(this.width / 2 - 85, this.height - 30).size(50, 20).build());
 
@@ -82,6 +85,10 @@ public class GeneralPlaylistScreen extends ApplyDraggedFileScreen {
             MusicPlayerHandler.INSTANCE.clear();
             MinecraftClient.getInstance().setScreen(null);
         }).position(this.width / 2 + 125, this.height - 30).size(50, 20).build());
+
+        this.listSubscription = ConcertoEvents.ON_MUSIC_LIST_UPDATE.subscribe(this::toggleSearch);
+        this.musicSubscription = ConcertoEvents.ON_NEW_MUSIC_STARTED.subscribe(
+                (music) -> this.widget.setSelected(MusicPlayerHandler.INSTANCE.getCurrentIndex()));
     }
 
     @Override
@@ -105,5 +112,12 @@ public class GeneralPlaylistScreen extends ApplyDraggedFileScreen {
     @Override
     public boolean charTyped(char chr, int modifiers) {
         return this.searchBox.charTyped(chr, modifiers);
+    }
+
+    @Override
+    public void close() {
+        super.close();
+        Event.unsubscribe(this.listSubscription);
+        Event.unsubscribe(this.musicSubscription);
     }
 }

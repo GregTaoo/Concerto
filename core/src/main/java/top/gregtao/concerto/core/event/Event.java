@@ -21,4 +21,10 @@ public class Event {
     public interface Subscription {
         void unsubscribe();
     }
+
+    public static void unsubscribe(Subscription subscription) {
+        if (subscription != null) {
+            subscription.unsubscribe();
+        }
+    }
 }

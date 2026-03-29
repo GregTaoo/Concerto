@@ -10,6 +10,7 @@ import top.gregtao.concerto.core.api.CacheableMusic;
 import top.gregtao.concerto.core.api.LazyLoadable;
 import top.gregtao.concerto.core.api.MusicJsonParsers;
 import top.gregtao.concerto.core.enums.OrderType;
+import top.gregtao.concerto.core.event.ConcertoEvents;
 import top.gregtao.concerto.core.music.Music;
 import top.gregtao.concerto.core.music.meta.music.MusicMetaData;
 import top.gregtao.concerto.core.network.SyncRecord;
@@ -89,6 +90,8 @@ public class MusicPlayerHandler {
                     return s;
                 }, List.of(MusicPlayerState.CURRENT_INDEX));
             }
+
+            ConcertoEvents.ON_MUSIC_LIST_UPDATE.emit();
         });
 
         record.addListener(MusicPlayerState.CURRENT_INDEX, (o, state, oldVal, newVal) -> {

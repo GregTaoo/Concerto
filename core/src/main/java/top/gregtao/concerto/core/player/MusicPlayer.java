@@ -109,7 +109,7 @@ public class MusicPlayer extends StreamPlayer implements StreamPlayerListener {
                     this.started = true;
 
                     Concerto.getLogger().info("Start playing music {} - {}", music.getMeta().title(), music.getMeta().author());
-                    ConcertoEvents.ON_NEXT_MUSIC.emit(music);
+                    ConcertoEvents.ON_NEW_MUSIC_STARTED.emit(music);
                 } catch (Exception e) {
                     Concerto.getLogger().error("Internal player error: " + e);
                     Concerto.getMinecraft().sendMessageToClientPlayer(

@@ -60,4 +60,11 @@ public class GeneralPlaylistWidget extends MetadataListWidget<GeneralPlaylistWid
         Pair<List<Entry>, Entry> pair = loadFromMusicList();
         super.reset(pair.getFirst(), pair.getSecond(), keyword);
     }
+
+    public void setSelected(UUID uuid) {
+        this.children().stream()
+                .filter(child -> child.item.index().equals(uuid))
+                .findFirst()
+                .ifPresent(this::setSelected);
+    }
 }

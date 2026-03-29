@@ -14,7 +14,7 @@ public class MinecraftServerMixin {
 
     @Inject(at = @At("HEAD"), method = "runServer()V")
     public void runServerInject(CallbackInfo ci) {
-        ServerMusicAgent.INSTANCE = new ServerMusicAgent(() -> (MinecraftServer)(Object) this);
+        ServerMusicAgent.INSTANCE = new ServerMusicAgent((MinecraftServer)(Object) this);
         ConcertoClient.LOGGER.info("Server launching.");
     }
 

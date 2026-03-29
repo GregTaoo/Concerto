@@ -23,7 +23,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Consumer;
-import java.util.function.Supplier;
 
 public class ServerMusicAgent {
 
@@ -49,14 +48,16 @@ public class ServerMusicAgent {
     public List<Music> freeTimePlaylist = new CopyOnWriteArrayList<>();
     private final MinecraftServer server;
 
-    public ServerMusicAgent(Supplier<MinecraftServer> serverSupplier) {
-        this.room = new MusicRoom("#Server", ROOM_UUID, MusicRoomManager.createServerBridge(serverSupplier));
-        this.server = serverSupplier.get();
+    public ServerMusicAgent(MinecraftServer server) {
+        this.room = new MusicRoom("#Server", ROOM_UUID, MusicRoomManager.createServerBridge(server));
+        this.server = server;
         MusicRoom.ROOMS.put(this.room.uuid, this.room);
 
         // Listeners for manual triggers or unexpected external state changes
-        this.room.serverState.addListener(MusicPlayerState.CURRENT_INDEX, (o, state, oldVal, newVal) -> this.syncIndexState());
-        this.room.serverState.addListener(MusicPlayerState.PAUSED, (o, state, oldVal, newVal) -> this.syncPauseState());
+        this.room.serverState.addListener(MusicPlayerState.CURRENT_INDEX,
+                (o, state, oldVal, newVal) -> this.syncIndexState());
+        this.room.serverState.addListener(MusicPlayerState.PAUSED,
+                (o, state, oldVal, newVal) -> this.syncPauseState());
     }
 
     private void updateState(Consumer<MusicRoomState> consumer, List<Field> changeList) {
@@ -291,7 +292,7 @@ public class ServerMusicAgent {
         int wait = (int) (ServerConfig.INSTANCE.options.musicAgentAddTimeLimit - (System.currentTimeMillis() - lastAdd) / 1000);
         if (wait > 0) {
             player.sendMessage(Text.translatable("concerto.agent.add.too_quick", wait));
-//            return;
+            return;
         }
 
         ConcertoRunner.run(() -> {

@@ -110,7 +110,6 @@ public class MusicRoom {
         void sendMessage(String targetPlayer, String i18nKey, Object... args);
         void sendRoomCommand(String targetPlayer, Command command, String payload);
         boolean hasExternalPermission(String player, int level);
-        MusicRoom createRoom(String creator);
     }
 
     public void serverBroadcastSyncPackage(JsonObject patch) {
@@ -179,7 +178,7 @@ public class MusicRoom {
                         bridge.sendMessage(sender, "concerto.room.permission_denied");
                         break;
                     }
-                    MusicRoom room = bridge.createRoom(sender);
+                    MusicRoom room = new MusicRoom(sender, bridge);
                     ROOMS.put(room.uuid, room);
                     bridge.sendRoomCommand(sender, Command.JOIN, room.uuid.toString());
                     bridge.sendRoomCommand(sender, Command.SYNC, room.serverState.buildFull().toString());

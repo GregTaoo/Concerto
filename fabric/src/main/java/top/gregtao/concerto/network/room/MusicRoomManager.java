@@ -15,7 +15,6 @@ import top.gregtao.concerto.network.ConcertoPayload;
 import top.gregtao.concerto.core.room.MusicRoom;
 
 import java.util.*;
-import java.util.function.Supplier;
 
 public class MusicRoomManager {
 
@@ -25,29 +24,24 @@ public class MusicRoomManager {
         ServerPlayNetworking.send(player, payload);
     }
     
-    public static MusicRoom.ServerNetworkBridge createServerBridge(Supplier<MinecraftServer> supplier) {
+    public static MusicRoom.ServerNetworkBridge createServerBridge(MinecraftServer server) {
         return new MusicRoom.ServerNetworkBridge() {
             @Override
             public void sendMessage(String targetPlayer, String i18nKey, Object... args) {
-                ServerPlayerEntity p = supplier.get().getPlayerManager().getPlayer(targetPlayer);
+                ServerPlayerEntity p = server.getPlayerManager().getPlayer(targetPlayer);
                 if (p != null) p.sendMessage(Text.translatable(i18nKey, args));
             }
 
             @Override
             public void sendRoomCommand(String targetPlayer, MusicRoom.Command command, String payload) {
-                ServerPlayerEntity p = supplier.get().getPlayerManager().getPlayer(targetPlayer);
+                ServerPlayerEntity p = server.getPlayerManager().getPlayer(targetPlayer);
                 if (p != null) serverSender(command.name(), payload, p);
             }
 
             @Override
             public boolean hasExternalPermission(String player, int level) {
-                ServerPlayerEntity p = supplier.get().getPlayerManager().getPlayer(player);
+                ServerPlayerEntity p = server.getPlayerManager().getPlayer(player);
                 return p != null && p.hasPermissionLevel(ServerConfig.INSTANCE.options.musicRoomCommandPermission);
-            }
-
-            @Override
-            public MusicRoom createRoom(String creator) {
-                return new MusicRoom(creator, this);
             }
         };
     }
@@ -62,7 +56,7 @@ public class MusicRoomManager {
         }
 
         MusicRoom.handleServerCommand(args[0], args[1], args[2],
-                player.getName().getString(), createServerBridge(() -> server));
+                player.getName().getString(), createServerBridge(server));
     }
 
     private static final MusicRoom.ClientNetworkBridge CLIENT_BRIDGE = new MusicRoom.ClientNetworkBridge() {

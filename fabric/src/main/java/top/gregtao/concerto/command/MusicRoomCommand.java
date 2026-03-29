@@ -33,10 +33,7 @@ public class MusicRoomCommand {
                                     return 0;
                                 })
                         )).then(ClientCommandManager.literal("quit").executes(context -> {
-                            switch (ConcertoClient.clientState) {
-                                case MUSIC_AGENT -> ClientMusicNetworkHandler.musicAgentQuit();
-                                case MUSIC_ROOM -> MusicRoomManager.clientQuit();
-                            }
+                            MusicRoomManager.clientQuit();
                             return 0;
                         })).then(ClientCommandManager.literal("remove").executes(context -> {
                             MusicRoomManager.clientRemove();

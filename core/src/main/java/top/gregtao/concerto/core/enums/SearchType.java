@@ -21,6 +21,6 @@ public enum SearchType implements SimpleStringIdentifiable {
     }
 
     public String getName() {
-        return Concerto.getMinecraft().getTranslatableText("concerto.search_type." + this.asString());
+        return Concerto.getCoreBridge().getTranslatableText("concerto.search_type." + this.asString());
     }
 }

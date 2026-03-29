@@ -10,6 +10,6 @@ public enum OrderType implements SimpleStringIdentifiable {
     LOOP;
 
     public String getName() {
-        return Concerto.getMinecraft().getTranslatableText("concerto.order." + this.asString());
+        return Concerto.getCoreBridge().getTranslatableText("concerto.order." + this.asString());
     }
 }

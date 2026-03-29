@@ -11,8 +11,8 @@ import net.minecraft.resource.ResourceType;
 import net.minecraft.util.Identifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import top.gregtao.concerto.bridge.CoreBridgeImpl;
 import top.gregtao.concerto.bridge.LoggerFactoryImpl;
-import top.gregtao.concerto.bridge.MinecraftImpl;
 import top.gregtao.concerto.command.ConcertoServerCommand;
 import top.gregtao.concerto.core.Concerto;
 import top.gregtao.concerto.core.config.ClientConfig;
@@ -27,12 +27,12 @@ import top.gregtao.concerto.network.ServerMusicNetworkHandler;
 public class ConcertoServer implements ModInitializer {
 
     public static Logger LOGGER = LoggerFactory.getLogger("ConcertoServer");
-    public static final MinecraftImpl MINECRAFT = new MinecraftImpl();
+    public static final CoreBridgeImpl CORE_BRIDGE = new CoreBridgeImpl();
     public static final LoggerFactoryImpl LOGGER_FACTORY = new LoggerFactoryImpl();
 
     @Override
     public void onInitialize() {
-        Concerto.registerMinecraft(MINECRAFT, LOGGER_FACTORY);
+        Concerto.registerCoreBridge(CORE_BRIDGE, LOGGER_FACTORY);
 
         CommandRegistrationCallback.EVENT.register(ConcertoServerCommand::register);
         ConcertoNetworking.register();

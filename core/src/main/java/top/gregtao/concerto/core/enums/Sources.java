@@ -14,7 +14,7 @@ public enum Sources implements SimpleStringIdentifiable {
     ;
 
     public String getName() {
-        return Concerto.getMinecraft().getTranslatableText(this.getKey("source"));
+        return Concerto.getCoreBridge().getTranslatableText(this.getKey("source"));
     }
 
     public String getKey(String main) {
@@ -22,6 +22,6 @@ public enum Sources implements SimpleStringIdentifiable {
     }
 
     public static String getI18nString(String source) {
-        return Concerto.getMinecraft().getTranslatableText("concerto.source." + source);
+        return Concerto.getCoreBridge().getTranslatableText("concerto.source." + source);
     }
 }

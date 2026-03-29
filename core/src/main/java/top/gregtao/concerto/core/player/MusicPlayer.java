@@ -92,8 +92,8 @@ public class MusicPlayer extends StreamPlayer implements StreamPlayerListener {
                     if (source == null) {
                         this.resetInfo();
                         Concerto.getLogger().error("Unable to play music: {} - {}", music.getMeta().title(), music.getMeta().author());
-                        Concerto.getMinecraft().sendMessageToClientPlayer(
-                                Concerto.getMinecraft().getTranslatableText("concerto.player.unable", music.getMeta().title(), music.getMeta().author(), music.getMeta().getSource()), false);
+                        Concerto.getCoreBridge().sendMessageToClientPlayer(
+                                Concerto.getCoreBridge().getTranslatableText("concerto.player.unable", music.getMeta().title(), music.getMeta().author(), music.getMeta().getSource()), false);
 
                         MusicPlayerHandler.INSTANCE.playNext(1);
                         return;
@@ -112,8 +112,8 @@ public class MusicPlayer extends StreamPlayer implements StreamPlayerListener {
                     ConcertoEvents.ON_NEW_MUSIC_STARTED.emit(music);
                 } catch (Exception e) {
                     Concerto.getLogger().error("Internal player error: " + e);
-                    Concerto.getMinecraft().sendMessageToClientPlayer(
-                            Concerto.getMinecraft().getTranslatableText("concerto.player.error", e.getMessage()), false);
+                    Concerto.getCoreBridge().sendMessageToClientPlayer(
+                            Concerto.getCoreBridge().getTranslatableText("concerto.player.error", e.getMessage()), false);
                 }
             }
         });
@@ -179,7 +179,7 @@ public class MusicPlayer extends StreamPlayer implements StreamPlayerListener {
 
         if (this.currentLyrics != null) this.displayTexts[0] = this.currentLyrics.stayOrNext(millisecond);
         else if (millisecond < 5000)
-            this.displayTexts[0] = Concerto.getMinecraft().getTranslatableText("concerto.no_subtitle");
+            this.displayTexts[0] = Concerto.getCoreBridge().getTranslatableText("concerto.no_subtitle");
         else this.displayTexts[0] = "";
 
         if (this.currentSubLyrics != null) this.displayTexts[1] = this.currentSubLyrics.stayOrNext(millisecond);

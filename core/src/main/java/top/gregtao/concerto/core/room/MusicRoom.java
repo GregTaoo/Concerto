@@ -390,7 +390,7 @@ public class MusicRoom {
                             return;
                         }
                     }
-                    String error = Concerto.getMinecraft().getTranslatableText("concerto.player.unable",
+                    String error = Concerto.getCoreBridge().getTranslatableText("concerto.player.unable",
                             music.getMeta().title(), music.getMeta().author(), music.getMeta().getSource());
                     o.set(s -> {
                         MusicRoomState rs = (MusicRoomState) s;
@@ -441,8 +441,8 @@ public class MusicRoom {
                 MusicPlayer.INSTANCE.internalPlayMusic(resolved);
             } catch (Exception e) {
                 Concerto.getLogger().error("Failed to parse resolved media", e);
-                Concerto.getMinecraft().sendMessageToClientPlayer(
-                        Concerto.getMinecraft().getTranslatableText("concerto.player.error", e.getMessage()), false);
+                Concerto.getCoreBridge().sendMessageToClientPlayer(
+                        Concerto.getCoreBridge().getTranslatableText("concerto.player.error", e.getMessage()), false);
             }
         }
     }

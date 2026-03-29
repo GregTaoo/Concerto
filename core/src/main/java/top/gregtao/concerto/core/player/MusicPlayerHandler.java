@@ -47,7 +47,7 @@ public class MusicPlayerHandler {
     }
 
     public SyncRecord<MusicPlayerState> getState() {
-        SyncRecord<MusicPlayerState> remote = Concerto.getMinecraft().getCurrentState();
+        SyncRecord<MusicPlayerState> remote = Concerto.getCoreBridge().getCurrentState();
         return remote == null ? this.localRecord : remote;
     }
 

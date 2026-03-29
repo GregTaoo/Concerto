@@ -26,12 +26,12 @@ public class ServerMusicAgent {
 
     public final MusicRoom room;
 
-    public interface AgentBridge {
+    public interface NetworkBridge {
         void sendMessage(String playerName, String translationKey, Object... args);
         void sendVoteRequest(String playerName);
     }
 
-    private final AgentBridge bridge;
+    private final NetworkBridge bridge;
 
     private final Map<UUID, Long> addMusicTimeRecord = new ConcurrentHashMap<>();
     private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(2);
@@ -49,7 +49,7 @@ public class ServerMusicAgent {
     private final AtomicBoolean currentlyFreeTime = new AtomicBoolean(false);
     public List<Music> freeTimePlaylist = new CopyOnWriteArrayList<>();
 
-    public ServerMusicAgent(AgentBridge bridge, ServerNetworkBridge roomServerBridge) {
+    public ServerMusicAgent(NetworkBridge bridge, ServerNetworkBridge roomServerBridge) {
         this.bridge = bridge;
         this.room = new MusicRoom("#Server", ROOM_UUID, roomServerBridge);
         MusicRoom.ROOMS.put(this.room.uuid, this.room);

@@ -28,9 +28,9 @@ public class MusicRoomManager {
     public static MusicRoom.ServerNetworkBridge createServerBridge(MinecraftServer server) {
         return new MusicRoom.ServerNetworkBridge() {
             @Override
-            public void sendMessage(String targetPlayer, String i18nKey, Object... args) {
+            public void sendMessage(String targetPlayer, String translationKey, Object... args) {
                 ServerPlayerEntity p = server.getPlayerManager().getPlayer(targetPlayer);
-                if (p != null) p.sendMessage(Text.translatable(i18nKey, args));
+                if (p != null) p.sendMessage(Text.translatable(translationKey, args));
             }
 
             @Override
@@ -79,9 +79,9 @@ public class MusicRoomManager {
         }
 
         @Override
-        public void sendMessage(String i18nKey, Object... args) {
+        public void sendMessage(String translationKey, Object... args) {
             if (MinecraftClient.getInstance().player != null) {
-                MinecraftClient.getInstance().player.sendMessage(Text.translatable(i18nKey, args), false);
+                MinecraftClient.getInstance().player.sendMessage(Text.translatable(translationKey, args), false);
             }
         }
 

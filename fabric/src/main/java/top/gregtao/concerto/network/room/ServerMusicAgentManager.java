@@ -11,7 +11,7 @@ public class ServerMusicAgentManager {
     public static ServerMusicAgent INSTANCE;
 
     public static void init(MinecraftServer server) {
-        INSTANCE = new ServerMusicAgent(new ServerMusicAgent.AgentBridge() {
+        INSTANCE = new ServerMusicAgent(new ServerMusicAgent.NetworkBridge() {
             @Override
             public void sendMessage(String playerName, String translationKey, Object... args) {
                 ServerPlayerEntity entity = server.getPlayerManager().getPlayer(playerName);

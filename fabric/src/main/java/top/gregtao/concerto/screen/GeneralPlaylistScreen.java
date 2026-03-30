@@ -49,7 +49,7 @@ public class GeneralPlaylistScreen extends ApplyDraggedFileScreen {
                 this.toggleSearch()).position(this.width / 2 + 125, 17).size(50, 20).build());
 
         this.addDrawableChild(ButtonWidget.builder(Text.translatable("concerto.screen.next"),
-                button -> MusicPlayerHandler.INSTANCE.playNext(1)).position(this.width / 2 - 185, this.height - 30).size(50, 20).build());
+                button -> MusicPlayerHandler.INSTANCE.playNextAsync(1)).position(this.width / 2 - 185, this.height - 30).size(50, 20).build());
 
         this.addDrawableChild(ButtonWidget.builder(Text.translatable("concerto.screen.play"), button -> {
             ConcertoListWidget<GeneralPlaylistWidget.Entry>.Entry entry = this.widget.getSelectedOrNull();

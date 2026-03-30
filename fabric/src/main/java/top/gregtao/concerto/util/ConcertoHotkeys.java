@@ -47,7 +47,7 @@ public class ConcertoHotkeys {
             } else if (INDEX_SCREEN.wasPressed()) {
                 client.setScreen(new ConcertoIndexScreen(null));
             } else if (NEXT_MUSIC.wasPressed()) {
-                MusicPlayerHandler.INSTANCE.playNext(1);
+                MusicPlayerHandler.INSTANCE.playNextAsync(1);
             } else if (PAUSE_RESUME.wasPressed()) {
                 if (MusicPlayer.INSTANCE.started) {
                     if (MusicPlayerHandler.INSTANCE.isForcePaused()) MusicPlayerHandler.INSTANCE.forceResume();

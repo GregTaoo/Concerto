@@ -221,11 +221,11 @@ public class MusicPlayerHandler {
     }
 
     public void start() {
-        this.playNext(0);
+        this.playNextAsync(0);
     }
 
     public void stop() {
-        this.setCurrentIndex(null);
+        ConcertoRunner.run(() -> this.setCurrentIndex(null));
     }
 
     public void playNext(int forward) {
@@ -242,6 +242,10 @@ public class MusicPlayerHandler {
         }, List.of(MusicPlayerState.CURRENT_INDEX, MusicPlayerState.PAUSED));
 
         this.writeConfig();
+    }
+
+    public void playNextAsync(int forward) {
+        ConcertoRunner.run(() -> this.playNext(forward));
     }
 
     public void removeCurrent() {

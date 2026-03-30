@@ -74,7 +74,7 @@ public class MusicRoomManager {
 
         @Override
         public void onQuit(UUID uuid) {
-            MusicPlayerHandler.INSTANCE.playNext(0);
+            MusicPlayerHandler.INSTANCE.playNextAsync(0);
             ConcertoClient.clientState = ConcertoClient.ClientState.LOCAL;
         }
 

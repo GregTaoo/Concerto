@@ -348,7 +348,7 @@ public class MusicRoom {
             }
         });
 
-        record.addListener(MusicPlayerState.MUSIC_LIST, (o, state, oldVal, newVal) -> {
+        record.addListener(MusicRoomState.MUSIC_LIST, (o, state, oldVal, newVal) -> {
             ConcertoEvents.ON_MUSIC_LIST_UPDATE.emit();
 
             int permission = this.permission;
@@ -373,7 +373,7 @@ public class MusicRoom {
             }
         });
 
-        record.addListener(MusicPlayerState.CURRENT_INDEX, (o, playerState, oldVal, newVal) -> {
+        record.addListener(MusicRoomState.CURRENT_INDEX, (o, playerState, oldVal, newVal) -> {
             MusicRoomState state = (MusicRoomState) playerState;
             int permission = this.permission;
 
@@ -422,13 +422,16 @@ public class MusicRoom {
             }
         });
 
-        record.addListener(MusicPlayerState.PAUSED, (o, state, oldVal, newVal) -> {
+        record.addListener(MusicRoomState.PAUSED, (o, state, oldVal, newVal) -> {
             if (state.paused && MusicPlayer.INSTANCE.isPlaying()) {
                 MusicPlayer.INSTANCE.internalPause();
             } else if (!state.paused && MusicPlayer.INSTANCE.isPaused()) {
                 MusicPlayer.INSTANCE.internalResume();
             }
         });
+
+        record.addListener(MusicRoomState.ORDER_TYPE, (o, state, oldVal, newVal) ->
+                ConcertoEvents.ON_PLAYER_ORDER_UPDATE.emit(state.orderType));
     }
 
     protected void clientOnResolvedMediaUpdate(MusicRoomState state) {

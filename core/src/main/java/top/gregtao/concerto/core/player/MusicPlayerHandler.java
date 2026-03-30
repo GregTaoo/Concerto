@@ -122,6 +122,9 @@ public class MusicPlayerHandler {
                 MusicPlayer.INSTANCE.internalResume();
             }
         });
+
+        record.addListener(MusicPlayerState.ORDER_TYPE, (o, state, oldVal, newVal) ->
+                ConcertoEvents.ON_PLAYER_ORDER_UPDATE.emit(state.orderType));
     }
 
     public void clear() {

@@ -18,7 +18,8 @@ import top.gregtao.concerto.screen.widget.GeneralPlaylistWidget;
 public class GeneralPlaylistScreen extends ApplyDraggedFileScreen {
     private GeneralPlaylistWidget widget;
     protected TextFieldWidget searchBox;
-    private Event.Subscription listSubscription, musicSubscription;
+    private CyclingButtonWidget<OrderType> orderButton;
+    private Event.Subscription listSubscription, musicSubscription, orderSubscription;
 
     public GeneralPlaylistScreen(Screen parent) {
         super(Text.translatable("concerto.screen.general_list"), parent);
@@ -64,10 +65,11 @@ public class GeneralPlaylistScreen extends ApplyDraggedFileScreen {
             }
         }).position(this.width / 2 - 85, this.height - 30).size(50, 20).build());
 
-        this.addDrawableChild(CyclingButtonWidget.builder((OrderType x) -> Text.literal(x.getName())).values(OrderType.values())
+        this.orderButton = CyclingButtonWidget.builder((OrderType x) -> Text.literal(x.getName())).values(OrderType.values())
                 .initially(MusicPlayerHandler.INSTANCE.getOrderType()).build(
                         this.width / 2 - 35, this.height - 30, 60, 20, Text.translatable("concerto.screen.order"),
-                        (widget, orderType) -> MusicPlayerHandler.INSTANCE.setOrderType(orderType)));
+                        (widget, orderType) -> MusicPlayerHandler.INSTANCE.setOrderType(orderType));
+        this.addDrawableChild(this.orderButton);
 
         this.addDrawableChild(ButtonWidget.builder(Text.translatable("concerto.screen.pause"), button -> {
             if (MusicPlayerHandler.INSTANCE.isForcePaused()) MusicPlayerHandler.INSTANCE.forceResume();
@@ -88,7 +90,9 @@ public class GeneralPlaylistScreen extends ApplyDraggedFileScreen {
 
         this.listSubscription = ConcertoEvents.ON_MUSIC_LIST_UPDATE.subscribe(this::toggleSearch);
         this.musicSubscription = ConcertoEvents.ON_NEW_MUSIC_STARTED.subscribe(
-                (music) -> this.widget.setSelected(MusicPlayerHandler.INSTANCE.getCurrentIndex()));
+                music -> this.widget.setSelected(MusicPlayerHandler.INSTANCE.getCurrentIndex()));
+        this.orderSubscription = ConcertoEvents.ON_PLAYER_ORDER_UPDATE.subscribe(
+                orderType -> this.orderButton.setValue(orderType));
     }
 
     @Override
@@ -119,5 +123,6 @@ public class GeneralPlaylistScreen extends ApplyDraggedFileScreen {
         super.close();
         Event.unsubscribe(this.listSubscription);
         Event.unsubscribe(this.musicSubscription);
+        Event.unsubscribe(this.orderSubscription);
     }
 }

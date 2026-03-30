@@ -5,6 +5,7 @@ import top.gregtao.concerto.core.Concerto;
 import top.gregtao.concerto.core.api.DynamicPath;
 import top.gregtao.concerto.core.api.MusicJsonParsers;
 import top.gregtao.concerto.core.enums.OrderType;
+import top.gregtao.concerto.core.event.ConcertoEvents;
 import top.gregtao.concerto.core.music.Music;
 import top.gregtao.concerto.core.music.SharedMusic;
 import top.gregtao.concerto.core.network.ClientRemoteRecord;
@@ -348,6 +349,8 @@ public class MusicRoom {
         });
 
         record.addListener(MusicPlayerState.MUSIC_LIST, (o, state, oldVal, newVal) -> {
+            ConcertoEvents.ON_MUSIC_LIST_UPDATE.emit();
+
             int permission = this.permission;
             if (permission <= 1) return;
 

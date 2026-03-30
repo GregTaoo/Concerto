@@ -116,7 +116,7 @@ public class MusicRoomCommand {
     }
 
     public static boolean checkLocal(ClientPlayerEntity player) {
-        if (ConcertoClient.clientState == ConcertoClient.ClientState.LOCAL) {
+        if (MusicRoom.clientGetState() == MusicRoom.ClientState.LOCAL) {
             return true;
         } else {
             player.sendMessage(Text.translatable("concerto.agent.occupied"), false);
@@ -125,7 +125,7 @@ public class MusicRoomCommand {
     }
 
     public static boolean checkAgent(ClientPlayerEntity player) {
-        if (ConcertoClient.clientState == ConcertoClient.ClientState.MUSIC_AGENT) {
+        if (MusicRoom.clientGetState() == MusicRoom.ClientState.MUSIC_AGENT) {
             return true;
         } else {
             player.sendMessage(Text.translatable("concerto.agent.not_in"), false);

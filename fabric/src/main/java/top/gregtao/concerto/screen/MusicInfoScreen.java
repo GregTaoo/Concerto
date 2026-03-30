@@ -4,10 +4,10 @@ import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.text.Text;
-import top.gregtao.concerto.ConcertoClient;
 import top.gregtao.concerto.core.music.Music;
 import top.gregtao.concerto.core.music.meta.music.MusicMetaData;
 import top.gregtao.concerto.core.player.MusicPlayerHandler;
+import top.gregtao.concerto.core.room.MusicRoom;
 import top.gregtao.concerto.network.ClientMusicNetworkHandler;
 import top.gregtao.concerto.screen.widget.URLImageWidget;
 import top.gregtao.concerto.core.util.ConcertoRunner;
@@ -37,7 +37,7 @@ public class MusicInfoScreen extends ConcertoScreen {
                 button -> ClientMusicNetworkHandler.musicAgentAddMusic(this.music)
         ).position(this.width - 245, this.height - 30).size(50, 20).build();
         this.addDrawableChild(requestButton);
-        requestButton.active = ConcertoClient.clientState == ConcertoClient.ClientState.MUSIC_AGENT;
+        requestButton.active = MusicRoom.clientGetState() == MusicRoom.ClientState.MUSIC_AGENT;
 
         this.addDrawableChild(ButtonWidget.builder(
                 Text.translatable("concerto.screen.play"),

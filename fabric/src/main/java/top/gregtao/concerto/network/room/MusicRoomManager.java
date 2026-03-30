@@ -9,8 +9,6 @@ import net.minecraft.text.Text;
 import top.gregtao.concerto.ConcertoClient;
 import top.gregtao.concerto.ConcertoServer;
 import top.gregtao.concerto.core.config.ServerConfig;
-import top.gregtao.concerto.core.player.MusicPlayerHandler;
-import top.gregtao.concerto.core.room.agent.ServerMusicAgent;
 import top.gregtao.concerto.network.ConcertoPayload;
 
 import top.gregtao.concerto.core.room.MusicRoom;
@@ -62,42 +60,10 @@ public class MusicRoomManager {
 
     private static final MusicRoom.ClientNetworkBridge CLIENT_BRIDGE = new MusicRoom.ClientNetworkBridge() {
         @Override
-        public void setClipboard(String text) {
-            MinecraftClient.getInstance().keyboard.setClipboard(text);
-        }
-
-        @Override
-        public void onJoin(UUID uuid) {
-            ConcertoClient.clientState = uuid.compareTo(ServerMusicAgent.ROOM_UUID) == 0 ?
-                    ConcertoClient.ClientState.MUSIC_AGENT : ConcertoClient.ClientState.MUSIC_ROOM;
-        }
-
-        @Override
-        public void onQuit(UUID uuid) {
-            MusicPlayerHandler.INSTANCE.playNextAsync(0);
-            ConcertoClient.clientState = ConcertoClient.ClientState.LOCAL;
-        }
-
-        @Override
-        public void sendMessage(String translationKey, Object... args) {
-            if (MinecraftClient.getInstance().player != null) {
-                MinecraftClient.getInstance().player.sendMessage(Text.translatable(translationKey, args), false);
-            }
-        }
-
-        @Override
         public void sendRoomCommand(String uuid, MusicRoom.Command command, String payloadString) {
             ConcertoPayload payload = new ConcertoPayload(
                     ConcertoPayload.Channel.MUSIC_ROOM, uuid + ":" + command + ":" + payloadString);
             ClientPlayNetworking.send(payload);
-        }
-
-        @Override
-        public String getClientPlayerName() {
-            if (MinecraftClient.getInstance().player != null) {
-                return MinecraftClient.getInstance().player.getName().getString();
-            }
-            return null;
         }
 
         @Override

@@ -92,8 +92,8 @@ public class MusicPlayer extends StreamPlayer implements StreamPlayerListener {
                     if (source == null) {
                         this.resetInfo();
                         Concerto.getLogger().error("Unable to play music: {} - {}", music.getMeta().title(), music.getMeta().author());
-                        Concerto.getCoreBridge().sendMessageToClientPlayer(
-                                Concerto.getCoreBridge().getTranslatableText("concerto.player.unable", music.getMeta().title(), music.getMeta().author(), music.getMeta().getSource()), false);
+                        Concerto.getCoreBridge().sendTranslatableToClientPlayer(
+                                "concerto.player.unable", false, music.getMeta().title(), music.getMeta().author(), music.getMeta().getSource());
 
                         MusicPlayerHandler.INSTANCE.playNext(1);
                         return;
@@ -112,8 +112,7 @@ public class MusicPlayer extends StreamPlayer implements StreamPlayerListener {
                     ConcertoEvents.ON_NEW_MUSIC_STARTED.emit(music);
                 } catch (Exception e) {
                     Concerto.getLogger().error("Internal player error: " + e);
-                    Concerto.getCoreBridge().sendMessageToClientPlayer(
-                            Concerto.getCoreBridge().getTranslatableText("concerto.player.error", e.getMessage()), false);
+                    Concerto.getCoreBridge().sendTranslatableToClientPlayer("concerto.player.error", false, e.getMessage());
                 }
             }
         });

@@ -5,17 +5,19 @@ import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.ChatScreen;
 import net.minecraft.text.Text;
 import org.joml.Quaternionf;
-import top.gregtao.concerto.ConcertoClient;
 import top.gregtao.concerto.core.config.ClientConfig;
+import top.gregtao.concerto.core.room.MusicRoom;
 import top.gregtao.concerto.core.util.Vector2i;
 import top.gregtao.concerto.mixin.DrawContextAccessor;
 import top.gregtao.concerto.core.player.MusicPlayer;
 import top.gregtao.concerto.core.player.MusicPlayerHandler;
+import top.gregtao.concerto.screen.widget.URLImageWidget;
 import top.gregtao.concerto.util.MinecraftTextUtil;
 
 public class InGameHudRenderer {
 
     public static ScrollingText MUSIC_DETAIL_SCROLL = new ScrollingText();
+    public static URLImageWidget COVER_IMAGE = new URLImageWidget(20, 20, 0, 0, null, false);
 
     public static class ScrollingText {
         public static int STOP_TICKS = 180;
@@ -98,9 +100,10 @@ public class InGameHudRenderer {
                 if (options.displayMusicDetails) {
                     Vector2i pos = config.musicDetailsPosSupplier.getPos(scaledWidth, scaledHeight);
 
+                    MusicRoom.ClientState roomState = MusicRoom.clientGetState();
                     String state = MusicPlayer.INSTANCE.isPlayingTemp ?
-                            ConcertoClient.clientState == ConcertoClient.ClientState.MUSIC_AGENT ? " | " + Text.translatable("concerto.agent").getString() :
-                            (ConcertoClient.clientState == ConcertoClient.ClientState.MUSIC_ROOM ? " | " + Text.translatable("concerto.room").getString() : "")
+                            roomState == MusicRoom.ClientState.MUSIC_AGENT ? " | " + Text.translatable("concerto.agent").getString() :
+                            (roomState == MusicRoom.ClientState.MUSIC_ROOM ? " | " + Text.translatable("concerto.room").getString() : "")
                             : "";
 
                     Text text2 = Text.literal(texts[2] + state);
@@ -140,9 +143,9 @@ public class InGameHudRenderer {
                 if (options.displayCoverImg) {
                     Vector2i pos = config.coverImgPosSupplier.getPos(scaledWidth, scaledHeight);
                     int size = config.options.coverImgSize;
-                    ConcertoClient.COVER_IMAGE.setX(pos.x);
-                    ConcertoClient.COVER_IMAGE.setY(pos.y);
-                    ConcertoClient.COVER_IMAGE.setSize(size, size);
+                    COVER_IMAGE.setX(pos.x);
+                    COVER_IMAGE.setY(pos.y);
+                    COVER_IMAGE.setSize(size, size);
 
                     if (options.coverImgRotate) {
                         float cx = pos.x + size / 2f;
@@ -154,7 +157,7 @@ public class InGameHudRenderer {
                         context.getMatrices().translate(-cx, -cy, 0); // 再平移回来
                     }
 
-                    ConcertoClient.COVER_IMAGE.render(context, mouseX, mouseY, delta);
+                    COVER_IMAGE.render(context, mouseX, mouseY, delta);
                 }
             }
         }

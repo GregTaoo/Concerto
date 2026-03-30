@@ -26,7 +26,6 @@ import top.gregtao.concerto.core.music.list.Playlist;
 import top.gregtao.concerto.core.player.MusicPlayerHandler;
 import top.gregtao.concerto.network.ClientMusicNetworkHandler;
 import top.gregtao.concerto.core.player.MusicPlayer;
-import top.gregtao.concerto.screen.widget.URLImageWidget;
 import top.gregtao.concerto.util.ConcertoHotkeys;
 import top.gregtao.concerto.util.ConcertoOptions;
 import top.gregtao.concerto.core.util.ConcertoRunner;
@@ -37,8 +36,6 @@ public class ConcertoClient implements ClientModInitializer {
 
 	public static final Logger LOGGER = LoggerFactory.getLogger("ConcertoClient");
 
-    public static URLImageWidget COVER_IMAGE = new URLImageWidget(20, 20, 0, 0, null, false);
-
     public static void syncPlayerVolume() {
         try {
             MinecraftClient client = MinecraftClient.getInstance();
@@ -48,11 +45,6 @@ public class ConcertoClient implements ClientModInitializer {
         } catch (NullPointerException ignore) {}
     }
 
-	// ======================================================
-	// Server States
-
-	public static ClientState clientState = ClientState.LOCAL;
-
 	public static boolean serverAvailable = false;
 
 	public static List<Playlist> presetRadios = List.of();
@@ -61,14 +53,6 @@ public class ConcertoClient implements ClientModInitializer {
 		return serverAvailable || !ClientConfig.INSTANCE.options.handshakeRequired ||
 				MinecraftClient.getInstance().isInSingleplayer();
 	}
-
-	public enum ClientState {
-		LOCAL,
-		MUSIC_ROOM,
-		MUSIC_AGENT
-	}
-
-	// ======================================================
 
 	@Override
 	public void onInitializeClient() {

@@ -14,6 +14,7 @@ import top.gregtao.concerto.command.ShareMusicCommand;
 import top.gregtao.concerto.core.config.ClientConfig;
 import top.gregtao.concerto.config.PresetPlaylistsConfig;
 import top.gregtao.concerto.core.music.Music;
+import top.gregtao.concerto.core.room.MusicRoom;
 import top.gregtao.concerto.core.room.agent.ServerMusicAgent;
 import top.gregtao.concerto.core.util.TextUtil;
 import top.gregtao.concerto.network.room.MusicRoomManager;
@@ -46,10 +47,10 @@ public class ClientMusicNetworkHandler {
         switch (payload.channel) {
             case MUSIC_DATA -> musicDataReceiver(payload, context);
             case HANDSHAKE -> playerJoinHandshake(payload, context);
-            case AUDITION_SYNC -> auditionDataSyncReceiver(payload, context);
+            case AUDITION_SYNC -> auditionDataSyncReceiver(payload);
             case MUSIC_ROOM -> MusicRoomManager.clientReceiver(payload, context);
             case PRESET_RADIOS -> presetRadiosReceiver(payload, context);
-            case MUSIC_AGENT -> musicAgentMusicReceiver(payload, context);
+            case MUSIC_AGENT -> musicAgentMusicReceiver(payload);
         }
     }
 
@@ -183,7 +184,7 @@ public class ClientMusicNetworkHandler {
         }
     }
 
-    public static void auditionDataSyncReceiver(ConcertoPayload payload, ClientPlayNetworking.Context context) {
+    public static void auditionDataSyncReceiver(ConcertoPayload payload) {
         String str = payload.string;
         String[] args = str.split(";");
         if (args.length != 3) return;
@@ -243,8 +244,8 @@ public class ClientMusicNetworkHandler {
         return true;
     }
 
-    public static void musicAgentMusicReceiver(ConcertoPayload payload, ClientPlayNetworking.Context context) {
-        if (ConcertoClient.clientState != ConcertoClient.ClientState.MUSIC_AGENT) return;
+    public static void musicAgentMusicReceiver(ConcertoPayload payload) {
+        if (MusicRoom.clientGetState() != MusicRoom.ClientState.MUSIC_AGENT) return;
         ConcertoRunner.run(() -> {
             if (payload.string.equals("Stop")) {
                 MusicPlayer.INSTANCE.stop();

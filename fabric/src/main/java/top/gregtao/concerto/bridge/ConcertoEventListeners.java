@@ -5,6 +5,7 @@ import top.gregtao.concerto.ConcertoClient;
 import top.gregtao.concerto.core.config.ClientConfig;
 import top.gregtao.concerto.core.event.ConcertoEvents;
 import top.gregtao.concerto.core.player.MusicPlayer;
+import top.gregtao.concerto.screen.InGameHudRenderer;
 
 public class ConcertoEventListeners {
 
@@ -20,12 +21,12 @@ public class ConcertoEventListeners {
 
 //        ConcertoEvents.ON_PLAYER_RESUME.subscribe(() -> MusicRoom.clientPause(false));
 
-        ConcertoEvents.ON_MUSIC_INFO_RESET.subscribe(() -> ConcertoClient.COVER_IMAGE.setUrl(null));
+        ConcertoEvents.ON_MUSIC_INFO_RESET.subscribe(() -> InGameHudRenderer.COVER_IMAGE.setUrl(null));
 
         ConcertoEvents.ON_MUSIC_INFO_UPDATE.subscribe(() -> {
             if (!MusicPlayer.INSTANCE.currentMeta.headPictureUrl().isEmpty()) {
-                ConcertoClient.COVER_IMAGE.setUrl(MusicPlayer.INSTANCE.currentMeta.headPictureUrl());
-                ConcertoClient.COVER_IMAGE.loadImage(true, ClientConfig.INSTANCE.options.coverImgInCircle);
+                InGameHudRenderer.COVER_IMAGE.setUrl(MusicPlayer.INSTANCE.currentMeta.headPictureUrl());
+                InGameHudRenderer.COVER_IMAGE.loadImage(true, ClientConfig.INSTANCE.options.coverImgInCircle);
             }
         });
 

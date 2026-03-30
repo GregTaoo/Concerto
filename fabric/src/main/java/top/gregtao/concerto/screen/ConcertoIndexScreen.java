@@ -79,7 +79,7 @@ public class ConcertoIndexScreen extends ConcertoScreen {
         ).position(this.width / 2 - 120, 170).size(115, 20).build());
 
         if (this.client != null) {
-            switch (ConcertoClient.clientState) {
+            switch (MusicRoom.clientGetState()) {
                 case MUSIC_ROOM -> {
                     String uuid = MusicRoom.CLIENT_ROOM.uuid.toString();
                     Text text = Text.translatable("concerto.screen.in_music_room", uuid);
@@ -107,7 +107,7 @@ public class ConcertoIndexScreen extends ConcertoScreen {
     @Override
     public void render(DrawContext matrices, int mouseX, int mouseY, float delta) {
         super.render(matrices, mouseX, mouseY, delta);
-        if (ConcertoClient.clientState != ConcertoClient.ClientState.LOCAL) {
+        if (MusicRoom.clientGetState() != MusicRoom.ClientState.LOCAL) {
             matrices.drawCenteredTextWithShadow(
                 this.textRenderer,
                 Text.translatable("concerto.screen.in_which_room"),

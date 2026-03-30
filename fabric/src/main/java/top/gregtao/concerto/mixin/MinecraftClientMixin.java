@@ -21,7 +21,6 @@ public class MinecraftClientMixin {
         ClientMusicNetworkHandler.WAIT_CONFIRMATION.clear();
         MusicAuditionScreen.WAIT_AUDITION.clear();
         MusicRoom.CLIENT_ROOM = null;
-        ConcertoClient.clientState = ConcertoClient.ClientState.LOCAL;
         if (MusicPlayerHandler.INSTANCE != null) {
             MusicPlayerHandler.INSTANCE.setPaused(true);
         }

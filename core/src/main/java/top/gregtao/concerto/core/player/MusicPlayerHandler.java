@@ -47,7 +47,7 @@ public class MusicPlayerHandler {
     }
 
     public SyncRecord<MusicPlayerState> getState() {
-        SyncRecord<MusicPlayerState> remote = Concerto.getCoreBridge().getCurrentState();
+        SyncRecord<MusicPlayerState> remote = Concerto.getCoreBridge().getCurrentPlayerState();
         return remote == null ? this.localRecord : remote;
     }
 
@@ -248,19 +248,6 @@ public class MusicPlayerHandler {
         ConcertoRunner.run(() -> this.playNext(forward));
     }
 
-    public void removeCurrent() {
-        MusicPlayerState state = this.getState().get();
-        if (state.currentIndex != null && state.musicList.contains(state.currentIndex)) {
-            this.getState().set((s) -> {
-                UUID removing = s.currentIndex;
-                UUID replacement = pickReplacementAfterRemove(s, removing);
-                s.musicList.remove(removing);
-                s.currentIndex = replacement;
-                return s;
-            }, List.of(MusicPlayerState.MUSIC_LIST, MusicPlayerState.CURRENT_INDEX));
-        }
-    }
-
     public void remove(UUID uuid) {
         MusicPlayerState state = this.getState().get();
         if (uuid == null || !state.musicList.contains(uuid)) return;
@@ -326,28 +313,6 @@ public class MusicPlayerHandler {
             return prev != null ? prev : next;
         }
         return next != null ? next : prev;
-    }
-
-    private int maxRemovable() {
-        MusicPlayerState state = this.getState().get();
-        UUID cur = state.currentIndex;
-        if (cur == null || !state.musicList.contains(cur)) return 0;
-
-        int count = 0;
-        if (state.orderType == OrderType.REVERSED) {
-            UUID p = state.musicList.nextUuid(cur);
-            while (p != null) {
-                count++;
-                p = state.musicList.nextUuid(p);
-            }
-        } else {
-            UUID p = state.musicList.previousUuid(cur);
-            while (p != null) {
-                count++;
-                p = state.musicList.previousUuid(p);
-            }
-        }
-        return count;
     }
 
     public String[] getDisplayTexts() {

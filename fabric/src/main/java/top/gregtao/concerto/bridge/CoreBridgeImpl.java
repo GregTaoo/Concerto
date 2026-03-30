@@ -16,6 +16,19 @@ public class CoreBridgeImpl implements CoreBridge {
     }
 
     @Override
+    public void setClientClipboard(String text) {
+        MinecraftClient.getInstance().keyboard.setClipboard(text);
+    }
+
+    @Override
+    public String getClientPlayerName() {
+        if (MinecraftClient.getInstance().player != null) {
+            return MinecraftClient.getInstance().player.getName().getString();
+        }
+        return null;
+    }
+
+    @Override
     public void sendMessageToClientPlayer(String message, boolean overlay) {
         ClientPlayerEntity player = MinecraftClient.getInstance().player;
         if (player != null) {
@@ -24,7 +37,7 @@ public class CoreBridgeImpl implements CoreBridge {
     }
 
     @Override
-    public SyncRecord<MusicPlayerState> getCurrentState() {
+    public SyncRecord<MusicPlayerState> getCurrentPlayerState() {
         return MusicRoom.CLIENT_ROOM != null ? MusicRoom.CLIENT_ROOM.clientState : null;
     }
 }

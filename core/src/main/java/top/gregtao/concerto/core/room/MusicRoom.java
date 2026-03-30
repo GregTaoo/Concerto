@@ -13,7 +13,9 @@ import top.gregtao.concerto.core.network.ServerRemoteRecord;
 import top.gregtao.concerto.core.network.SyncRecord;
 import top.gregtao.concerto.core.player.ConcertoPlayerList;
 import top.gregtao.concerto.core.player.MusicPlayer;
+import top.gregtao.concerto.core.player.MusicPlayerHandler;
 import top.gregtao.concerto.core.player.MusicPlayerState;
+import top.gregtao.concerto.core.room.agent.ServerMusicAgent;
 import top.gregtao.concerto.core.util.JsonUtil;
 
 import java.lang.reflect.Field;
@@ -245,13 +247,24 @@ public class MusicRoom {
 
     // Client side
     public interface ClientNetworkBridge {
-        void setClipboard(String text);
-        void onJoin(UUID uuid);
-        void onQuit(UUID uuid);
-        void sendMessage(String translationKey, Object... args);
         void sendRoomCommand(String uuid, Command command, String payload);
-        String getClientPlayerName();
         void onErrorMessageUpdate(String message);
+    }
+
+    public enum ClientState {
+        LOCAL,
+        MUSIC_ROOM,
+        MUSIC_AGENT
+    }
+
+    public static ClientState clientGetState() {
+        if (MusicRoom.CLIENT_ROOM != null) {
+            if (MusicRoom.CLIENT_ROOM.uuid.equals(ServerMusicAgent.ROOM_UUID)) {
+                return ClientState.MUSIC_AGENT;
+            }
+            return ClientState.MUSIC_ROOM;
+        }
+        return ClientState.LOCAL;
     }
 
     public static void clientSendSyncPacket(JsonObject patch) {
@@ -304,8 +317,7 @@ public class MusicRoom {
                 case JOIN -> {
                     UUID uuid = UUID.fromString(payload);
                     CLIENT_ROOM = new MusicRoom(uuid, bridge);
-                    bridge.setClipboard(uuid.toString());
-                    bridge.onJoin(uuid);
+                    Concerto.getCoreBridge().setClientClipboard(uuid.toString());
                 }
                 case SYNC -> {
                     MusicRoom room = CLIENT_ROOM;
@@ -317,7 +329,7 @@ public class MusicRoom {
                 case REMOVE -> {
                     MusicRoom room = CLIENT_ROOM;
                     if (room != null) {
-                        bridge.onQuit(room.uuid);
+                        MusicPlayerHandler.INSTANCE.playNextAsync(0);
                         CLIENT_ROOM = null;
                     }
                 }
@@ -326,7 +338,7 @@ public class MusicRoom {
                     if (room != null) {
                         UUID uuid = UUID.fromString(payload);
                         if (room.uuid.equals(uuid)) {
-                            bridge.onQuit(uuid);
+                            MusicPlayerHandler.INSTANCE.playNextAsync(0);
                             CLIENT_ROOM = null;
                         }
                     }
@@ -334,7 +346,7 @@ public class MusicRoom {
             }
         } catch (Exception e) {
             Concerto.getLogger().warn("Client Room Error", e);
-            bridge.sendMessage("concerto.room.update.fail");
+            Concerto.getCoreBridge().sendTranslatableToClientPlayer("concerto.room.update.fail", false);
         }
     }
 
@@ -342,7 +354,7 @@ public class MusicRoom {
     protected void registerClientListeners(ClientRemoteRecord<MusicPlayerState> record) {
         record.addListener(MusicRoomState.MEMBERS, (o, state, oldVal, newVal) -> {
             MusicRoomState rs = (MusicRoomState) state;
-            String name = this.clientBridge.getClientPlayerName();
+            String name = Concerto.getCoreBridge().getClientPlayerName();
             if (name != null) {
                 this.permission = rs.members.getOrDefault(name, 0);
             }
@@ -447,8 +459,7 @@ public class MusicRoom {
                 MusicPlayer.INSTANCE.internalPlayMusic(resolved);
             } catch (Exception e) {
                 Concerto.getLogger().error("Failed to parse resolved media", e);
-                Concerto.getCoreBridge().sendMessageToClientPlayer(
-                        Concerto.getCoreBridge().getTranslatableText("concerto.player.error", e.getMessage()), false);
+                Concerto.getCoreBridge().sendTranslatableToClientPlayer("concerto.player.error", false, e.getMessage());
             }
         }
     }

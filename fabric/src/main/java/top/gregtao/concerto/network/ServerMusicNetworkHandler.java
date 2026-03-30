@@ -6,16 +6,13 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.PlayerManager;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
 import org.jetbrains.annotations.Nullable;
 import top.gregtao.concerto.ConcertoServer;
 import top.gregtao.concerto.core.api.MusicJsonParsers;
 import top.gregtao.concerto.command.ConcertoServerCommand;
 import top.gregtao.concerto.config.PresetPlaylistsConfig;
 import top.gregtao.concerto.core.config.ServerConfig;
-import top.gregtao.concerto.core.music.Music;
 import top.gregtao.concerto.core.music.meta.music.MusicMetaData;
-import top.gregtao.concerto.core.util.TextUtil;
 import top.gregtao.concerto.network.room.MusicRoomManager;
 import top.gregtao.concerto.network.room.ServerMusicAgentManager;
 import top.gregtao.concerto.util.MinecraftTextUtil;
@@ -41,7 +38,7 @@ public class ServerMusicNetworkHandler {
         switch (payload.channel) {
             case MUSIC_DATA -> musicDataReceiver(payload, context);
             case MUSIC_ROOM -> MusicRoomManager.serverReceiver(payload, context);
-            case MUSIC_AGENT -> musicAgentReceiver(payload, context);
+            case MUSIC_AGENT -> ServerMusicAgentManager.serverReceiver(payload, context);
         }
     }
 
@@ -215,52 +212,5 @@ public class ServerMusicNetworkHandler {
 
     public static boolean playerExist(PlayerManager manager, String name) {
         return name.equals("@a") || (manager.getPlayer(name) != null);
-    }
-
-    public static void musicAgentReceiver(ConcertoPayload payload, ServerPlayNetworking.Context context) {
-        if (!ServerConfig.INSTANCE.options.serverMusicAgent) {
-            context.player().sendMessage(Text.translatable("concerto.agent.not_available"));
-            return;
-        }
-        String[] args = payload.string.split(":");
-        if (args[0].equals("Query")) {
-            List<Music> list = ServerMusicAgentManager.INSTANCE.getMusicQueue();
-            context.player().sendMessage(MinecraftTextUtil.PAGE_SPLIT);
-            list.forEach(music -> context.player().sendMessage(Text.literal(
-                    music.getMeta().title() + " - " + music.getMeta().author())));
-            context.player().sendMessage(MinecraftTextUtil.PAGE_SPLIT);
-        } else if (args.length < 2 || !ServerMusicAgentManager.INSTANCE.isMember(context.player().getName().getString())) {
-            context.player().sendMessage(Text.translatable("concerto.agent.error"));
-        } else if (args[0].equals("Vote")) {
-            if (args[1].equals("New")) {
-                ServerMusicAgentManager.INSTANCE.receiveVoteRequest(context.player().getName().getString());
-            } else if (args[1].length() == 1) {
-                ServerMusicAgentManager.INSTANCE.receiveVote(context.player().getName().getString(), args[1].equals("1"));
-            } else {
-                context.player().sendMessage(Text.translatable("concerto.agent.error"));
-            }
-        } else if (args[0].equals("Add")) {
-            Music music = MusicJsonParsers.from(TextUtil.fromBase64(args[1]), false);
-            if (music != null && MusicDataPacket.isMusicSafe(music)) {
-                ServerMusicAgentManager.INSTANCE.addMusic(
-                        context.player().getUuid(), context.player().getName().getString(), music);
-            } else {
-                context.player().sendMessage(Text.translatable("concerto.agent.error"));
-            }
-        }
-    }
-
-    public static void sendVote2Member(ServerPlayerEntity player) {
-        player.sendMessage(MinecraftTextUtil.PAGE_SPLIT);
-        player.sendMessage(Text.translatable("concerto.agent.vote")
-                .append(Text.literal("  ["))
-                .append(Text.translatable("concerto.accept").setStyle(
-                        MinecraftTextUtil.getRunCommandStyle("/musicroom agent vote true").withColor(Formatting.GREEN)))
-                .append(Text.literal("]"))
-                .append(Text.literal("  ["))
-                .append(Text.translatable("concerto.reject").setStyle(
-                        MinecraftTextUtil.getRunCommandStyle("/musicroom agent vote false").withColor(Formatting.RED)))
-                .append(Text.literal("]")));
-        player.sendMessage(MinecraftTextUtil.PAGE_SPLIT);
     }
 }

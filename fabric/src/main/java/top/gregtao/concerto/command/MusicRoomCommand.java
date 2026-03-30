@@ -10,8 +10,8 @@ import net.minecraft.command.CommandRegistryAccess;
 import net.minecraft.text.Text;
 import top.gregtao.concerto.ConcertoClient;
 import top.gregtao.concerto.core.room.MusicRoom;
-import top.gregtao.concerto.network.ClientMusicNetworkHandler;
 import top.gregtao.concerto.network.room.MusicRoomManager;
+import top.gregtao.concerto.network.room.ServerMusicAgentManager;
 
 public class MusicRoomCommand {
 
@@ -56,7 +56,7 @@ public class MusicRoomCommand {
                                         ClientCommandManager.literal("join").executes(context -> {
                                             ClientPlayerEntity player = context.getSource().getPlayer();
                                             if (checkServerAvailable(player) && checkLocal(player)) {
-                                                ClientMusicNetworkHandler.musicAgentJoin();
+                                                ServerMusicAgentManager.clientJoin();
                                             }
                                             return 0;
                                         })
@@ -64,15 +64,7 @@ public class MusicRoomCommand {
                                         ClientCommandManager.literal("quit").executes(context -> {
                                             ClientPlayerEntity player = context.getSource().getPlayer();
                                             if (checkServerAvailable(player) && checkAgent(player)) {
-                                                ClientMusicNetworkHandler.musicAgentQuit();
-                                            }
-                                            return 0;
-                                        })
-                                ).then(
-                                        ClientCommandManager.literal("query").executes(context -> {
-                                            ClientPlayerEntity player = context.getSource().getPlayer();
-                                            if (checkServerAvailable(player) && checkAgent(player)) {
-                                                ClientMusicNetworkHandler.musicAgentQuery();
+                                                ServerMusicAgentManager.clientQuit();
                                             }
                                             return 0;
                                         })
@@ -80,7 +72,7 @@ public class MusicRoomCommand {
                                         ClientCommandManager.literal("add").executes(context -> {
                                             ClientPlayerEntity player = context.getSource().getPlayer();
                                             if (checkServerAvailable(player) && checkAgent(player)) {
-                                                if (!ClientMusicNetworkHandler.musicAgentAddCurrentMusic()) {
+                                                if (!ServerMusicAgentManager.clientAddCurrentMusic()) {
                                                     player.sendMessage(Text.translatable("concerto.agent.not_playing"), false);
                                                 }
                                             }
@@ -90,14 +82,14 @@ public class MusicRoomCommand {
                                         ClientCommandManager.literal("vote").executes(context -> {
                                             ClientPlayerEntity player = context.getSource().getPlayer();
                                             if (checkServerAvailable(player) && checkAgent(player)) {
-                                                ClientMusicNetworkHandler.musicAgentNewVote();
+                                                ServerMusicAgentManager.clientNewVote();
                                             }
                                             return 0;
                                         }).then(
                                                 ClientCommandManager.argument("vote", BoolArgumentType.bool()).executes(context -> {
                                                     ClientPlayerEntity player = context.getSource().getPlayer();
                                                     if (checkServerAvailable(player) && checkAgent(player)) {
-                                                        ClientMusicNetworkHandler.musicAgentVote(BoolArgumentType.getBool(context, "vote"));
+                                                        ServerMusicAgentManager.clientVote(BoolArgumentType.getBool(context, "vote"));
                                                     }
                                                     return 0;
                                                 })

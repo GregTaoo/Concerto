@@ -1,5 +1,6 @@
 package top.gregtao.concerto.core.room.agent;
 
+import com.google.gson.JsonObject;
 import top.gregtao.concerto.core.Concerto;
 import top.gregtao.concerto.core.api.DynamicPath;
 import top.gregtao.concerto.core.api.MusicJsonParsers;
@@ -23,17 +24,23 @@ import java.util.function.Consumer;
 public class ServerMusicAgent {
 
     public static final UUID ROOM_UUID = UUID.fromString("00000000-0000-0000-0000-000000000000");
+    public static ServerMusicAgent INSTANCE;
+
+    public static void init(ServerNetworkBridge serverBridge, MusicRoom.ServerNetworkBridge roomServerBridge) {
+        INSTANCE = new ServerMusicAgent(serverBridge, roomServerBridge);
+    }
 
     public final MusicRoom room;
 
-    public interface NetworkBridge {
-        void sendMessage(String playerName, String translationKey, Object... args);
-        void sendVoteRequest(String playerName);
+    public interface ServerNetworkBridge {
+        void serverSendVoteRequest(String playerName);
     }
+    public interface ClientNetworkBridge {
+        void clientSendAgentCommand(Command command, String payload);
+    }
+    private final ServerNetworkBridge serverBridge;
 
-    private final NetworkBridge bridge;
-
-    private final Map<UUID, Long> addMusicTimeRecord = new ConcurrentHashMap<>();
+    private final Map<String, Long> addMusicTimeRecord = new ConcurrentHashMap<>();
     private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(2);
     private final Lock voteLock = new ReentrantLock();
     private volatile boolean isVoting = false;
@@ -49,8 +56,8 @@ public class ServerMusicAgent {
     private final AtomicBoolean currentlyFreeTime = new AtomicBoolean(false);
     public List<Music> freeTimePlaylist = new CopyOnWriteArrayList<>();
 
-    public ServerMusicAgent(NetworkBridge bridge, ServerNetworkBridge roomServerBridge) {
-        this.bridge = bridge;
+    private ServerMusicAgent(ServerNetworkBridge serverBridge, MusicRoom.ServerNetworkBridge roomServerBridge) {
+        this.serverBridge = serverBridge;
         this.room = new MusicRoom("#Server", ROOM_UUID, roomServerBridge);
         MusicRoom.ROOMS.put(this.room.uuid, this.room);
 
@@ -110,11 +117,11 @@ public class ServerMusicAgent {
 
     public void receiveVoteRequest(String playerName) {
         if (this.isVoting) {
-            this.bridge.sendMessage(playerName, "concerto.agent.vote.voting");
+            this.room.serverBridge.sendMessage(playerName, "concerto.agent.vote.voting");
             return;
         }
         if (this.trackedPauseState) {
-            this.bridge.sendMessage(playerName, "concerto.agent.not_playing");
+            this.room.serverBridge.sendMessage(playerName, "concerto.agent.not_playing");
             return;
         }
         this.voteLock.lock();
@@ -127,17 +134,17 @@ public class ServerMusicAgent {
         } finally {
             this.voteLock.unlock();
         }
-        this.membersForEach(this.bridge::sendVoteRequest);
+        this.membersForEach(this.serverBridge::serverSendVoteRequest);
         Concerto.getLogger().info("Vote request created");
     }
 
     public void receiveVote(String playerName, boolean vote) {
         if (!this.isVoting) {
-            this.bridge.sendMessage(playerName, "concerto.agent.vote.ended");
+            this.room.serverBridge.sendMessage(playerName, "concerto.agent.vote.ended");
             return;
         }
         if (this.yesVoters.contains(playerName) || this.noVoters.contains(playerName)) {
-            this.bridge.sendMessage(playerName, "concerto.agent.vote.duplicate");
+            this.room.serverBridge.sendMessage(playerName, "concerto.agent.vote.duplicate");
             return;
         }
 
@@ -152,7 +159,7 @@ public class ServerMusicAgent {
             this.voteLock.unlock();
         }
 
-        this.bridge.sendMessage(playerName, "concerto.agent.vote_for", 
+        this.room.serverBridge.sendMessage(playerName, "concerto.agent.vote_for", 
                 vote ? "concerto.accept" : "concerto.reject");
     }
 
@@ -272,18 +279,18 @@ public class ServerMusicAgent {
     }
 
     public void broadcast(String translationKey, Object... args) {
-        this.membersForEach((playerName) -> this.bridge.sendMessage(playerName, translationKey, args));
+        this.membersForEach((playerName) -> this.room.serverBridge.sendMessage(playerName, translationKey, args));
     }
 
     public boolean isMember(String playerName) {
         return this.getMembers().containsKey(playerName);
     }
 
-    public void addMusic(UUID playerUuid, String playerName, Music music) {
-        long lastAdd = this.addMusicTimeRecord.getOrDefault(playerUuid, 0L);
+    public void addMusic(String playerName, Music music) {
+        long lastAdd = this.addMusicTimeRecord.getOrDefault(playerName, 0L);
         int wait = (int) (ServerConfig.INSTANCE.options.musicAgentAddTimeLimit - (System.currentTimeMillis() - lastAdd) / 1000);
         if (wait > 0) {
-            this.bridge.sendMessage(playerName, "concerto.agent.add.too_quick", wait);
+            this.room.serverBridge.sendMessage(playerName, "concerto.agent.add.too_quick", wait);
             return;
         }
 
@@ -300,7 +307,7 @@ public class ServerMusicAgent {
                 }
             }, List.of(MusicRoomState.MUSIC_LIST, MusicRoomState.CURRENT_INDEX));
 
-            this.addMusicTimeRecord.put(playerUuid, System.currentTimeMillis());
+            this.addMusicTimeRecord.put(playerName, System.currentTimeMillis());
             this.broadcast("concerto.agent.add", playerName, music.getMeta().title(), music.getMeta().author());
         });
     }
@@ -344,7 +351,60 @@ public class ServerMusicAgent {
         this.getMembers().keySet().forEach(consumer);
     }
 
-    public List<Music> getMusicQueue() {
-        return this.room.serverState.get().musicList.snapshotMusics();
+    public enum Command {
+        NEW_VOTE,
+        VOTE,
+        ADD_MUSIC,
+    }
+
+    public static void handleServerCommand(String commandString, String payload, String sender) {
+        MusicRoom.ServerNetworkBridge bridge = INSTANCE == null ? null : INSTANCE.room.serverBridge;
+        try {
+            if (ServerMusicAgent.INSTANCE == null) {
+                Concerto.getLogger().warn("Server Music Agent is null");
+                return;
+            }
+            if (!ServerConfig.INSTANCE.options.serverMusicAgent) {
+                bridge.sendMessage(sender, "concerto.agent.not_available");
+                return;
+            }
+            if (!ServerMusicAgent.INSTANCE.isMember(sender)) {
+                bridge.sendMessage(sender, "concerto.agent.error");
+                return;
+            }
+            Command command = Command.valueOf(commandString.toUpperCase());
+            switch (command) {
+                case NEW_VOTE -> ServerMusicAgent.INSTANCE.receiveVoteRequest(sender);
+                case VOTE -> ServerMusicAgent.INSTANCE.receiveVote(sender, payload.equals("1"));
+                case ADD_MUSIC -> {
+                    Music music = MusicJsonParsers.from(payload, false);
+                    if (music != null) {
+                        ServerMusicAgent.INSTANCE.addMusic(sender, music);
+                    } else {
+                        bridge.sendMessage(sender, "concerto.agent.error");
+                    }
+                }
+            }
+        } catch (Exception e) {
+            Concerto.getLogger().warn("Server Music Agent Error", e);
+            if (bridge != null) {
+                bridge.sendMessage(sender, "concerto.room.update.fail");
+            }
+        }
+    }
+
+    public static void clientNewVote(ClientNetworkBridge bridge) {
+        bridge.clientSendAgentCommand(Command.NEW_VOTE, "");
+    }
+
+    public static void clientVote(ClientNetworkBridge bridge, boolean vote) {
+        bridge.clientSendAgentCommand(Command.VOTE, vote ? "1" : "0");
+    }
+
+    public static void clientAddMusic(ClientNetworkBridge bridge, Music music) {
+        JsonObject object = MusicJsonParsers.to(music);
+        if (object != null) {
+            bridge.clientSendAgentCommand(Command.ADD_MUSIC, object.toString());
+        }
     }
 }

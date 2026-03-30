@@ -14,12 +14,8 @@ import top.gregtao.concerto.command.ShareMusicCommand;
 import top.gregtao.concerto.core.config.ClientConfig;
 import top.gregtao.concerto.config.PresetPlaylistsConfig;
 import top.gregtao.concerto.core.music.Music;
-import top.gregtao.concerto.core.room.MusicRoom;
-import top.gregtao.concerto.core.room.agent.ServerMusicAgent;
-import top.gregtao.concerto.core.util.TextUtil;
 import top.gregtao.concerto.network.room.MusicRoomManager;
 import top.gregtao.concerto.core.player.MusicPlayer;
-import top.gregtao.concerto.core.player.MusicPlayerHandler;
 import top.gregtao.concerto.screen.MusicAuditionScreen;
 import top.gregtao.concerto.screen.PresetRadiosScreen;
 import top.gregtao.concerto.core.util.ConcertoRunner;
@@ -50,7 +46,6 @@ public class ClientMusicNetworkHandler {
             case AUDITION_SYNC -> auditionDataSyncReceiver(payload);
             case MUSIC_ROOM -> MusicRoomManager.clientReceiver(payload, context);
             case PRESET_RADIOS -> presetRadiosReceiver(payload, context);
-            case MUSIC_AGENT -> musicAgentMusicReceiver(payload);
         }
     }
 
@@ -207,53 +202,6 @@ public class ClientMusicNetworkHandler {
             MinecraftClient client = context.client();
             if (client != null && client.currentScreen instanceof PresetRadiosScreen screen) {
                 screen.reset();
-            }
-        });
-    }
-
-    public static void musicAgentJoin() {
-        MusicRoomManager.clientJoin(ServerMusicAgent.ROOM_UUID.toString());
-    }
-
-    public static void musicAgentQuit() {
-        MusicRoomManager.clientQuit();
-    }
-
-    public static void musicAgentNewVote() {
-        ClientPlayNetworking.send(new ConcertoPayload(ConcertoPayload.Channel.MUSIC_AGENT, "Vote:New"));
-    }
-
-    public static void musicAgentQuery() {
-        ClientPlayNetworking.send(new ConcertoPayload(ConcertoPayload.Channel.MUSIC_AGENT, "Query"));
-    }
-
-    public static void musicAgentVote(boolean vote) {
-        ClientPlayNetworking.send(new ConcertoPayload(ConcertoPayload.Channel.MUSIC_AGENT, "Vote:" + (vote ? "1" : "0")));
-    }
-
-    public static boolean musicAgentAddCurrentMusic() {
-        return MusicPlayerHandler.INSTANCE.getCurrentMusic() != null &&
-                musicAgentAddMusic(MusicPlayerHandler.INSTANCE.getCurrentMusic());
-    }
-
-    public static boolean musicAgentAddMusic(Music music) {
-        JsonObject object = MusicJsonParsers.to(music);
-        if (object == null) return false;
-        ClientPlayNetworking.send(new ConcertoPayload(ConcertoPayload.Channel.MUSIC_AGENT,
-                "Add:" +  TextUtil.toBase64(object.toString())));
-        return true;
-    }
-
-    public static void musicAgentMusicReceiver(ConcertoPayload payload) {
-        if (MusicRoom.clientGetState() != MusicRoom.ClientState.MUSIC_AGENT) return;
-        ConcertoRunner.run(() -> {
-            if (payload.string.equals("Stop")) {
-                MusicPlayer.INSTANCE.stop();
-            } else {
-                Music music = MusicJsonParsers.from(TextUtil.fromBase64(payload.string));
-                if (music != null) {
-                    MusicPlayer.INSTANCE.playTempMusic(music);
-                }
             }
         });
     }

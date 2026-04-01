@@ -9,6 +9,7 @@ import net.minecraft.text.Style;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
@@ -16,8 +17,13 @@ public class ConcertoScreen extends Screen {
     private final Screen parent;
     private NarratedMultilineTextWidget message;
 
+    public static Text getTextWithColor(Text text, Formatting color) {
+        List<Text> textList = text.getWithStyle(Style.EMPTY.withColor(color));
+        return textList.isEmpty() ? text : textList.get(0);
+    }
+
     public ConcertoScreen(Text title, Screen parent) {
-        super(title.getWithStyle(Style.EMPTY.withColor(Formatting.DARK_AQUA)).get(0));
+        super(getTextWithColor(title, Formatting.DARK_AQUA));
         this.parent = parent;
     }
 

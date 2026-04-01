@@ -8,7 +8,7 @@ import org.lwjgl.glfw.GLFW;
 import top.gregtao.concerto.core.player.MusicPlayer;
 import top.gregtao.concerto.core.player.MusicPlayerHandler;
 import top.gregtao.concerto.screen.ConcertoIndexScreen;
-import top.gregtao.concerto.screen.GeneralPlaylistScreen;
+import top.gregtao.concerto.screen.MusicPlayerScreen;
 
 public class ConcertoHotkeys {
 
@@ -43,7 +43,7 @@ public class ConcertoHotkeys {
         ));
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
             if (GENERAL_PLAYLIST.wasPressed()) {
-                client.setScreen(new GeneralPlaylistScreen(null));
+                client.setScreen(new MusicPlayerScreen(null));
             } else if (INDEX_SCREEN.wasPressed()) {
                 client.setScreen(new ConcertoIndexScreen(null));
             } else if (NEXT_MUSIC.wasPressed()) {

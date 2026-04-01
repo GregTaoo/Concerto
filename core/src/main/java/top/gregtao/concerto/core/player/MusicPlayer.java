@@ -218,6 +218,7 @@ public class MusicPlayer extends StreamPlayer implements StreamPlayerListener {
     }
 
     public void stop() {
+        this.resetInfo();
         this.started = false;
         super.stop();
     }

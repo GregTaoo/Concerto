@@ -11,6 +11,7 @@ import top.gregtao.concerto.core.config.ClientConfig;
 import top.gregtao.concerto.core.music.*;
 import top.gregtao.concerto.core.music.list.NeteaseCloudPlaylist;
 import top.gregtao.concerto.core.player.MusicPlayerHandler;
+import top.gregtao.concerto.core.player.PlayerPermissions;
 import top.gregtao.concerto.core.util.ConcertoRunner;
 
 import java.io.File;
@@ -28,10 +29,12 @@ public class AddMusicScreen extends ApplyDraggedFileScreen {
         widget.setMaxLength(1024);
         TextWidget textWidget = new TextWidget(centerX - 135, y + 2, 120, 20, text, this.textRenderer);
         textWidget.alignLeft();
+        ButtonWidget addButton = ButtonWidget.builder(Text.translatable("concerto.screen.add"),
+                button -> onClick.accept(widget.getText())).position(centerX + 80, y).size(60, 20).build();
+        addButton.active = PlayerPermissions.canModifyMusicList();
         this.addDrawableChild(widget);
         this.addDrawableChild(textWidget);
-        this.addDrawableChild(ButtonWidget.builder(Text.translatable("concerto.screen.add"),
-                button -> onClick.accept(widget.getText())).position(centerX + 80, y).size(60, 20).build());
+        this.addDrawableChild(addButton);
         this.addSelectableChild(widget);
     }
 

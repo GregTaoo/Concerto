@@ -22,15 +22,7 @@ public class PlayerPermissions {
         return 0;
     }
 
-    public static boolean canAddMusic() {
-        return getPermissionLevel() >= 2;
-    }
-
-    public static boolean canRemoveMusic() {
-        return getPermissionLevel() >= 2;
-    }
-
-    public static boolean canClearList() {
+    public static boolean canModifyMusicList() {
         return getPermissionLevel() >= 2;
     }
 
@@ -42,18 +34,7 @@ public class PlayerPermissions {
         return getPermissionLevel() >= 2;
     }
 
-    public static boolean canSkipMusic() {
+    public static boolean canChangeMusicIndex() {
         return getPermissionLevel() >= 2;
-    }
-
-    public static boolean canChangeIndex() {
-        return getPermissionLevel() >= 2;
-    }
-
-    public static boolean canManageRoom() {
-        if (MusicRoom.clientGetState() == ClientState.LOCAL) {
-            return false; // Not in a room
-        }
-        return getPermissionLevel() >= 3;
     }
 }

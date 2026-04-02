@@ -50,8 +50,8 @@ public class ConcertoHotkeys {
                 MusicPlayerHandler.INSTANCE.playNextAsync(1);
             } else if (PAUSE_RESUME.wasPressed()) {
                 if (MusicPlayer.INSTANCE.started) {
-                    if (MusicPlayerHandler.INSTANCE.isForcePaused()) MusicPlayerHandler.INSTANCE.forceResume();
-                    else MusicPlayerHandler.INSTANCE.forcePause();
+                    boolean paused = MusicPlayerHandler.INSTANCE.isPaused();
+                    MusicPlayerHandler.INSTANCE.tryForcePause(!paused);
                 }
             }
         });

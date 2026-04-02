@@ -46,10 +46,10 @@ public class MusicCommand {
         return builder.then(
                 ClientCommandManager.literal("pause").executes(context -> {
                     if (handler.isForcePaused()) {
-                        handler.forceResume();
+                        handler.tryForcePause(false);
                         MinecraftTextUtil.commandMessageClient(context, Text.translatable("concerto.player.resume"));
                     } else {
-                        handler.forcePause();
+                        handler.tryForcePause(true);
                         MinecraftTextUtil.commandMessageClient(context, Text.translatable("concerto.player.pause"));
                     }
                     return 0;

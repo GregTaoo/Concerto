@@ -12,12 +12,18 @@ import top.gregtao.concerto.core.enums.OrderType;
 import top.gregtao.concerto.core.event.ConcertoEvents;
 import top.gregtao.concerto.core.event.Event;
 import top.gregtao.concerto.core.player.MusicPlayerHandler;
+import top.gregtao.concerto.core.player.PlayerPermissions;
 import top.gregtao.concerto.screen.widget.ConcertoListWidget;
 import top.gregtao.concerto.screen.widget.GeneralPlaylistWidget;
 
 public class GeneralPlaylistScreen extends ApplyDraggedFileScreen {
     private GeneralPlaylistWidget widget;
     protected TextFieldWidget searchBox;
+    private ButtonWidget nextButton;
+    private ButtonWidget playButton;
+    private ButtonWidget deleteButton;
+    private ButtonWidget pauseButton;
+    private ButtonWidget clearButton;
     private CyclingButtonWidget<OrderType> orderButton;
     private Event.Subscription listSubscription, musicSubscription, orderSubscription;
 
@@ -48,22 +54,25 @@ public class GeneralPlaylistScreen extends ApplyDraggedFileScreen {
         this.addDrawableChild(ButtonWidget.builder(Text.translatable("concerto.screen.search"), button ->
                 this.toggleSearch()).position(this.width / 2 + 125, 17).size(50, 20).build());
 
-        this.addDrawableChild(ButtonWidget.builder(Text.translatable("concerto.screen.next"),
-                button -> MusicPlayerHandler.INSTANCE.playNextAsync(1)).position(this.width / 2 - 185, this.height - 30).size(50, 20).build());
+        this.nextButton = ButtonWidget.builder(Text.translatable("concerto.screen.next"),
+                button -> MusicPlayerHandler.INSTANCE.playNextAsync(1)).position(this.width / 2 - 185, this.height - 30).size(50, 20).build();
+        this.addDrawableChild(this.nextButton);
 
-        this.addDrawableChild(ButtonWidget.builder(Text.translatable("concerto.screen.play"), button -> {
+        this.playButton = ButtonWidget.builder(Text.translatable("concerto.screen.play"), button -> {
             ConcertoListWidget<GeneralPlaylistWidget.Entry>.Entry entry = this.widget.getSelectedOrNull();
             if (entry != null) {
                 MusicPlayerHandler.INSTANCE.setCurrentIndex(entry.item.index());
             }
-        }).position(this.width / 2 - 135, this.height - 30).size(50, 20).build());
+        }).position(this.width / 2 - 135, this.height - 30).size(50, 20).build();
+        this.addDrawableChild(this.playButton);
 
-        this.addDrawableChild(ButtonWidget.builder(Text.translatable("concerto.screen.delete"), button -> {
+        this.deleteButton = ButtonWidget.builder(Text.translatable("concerto.screen.delete"), button -> {
             ConcertoListWidget<GeneralPlaylistWidget.Entry>.Entry entry = this.widget.getSelectedOrNull();
             if (entry != null) {
                 MusicPlayerHandler.INSTANCE.removeAsync(entry.item.index(), () -> {});
             }
-        }).position(this.width / 2 - 85, this.height - 30).size(50, 20).build());
+        }).position(this.width / 2 - 85, this.height - 30).size(50, 20).build();
+        this.addDrawableChild(this.deleteButton);
 
         this.orderButton = CyclingButtonWidget.builder((OrderType x) -> Text.literal(x.getName())).values(OrderType.values())
                 .initially(MusicPlayerHandler.INSTANCE.getOrderType()).build(
@@ -71,10 +80,11 @@ public class GeneralPlaylistScreen extends ApplyDraggedFileScreen {
                         (widget, orderType) -> MusicPlayerHandler.INSTANCE.setOrderType(orderType));
         this.addDrawableChild(this.orderButton);
 
-        this.addDrawableChild(ButtonWidget.builder(Text.translatable("concerto.screen.pause"), button -> {
-            if (MusicPlayerHandler.INSTANCE.isForcePaused()) MusicPlayerHandler.INSTANCE.forceResume();
-            else MusicPlayerHandler.INSTANCE.forcePause();
-        }).position(this.width / 2 + 25, this.height - 30).size(50, 20).build());
+        this.pauseButton = ButtonWidget.builder(Text.translatable("concerto.screen.pause"), button -> {
+            boolean paused = MusicPlayerHandler.INSTANCE.isPaused();
+            MusicPlayerHandler.INSTANCE.tryForcePause(!paused);
+        }).position(this.width / 2 + 25, this.height - 30).size(50, 20).build();
+        this.addDrawableChild(this.pauseButton);
 
         this.addDrawableChild(ButtonWidget.builder(Text.translatable("concerto.screen.info"), button -> {
             ConcertoListWidget<GeneralPlaylistWidget.Entry>.Entry entry = this.widget.getSelectedOrNull();
@@ -83,16 +93,28 @@ public class GeneralPlaylistScreen extends ApplyDraggedFileScreen {
             }
         }).position(this.width / 2 + 75, this.height - 30).size(50, 20).build());
 
-        this.addDrawableChild(ButtonWidget.builder(Text.translatable("concerto.screen.clear"), button -> {
+        this.clearButton = ButtonWidget.builder(Text.translatable("concerto.screen.clear"), button -> {
             MusicPlayerHandler.INSTANCE.clear();
             MinecraftClient.getInstance().setScreen(null);
-        }).position(this.width / 2 + 125, this.height - 30).size(50, 20).build());
+        }).position(this.width / 2 + 125, this.height - 30).size(50, 20).build();
+        this.addDrawableChild(this.clearButton);
 
         this.listSubscription = ConcertoEvents.ON_MUSIC_LIST_UPDATE.subscribe(this::toggleSearch);
         this.musicSubscription = ConcertoEvents.ON_NEW_MUSIC_STARTED.subscribe(
                 music -> this.widget.setSelected(MusicPlayerHandler.INSTANCE.getCurrentIndex()));
         this.orderSubscription = ConcertoEvents.ON_PLAYER_ORDER_UPDATE.subscribe(
                 orderType -> this.orderButton.setValue(orderType));
+
+        this.updateButtonStates();
+    }
+
+    private void updateButtonStates() {
+        this.nextButton.active = PlayerPermissions.canChangeMusicIndex();
+        this.playButton.active = PlayerPermissions.canChangeMusicIndex();
+        this.deleteButton.active = PlayerPermissions.canModifyMusicList();
+        this.orderButton.active = PlayerPermissions.canChangeOrderType();
+        this.pauseButton.active = PlayerPermissions.canControlPlayback();
+        this.clearButton.active = PlayerPermissions.canModifyMusicList();
     }
 
     @Override

@@ -9,6 +9,7 @@ import top.gregtao.concerto.config.PresetPlaylistsConfig;
 import top.gregtao.concerto.core.music.Music;
 import top.gregtao.concerto.core.music.list.Playlist;
 import top.gregtao.concerto.core.player.MusicPlayerHandler;
+import top.gregtao.concerto.core.player.PlayerPermissions;
 import top.gregtao.concerto.screen.widget.ConcertoListWidget;
 import top.gregtao.concerto.screen.widget.MetadataListWidget;
 import top.gregtao.concerto.core.util.ConcertoRunner;
@@ -16,6 +17,9 @@ import top.gregtao.concerto.core.util.ConcertoRunner;
 public class PlaylistPreviewScreen extends ConcertoScreen {
     private final Playlist playlist;
     private MetadataListWidget<Music> widget;
+    private ButtonWidget addPlaylistButton;
+    private ButtonWidget playButton;
+    private ButtonWidget addButton;
 
     public PlaylistPreviewScreen(Playlist playlist, Screen parent) {
         super(Text.literal(Text.translatable("concerto." + (playlist.isAlbum() ? "album" : "playlist")).getString() +
@@ -29,29 +33,34 @@ public class PlaylistPreviewScreen extends ConcertoScreen {
         this.widget = new MetadataListWidget<>(this.width, this.height - 55, 20, 18) {
             @Override
             public void onDoubleClicked(ConcertoListWidget<Music>.Entry entry) {
-                MusicPlayerHandler.INSTANCE.addMusicHereAsync(entry.item, true);
+                if (PlayerPermissions.canModifyMusicList()) {
+                    MusicPlayerHandler.INSTANCE.addMusicHereAsync(entry.item, true);
+                }
             }
         };
         this.addSelectableChild(this.widget);
         ConcertoRunner.run(() -> this.widget.reset(this.playlist.getList(), null));
 
-        this.addDrawableChild(ButtonWidget.builder(Text.translatable("concerto.screen.playlist.add"), button ->
+        this.addPlaylistButton = ButtonWidget.builder(Text.translatable("concerto.screen.playlist.add"), button ->
             MusicPlayerHandler.INSTANCE.addMusicAsync(this.playlist.getList(), true))
-                .position(20, this.height - 30).size(60, 20).build());
+                .position(20, this.height - 30).size(60, 20).build();
+        this.addDrawableChild(this.addPlaylistButton);
 
-        this.addDrawableChild(ButtonWidget.builder(Text.translatable("concerto.screen.play"), button -> {
+        this.playButton = ButtonWidget.builder(Text.translatable("concerto.screen.play"), button -> {
             ConcertoListWidget<Music>.Entry entry = this.widget.getSelectedOrNull();
             if (entry != null) {
                 MusicPlayerHandler.INSTANCE.addMusicHereAsync(entry.item, true);
             }
-        }).position(85, this.height - 30).size(60, 20).build());
+        }).position(85, this.height - 30).size(60, 20).build();
+        this.addDrawableChild(this.playButton);
 
-        this.addDrawableChild(ButtonWidget.builder(Text.translatable("concerto.screen.add"), button -> {
+        this.addButton = ButtonWidget.builder(Text.translatable("concerto.screen.add"), button -> {
             ConcertoListWidget<Music>.Entry entry = this.widget.getSelectedOrNull();
             if (entry != null) {
                 MusicPlayerHandler.INSTANCE.addMusicAsync(entry.item, false);
             }
-        }).position(150, this.height - 30).size(60, 20).build());
+        }).position(150, this.height - 30).size(60, 20).build();
+        this.addDrawableChild(this.addButton);
 
         this.addDrawableChild(ButtonWidget.builder(Text.translatable("concerto.screen.info"), button -> {
             ConcertoListWidget<Music>.Entry entry = this.widget.getSelectedOrNull();
@@ -65,6 +74,15 @@ public class PlaylistPreviewScreen extends ConcertoScreen {
                     Text.translatable("concerto.playlist.export.fail");
             this.displayAlert(text);
         }).position(280, this.height - 30).size(60, 20).build());
+
+        this.updateButtonStates();
+    }
+
+    private void updateButtonStates() {
+        boolean canModifyMusicList = PlayerPermissions.canModifyMusicList();
+        this.addPlaylistButton.active = canModifyMusicList;
+        this.playButton.active = canModifyMusicList;
+        this.addButton.active = canModifyMusicList;
     }
 
     @Override

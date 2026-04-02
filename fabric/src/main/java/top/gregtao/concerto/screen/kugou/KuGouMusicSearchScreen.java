@@ -16,6 +16,7 @@ import top.gregtao.concerto.core.music.Music;
 import top.gregtao.concerto.core.music.list.KuGouMusicPlaylist;
 import top.gregtao.concerto.core.music.list.Playlist;
 import top.gregtao.concerto.core.player.MusicPlayerHandler;
+import top.gregtao.concerto.core.player.PlayerPermissions;
 import top.gregtao.concerto.screen.MusicInfoScreen;
 import top.gregtao.concerto.screen.PageScreen;
 import top.gregtao.concerto.screen.PlaylistPreviewScreen;
@@ -34,6 +35,8 @@ public class KuGouMusicSearchScreen extends PageScreen {
     private Map<SearchType, ConcertoListWidget<?>> listWidgetsMap = new HashMap<>();
     protected TextFieldWidget searchBox;
     private ButtonWidget infoButton;
+    private ButtonWidget playButton;
+    private ButtonWidget addButton;
     private SearchType searchType = SearchType.MUSIC;
 
     private <T extends WithMetaData> MetadataListWidget<T> initListsWidget() {
@@ -43,7 +46,9 @@ public class KuGouMusicSearchScreen extends PageScreen {
                 try {
                     switch (KuGouMusicSearchScreen.this.searchType) {
                         case MUSIC: {
-                            MusicPlayerHandler.INSTANCE.addMusicHereAsync((Music) entry.item, true, () -> {});
+                            if (PlayerPermissions.canModifyMusicList()) {
+                                MusicPlayerHandler.INSTANCE.addMusicHereAsync((Music) entry.item, true, () -> {});
+                            }
                             break;
                         }
                         case PLAYLIST, ALBUM: {
@@ -87,7 +92,18 @@ public class KuGouMusicSearchScreen extends PageScreen {
         this.addSelectableChild(this.listWidgetsMap.get(type));
         this.searchType = type;
         this.infoButton.active = type == SearchType.MUSIC;
+        this.updateActionButtons();
         this.toggleSearch();
+    }
+
+    private void updateActionButtons() {
+        boolean canModifyMusicList = PlayerPermissions.canModifyMusicList();
+        if (this.playButton != null) {
+            this.playButton.active = canModifyMusicList;
+        }
+        if (this.addButton != null) {
+            this.addButton.active = canModifyMusicList;
+        }
     }
 
     @Override
@@ -132,7 +148,7 @@ public class KuGouMusicSearchScreen extends PageScreen {
                 this.width / 2 + 105, 17, 65, 20, Text.translatable("concerto.search_type"),
                 (widget, type) -> this.updateSearchType(type)));
 
-        this.addDrawableChild(ButtonWidget.builder(Text.translatable("concerto.screen.play"), button -> {
+        this.playButton = ButtonWidget.builder(Text.translatable("concerto.screen.play"), button -> {
             switch (this.searchType) {
                 case MUSIC: {
                     ConcertoListWidget<Music>.Entry entry = this.musicList.getSelectedOrNull();
@@ -153,9 +169,10 @@ public class KuGouMusicSearchScreen extends PageScreen {
                     }
                 }
             }
-        }).position(this.width / 2 + 65, this.height - 30).size(50, 20).build());
+        }).position(this.width / 2 + 65, this.height - 30).size(50, 20).build();
+        this.addDrawableChild(this.playButton);
 
-        this.addDrawableChild(ButtonWidget.builder(Text.translatable("concerto.screen.add"), button -> {
+        this.addButton = ButtonWidget.builder(Text.translatable("concerto.screen.add"), button -> {
             switch (this.searchType) {
                 case MUSIC: {
                     ConcertoListWidget<Music>.Entry entry = this.musicList.getSelectedOrNull();
@@ -176,7 +193,10 @@ public class KuGouMusicSearchScreen extends PageScreen {
                     }
                 }
             }
-        }).position(this.width / 2 + 10, this.height - 30).size(50, 20).build());
+        }).position(this.width / 2 + 10, this.height - 30).size(50, 20).build();
+        this.addDrawableChild(this.addButton);
+
+        this.updateActionButtons();
     }
 
     @Override

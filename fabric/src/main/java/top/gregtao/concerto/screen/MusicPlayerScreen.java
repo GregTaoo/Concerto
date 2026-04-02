@@ -53,9 +53,9 @@ public class MusicPlayerScreen extends ConcertoScreen {
         this.playPauseButton = ButtonWidget.builder(
                 Text.translatable(MusicPlayerHandler.INSTANCE.getState().get().paused ? "concerto.screen.play" : "concerto.screen.pause"),
                 button -> {
-                    boolean isPaused = MusicPlayerHandler.INSTANCE.getState().get().paused;
-                    MusicPlayerHandler.INSTANCE.setPaused(!isPaused);
-                    button.setMessage(Text.translatable(!isPaused ? "concerto.screen.play" : "concerto.screen.pause"));
+                    boolean paused = MusicPlayerHandler.INSTANCE.isPaused();
+                    MusicPlayerHandler.INSTANCE.tryForcePause(!paused);
+                    button.setMessage(Text.translatable(!paused ? "concerto.screen.play" : "concerto.screen.pause"));
                 }
         ).position(x, y).size(60, 20).build();
         x += 62;
@@ -80,13 +80,9 @@ public class MusicPlayerScreen extends ConcertoScreen {
     }
 
     private void updateButtonStates() {
-        boolean canControlPlayback = PlayerPermissions.canControlPlayback();
-        boolean canSkip = PlayerPermissions.canSkipMusic();
-        boolean canChangeOrder = PlayerPermissions.canChangeOrderType();
-
-        this.playPauseButton.active = canControlPlayback;
-        this.nextButton.active = canSkip;
-        this.orderButton.active = canChangeOrder;
+        this.playPauseButton.active = PlayerPermissions.canControlPlayback();
+        this.nextButton.active = PlayerPermissions.canChangeMusicIndex();
+        this.orderButton.active = PlayerPermissions.canChangeOrderType();
 
         boolean isPaused = MusicPlayerHandler.INSTANCE.getState().get().paused;
         this.playPauseButton.setMessage(Text.translatable(isPaused ? "concerto.screen.play" : "concerto.screen.pause"));
@@ -95,7 +91,6 @@ public class MusicPlayerScreen extends ConcertoScreen {
     @Override
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
         super.render(context, mouseX, mouseY, delta);
-        this.updateButtonStates();
 
         if (MusicPlayer.INSTANCE.isPlaying() && !MusicPlayerHandler.INSTANCE.getState().get().paused) {
             this.rotationAngle += delta * 0.3f;

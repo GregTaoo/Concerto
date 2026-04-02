@@ -14,6 +14,7 @@ import top.gregtao.concerto.core.event.ConcertoEvents;
 import top.gregtao.concerto.core.music.Music;
 import top.gregtao.concerto.core.music.meta.music.MusicMetaData;
 import top.gregtao.concerto.core.network.SyncRecord;
+import top.gregtao.concerto.core.room.MusicRoom;
 import top.gregtao.concerto.core.util.ConcertoRunner;
 
 import java.io.*;
@@ -55,7 +56,7 @@ public class MusicPlayerHandler {
         return this.forcePaused;
     }
 
-    public void forcePause() {
+    private void forcePause() {
         this.forcePaused = true;
         this.setPaused(true);
         if (MusicPlayer.INSTANCE.isPlaying()) {
@@ -63,12 +64,23 @@ public class MusicPlayerHandler {
         }
     }
 
-    public void forceResume() {
+    private void forceResume() {
         this.forcePaused = false;
         this.setPaused(false);
         if (MusicPlayer.INSTANCE.started) {
             MusicPlayer.INSTANCE.internalResume();
         }
+    }
+
+    public void tryForcePause(boolean paused) {
+        boolean isLocal = MusicRoom.clientGetState() == MusicRoom.ClientState.LOCAL;
+        if (isLocal) {
+            if (this.isForcePaused() && !paused) this.forceResume();
+            else if (paused) this.forcePause();
+            return;
+        }
+
+        this.setPaused(paused);
     }
 
     public static void registerSyncRecordListeners(SyncRecord<MusicPlayerState> record) {
@@ -133,6 +145,10 @@ public class MusicPlayerHandler {
                 List.of(MusicPlayerState.MUSIC_LIST, MusicPlayerState.PAUSED, MusicPlayerState.ORDER_TYPE, MusicPlayerState.CURRENT_INDEX)
         );
         this.writeConfig();
+    }
+
+    public boolean isPaused() {
+        return this.isForcePaused() || this.getState().get().paused;
     }
 
     public void setPaused(boolean paused) {

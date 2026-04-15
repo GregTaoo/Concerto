@@ -5,14 +5,14 @@
   "compatibilityLevel": "JAVA_21",
   "mixins": [
     "MinecraftServerMixin",
-    "PlayerManagerMixin"
+    "PlayerListMixin"
   ],
   "client": [
-    "ChatHudMixin",
-    "DrawContextAccessor",
-    "GameMenuScreenMixin",
-    "MinecraftClientMixin",
-    "MusicTrackerMixin",
+    "ChatComponentMixin",
+    "GuiGraphicsAccessor",
+    "PauseScreenMixin",
+    "MinecraftMixin",
+    "MusicManagerMixin",
     "SoundManagerMixin"
   ],
   "server": [

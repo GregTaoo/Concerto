@@ -1,20 +1,23 @@
 package top.gregtao.concerto.screen;
 
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.screen.ConfirmScreen;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.widget.*;
-import net.minecraft.screen.ScreenTexts;
-import net.minecraft.text.Text;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.layouts.HeaderAndFooterLayout;
+import net.minecraft.client.gui.layouts.LinearLayout;
+import net.minecraft.client.gui.screens.ConfirmScreen;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.gui.components.*;
+import net.minecraft.network.chat.CommonComponents;
+import net.minecraft.network.chat.Component;
 import top.gregtao.concerto.screen.widget.ConcertoOptionListWidget;
 import top.gregtao.concerto.util.ConcertoOptions;
 
 public class ConcertoOptionsScreen extends ConcertoScreen {
     protected ConcertoOptionListWidget body;
-    public final ThreePartsLayoutWidget layout = new ThreePartsLayoutWidget(this);
+    public final HeaderAndFooterLayout layout = new HeaderAndFooterLayout(this);
 
     public ConcertoOptionsScreen(Screen parent) {
-        super(Text.translatable("concerto.screen.options"), parent);
+        super(Component.translatable("concerto.screen.options"), parent);
     }
 
     @Override
@@ -22,13 +25,13 @@ public class ConcertoOptionsScreen extends ConcertoScreen {
         this.layout.setHeaderHeight(18);
         this.initBody();
         this.initFooter();
-        this.layout.forEachChild(this::addDrawableChild);
-        this.refreshWidgetPositions();
+        this.layout.visitWidgets(this::addRenderableWidget);
+        this.repositionElements();
         super.init();
     }
 
     protected void initBody() {
-        this.body = this.layout.addBody(new ConcertoOptionListWidget(this.client, this.width, this));
+        this.body = this.layout.addToContents(new ConcertoOptionListWidget(this.minecraft, this.width, this));
         this.addOptions();
     }
 
@@ -37,24 +40,24 @@ public class ConcertoOptionsScreen extends ConcertoScreen {
     }
 
     protected void initFooter() {
-        DirectionalLayoutWidget directionalLayoutWidget = this.layout.addFooter(DirectionalLayoutWidget.horizontal().spacing(8));
-        directionalLayoutWidget.add(ButtonWidget.builder(
-                Text.translatable("concerto.reset"), button -> {
-                    if (this.client != null) {
-                        this.client.setScreen(new ConfirmScreen(confirmed -> {
+        LinearLayout directionalLayoutWidget = this.layout.addToFooter(LinearLayout.horizontal().spacing(8));
+        directionalLayoutWidget.addChild(Button.builder(
+                Component.translatable("concerto.reset"), button -> {
+                    if (this.minecraft != null) {
+                        this.minecraft.setScreen(new ConfirmScreen(confirmed -> {
                             if (confirmed) ConcertoOptions.INSTANCE.resetOptions();
-                            this.client.setScreen(new ConcertoOptionsScreen(this.getParent()));
-                        }, this.title, Text.translatable("concerto.reset_confirm")));
+                            this.minecraft.setScreen(new ConcertoOptionsScreen(this.getParent()));
+                        }, this.title, Component.translatable("concerto.reset_confirm")));
                     }
                 }).build());
-        directionalLayoutWidget.add(ButtonWidget.builder(ScreenTexts.DONE, button -> this.close()).build());
+        directionalLayoutWidget.addChild(Button.builder(CommonComponents.GUI_DONE, button -> this.onClose()).build());
     }
 
     @Override
-    protected void refreshWidgetPositions() {
-        this.layout.refreshPositions();
+    protected void repositionElements() {
+        this.layout.arrangeElements();
         if (this.body != null) {
-            this.body.position(this.width, this.layout);
+            this.body.updateSize(this.width, this.layout);
         }
     }
 
@@ -64,15 +67,15 @@ public class ConcertoOptionsScreen extends ConcertoScreen {
     }
 
     @Override
-    public void close() {
+    public void onClose() {
         if (this.body != null) {
             this.body.applyAllPendingValues();
         }
-        super.close();
+        super.onClose();
     }
 
     @Override
-    public void render(DrawContext matrices, int mouseX, int mouseY, float delta) {
+    public void render(GuiGraphics matrices, int mouseX, int mouseY, float delta) {
         super.render(matrices, mouseX, mouseY, delta);
         InGameHudRenderer.render(matrices, mouseX, mouseY, delta);
     }

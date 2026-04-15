@@ -4,12 +4,12 @@ import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback;
 import net.fabricmc.fabric.api.resource.ResourceManagerHelper;
 import net.fabricmc.fabric.api.resource.SimpleSynchronousResourceReloadListener;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.option.GameOptions;
-import net.minecraft.resource.ResourceManager;
-import net.minecraft.resource.ResourceType;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.util.Identifier;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.Options;
+import net.minecraft.server.packs.resources.ResourceManager;
+import net.minecraft.server.packs.PackType;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.resources.ResourceLocation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import top.gregtao.concerto.bridge.ConcertoEventListeners;
@@ -38,9 +38,9 @@ public class ConcertoClient implements ClientModInitializer {
 
     public static void syncPlayerVolume() {
         try {
-            MinecraftClient client = MinecraftClient.getInstance();
-            GameOptions options = client.options;
-            double volume = options.getSoundVolume(SoundCategory.MASTER) * options.getSoundVolume(SoundCategory.MUSIC) * 0.5;
+            Minecraft client = Minecraft.getInstance();
+            Options options = client.options;
+            double volume = options.getSoundSourceVolume(SoundSource.MASTER) * options.getSoundSourceVolume(SoundSource.MUSIC) * 0.5;
             MusicPlayer.INSTANCE.setGain(volume);
         } catch (NullPointerException ignore) {}
     }
@@ -51,7 +51,7 @@ public class ConcertoClient implements ClientModInitializer {
 
 	public static boolean isServerAvailable() {
 		return serverAvailable || !ClientConfig.INSTANCE.options.handshakeRequired ||
-				MinecraftClient.getInstance().isInSingleplayer();
+				Minecraft.getInstance().isLocalServer();
 	}
 
 	@Override
@@ -62,14 +62,14 @@ public class ConcertoClient implements ClientModInitializer {
 		ClientCommandRegistrationCallback.EVENT.register(ShareMusicCommand::register);
 		ClientCommandRegistrationCallback.EVENT.register(MusicRoomCommand::register);
 
-		ResourceManagerHelper.get(ResourceType.CLIENT_RESOURCES).registerReloadListener(new SimpleSynchronousResourceReloadListener() {
+		ResourceManagerHelper.get(PackType.CLIENT_RESOURCES).registerReloadListener(new SimpleSynchronousResourceReloadListener() {
 			@Override
-			public Identifier getFabricId() {
-				return Identifier.of(Concerto.MOD_ID, "music");
+			public ResourceLocation getFabricId() {
+				return ResourceLocation.fromNamespaceAndPath(Concerto.MOD_ID, "music");
 			}
 
 			@Override
-			public void reload(ResourceManager manager) {
+			public void onResourceManagerReload(ResourceManager manager) {
 				ConcertoRunner.run(() -> {
 					ClientConfig.INSTANCE.readOptions();
 					ConcertoOptions.INSTANCE.readOptions();

@@ -7,8 +7,8 @@ import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;
-import net.minecraft.command.CommandSource;
-import net.minecraft.command.argument.EntityArgumentType;
+import net.minecraft.commands.SharedSuggestionProvider;
+import net.minecraft.commands.arguments.EntityArgument;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -22,8 +22,8 @@ public class ShareMusicTargetArgumentType implements ArgumentType<String> {
         return new ShareMusicTargetArgumentType();
     }
 
-    public static List<String> getPlayerNameList(CommandSource source) {
-        List<String> players = new ArrayList<>(source.getPlayerNames());
+    public static List<String> getPlayerNameList(SharedSuggestionProvider source) {
+        List<String> players = new ArrayList<>(source.getOnlinePlayerNames());
         players.add("@a");
         return players;
     }
@@ -31,7 +31,7 @@ public class ShareMusicTargetArgumentType implements ArgumentType<String> {
     public static String get(CommandContext<FabricClientCommandSource> context, String key) throws CommandSyntaxException {
         String str = context.getArgument(key, String.class);
         if (getPlayerNameList(context.getSource()).contains(str)) return str;
-        else throw EntityArgumentType.PLAYER_NOT_FOUND_EXCEPTION.create();
+        else throw EntityArgument.NO_PLAYERS_FOUND.create();
     }
 
     @Override
@@ -44,8 +44,8 @@ public class ShareMusicTargetArgumentType implements ArgumentType<String> {
     @Override
     public <S> CompletableFuture<Suggestions> listSuggestions(CommandContext<S> context, SuggestionsBuilder builder) {
         S contextSource = context.getSource();
-        if (contextSource instanceof CommandSource source) {
-            return CommandSource.suggestMatching(getPlayerNameList(source), builder);
+        if (contextSource instanceof SharedSuggestionProvider source) {
+            return SharedSuggestionProvider.suggest(getPlayerNameList(source), builder);
         }
         return Suggestions.empty();
     }

@@ -19,7 +19,7 @@ public class MinecraftServerMixin {
         ConcertoClient.LOGGER.info("Server launching.");
     }
 
-    @Inject(at = @At("HEAD"), method = "shutdown()V")
+    @Inject(at = @At("HEAD"), method = "stopServer()V")
     public void shutdownInject(CallbackInfo ci) {
         MusicRoom.ROOMS.clear();
         ServerMusicAgent.INSTANCE.reset();

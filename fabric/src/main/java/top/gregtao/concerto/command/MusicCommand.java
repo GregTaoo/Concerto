@@ -5,9 +5,9 @@ import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandManager;
 import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;
-import net.minecraft.client.network.ClientPlayerEntity;
-import net.minecraft.command.CommandRegistryAccess;
-import net.minecraft.text.Text;
+import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.commands.CommandBuildContext;
+import net.minecraft.network.chat.Component;
 import top.gregtao.concerto.core.api.CacheableMusic;
 import top.gregtao.concerto.core.api.Likeable;
 import top.gregtao.concerto.core.config.CacheManager;
@@ -30,7 +30,7 @@ import java.util.concurrent.CompletableFuture;
 
 public class MusicCommand {
 
-    public static void register(CommandDispatcher<FabricClientCommandSource> dispatcher, CommandRegistryAccess access) {
+    public static void register(CommandDispatcher<FabricClientCommandSource> dispatcher, CommandBuildContext access) {
         LiteralCommandNode<FabricClientCommandSource> node = dispatcher.register(registerPlayerControllers(
                 ClientCommandManager.literal("concerto")
         ));
@@ -47,10 +47,10 @@ public class MusicCommand {
                 ClientCommandManager.literal("pause").executes(context -> {
                     if (handler.isForcePaused()) {
                         handler.tryForcePause(false);
-                        MinecraftTextUtil.commandMessageClient(context, Text.translatable("concerto.player.resume"));
+                        MinecraftTextUtil.commandMessageClient(context, Component.translatable("concerto.player.resume"));
                     } else {
                         handler.tryForcePause(true);
-                        MinecraftTextUtil.commandMessageClient(context, Text.translatable("concerto.player.pause"));
+                        MinecraftTextUtil.commandMessageClient(context, Component.translatable("concerto.player.pause"));
                     }
                     return 0;
                 })
@@ -58,35 +58,35 @@ public class MusicCommand {
                 ClientCommandManager.literal("start").executes(context -> {
                     if (!player.started) {
                         handler.start();
-                        MinecraftTextUtil.commandMessageClient(context, Text.translatable("concerto.player.start"));
+                        MinecraftTextUtil.commandMessageClient(context, Component.translatable("concerto.player.start"));
                     } else {
-                        MinecraftTextUtil.commandMessageClient(context, Text.translatable("concerto.player.already_started"));
+                        MinecraftTextUtil.commandMessageClient(context, Component.translatable("concerto.player.already_started"));
                     }
                     return 0;
                 })
         ).then(
                 ClientCommandManager.literal("stop").executes(context -> {
                     MusicPlayerHandler.INSTANCE.stop();
-                    MinecraftTextUtil.commandMessageClient(context, Text.translatable("concerto.player.stop"));
+                    MinecraftTextUtil.commandMessageClient(context, Component.translatable("concerto.player.stop"));
                     return 0;
                 })
         ).then(
                 ClientCommandManager.literal("clear").executes(context -> {
                     MusicPlayerHandler.INSTANCE.clear();
                     MusicPlayer.resetInstance();
-                    MinecraftTextUtil.commandMessageClient(context, Text.translatable("concerto.player.clear"));
+                    MinecraftTextUtil.commandMessageClient(context, Component.translatable("concerto.player.clear"));
                     return 0;
                 })
         ).then(
                 ClientCommandManager.literal("restart").executes(context -> {
                     MusicPlayer.resetInstance();
-                    MinecraftTextUtil.commandMessageClient(context, Text.translatable("concerto.success"));
+                    MinecraftTextUtil.commandMessageClient(context, Component.translatable("concerto.success"));
                     return 0;
                 })
         ).then(
                 ClientCommandManager.literal("reload").executes(context -> {
                     MusicPlayerHandler.reloadConfig(() ->
-                            MinecraftTextUtil.commandMessageClient(context, Text.translatable("concerto.player.reload")));
+                            MinecraftTextUtil.commandMessageClient(context, Component.translatable("concerto.player.reload")));
                     ClientConfig.INSTANCE.readOptions();
                     PresetPlaylistsConfig.LOCAL_PLAYLISTS.read();
                     MusicPlayer.resetInstance();
@@ -94,67 +94,67 @@ public class MusicCommand {
                 })
         ).then(
                 ClientCommandManager.literal("save").executes(context -> {
-                    ClientPlayerEntity clientPlayer = context.getSource().getPlayer();
+                    LocalPlayer clientPlayer = context.getSource().getPlayer();
                     if (MusicPlayer.INSTANCE.currentMusic == null) {
-                        clientPlayer.sendMessage(Text.translatable("concerto.unknown"), false);
+                        clientPlayer.displayClientMessage(Component.translatable("concerto.unknown"), false);
                     } else if (MusicPlayer.INSTANCE.currentMusic instanceof CacheableMusic music) {
                         ConcertoRunner.run(() -> {
                             try {
                                 MusicCacheManager.INSTANCE.addMusic(music);
-                                clientPlayer.sendMessage(Text.translatable("concerto.success"), false);
+                                clientPlayer.displayClientMessage(Component.translatable("concerto.success"), false);
                             } catch (IOException | UnsupportedAudioFileException e) {
                                 throw new RuntimeException(e);
                             }
                         });
                     } else {
-                        clientPlayer.sendMessage(Text.translatable("concerto.not_cacheable"), false);
+                        clientPlayer.displayClientMessage(Component.translatable("concerto.not_cacheable"), false);
                     }
                     return 0;
                 })
         ).then(
                 ClientCommandManager.literal("like").executes(context -> {
-                    ClientPlayerEntity clientPlayer = context.getSource().getPlayer();
+                    LocalPlayer clientPlayer = context.getSource().getPlayer();
                     Music music = MusicPlayerHandler.INSTANCE.getCurrentMusic();
                     if (music instanceof Likeable likeable) {
                         CompletableFuture.supplyAsync(likeable::likeIt, ConcertoRunner.RUNNERS_POOL).thenAcceptAsync(success ->
-                                clientPlayer.sendMessage(success ? Text.translatable("concerto.like",
+                                clientPlayer.displayClientMessage(success ? Component.translatable("concerto.like",
                                         music.getMeta().title(), music.getMeta().getSource()) :
-                                        Text.translatable("concerto.fail"), false), ConcertoRunner.RUNNERS_POOL);
+                                        Component.translatable("concerto.fail"), false), ConcertoRunner.RUNNERS_POOL);
                     } else {
-                        clientPlayer.sendMessage(Text.translatable("concerto.error.unsupported_operation"), false);
+                        clientPlayer.displayClientMessage(Component.translatable("concerto.error.unsupported_operation"), false);
                     }
                     return 0;
                 })
         ).then(
                 ClientCommandManager.literal("dislike").executes(context -> {
-                    ClientPlayerEntity clientPlayer = context.getSource().getPlayer();
+                    LocalPlayer clientPlayer = context.getSource().getPlayer();
                     Music music = MusicPlayerHandler.INSTANCE.getCurrentMusic();
                     if (music instanceof Likeable likeable) {
                         CompletableFuture.supplyAsync(likeable::dislikeIt, ConcertoRunner.RUNNERS_POOL).thenAcceptAsync(success ->
-                                clientPlayer.sendMessage(success ? Text.translatable("concerto.dislike",
+                                clientPlayer.displayClientMessage(success ? Component.translatable("concerto.dislike",
                                         music.getMeta().title(), music.getMeta().getSource()) :
-                                        Text.translatable("concerto.fail"), false), ConcertoRunner.RUNNERS_POOL);
+                                        Component.translatable("concerto.fail"), false), ConcertoRunner.RUNNERS_POOL);
                     } else {
-                        clientPlayer.sendMessage(Text.translatable("concerto.error.unsupported_operation"), false);
+                        clientPlayer.displayClientMessage(Component.translatable("concerto.error.unsupported_operation"), false);
                     }
                     return 0;
                 })
         ).then(
                 ClientCommandManager.literal("download-current").executes(context -> {
                     MusicPlayerHandler.downloadMusics(List.of(MusicPlayerHandler.INSTANCE.getCurrentMusic()));
-                    context.getSource().getPlayer().sendMessage(Text.translatable("concerto.success"), false);
+                    context.getSource().getPlayer().displayClientMessage(Component.translatable("concerto.success"), false);
                     return 0;
                 })
         ).then(
                 ClientCommandManager.literal("download-all").executes(context -> {
                     MusicPlayerHandler.downloadMusics(MusicPlayerHandler.INSTANCE.getMusicList().snapshotMusics());
-                    context.getSource().getPlayer().sendMessage(Text.translatable("concerto.success"), false);
+                    context.getSource().getPlayer().displayClientMessage(Component.translatable("concerto.success"), false);
                     return 0;
                 })
         ).then(
                 ClientCommandManager.literal("export-as-playlist").executes(context -> {
-                    ClientPlayerEntity clientPlayer = context.getSource().getPlayer();
-                    Text playerName = clientPlayer.getDisplayName();
+                    LocalPlayer clientPlayer = context.getSource().getPlayer();
+                    Component playerName = clientPlayer.getDisplayName();
                     if (PresetPlaylistsConfig.saveToLocalPlaylists(new FixedPlaylist(
                             MusicPlayerHandler.INSTANCE.getMusicList().snapshotMusics(),
                             new PlaylistMetaData(
@@ -165,9 +165,9 @@ public class MusicCommand {
                             ),
                             false
                     ))) {
-                        clientPlayer.sendMessage(Text.translatable("concerto.playlist.export.success"), false);
+                        clientPlayer.displayClientMessage(Component.translatable("concerto.playlist.export.success"), false);
                     } else {
-                        clientPlayer.sendMessage(Text.translatable("concerto.playlist.export.fail"), false);
+                        clientPlayer.displayClientMessage(Component.translatable("concerto.playlist.export.fail"), false);
                     }
                     return 0;
                 })

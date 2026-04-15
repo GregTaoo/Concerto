@@ -1,11 +1,11 @@
 package top.gregtao.concerto.screen;
 
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.widget.ButtonWidget;
-import net.minecraft.client.network.ClientPlayerEntity;
-import net.minecraft.text.Text;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.network.chat.Component;
 import top.gregtao.concerto.core.music.Music;
 import top.gregtao.concerto.network.ClientMusicNetworkHandler;
 import top.gregtao.concerto.screen.widget.ConcertoListWidget;
@@ -19,7 +19,7 @@ public class MusicConfirmationScreen extends ConcertoScreen {
     private MusicWithUUIDListWidget widget;
 
     public MusicConfirmationScreen(Screen parent) {
-        super(Text.translatable("concerto.screen.confirmation"), parent);
+        super(Component.translatable("concerto.screen.confirmation"), parent);
     }
 
     public void refresh() {
@@ -32,40 +32,40 @@ public class MusicConfirmationScreen extends ConcertoScreen {
         super.init();
         this.widget = new MusicWithUUIDListWidget(this.width, this.height - 55, 20, 18);
         this.refresh();
-        this.addSelectableChild(this.widget);
+        this.addWidget(this.widget);
 
-        this.addDrawableChild(ButtonWidget.builder(Text.translatable("concerto.accept"), button -> {
-            ClientPlayerEntity player = MinecraftClient.getInstance().player;
-            ConcertoListWidget<Pair<Music, UUID>>.Entry entry = this.widget.getSelectedOrNull();
+        this.addRenderableWidget(Button.builder(Component.translatable("concerto.accept"), button -> {
+            LocalPlayer player = Minecraft.getInstance().player;
+            ConcertoListWidget<Pair<Music, UUID>>.Entry entry = this.widget.getSelected();
             if (player != null && entry != null) {
-                player.networkHandler.sendChatCommand("sharemusic accept " + entry.item.getSecond());
-                this.widget.removeEntryWithoutScrolling(entry);
+                player.connection.sendCommand("sharemusic accept " + entry.item.getSecond());
+                this.widget.removeEntryFromTop(entry);
             }
-        }).position(20, this.height - 30).size(60, 20).build());
+        }).pos(20, this.height - 30).size(60, 20).build());
 
-        this.addDrawableChild(ButtonWidget.builder(Text.translatable("concerto.reject"), button -> {
-            ClientPlayerEntity player = MinecraftClient.getInstance().player;
-            ConcertoListWidget<Pair<Music, UUID>>.Entry entry = this.widget.getSelectedOrNull();
+        this.addRenderableWidget(Button.builder(Component.translatable("concerto.reject"), button -> {
+            LocalPlayer player = Minecraft.getInstance().player;
+            ConcertoListWidget<Pair<Music, UUID>>.Entry entry = this.widget.getSelected();
             if (player != null && entry != null) {
-                player.networkHandler.sendChatCommand("sharemusic reject " + entry.item.getSecond());
-                this.widget.removeEntryWithoutScrolling(entry);
+                player.connection.sendCommand("sharemusic reject " + entry.item.getSecond());
+                this.widget.removeEntryFromTop(entry);
             }
-        }).position(85, this.height - 30).size(60, 20).build());
+        }).pos(85, this.height - 30).size(60, 20).build());
 
-        this.addDrawableChild(ButtonWidget.builder(Text.translatable("concerto.reject.all"), button -> {
-            ClientPlayerEntity player = MinecraftClient.getInstance().player;
+        this.addRenderableWidget(Button.builder(Component.translatable("concerto.reject.all"), button -> {
+            LocalPlayer player = Minecraft.getInstance().player;
             if (player != null) {
-                player.networkHandler.sendChatCommand("sharemusic reject all");
+                player.connection.sendCommand("sharemusic reject all");
                 this.widget.clear();
             }
-        }).position(150, this.height - 30).size(60, 20).build());
+        }).pos(150, this.height - 30).size(60, 20).build());
 
-        this.addDrawableChild(ButtonWidget.builder(Text.translatable("concerto.refresh"), button -> this.refresh())
-                .position(215, this.height - 30).size(60, 20).build());
+        this.addRenderableWidget(Button.builder(Component.translatable("concerto.refresh"), button -> this.refresh())
+                .pos(215, this.height - 30).size(60, 20).build());
     }
 
     @Override
-    public void render(DrawContext matrices, int mouseX, int mouseY, float delta) {
+    public void render(GuiGraphics matrices, int mouseX, int mouseY, float delta) {
         super.render(matrices, mouseX, mouseY, delta);
         this.widget.render(matrices, mouseX, mouseY, delta);
     }

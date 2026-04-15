@@ -1,11 +1,11 @@
 package top.gregtao.concerto.screen.kugou;
 
 import com.google.gson.JsonElement;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.widget.ButtonWidget;
-import net.minecraft.text.Text;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.gui.components.Button;
+import net.minecraft.network.chat.Component;
 import top.gregtao.concerto.core.api.WithMetaData;
 import top.gregtao.concerto.core.config.ClientConfig;
 import top.gregtao.concerto.core.http.kugou.KuGouMusicApiClient;
@@ -27,13 +27,13 @@ public class KuGouMusicUserScreen extends PageScreen {
         return new MetadataListWidget<>(this.width, this.height - 55, 20, 18) {
             @Override
             public void onDoubleClicked(ConcertoListWidget<T>.Entry entry) {
-                MinecraftClient.getInstance().setScreen(new PlaylistPreviewScreen((Playlist) entry.item, KuGouMusicUserScreen.this));
+                Minecraft.getInstance().setScreen(new PlaylistPreviewScreen((Playlist) entry.item, KuGouMusicUserScreen.this));
             }
         };
     }
 
     public KuGouMusicUserScreen(Screen parent) {
-        super(Text.translatable("concerto.screen.user"), parent);
+        super(Component.translatable("concerto.screen.user"), parent);
     }
 
     @Override
@@ -53,16 +53,16 @@ public class KuGouMusicUserScreen extends PageScreen {
     protected void init() {
         super.init();
         if (!this.loggedIn()) {
-            MinecraftClient.getInstance().setScreen(new KuGouMusicLoginScreen(null));
+            Minecraft.getInstance().setScreen(new KuGouMusicLoginScreen(null));
         }
         this.playlistList = this.initWidget();
 
         this.onPageTurned(0);
-        this.addDrawableChild(this.playlistList);
-        this.addSelectableChild(this.playlistList);
+        this.addRenderableWidget(this.playlistList);
+        this.addWidget(this.playlistList);
 
         if (ClientConfig.INSTANCE.options.kuGouMusicLite) {
-            this.addDrawableChild(ButtonWidget.builder(Text.translatable("concerto.screen.daily_vip"),
+            this.addRenderableWidget(Button.builder(Component.translatable("concerto.screen.daily_vip"),
                     button -> CompletableFuture.supplyAsync(
                             () -> KuGouMusicApiClient.INSTANCE.receiveVip()
                     ).thenAccept(jsonObject -> {
@@ -83,31 +83,31 @@ public class KuGouMusicUserScreen extends PageScreen {
                                 })
                                 .orElse("failed");
 
-                        displayAlert(Text.translatable("concerto.screen.daily_vip." + text));
-                    })).position(this.width / 2 - 10, this.height - 30).size(70, 20).build()
+                        displayAlert(Component.translatable("concerto.screen.daily_vip." + text));
+                    })).pos(this.width / 2 - 10, this.height - 30).size(70, 20).build()
             );
         }
 
-        this.addDrawableChild(ButtonWidget.builder(Text.translatable("concerto.screen.play"), button -> {
-            ConcertoListWidget<KuGouMusicPlaylist>.Entry entry = this.playlistList.getSelectedOrNull();
+        this.addRenderableWidget(Button.builder(Component.translatable("concerto.screen.play"), button -> {
+            ConcertoListWidget<KuGouMusicPlaylist>.Entry entry = this.playlistList.getSelected();
             if (entry != null) {
-                MinecraftClient.getInstance().setScreen(new PlaylistPreviewScreen(entry.item, this));
+                Minecraft.getInstance().setScreen(new PlaylistPreviewScreen(entry.item, this));
             }
-        }).position(this.width / 2 + 65, this.height - 30).size(50, 20).build());
+        }).pos(this.width / 2 + 65, this.height - 30).size(50, 20).build());
 
-        this.addDrawableChild(ButtonWidget.builder(Text.translatable("concerto.screen.logout"), button -> {
+        this.addRenderableWidget(Button.builder(Component.translatable("concerto.screen.logout"), button -> {
             if (this.loggedIn()) {
                 KuGouMusicApiClient.LOCAL_USER.logout();
             }
-            MinecraftClient.getInstance().setScreen(new KuGouMusicLoginScreen(this));
-        }).position(this.width / 2 + 120, this.height - 30).size(50, 20).build());
+            Minecraft.getInstance().setScreen(new KuGouMusicLoginScreen(this));
+        }).pos(this.width / 2 + 120, this.height - 30).size(50, 20).build());
     }
 
     @Override
-    public void render(DrawContext matrices, int mouseX, int mouseY, float delta) {
+    public void render(GuiGraphics matrices, int mouseX, int mouseY, float delta) {
         super.render(matrices, mouseX, mouseY, delta);
         if (!this.loggedIn()) {
-            matrices.drawCenteredTextWithShadow(this.textRenderer, Text.translatable("concerto.screen.kugou.not_login"),
+            matrices.drawCenteredString(this.font, Component.translatable("concerto.screen.kugou.not_login"),
                     this.width / 2, this.height / 2, 0xffffffff);
         }
     }

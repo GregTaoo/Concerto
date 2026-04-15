@@ -3,9 +3,9 @@ package top.gregtao.concerto.network.room;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.network.chat.Component;
+import net.minecraft.ChatFormatting;
 import top.gregtao.concerto.ConcertoServer;
 import top.gregtao.concerto.core.music.Music;
 import top.gregtao.concerto.core.player.MusicPlayerHandler;
@@ -15,22 +15,22 @@ import top.gregtao.concerto.util.MinecraftTextUtil;
 
 public class ServerMusicAgentManager {
 
-    public static void sendVote2Member(ServerPlayerEntity player) {
-        player.sendMessage(MinecraftTextUtil.PAGE_SPLIT);
-        player.sendMessage(Text.translatable("concerto.agent.vote")
-                .append(Text.literal("  ["))
-                .append(Text.translatable("concerto.accept").setStyle(
-                        MinecraftTextUtil.getRunCommandStyle("/musicroom agent vote true").withColor(Formatting.GREEN)))
-                .append(Text.literal("]"))
-                .append(Text.literal("  ["))
-                .append(Text.translatable("concerto.reject").setStyle(
-                        MinecraftTextUtil.getRunCommandStyle("/musicroom agent vote false").withColor(Formatting.RED)))
-                .append(Text.literal("]")));
-        player.sendMessage(MinecraftTextUtil.PAGE_SPLIT);
+    public static void sendVote2Member(ServerPlayer player) {
+        player.sendSystemMessage(MinecraftTextUtil.PAGE_SPLIT);
+        player.sendSystemMessage(Component.translatable("concerto.agent.vote")
+                .append(Component.literal("  ["))
+                .append(Component.translatable("concerto.accept").setStyle(
+                        MinecraftTextUtil.getRunCommandStyle("/musicroom agent vote true").withColor(ChatFormatting.GREEN)))
+                .append(Component.literal("]"))
+                .append(Component.literal("  ["))
+                .append(Component.translatable("concerto.reject").setStyle(
+                        MinecraftTextUtil.getRunCommandStyle("/musicroom agent vote false").withColor(ChatFormatting.RED)))
+                .append(Component.literal("]")));
+        player.sendSystemMessage(MinecraftTextUtil.PAGE_SPLIT);
     }
 
     public static void serverReceiver(ConcertoPayload payload, ServerPlayNetworking.Context context) {
-        ServerPlayerEntity player = context.player();
+        ServerPlayer player = context.player();
         String[] args = payload.string.split(":", 2);
         if (args.length != 2) {
             ConcertoServer.LOGGER.error("Invalid arguments for server receiver: {}", payload);
@@ -73,7 +73,7 @@ public class ServerMusicAgentManager {
 
     public static void init(MinecraftServer server) {
         ServerMusicAgent.init(playerName -> {
-            ServerPlayerEntity entity = server.getPlayerManager().getPlayer(playerName);
+            ServerPlayer entity = server.getPlayerList().getPlayerByName(playerName);
             if (entity != null) {
                 sendVote2Member(entity);
             }

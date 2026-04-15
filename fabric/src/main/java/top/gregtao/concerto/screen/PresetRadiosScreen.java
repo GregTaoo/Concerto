@@ -1,11 +1,11 @@
 package top.gregtao.concerto.screen;
 
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.widget.ButtonWidget;
-import net.minecraft.client.network.ClientPlayerEntity;
-import net.minecraft.text.Text;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.network.chat.Component;
 import top.gregtao.concerto.ConcertoClient;
 import top.gregtao.concerto.core.api.WithMetaData;
 import top.gregtao.concerto.core.music.list.Playlist;
@@ -20,13 +20,13 @@ public class PresetRadiosScreen extends ConcertoScreen {
         return new MetadataListWidget<>(this.width, this.height - 55, 20, 18) {
             @Override
             public void onDoubleClicked(ConcertoListWidget<T>.Entry entry) {
-                MinecraftClient.getInstance().setScreen(new PlaylistPreviewScreen((Playlist) entry.item, PresetRadiosScreen.this));
+                Minecraft.getInstance().setScreen(new PlaylistPreviewScreen((Playlist) entry.item, PresetRadiosScreen.this));
             }
         };
     }
 
     public PresetRadiosScreen(Screen parent) {
-        super(Text.translatable("concerto.screen.preset_radios"), parent);
+        super(Component.translatable("concerto.screen.preset_radios"), parent);
     }
 
     public void reset() {
@@ -38,26 +38,26 @@ public class PresetRadiosScreen extends ConcertoScreen {
         super.init();
         this.playlistList = this.initWidget();
         this.reset();
-        this.addSelectableChild(this.playlistList);
-        this.addDrawableChild(this.playlistList);
+        this.addWidget(this.playlistList);
+        this.addRenderableWidget(this.playlistList);
 
-        this.addDrawableChild(ButtonWidget.builder(Text.translatable("concerto.screen.play"), button -> {
-            ConcertoListWidget<Playlist>.Entry entry = this.playlistList.getSelectedOrNull();
+        this.addRenderableWidget(Button.builder(Component.translatable("concerto.screen.play"), button -> {
+            ConcertoListWidget<Playlist>.Entry entry = this.playlistList.getSelected();
             if (entry != null) {
-                MinecraftClient.getInstance().setScreen(new PlaylistPreviewScreen(entry.item, this));
+                Minecraft.getInstance().setScreen(new PlaylistPreviewScreen(entry.item, this));
             }
-        }).position(20, this.height - 30).size(60, 20).build());
+        }).pos(20, this.height - 30).size(60, 20).build());
 
-        this.addDrawableChild(ButtonWidget.builder(Text.translatable("concerto.refresh"), button -> {
-            ClientPlayerEntity player = MinecraftClient.getInstance().player;
+        this.addRenderableWidget(Button.builder(Component.translatable("concerto.refresh"), button -> {
+            LocalPlayer player = Minecraft.getInstance().player;
             if (player != null) {
-                player.networkHandler.sendChatCommand("concerto-server fetch-radios");
+                player.connection.sendCommand("concerto-server fetch-radios");
             }
-        }).position(85, this.height - 30).size(60, 20).build());
+        }).pos(85, this.height - 30).size(60, 20).build());
     }
 
     @Override
-    public void render(DrawContext matrices, int mouseX, int mouseY, float delta) {
+    public void render(GuiGraphics matrices, int mouseX, int mouseY, float delta) {
         super.render(matrices, mouseX, mouseY, delta);
         this.playlistList.render(matrices, mouseX, mouseY, delta);
     }

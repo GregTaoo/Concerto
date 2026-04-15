@@ -1,7 +1,7 @@
 package top.gregtao.concerto.mixin;
 
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.screens.Screen;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -12,10 +12,10 @@ import top.gregtao.concerto.core.room.MusicRoom;
 import top.gregtao.concerto.network.ClientMusicNetworkHandler;
 import top.gregtao.concerto.screen.MusicAuditionScreen;
 
-@Mixin(MinecraftClient.class)
-public class MinecraftClientMixin {
+@Mixin(Minecraft.class)
+public class MinecraftMixin {
 
-    @Inject(at = @At("TAIL"), method = "disconnect(Lnet/minecraft/client/gui/screen/Screen;Z)V")
+    @Inject(at = @At("TAIL"), method = "disconnect(Lnet/minecraft/client/gui/screens/Screen;Z)V")
     public void disconnectInject(Screen disconnectionScreen, boolean transferring, CallbackInfo ci) {
         ConcertoClient.serverAvailable = false;
         ClientMusicNetworkHandler.WAIT_CONFIRMATION.clear();

@@ -1,12 +1,12 @@
 package top.gregtao.concerto.screen.qq;
 
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.widget.ButtonWidget;
-import net.minecraft.client.gui.widget.CyclingButtonWidget;
-import net.minecraft.client.gui.widget.TextFieldWidget;
-import net.minecraft.text.Text;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.components.CycleButton;
+import net.minecraft.client.gui.components.EditBox;
+import net.minecraft.network.chat.Component;
 import org.lwjgl.glfw.GLFW;
 import top.gregtao.concerto.ConcertoClient;
 import top.gregtao.concerto.core.api.WithMetaData;
@@ -33,10 +33,10 @@ public class QQMusicSearchScreen extends PageScreen {
     private MetadataListWidget<QQMusicPlaylist> playlistList;
     private MetadataListWidget<QQMusicPlaylist> albumList;
     private Map<SearchType, ConcertoListWidget<?>> listWidgetsMap = new HashMap<>();
-    protected TextFieldWidget searchBox;
-    private ButtonWidget infoButton;
-    private ButtonWidget playButton;
-    private ButtonWidget addButton;
+    protected EditBox searchBox;
+    private Button infoButton;
+    private Button playButton;
+    private Button addButton;
     private SearchType searchType = SearchType.MUSIC;
 
     private <T extends WithMetaData> MetadataListWidget<T> initListsWidget() {
@@ -52,7 +52,7 @@ public class QQMusicSearchScreen extends PageScreen {
                             break;
                         }
                         case PLAYLIST, ALBUM: {
-                            MinecraftClient.getInstance().setScreen(new PlaylistPreviewScreen((Playlist) entry.item, QQMusicSearchScreen.this));
+                            Minecraft.getInstance().setScreen(new PlaylistPreviewScreen((Playlist) entry.item, QQMusicSearchScreen.this));
                             break;
                         }
                     }
@@ -64,7 +64,7 @@ public class QQMusicSearchScreen extends PageScreen {
     }
 
     public QQMusicSearchScreen(Screen parent) {
-        super(Text.translatable("concerto.screen.search.qq"), parent);
+        super(Component.translatable("concerto.screen.search.qq"), parent);
     }
 
     private void search(String keyword, int page) {
@@ -76,20 +76,20 @@ public class QQMusicSearchScreen extends PageScreen {
                 case PLAYLIST -> this.playlistList.reset(QQMusicApiClient.INSTANCE.searchPlaylist(keyword, page), null);
                 case ALBUM -> this.albumList.reset(QQMusicApiClient.INSTANCE.searchAlbum(keyword, page), null);
             }
-            this.listWidgetsMap.get(this.searchType).setScrollY(0);
+            this.listWidgetsMap.get(this.searchType).setScrollAmount(0);
         });
     }
 
     private void toggleSearch() {
         this.page = 0;
-        this.search(this.searchBox.getText(), 0);
+        this.search(this.searchBox.getValue(), 0);
     }
 
     private void updateSearchType(SearchType type) {
         try {
-            this.remove(this.listWidgetsMap.get(this.searchType));
+            this.removeWidget(this.listWidgetsMap.get(this.searchType));
         } catch (NullPointerException ignored) {}
-        this.addSelectableChild(this.listWidgetsMap.get(type));
+        this.addWidget(this.listWidgetsMap.get(type));
         this.searchType = type;
         this.infoButton.active = type == SearchType.MUSIC;
         this.updateActionButtons();
@@ -108,7 +108,7 @@ public class QQMusicSearchScreen extends PageScreen {
 
     @Override
     public void onPageTurned(int page) {
-        this.search(this.searchBox.getText(), page);
+        this.search(this.searchBox.getValue(), page);
     }
 
     @Override
@@ -124,83 +124,83 @@ public class QQMusicSearchScreen extends PageScreen {
                 SearchType.ALBUM, this.albumList
         );
 
-        this.searchBox = new TextFieldWidget(this.textRenderer, this.width / 2 - 155, 17, 200, 20,
-                this.searchBox, Text.translatable("concerto.screen.search"));
-        this.addSelectableChild(this.searchBox);
-        this.addDrawableChild(this.searchBox);
-        this.searchBox.setText(DEFAULT_KEYWORD);
+        this.searchBox = new EditBox(this.font, this.width / 2 - 155, 17, 200, 20,
+                this.searchBox, Component.translatable("concerto.screen.search"));
+        this.addWidget(this.searchBox);
+        this.addRenderableWidget(this.searchBox);
+        this.searchBox.setValue(DEFAULT_KEYWORD);
 
-        this.infoButton = ButtonWidget.builder(Text.translatable("concerto.screen.info"), button -> {
-            ConcertoListWidget<Music>.Entry entry = this.musicList.getSelectedOrNull();
+        this.infoButton = Button.builder(Component.translatable("concerto.screen.info"), button -> {
+            ConcertoListWidget<Music>.Entry entry = this.musicList.getSelected();
             if (entry != null) {
-                MinecraftClient.getInstance().setScreen(new MusicInfoScreen(entry.item, this));
+                Minecraft.getInstance().setScreen(new MusicInfoScreen(entry.item, this));
             }
-        }).position(this.width / 2 + 120, this.height - 30).size(50, 20).build();
-        this.addDrawableChild(this.infoButton);
+        }).pos(this.width / 2 + 120, this.height - 30).size(50, 20).build();
+        this.addRenderableWidget(this.infoButton);
 
         this.updateSearchType(this.searchType);
 
-        this.addDrawableChild(ButtonWidget.builder(Text.translatable("concerto.screen.search"),
-                button -> this.toggleSearch()).position(this.width / 2 + 50, 17).size(52, 20).build());
+        this.addRenderableWidget(Button.builder(Component.translatable("concerto.screen.search"),
+                button -> this.toggleSearch()).pos(this.width / 2 + 50, 17).size(52, 20).build());
 
-        this.addDrawableChild(CyclingButtonWidget.builder((SearchType type) -> Text.literal(type.getName()))
-                .values(SearchType.values()).initially(this.searchType).build(
-                this.width / 2 + 105, 17, 65, 20, Text.translatable("concerto.search_type"),
+        this.addRenderableWidget(CycleButton.builder((SearchType type) -> Component.literal(type.getName()))
+                .withValues(SearchType.values()).withInitialValue(this.searchType).create(
+                this.width / 2 + 105, 17, 65, 20, Component.translatable("concerto.search_type"),
                 (widget, type) -> this.updateSearchType(type)));
 
-        this.playButton = ButtonWidget.builder(Text.translatable("concerto.screen.play"), button -> {
+        this.playButton = Button.builder(Component.translatable("concerto.screen.play"), button -> {
             switch (this.searchType) {
                 case MUSIC: {
-                    ConcertoListWidget<Music>.Entry entry = this.musicList.getSelectedOrNull();
+                    ConcertoListWidget<Music>.Entry entry = this.musicList.getSelected();
                     if (entry != null) {
                         MusicPlayerHandler.INSTANCE.addMusicHereAsync(entry.item, true);
                     }
                 }
                 case PLAYLIST: {
-                    ConcertoListWidget<QQMusicPlaylist>.Entry entry = this.playlistList.getSelectedOrNull();
+                    ConcertoListWidget<QQMusicPlaylist>.Entry entry = this.playlistList.getSelected();
                     if (entry != null) {
-                        MinecraftClient.getInstance().setScreen(new PlaylistPreviewScreen(entry.item, this));
+                        Minecraft.getInstance().setScreen(new PlaylistPreviewScreen(entry.item, this));
                     }
                 }
                 case ALBUM: {
-                    ConcertoListWidget<QQMusicPlaylist>.Entry entry = this.albumList.getSelectedOrNull();
+                    ConcertoListWidget<QQMusicPlaylist>.Entry entry = this.albumList.getSelected();
                     if (entry != null) {
-                        MinecraftClient.getInstance().setScreen(new PlaylistPreviewScreen(entry.item, this));
+                        Minecraft.getInstance().setScreen(new PlaylistPreviewScreen(entry.item, this));
                     }
                 }
             }
-        }).position(this.width / 2 + 65, this.height - 30).size(50, 20).build();
-        this.addDrawableChild(this.playButton);
+        }).pos(this.width / 2 + 65, this.height - 30).size(50, 20).build();
+        this.addRenderableWidget(this.playButton);
 
-        this.addButton = ButtonWidget.builder(Text.translatable("concerto.screen.add"), button -> {
+        this.addButton = Button.builder(Component.translatable("concerto.screen.add"), button -> {
             switch (this.searchType) {
                 case MUSIC: {
-                    ConcertoListWidget<Music>.Entry entry = this.musicList.getSelectedOrNull();
+                    ConcertoListWidget<Music>.Entry entry = this.musicList.getSelected();
                     if (entry != null) {
                         MusicPlayerHandler.INSTANCE.addMusicAsync(entry.item, false);
                     }
                 }
                 case PLAYLIST: {
-                    ConcertoListWidget<QQMusicPlaylist>.Entry entry = this.playlistList.getSelectedOrNull();
+                    ConcertoListWidget<QQMusicPlaylist>.Entry entry = this.playlistList.getSelected();
                     if (entry != null) {
                         MusicPlayerHandler.INSTANCE.addMusicAsync(() -> entry.item.getList(), false);
                     }
                 }
                 case ALBUM: {
-                    ConcertoListWidget<QQMusicPlaylist>.Entry entry = this.albumList.getSelectedOrNull();
+                    ConcertoListWidget<QQMusicPlaylist>.Entry entry = this.albumList.getSelected();
                     if (entry != null) {
                         MusicPlayerHandler.INSTANCE.addMusicAsync(() -> entry.item.getList(), false);
                     }
                 }
             }
-        }).position(this.width / 2 + 10, this.height - 30).size(50, 20).build();
-        this.addDrawableChild(this.addButton);
+        }).pos(this.width / 2 + 10, this.height - 30).size(50, 20).build();
+        this.addRenderableWidget(this.addButton);
 
         this.updateActionButtons();
     }
 
     @Override
-    public void render(DrawContext matrices, int mouseX, int mouseY, float delta) {
+    public void render(GuiGraphics matrices, int mouseX, int mouseY, float delta) {
         super.render(matrices, mouseX, mouseY, delta);
         try {
             switch (this.searchType) {
@@ -219,7 +219,7 @@ public class QQMusicSearchScreen extends PageScreen {
         if (super.keyPressed(keyCode, scanCode, modifiers)) {
             return true;
         }
-        if (keyCode == GLFW.GLFW_KEY_ENTER && this.searchBox.isSelected()) {
+        if (keyCode == GLFW.GLFW_KEY_ENTER && this.searchBox.isHoveredOrFocused()) {
             this.toggleSearch();
             return true;
         }

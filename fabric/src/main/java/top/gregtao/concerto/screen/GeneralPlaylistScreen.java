@@ -1,12 +1,12 @@
 package top.gregtao.concerto.screen;
 
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.widget.ButtonWidget;
-import net.minecraft.client.gui.widget.CyclingButtonWidget;
-import net.minecraft.client.gui.widget.TextFieldWidget;
-import net.minecraft.text.Text;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.components.CycleButton;
+import net.minecraft.client.gui.components.EditBox;
+import net.minecraft.network.chat.Component;
 import org.lwjgl.glfw.GLFW;
 import top.gregtao.concerto.core.enums.OrderType;
 import top.gregtao.concerto.core.event.ConcertoEvents;
@@ -18,22 +18,22 @@ import top.gregtao.concerto.screen.widget.GeneralPlaylistWidget;
 
 public class GeneralPlaylistScreen extends ApplyDraggedFileScreen {
     private GeneralPlaylistWidget widget;
-    protected TextFieldWidget searchBox;
-    private ButtonWidget nextButton;
-    private ButtonWidget playButton;
-    private ButtonWidget deleteButton;
-    private ButtonWidget pauseButton;
-    private ButtonWidget clearButton;
-    private CyclingButtonWidget<OrderType> orderButton;
+    protected EditBox searchBox;
+    private Button nextButton;
+    private Button playButton;
+    private Button deleteButton;
+    private Button pauseButton;
+    private Button clearButton;
+    private CycleButton<OrderType> orderButton;
     private Event.Subscription listSubscription, musicSubscription, orderSubscription;
 
     public GeneralPlaylistScreen(Screen parent) {
-        super(Text.translatable("concerto.screen.general_list"), parent);
+        super(Component.translatable("concerto.screen.general_list"), parent);
     }
 
     public void toggleSearch() {
-        if (!this.searchBox.getText().isEmpty()) {
-            this.widget.reset(this.searchBox.getText());
+        if (!this.searchBox.getValue().isEmpty()) {
+            this.widget.reset(this.searchBox.getValue());
         } else {
             this.widget.reset();
         }
@@ -44,60 +44,60 @@ public class GeneralPlaylistScreen extends ApplyDraggedFileScreen {
         super.init();
         this.widget = new GeneralPlaylistWidget(this.width, this.height - 75, 40, 18);
 
-        this.addSelectableChild(this.widget);
+        this.addWidget(this.widget);
 
-        this.searchBox = new TextFieldWidget(this.textRenderer, this.width / 2 - 185, 18, 300, 18,
-                this.searchBox, Text.translatable("concerto.screen.search"));
-        this.addSelectableChild(this.searchBox);
-        this.addDrawableChild(this.searchBox);
+        this.searchBox = new EditBox(this.font, this.width / 2 - 185, 18, 300, 18,
+                this.searchBox, Component.translatable("concerto.screen.search"));
+        this.addWidget(this.searchBox);
+        this.addRenderableWidget(this.searchBox);
 
-        this.addDrawableChild(ButtonWidget.builder(Text.translatable("concerto.screen.search"), button ->
-                this.toggleSearch()).position(this.width / 2 + 125, 17).size(50, 20).build());
+        this.addRenderableWidget(Button.builder(Component.translatable("concerto.screen.search"), button ->
+                this.toggleSearch()).pos(this.width / 2 + 125, 17).size(50, 20).build());
 
-        this.nextButton = ButtonWidget.builder(Text.translatable("concerto.screen.next"),
-                button -> MusicPlayerHandler.INSTANCE.playNextAsync(1)).position(this.width / 2 - 185, this.height - 30).size(50, 20).build();
-        this.addDrawableChild(this.nextButton);
+        this.nextButton = Button.builder(Component.translatable("concerto.screen.next"),
+                button -> MusicPlayerHandler.INSTANCE.playNextAsync(1)).pos(this.width / 2 - 185, this.height - 30).size(50, 20).build();
+        this.addRenderableWidget(this.nextButton);
 
-        this.playButton = ButtonWidget.builder(Text.translatable("concerto.screen.play"), button -> {
-            ConcertoListWidget<GeneralPlaylistWidget.Entry>.Entry entry = this.widget.getSelectedOrNull();
+        this.playButton = Button.builder(Component.translatable("concerto.screen.play"), button -> {
+            ConcertoListWidget<GeneralPlaylistWidget.Entry>.Entry entry = this.widget.getSelected();
             if (entry != null) {
                 MusicPlayerHandler.INSTANCE.setCurrentIndex(entry.item.index());
             }
-        }).position(this.width / 2 - 135, this.height - 30).size(50, 20).build();
-        this.addDrawableChild(this.playButton);
+        }).pos(this.width / 2 - 135, this.height - 30).size(50, 20).build();
+        this.addRenderableWidget(this.playButton);
 
-        this.deleteButton = ButtonWidget.builder(Text.translatable("concerto.screen.delete"), button -> {
-            ConcertoListWidget<GeneralPlaylistWidget.Entry>.Entry entry = this.widget.getSelectedOrNull();
+        this.deleteButton = Button.builder(Component.translatable("concerto.screen.delete"), button -> {
+            ConcertoListWidget<GeneralPlaylistWidget.Entry>.Entry entry = this.widget.getSelected();
             if (entry != null) {
                 MusicPlayerHandler.INSTANCE.removeAsync(entry.item.index(), () -> {});
             }
-        }).position(this.width / 2 - 85, this.height - 30).size(50, 20).build();
-        this.addDrawableChild(this.deleteButton);
+        }).pos(this.width / 2 - 85, this.height - 30).size(50, 20).build();
+        this.addRenderableWidget(this.deleteButton);
 
-        this.orderButton = CyclingButtonWidget.builder((OrderType x) -> Text.literal(x.getName())).values(OrderType.values())
-                .initially(MusicPlayerHandler.INSTANCE.getOrderType()).build(
-                        this.width / 2 - 35, this.height - 30, 60, 20, Text.translatable("concerto.screen.order"),
+        this.orderButton = CycleButton.builder((OrderType x) -> Component.literal(x.getName())).withValues(OrderType.values())
+                .withInitialValue(MusicPlayerHandler.INSTANCE.getOrderType()).create(
+                        this.width / 2 - 35, this.height - 30, 60, 20, Component.translatable("concerto.screen.order"),
                         (widget, orderType) -> MusicPlayerHandler.INSTANCE.setOrderType(orderType));
-        this.addDrawableChild(this.orderButton);
+        this.addRenderableWidget(this.orderButton);
 
-        this.pauseButton = ButtonWidget.builder(Text.translatable("concerto.screen.pause"), button -> {
+        this.pauseButton = Button.builder(Component.translatable("concerto.screen.pause"), button -> {
             boolean paused = MusicPlayerHandler.INSTANCE.isPaused();
             MusicPlayerHandler.INSTANCE.tryForcePause(!paused);
-        }).position(this.width / 2 + 25, this.height - 30).size(50, 20).build();
-        this.addDrawableChild(this.pauseButton);
+        }).pos(this.width / 2 + 25, this.height - 30).size(50, 20).build();
+        this.addRenderableWidget(this.pauseButton);
 
-        this.addDrawableChild(ButtonWidget.builder(Text.translatable("concerto.screen.info"), button -> {
-            ConcertoListWidget<GeneralPlaylistWidget.Entry>.Entry entry = this.widget.getSelectedOrNull();
+        this.addRenderableWidget(Button.builder(Component.translatable("concerto.screen.info"), button -> {
+            ConcertoListWidget<GeneralPlaylistWidget.Entry>.Entry entry = this.widget.getSelected();
             if (entry != null) {
-                MinecraftClient.getInstance().setScreen(new MusicInfoScreen(entry.item.music(), this));
+                Minecraft.getInstance().setScreen(new MusicInfoScreen(entry.item.music(), this));
             }
-        }).position(this.width / 2 + 75, this.height - 30).size(50, 20).build());
+        }).pos(this.width / 2 + 75, this.height - 30).size(50, 20).build());
 
-        this.clearButton = ButtonWidget.builder(Text.translatable("concerto.screen.clear"), button -> {
+        this.clearButton = Button.builder(Component.translatable("concerto.screen.clear"), button -> {
             MusicPlayerHandler.INSTANCE.clear();
-            MinecraftClient.getInstance().setScreen(null);
-        }).position(this.width / 2 + 125, this.height - 30).size(50, 20).build();
-        this.addDrawableChild(this.clearButton);
+            Minecraft.getInstance().setScreen(null);
+        }).pos(this.width / 2 + 125, this.height - 30).size(50, 20).build();
+        this.addRenderableWidget(this.clearButton);
 
         this.listSubscription = ConcertoEvents.ON_MUSIC_LIST_UPDATE.subscribe(this::toggleSearch);
         this.musicSubscription = ConcertoEvents.ON_NEW_MUSIC_STARTED.subscribe(
@@ -118,7 +118,7 @@ public class GeneralPlaylistScreen extends ApplyDraggedFileScreen {
     }
 
     @Override
-    public void render(DrawContext matrices, int mouseX, int mouseY, float delta) {
+    public void render(GuiGraphics matrices, int mouseX, int mouseY, float delta) {
         super.render(matrices, mouseX, mouseY, delta);
         this.widget.render(matrices, mouseX, mouseY, delta);
     }
@@ -128,7 +128,7 @@ public class GeneralPlaylistScreen extends ApplyDraggedFileScreen {
         if (super.keyPressed(keyCode, scanCode, modifiers)) {
             return true;
         }
-        if (keyCode == GLFW.GLFW_KEY_ENTER && this.searchBox.isSelected()) {
+        if (keyCode == GLFW.GLFW_KEY_ENTER && this.searchBox.isHoveredOrFocused()) {
             this.toggleSearch();
             return true;
         }
@@ -141,8 +141,8 @@ public class GeneralPlaylistScreen extends ApplyDraggedFileScreen {
     }
 
     @Override
-    public void close() {
-        super.close();
+    public void onClose() {
+        super.onClose();
         Event.unsubscribe(this.listSubscription);
         Event.unsubscribe(this.musicSubscription);
         Event.unsubscribe(this.orderSubscription);

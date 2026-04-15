@@ -1,9 +1,9 @@
 package top.gregtao.concerto.mixin;
 
-import net.minecraft.network.ClientConnection;
-import net.minecraft.server.PlayerManager;
-import net.minecraft.server.network.ConnectedClientData;
-import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.network.Connection;
+import net.minecraft.server.players.PlayerList;
+import net.minecraft.server.network.CommonListenerCookie;
+import net.minecraft.server.level.ServerPlayer;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -19,17 +19,17 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
 
-@Mixin(PlayerManager.class)
-public class PlayerManagerMixin {
+@Mixin(PlayerList.class)
+public class PlayerListMixin {
 
-    @Inject(at = @At("TAIL"), method = "onPlayerConnect(Lnet/minecraft/network/ClientConnection;Lnet/minecraft/server/network/ServerPlayerEntity;Lnet/minecraft/server/network/ConnectedClientData;)V")
-    public void onPlayerConnectInject(ClientConnection connection, ServerPlayerEntity player, ConnectedClientData clientData, CallbackInfo ci) {
+    @Inject(at = @At("TAIL"), method = "placeNewPlayer(Lnet/minecraft/network/Connection;Lnet/minecraft/server/level/ServerPlayer;Lnet/minecraft/server/network/CommonListenerCookie;)V")
+    public void onPlayerConnectInject(Connection connection, ServerPlayer player, CommonListenerCookie clientData, CallbackInfo ci) {
         Executor delayedExecutor = CompletableFuture.delayedExecutor(3, TimeUnit.SECONDS);
         CompletableFuture.runAsync(() -> ServerMusicNetworkHandler.playerJoinHandshake(player), delayedExecutor);
     }
 
-    @Inject(at = @At("HEAD"), method = "remove(Lnet/minecraft/server/network/ServerPlayerEntity;)V")
-    public void removeInject(ServerPlayerEntity player, CallbackInfo ci) {
+    @Inject(at = @At("HEAD"), method = "remove(Lnet/minecraft/server/level/ServerPlayer;)V")
+    public void removeInject(ServerPlayer player, CallbackInfo ci) {
         List<UUID> removeList = new ArrayList<>();
         for (Map.Entry<UUID, MusicRoom> entry : MusicRoom.ROOMS.entrySet()) {
             if (entry.getValue().serverGetOwner().equals(player.getName().getString())) {

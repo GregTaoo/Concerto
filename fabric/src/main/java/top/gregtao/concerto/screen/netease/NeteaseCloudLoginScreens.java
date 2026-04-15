@@ -1,9 +1,9 @@
 package top.gregtao.concerto.screen.netease;
 
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.widget.ButtonWidget;
-import net.minecraft.text.Text;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.gui.components.Button;
+import net.minecraft.network.chat.Component;
 import top.gregtao.concerto.ConcertoClient;
 import top.gregtao.concerto.core.http.netease.NeteaseCloudApiClient;
 import top.gregtao.concerto.core.util.TextUtil;
@@ -19,27 +19,27 @@ import java.util.List;
 
 public class NeteaseCloudLoginScreens extends ConcertoScreen {
 
-    public static Text SOURCE_TEXT = Text.translatable("concerto.source.netease_cloud");
+    public static Component SOURCE_TEXT = Component.translatable("concerto.source.netease_cloud");
 
     public NeteaseCloudLoginScreens(Screen parent) {
-        super(Text.literal(Text.translatable("concerto.screen.login").getString() + SOURCE_TEXT.getString()), parent);
+        super(Component.literal(Component.translatable("concerto.screen.login").getString() + SOURCE_TEXT.getString()), parent);
     }
 
     @Override
     protected void init() {
         super.init();
-        this.addDrawableChild(ButtonWidget.builder(Text.translatable("concerto.screen.login.type.password"),
-                button -> MinecraftClient.getInstance().setScreen(this.passwordLogin())
-        ).size(100, 20).position(this.width / 2 - 50, 40).build());
-        this.addDrawableChild(ButtonWidget.builder(Text.translatable("concerto.screen.login.type.captcha"),
-                button -> MinecraftClient.getInstance().setScreen(this.captchaLogin())
-        ).size(100, 20).position(this.width / 2 - 50, 70).build());
-        this.addDrawableChild(ButtonWidget.builder(Text.translatable("concerto.screen.login.type.qrcode"),
-                button -> MinecraftClient.getInstance().setScreen(this.qrCodeLogin())
-        ).size(100, 20).position(this.width / 2 - 50, 100).build());
-        this.addDrawableChild(ButtonWidget.builder(Text.translatable("concerto.screen.login.type.cookie"),
-                button -> MinecraftClient.getInstance().setScreen(this.cookieLogin())
-        ).size(100, 20).position(this.width / 2 - 50, 130).build());
+        this.addRenderableWidget(Button.builder(Component.translatable("concerto.screen.login.type.password"),
+                button -> Minecraft.getInstance().setScreen(this.passwordLogin())
+        ).size(100, 20).pos(this.width / 2 - 50, 40).build());
+        this.addRenderableWidget(Button.builder(Component.translatable("concerto.screen.login.type.captcha"),
+                button -> Minecraft.getInstance().setScreen(this.captchaLogin())
+        ).size(100, 20).pos(this.width / 2 - 50, 70).build());
+        this.addRenderableWidget(Button.builder(Component.translatable("concerto.screen.login.type.qrcode"),
+                button -> Minecraft.getInstance().setScreen(this.qrCodeLogin())
+        ).size(100, 20).pos(this.width / 2 - 50, 100).build());
+        this.addRenderableWidget(Button.builder(Component.translatable("concerto.screen.login.type.cookie"),
+                button -> Minecraft.getInstance().setScreen(this.cookieLogin())
+        ).size(100, 20).pos(this.width / 2 - 50, 130).build());
     }
 
     private static boolean loginChecker() {
@@ -55,12 +55,12 @@ public class NeteaseCloudLoginScreens extends ConcertoScreen {
                                 NeteaseCloudApiClient.INSTANCE.cellphoneLogin(username, false, password) :
                                 NeteaseCloudApiClient.INSTANCE.emailPasswordLogin(username, password);
                         if (message.getFirst() == 200) {
-                            return Text.translatable("concerto.login.163.success");
+                            return Component.translatable("concerto.login.163.success");
                         } else {
-                            return Text.translatable("concerto.login.163.failed", message.getSecond());
+                            return Component.translatable("concerto.login.163.failed", message.getSecond());
                         }
                     } catch (Exception e) {
-                        return Text.translatable("concerto.login.163.error");
+                        return Component.translatable("concerto.login.163.error");
                     }
                 },
                 SOURCE_TEXT,
@@ -82,12 +82,12 @@ public class NeteaseCloudLoginScreens extends ConcertoScreen {
                     try {
                         Pair<Integer, String> message = NeteaseCloudApiClient.INSTANCE.cellphoneLogin(username, true, password);
                         if (message.getFirst() == 200) {
-                            return Text.translatable("concerto.login.163.success");
+                            return Component.translatable("concerto.login.163.success");
                         } else {
-                            return Text.translatable("concerto.login.163.failed", message.getSecond());
+                            return Component.translatable("concerto.login.163.failed", message.getSecond());
                         }
                     } catch (Exception e) {
-                        return Text.translatable("concerto.login.163.error");
+                        return Component.translatable("concerto.login.163.error");
                     }
                 },
                 SOURCE_TEXT,

@@ -1,10 +1,10 @@
 package top.gregtao.concerto.screen;
 
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.widget.ButtonWidget;
-import net.minecraft.client.gui.widget.CyclingButtonWidget;
-import net.minecraft.text.Text;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.components.CycleButton;
+import net.minecraft.network.chat.Component;
 import org.joml.Quaternionf;
 import top.gregtao.concerto.core.enums.OrderType;
 import top.gregtao.concerto.core.music.MusicTimestamp;
@@ -20,15 +20,15 @@ import java.util.Comparator;
 
 public class MusicPlayerScreen extends ConcertoScreen {
 
-    private ButtonWidget playPauseButton;
-    private ButtonWidget nextButton;
-    private CyclingButtonWidget<OrderType> orderButton;
+    private Button playPauseButton;
+    private Button nextButton;
+    private CycleButton<OrderType> orderButton;
 
     private float rotationAngle = 0f;
     private int scrollOffset = 0;
 
     public MusicPlayerScreen(Screen parent) {
-        super(Text.empty(), parent);
+        super(Component.empty(), parent);
     }
 
     @Override
@@ -39,42 +39,42 @@ public class MusicPlayerScreen extends ConcertoScreen {
         int totalWidth = 4 * 60 + 3 * 2; // four buttons, 2px gaps
         int x = (this.width - totalWidth) / 2;
 
-        ButtonWidget playlistButton = ButtonWidget.builder(
-                Text.translatable("concerto.screen.general_list"),
+        Button playlistButton = Button.builder(
+                Component.translatable("concerto.screen.general_list"),
                 button -> {
-                    if (this.client != null) {
-                        this.client.setScreen(new GeneralPlaylistScreen(this));
+                    if (this.minecraft != null) {
+                        this.minecraft.setScreen(new GeneralPlaylistScreen(this));
                     }
                 }
-        ).position(x, y).size(60, 20).build();
-        this.addDrawableChild(playlistButton);
+        ).pos(x, y).size(60, 20).build();
+        this.addRenderableWidget(playlistButton);
         x += 62;
 
-        this.playPauseButton = ButtonWidget.builder(
-                Text.translatable(MusicPlayerHandler.INSTANCE.getState().get().paused ? "concerto.screen.play" : "concerto.screen.pause"),
+        this.playPauseButton = Button.builder(
+                Component.translatable(MusicPlayerHandler.INSTANCE.getState().get().paused ? "concerto.screen.play" : "concerto.screen.pause"),
                 button -> {
                     boolean paused = MusicPlayerHandler.INSTANCE.isPaused();
                     MusicPlayerHandler.INSTANCE.tryForcePause(!paused);
-                    button.setMessage(Text.translatable(!paused ? "concerto.screen.play" : "concerto.screen.pause"));
+                    button.setMessage(Component.translatable(!paused ? "concerto.screen.play" : "concerto.screen.pause"));
                 }
-        ).position(x, y).size(60, 20).build();
+        ).pos(x, y).size(60, 20).build();
         x += 62;
 
-        this.nextButton = ButtonWidget.builder(
-                Text.translatable("concerto.screen.next"),
+        this.nextButton = Button.builder(
+                Component.translatable("concerto.screen.next"),
                 button -> MusicPlayerHandler.INSTANCE.playNextAsync(1)
-        ).position(x, y).size(60, 20).build();
+        ).pos(x, y).size(60, 20).build();
         x += 62;
 
-        this.orderButton = CyclingButtonWidget.builder((OrderType val) -> Text.literal(val.getName()))
-                .values(OrderType.values())
-                .initially(MusicPlayerHandler.INSTANCE.getOrderType())
-                .build(x, y, 60, 20, Text.translatable("concerto.screen.order"),
+        this.orderButton = CycleButton.builder((OrderType val) -> Component.literal(val.getName()))
+                .withValues(OrderType.values())
+                .withInitialValue(MusicPlayerHandler.INSTANCE.getOrderType())
+                .create(x, y, 60, 20, Component.translatable("concerto.screen.order"),
                         (widget, orderType) -> MusicPlayerHandler.INSTANCE.setOrderType(orderType));
 
-        this.addDrawableChild(this.playPauseButton);
-        this.addDrawableChild(this.nextButton);
-        this.addDrawableChild(this.orderButton);
+        this.addRenderableWidget(this.playPauseButton);
+        this.addRenderableWidget(this.nextButton);
+        this.addRenderableWidget(this.orderButton);
 
         this.updateButtonStates();
     }
@@ -85,11 +85,11 @@ public class MusicPlayerScreen extends ConcertoScreen {
         this.orderButton.active = PlayerPermissions.canChangeOrderType();
 
         boolean isPaused = MusicPlayerHandler.INSTANCE.getState().get().paused;
-        this.playPauseButton.setMessage(Text.translatable(isPaused ? "concerto.screen.play" : "concerto.screen.pause"));
+        this.playPauseButton.setMessage(Component.translatable(isPaused ? "concerto.screen.play" : "concerto.screen.pause"));
     }
 
     @Override
-    public void render(DrawContext context, int mouseX, int mouseY, float delta) {
+    public void render(GuiGraphics context, int mouseX, int mouseY, float delta) {
         super.render(context, mouseX, mouseY, delta);
 
         if (MusicPlayer.INSTANCE.isPlaying() && !MusicPlayerHandler.INSTANCE.getState().get().paused) {
@@ -102,19 +102,19 @@ public class MusicPlayerScreen extends ConcertoScreen {
         int imgX = (leftWidth - imgSize) / 2;
         int imgY = (this.height - imgSize) / 2 - 8;
 
-        context.getMatrices().push();
+        context.pose().pushPose();
         
         InGameHudRenderer.COVER_IMAGE.setX(imgX);
         InGameHudRenderer.COVER_IMAGE.setY(imgY);
         InGameHudRenderer.COVER_IMAGE.setSize(imgSize, imgSize);
 
-        context.getMatrices().translate(imgX + imgSize / 2f, imgY + imgSize / 2f, 0);
-        context.getMatrices().multiply(new Quaternionf().rotateZ(this.rotationAngle * (float) Math.PI / 180f));
-        context.getMatrices().translate(-(imgX + imgSize / 2f), -(imgY + imgSize / 2f), 0);
+        context.pose().translate(imgX + imgSize / 2f, imgY + imgSize / 2f, 0);
+        context.pose().mulPose(new Quaternionf().rotateZ(this.rotationAngle * (float) Math.PI / 180f));
+        context.pose().translate(-(imgX + imgSize / 2f), -(imgY + imgSize / 2f), 0);
         
         InGameHudRenderer.COVER_IMAGE.render(context, mouseX, mouseY, delta);
 
-        context.getMatrices().pop();
+        context.pose().popPose();
 
         int rightHalfX = this.width / 2; // lyrics start at mid-screen for >= 1/2 width
         int lyricsWidth = this.width - rightHalfX - 20;
@@ -124,10 +124,10 @@ public class MusicPlayerScreen extends ConcertoScreen {
             String author = MusicPlayer.INSTANCE.currentMeta.author();
             int centerX = this.width / 2;
             int titleY = 8;
-            context.drawText(this.textRenderer, title, centerX - this.textRenderer.getWidth(title) / 2, titleY, 0xFFFFFF, false);
+            context.drawString(this.font, title, centerX - this.font.width(title) / 2, titleY, 0xFFFFFF, false);
             if (author != null && !author.isEmpty()) {
                 int authorY = titleY + 12;
-                context.drawText(this.textRenderer, author, centerX - this.textRenderer.getWidth(author) / 2, authorY, 0xAAAAAA, false);
+                context.drawString(this.font, author, centerX - this.font.width(author) / 2, authorY, 0xAAAAAA, false);
             }
         }
 
@@ -166,12 +166,12 @@ public class MusicPlayerScreen extends ConcertoScreen {
                     
                     int color = isActive ? ((int) ClientConfig.INSTANCE.lyricsColor.getNumber() | 0xFF000000) : ((alpha << 24) | 0xAAAAAA);
                     
-                    context.drawText(this.textRenderer, line, rightHalfX + (lyricsWidth - this.textRenderer.getWidth(line)) / 2, y, color, isActive);
+                    context.drawString(this.font, line, rightHalfX + (lyricsWidth - this.font.width(line)) / 2, y, color, isActive);
 
                     if (subLine != null) {
                         int subColor = isActive ? ((int) ClientConfig.INSTANCE.subLyricsColor.getNumber() | 0xFF000000) : ((alpha << 24) | 0x888888);
                         int subY = y + 12;
-                        context.drawText(this.textRenderer, subLine, rightHalfX + (lyricsWidth - this.textRenderer.getWidth(subLine)) / 2, subY, subColor, false);
+                        context.drawString(this.font, subLine, rightHalfX + (lyricsWidth - this.font.width(subLine)) / 2, subY, subColor, false);
                     }
                 }
             }

@@ -1,35 +1,36 @@
 package top.gregtao.concerto.screen.widget;
 
-import net.minecraft.client.font.TextRenderer;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.widget.PressableTextWidget;
-import net.minecraft.text.Style;
-import net.minecraft.text.Text;
-import net.minecraft.text.Texts;
-import net.minecraft.util.math.MathHelper;
+import net.minecraft.client.gui.Font;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.Button.OnPress;
+import net.minecraft.client.gui.components.PlainTextButton;
+import net.minecraft.network.chat.Style;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.ComponentUtils;
+import net.minecraft.util.Mth;
 
-public class ModifiablePressableTextWidget extends PressableTextWidget {
-    private TextRenderer textRenderer;
-    private Text text;
-    private Text hoverText;
+public class ModifiablePressableTextWidget extends PlainTextButton {
+    private Font textRenderer;
+    private Component text;
+    private Component hoverText;
 
-    public ModifiablePressableTextWidget(int x, int y, int width, int height, Text text, PressAction onPress, TextRenderer textRenderer) {
+    public ModifiablePressableTextWidget(int x, int y, int width, int height, Component text, OnPress onPress, Font textRenderer) {
         super(x, y, width, height, text, onPress, textRenderer);
         this.textRenderer = textRenderer;
         this.text = text;
-        this.hoverText = Texts.setStyleIfAbsent(text.copy(), Style.EMPTY.withUnderline(true));
+        this.hoverText = ComponentUtils.mergeStyles(text.copy(), Style.EMPTY.withUnderlined(true));
     }
 
     @Override
-    public void renderWidget(DrawContext context, int mouseX, int mouseY, float deltaTicks) {
-        Text text = this.isSelected() ? this.hoverText : this.text;
-        context.drawTextWithShadow(this.textRenderer, text, this.getX(), this.getY(), 16777215 | MathHelper.ceil(this.alpha * 255.0F) << 24);
+    public void renderWidget(GuiGraphics context, int mouseX, int mouseY, float deltaTicks) {
+        Component text = this.isHoveredOrFocused() ? this.hoverText : this.text;
+        context.drawString(this.textRenderer, text, this.getX(), this.getY(), 16777215 | Mth.ceil(this.alpha * 255.0F) << 24);
     }
 
-    public void setText(Text text) {
+    public void setText(Component text) {
         this.text = text;
-        this.hoverText = Texts.setStyleIfAbsent(text.copy(), Style.EMPTY.withUnderline(true));
-        this.setWidth(this.textRenderer.getWidth(text));
-        this.setHeight(this.textRenderer.fontHeight);
+        this.hoverText = ComponentUtils.mergeStyles(text.copy(), Style.EMPTY.withUnderlined(true));
+        this.setWidth(this.textRenderer.width(text));
+        this.setHeight(this.textRenderer.lineHeight);
     }
 }

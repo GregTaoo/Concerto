@@ -1,9 +1,9 @@
 package top.gregtao.concerto.screen.qq;
 
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.widget.ButtonWidget;
-import net.minecraft.text.Text;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.gui.components.Button;
+import net.minecraft.network.chat.Component;
 import top.gregtao.concerto.ConcertoClient;
 import top.gregtao.concerto.core.http.qq.QQMusicApiClient;
 import top.gregtao.concerto.screen.ConcertoScreen;
@@ -17,24 +17,24 @@ import java.util.List;
 
 public class QQMusicLoginScreens extends ConcertoScreen {
 
-    public static Text SOURCE_TEXT = Text.translatable("concerto.source.qq_music");
+    public static Component SOURCE_TEXT = Component.translatable("concerto.source.qq_music");
 
     public QQMusicLoginScreens(Screen parent) {
-        super(Text.literal(Text.translatable("concerto.screen.login").getString() + SOURCE_TEXT.getString()), parent);
+        super(Component.literal(Component.translatable("concerto.screen.login").getString() + SOURCE_TEXT.getString()), parent);
     }
 
     @Override
     protected void init() {
         super.init();
-        this.addDrawableChild(ButtonWidget.builder(Text.translatable("concerto.screen.login.type.qrcode.wechat"),
-                button -> MinecraftClient.getInstance().setScreen(this.weChatQRLogin())
-        ).size(100, 20).position(this.width / 2 - 50, 40).build());
-        this.addDrawableChild(ButtonWidget.builder(Text.translatable("concerto.screen.login.type.qrcode.qq"),
-                button -> MinecraftClient.getInstance().setScreen(this.qqQRLogin())
-        ).size(100, 20).position(this.width / 2 - 50, 70).build());
-        this.addDrawableChild(ButtonWidget.builder(Text.translatable("concerto.screen.login.type.cookie"),
-                button -> MinecraftClient.getInstance().setScreen(this.cookieLogin())
-        ).size(100, 20).position(this.width / 2 - 50, 100).build());
+        this.addRenderableWidget(Button.builder(Component.translatable("concerto.screen.login.type.qrcode.wechat"),
+                button -> Minecraft.getInstance().setScreen(this.weChatQRLogin())
+        ).size(100, 20).pos(this.width / 2 - 50, 40).build());
+        this.addRenderableWidget(Button.builder(Component.translatable("concerto.screen.login.type.qrcode.qq"),
+                button -> Minecraft.getInstance().setScreen(this.qqQRLogin())
+        ).size(100, 20).pos(this.width / 2 - 50, 70).build());
+        this.addRenderableWidget(Button.builder(Component.translatable("concerto.screen.login.type.cookie"),
+                button -> Minecraft.getInstance().setScreen(this.cookieLogin())
+        ).size(100, 20).pos(this.width / 2 - 50, 100).build());
     }
 
     public QRCodeLoginScreen weChatQRLogin() {

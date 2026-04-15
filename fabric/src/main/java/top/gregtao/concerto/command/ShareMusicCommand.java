@@ -4,11 +4,11 @@ import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandManager;
 import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.command.CommandRegistryAccess;
-import net.minecraft.command.argument.UuidArgumentType;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
+import net.minecraft.client.Minecraft;
+import net.minecraft.commands.CommandBuildContext;
+import net.minecraft.commands.arguments.UuidArgument;
+import net.minecraft.network.chat.Component;
+import net.minecraft.ChatFormatting;
 import top.gregtao.concerto.core.api.UnsafeMusicException;
 import top.gregtao.concerto.command.argument.ShareMusicTargetArgumentType;
 import top.gregtao.concerto.core.music.Music;
@@ -24,7 +24,7 @@ import java.util.UUID;
 
 public class ShareMusicCommand {
 
-    public static void register(CommandDispatcher<FabricClientCommandSource> dispatcher, CommandRegistryAccess registryAccess) {
+    public static void register(CommandDispatcher<FabricClientCommandSource> dispatcher, CommandBuildContext registryAccess) {
         dispatcher.register(
                 ClientCommandManager.literal("sharemusic").then(
                         ClientCommandManager.literal("to").then(
@@ -33,14 +33,14 @@ public class ShareMusicCommand {
                                     ConcertoRunner.run(() -> {
                                         Music current = MusicPlayerHandler.INSTANCE.getCurrentMusic();
                                         if (current != null) {
-                                            MinecraftTextUtil.commandMessageClient(context, Text.translatable("concerto.share.sent"));
+                                            MinecraftTextUtil.commandMessageClient(context, Component.translatable("concerto.share.sent"));
                                             try {
                                                 ClientMusicNetworkHandler.sendC2SMusicData(new MusicDataPacket(current, target, false));
                                             } catch (UnsafeMusicException e) {
-                                                MinecraftTextUtil.commandMessageClient(context, Text.translatable("concerto.share.unsafe"));
+                                                MinecraftTextUtil.commandMessageClient(context, Component.translatable("concerto.share.unsafe"));
                                             }
                                         } else {
-                                            MinecraftTextUtil.commandMessageClient(context, Text.translatable("concerto.share.no_music"));
+                                            MinecraftTextUtil.commandMessageClient(context, Component.translatable("concerto.share.no_music"));
                                         }
                                     });
                                     return 0;
@@ -48,21 +48,21 @@ public class ShareMusicCommand {
                         )
                 ).then(
                         ClientCommandManager.literal("accept").then(
-                                ClientCommandManager.argument("uuid", UuidArgumentType.uuid()).executes(context -> {
+                                ClientCommandManager.argument("uuid", UuidArgument.uuid()).executes(context -> {
                                     UUID uuid = context.getArgument("uuid", UUID.class);
-                                    ClientMusicNetworkHandler.accept(context.getSource().getPlayer(), uuid, MinecraftClient.getInstance());
+                                    ClientMusicNetworkHandler.accept(context.getSource().getPlayer(), uuid, Minecraft.getInstance());
                                     return 0;
                                 })
                         )
                 ).then(
                         ClientCommandManager.literal("reject").then(
-                                ClientCommandManager.argument("uuid", UuidArgumentType.uuid()).executes(context -> {
+                                ClientCommandManager.argument("uuid", UuidArgument.uuid()).executes(context -> {
                                     UUID uuid = context.getArgument("uuid", UUID.class);
-                                    ClientMusicNetworkHandler.reject(context.getSource().getPlayer(), uuid, MinecraftClient.getInstance());
+                                    ClientMusicNetworkHandler.reject(context.getSource().getPlayer(), uuid, Minecraft.getInstance());
                                     return 0;
                                 })
                         ).then(ClientCommandManager.literal("all").executes(context -> {
-                            ClientMusicNetworkHandler.rejectAll(context.getSource().getPlayer(), MinecraftClient.getInstance());
+                            ClientMusicNetworkHandler.rejectAll(context.getSource().getPlayer(), Minecraft.getInstance());
                             return 0;
                         }))
                 ).then(
@@ -80,7 +80,7 @@ public class ShareMusicCommand {
                                         for (int i = 10 * (page - 1); i < Math.min(10 * page, map.size()) && iterator.hasNext(); ++i) {
                                             Map.Entry<UUID, MusicDataPacket> entry = iterator.next();
                                             MusicDataPacket packet = entry.getValue();
-                                            MinecraftTextUtil.commandMessageClient(context, Text.literal((i + 1) + ". ").append(chatMessageBuilder(
+                                            MinecraftTextUtil.commandMessageClient(context, Component.literal((i + 1) + ". ").append(chatMessageBuilder(
                                                     entry.getKey(), packet.from, packet.music.getMeta().title()
                                             )));
                                         }
@@ -93,15 +93,15 @@ public class ShareMusicCommand {
         );
     }
 
-    public static Text chatMessageBuilder(UUID uuid, String name, String title) {
-        return Text.translatable("concerto.share.wait_confirmation", name, title)
-                .append(Text.literal("  ["))
-                .append(Text.translatable("concerto.accept").setStyle(
-                        MinecraftTextUtil.getRunCommandStyle("/sharemusic accept " + uuid).withColor(Formatting.GREEN)))
-                .append(Text.literal("]"))
-                .append(Text.literal("  ["))
-                .append(Text.translatable("concerto.reject").setStyle(
-                        MinecraftTextUtil.getRunCommandStyle("/sharemusic reject " + uuid).withColor(Formatting.RED)))
-                .append(Text.literal("]"));
+    public static Component chatMessageBuilder(UUID uuid, String name, String title) {
+        return Component.translatable("concerto.share.wait_confirmation", name, title)
+                .append(Component.literal("  ["))
+                .append(Component.translatable("concerto.accept").setStyle(
+                        MinecraftTextUtil.getRunCommandStyle("/sharemusic accept " + uuid).withColor(ChatFormatting.GREEN)))
+                .append(Component.literal("]"))
+                .append(Component.literal("  ["))
+                .append(Component.translatable("concerto.reject").setStyle(
+                        MinecraftTextUtil.getRunCommandStyle("/sharemusic reject " + uuid).withColor(ChatFormatting.RED)))
+                .append(Component.literal("]"));
     }
 }

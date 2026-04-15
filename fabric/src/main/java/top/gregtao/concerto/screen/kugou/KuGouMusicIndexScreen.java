@@ -1,10 +1,10 @@
 package top.gregtao.concerto.screen.kugou;
 
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.widget.ButtonWidget;
-import net.minecraft.text.Text;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.gui.components.Button;
+import net.minecraft.network.chat.Component;
 import top.gregtao.concerto.core.config.ClientConfig;
 import top.gregtao.concerto.core.http.kugou.KuGouMusicApiClient;
 import top.gregtao.concerto.core.http.kugou.KuGouMusicUser;
@@ -24,18 +24,18 @@ public class KuGouMusicIndexScreen extends ConcertoScreen {
     private ModifiablePressableTextWidget vipStatusWidget;
 
     public KuGouMusicIndexScreen(Screen parent) {
-        super(Text.translatable("concerto.screen.index.kugou"), parent);
+        super(Component.translatable("concerto.screen.index.kugou"), parent);
     }
 
     @Override
     protected void init() {
         super.init();
-        this.addDrawableChild(ButtonWidget.builder(Text.translatable("concerto.screen.user"),
-                button -> MinecraftClient.getInstance().setScreen(new KuGouMusicUserScreen(this))
-        ).size(100, 20).position(this.width / 2 - 50, 40).build());
-        this.addDrawableChild(ButtonWidget.builder(Text.translatable("concerto.screen.search"),
-                button -> MinecraftClient.getInstance().setScreen(new KuGouMusicSearchScreen(this))
-        ).size(100, 20).position(this.width / 2 - 50, 65).build());
+        this.addRenderableWidget(Button.builder(Component.translatable("concerto.screen.user"),
+                button -> Minecraft.getInstance().setScreen(new KuGouMusicUserScreen(this))
+        ).size(100, 20).pos(this.width / 2 - 50, 40).build());
+        this.addRenderableWidget(Button.builder(Component.translatable("concerto.screen.search"),
+                button -> Minecraft.getInstance().setScreen(new KuGouMusicSearchScreen(this))
+        ).size(100, 20).pos(this.width / 2 - 50, 65).build());
 
         URL avatarUrl;
         try {
@@ -49,23 +49,23 @@ public class KuGouMusicIndexScreen extends ConcertoScreen {
         ConcertoRunner.run(() -> this.avatar.loadImage(true, true));
 
         if (loggedIn() && isVersionSame()) {
-            this.vipStatusWidget = this.addSelectableChild(new ModifiablePressableTextWidget(
+            this.vipStatusWidget = this.addWidget(new ModifiablePressableTextWidget(
                     0, 0, 0, 0,
-                    Text.empty(),
+                    Component.empty(),
                     button -> ConcertoRunner.run(() -> {
                         // 更新 VIP 状态
                         KuGouMusicUser localUser = KuGouMusicApiClient.LOCAL_USER;
                         if (localUser.isLoggedIn() && localUser.isVersionSame()) {
-                            Text tip;
+                            Component tip;
                             if (localUser.updateVIPStatus()) {
-                                tip = Text.translatable("concerto.screen.kugou.vip.update_success");
+                                tip = Component.translatable("concerto.screen.kugou.vip.update_success");
                             } else {
-                                tip = Text.translatable("concerto.screen.kugou.vip.update_failed");
+                                tip = Component.translatable("concerto.screen.kugou.vip.update_failed");
                             }
                             displayAlert(tip);
                         }
                     }),
-                    textRenderer
+                    font
             ));
         }
     }
@@ -79,23 +79,23 @@ public class KuGouMusicIndexScreen extends ConcertoScreen {
     }
 
     @Override
-    public void render(DrawContext matrices, int mouseX, int mouseY, float delta) {
+    public void render(GuiGraphics matrices, int mouseX, int mouseY, float delta) {
         super.render(matrices, mouseX, mouseY, delta);
-        Text text = this.loggedIn() ? Text.translatable("concerto.screen.kugou.welcome", KuGouMusicApiClient.LOCAL_USER.getUserName()) :
-                Text.translatable("concerto.screen.kugou.not_login");
-        matrices.drawCenteredTextWithShadow(this.textRenderer, text, this.width / 2, 90, 0xffffffff);
+        Component text = this.loggedIn() ? Component.translatable("concerto.screen.kugou.welcome", KuGouMusicApiClient.LOCAL_USER.getUserName()) :
+                Component.translatable("concerto.screen.kugou.not_login");
+        matrices.drawCenteredString(this.font, text, this.width / 2, 90, 0xffffffff);
 
         if (this.loggedIn()) {
             boolean isVersionSame = isVersionSame();
-            int fontHeight = this.textRenderer.fontHeight;
+            int fontHeight = this.font.lineHeight;
             int x = 5;
             int bottom = this.height - 5;
 
-            Text currentVersion = Text.translatable("concerto.screen.kugou.version.current", getVersionName(KuGouMusicApiClient.LOCAL_USER.isLite()));
-            Text apiVersion = Text.translatable("concerto.screen.kugou.version.options", getVersionName(ClientConfig.INSTANCE.options.kuGouMusicLite));
-            Text versionStatus = isVersionSame ?
-                    Text.translatable("concerto.screen.kugou.version.correct") :
-                    Text.translatable("concerto.screen.kugou.version.warning");
+            Component currentVersion = Component.translatable("concerto.screen.kugou.version.current", getVersionName(KuGouMusicApiClient.LOCAL_USER.isLite()));
+            Component apiVersion = Component.translatable("concerto.screen.kugou.version.options", getVersionName(ClientConfig.INSTANCE.options.kuGouMusicLite));
+            Component versionStatus = isVersionSame ?
+                    Component.translatable("concerto.screen.kugou.version.correct") :
+                    Component.translatable("concerto.screen.kugou.version.warning");
 
             // 避免 VIP 适用平台歧义, 只有版本匹配时才显示
             if (isVersionSame) {
@@ -103,15 +103,15 @@ public class KuGouMusicIndexScreen extends ConcertoScreen {
 
                 LocalDateTime vipExpireTime = KuGouMusicApiClient.LOCAL_USER.getVipExpireTime();
                 if (vipLevel != KuGouMusicUser.VIPLevel.NONE && vipExpireTime != null) {
-                    Text expireTime = Text.translatable("concerto.screen.kugou.vip.expire_time", KuGouMusicUser.FORMATTER.format(vipExpireTime));
+                    Component expireTime = Component.translatable("concerto.screen.kugou.vip.expire_time", KuGouMusicUser.FORMATTER.format(vipExpireTime));
                     bottom -= fontHeight;
-                    matrices.drawText(this.textRenderer, expireTime, x, bottom, 0xffffffff, true);
+                    matrices.drawString(this.font, expireTime, x, bottom, 0xffffffff, true);
                     bottom -= 1;
                 }
 
                 String levelPrefix = "concerto.screen.kugou.vip.level.";
-                String  levelText = Text.translatable(levelPrefix + vipLevel.name().toLowerCase()).getString();
-                Text vipStatus = Text.translatable("concerto.screen.kugou.vip.vip_level", levelText);
+                String  levelText = Component.translatable(levelPrefix + vipLevel.name().toLowerCase()).getString();
+                Component vipStatus = Component.translatable("concerto.screen.kugou.vip.vip_level", levelText);
                 bottom -= fontHeight;
                 if (vipStatusWidget != null) {
                     vipStatusWidget.setX(x);
@@ -122,15 +122,15 @@ public class KuGouMusicIndexScreen extends ConcertoScreen {
                 bottom -= 1;
             }
 
-            matrices.drawText(this.textRenderer, versionStatus, x, bottom - fontHeight, isVersionSame ? 5635925 : 16733525, true);
-            matrices.drawText(this.textRenderer, apiVersion, x, bottom - fontHeight * 2 - 1, 0xffffffff, true);
-            matrices.drawText(this.textRenderer, currentVersion, x, bottom - fontHeight * 3 - 2, 0xffffffff, true);
+            matrices.drawString(this.font, versionStatus, x, bottom - fontHeight, isVersionSame ? 5635925 : 16733525, true);
+            matrices.drawString(this.font, apiVersion, x, bottom - fontHeight * 2 - 1, 0xffffffff, true);
+            matrices.drawString(this.font, currentVersion, x, bottom - fontHeight * 3 - 2, 0xffffffff, true);
         }
 
         this.avatar.render(matrices, mouseX, mouseY, delta);
     }
 
     public String getVersionName(boolean isLite) {
-        return Text.translatable("concerto.screen.kugou.version." + (isLite ? "lite" : "normal")).getString();
+        return Component.translatable("concerto.screen.kugou.version." + (isLite ? "lite" : "normal")).getString();
     }
 }

@@ -1,10 +1,10 @@
 package top.gregtao.concerto.screen.netease;
 
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.widget.ButtonWidget;
-import net.minecraft.text.Text;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.gui.components.Button;
+import net.minecraft.network.chat.Component;
 import top.gregtao.concerto.core.http.netease.NeteaseCloudApiClient;
 import top.gregtao.concerto.screen.ConcertoScreen;
 import top.gregtao.concerto.screen.widget.URLImageWidget;
@@ -18,18 +18,18 @@ public class NeteaseCloudIndexScreen extends ConcertoScreen {
     private URLImageWidget avatar;
 
     public NeteaseCloudIndexScreen(Screen parent) {
-        super(Text.translatable("concerto.screen.index.163"), parent);
+        super(Component.translatable("concerto.screen.index.163"), parent);
     }
 
     @Override
     protected void init() {
         super.init();
-        this.addDrawableChild(ButtonWidget.builder(Text.translatable("concerto.screen.user"),
-                button -> MinecraftClient.getInstance().setScreen(new NeteaseCloudUserScreen(this))
-        ).size(100, 20).position(this.width / 2 - 50, 40).build());
-        this.addDrawableChild(ButtonWidget.builder(Text.translatable("concerto.screen.search"),
-                button -> MinecraftClient.getInstance().setScreen(new NeteaseCloudSearchScreen(this))
-        ).size(100, 20).position(this.width / 2 - 50, 65).build());
+        this.addRenderableWidget(Button.builder(Component.translatable("concerto.screen.user"),
+                button -> Minecraft.getInstance().setScreen(new NeteaseCloudUserScreen(this))
+        ).size(100, 20).pos(this.width / 2 - 50, 40).build());
+        this.addRenderableWidget(Button.builder(Component.translatable("concerto.screen.search"),
+                button -> Minecraft.getInstance().setScreen(new NeteaseCloudSearchScreen(this))
+        ).size(100, 20).pos(this.width / 2 - 50, 65).build());
 
         URL avatarUrl;
         try {
@@ -44,8 +44,8 @@ public class NeteaseCloudIndexScreen extends ConcertoScreen {
     }
 
     @Override
-    public void close() {
-        super.close();
+    public void onClose() {
+        super.onClose();
         this.avatar.close();
     }
 
@@ -54,11 +54,11 @@ public class NeteaseCloudIndexScreen extends ConcertoScreen {
     }
 
     @Override
-    public void render(DrawContext matrices, int mouseX, int mouseY, float delta) {
+    public void render(GuiGraphics matrices, int mouseX, int mouseY, float delta) {
         super.render(matrices, mouseX, mouseY, delta);
-        Text text = this.loggedIn() ? Text.translatable("concerto.screen.163.welcome", NeteaseCloudApiClient.LOCAL_USER.nickname) :
-                Text.translatable("concerto.screen.163.not_login");
-        matrices.drawCenteredTextWithShadow(this.textRenderer, text, this.width / 2, 90, 0xffffffff);
+        Component text = this.loggedIn() ? Component.translatable("concerto.screen.163.welcome", NeteaseCloudApiClient.LOCAL_USER.nickname) :
+                Component.translatable("concerto.screen.163.not_login");
+        matrices.drawCenteredString(this.font, text, this.width / 2, 90, 0xffffffff);
         this.avatar.render(matrices, mouseX, mouseY, delta);
     }
 }

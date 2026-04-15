@@ -2,13 +2,13 @@ package top.gregtao.concerto.command;
 
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
-import net.minecraft.command.CommandRegistryAccess;
-import net.minecraft.command.argument.UuidArgumentType;
-import net.minecraft.server.command.CommandManager;
-import net.minecraft.server.command.ServerCommandSource;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
+import net.minecraft.commands.CommandBuildContext;
+import net.minecraft.commands.arguments.UuidArgument;
+import net.minecraft.commands.Commands;
+import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.network.chat.Component;
+import net.minecraft.ChatFormatting;
 import top.gregtao.concerto.ConcertoServer;
 import top.gregtao.concerto.core.config.CacheManager;
 import top.gregtao.concerto.core.http.kugou.KuGouMusicApiClient;
@@ -26,30 +26,30 @@ import java.util.UUID;
 
 public class ConcertoServerCommand {
 
-    public static void register(CommandDispatcher<ServerCommandSource> dispatcher, CommandRegistryAccess access,
-                                CommandManager.RegistrationEnvironment environment) {
+    public static void register(CommandDispatcher<CommandSourceStack> dispatcher, CommandBuildContext access,
+                                Commands.CommandSelection environment) {
         dispatcher.register(
-                CommandManager.literal("concerto-server").then(
-                        CommandManager.literal("audit").requires(source -> source.hasPermissionLevel(2)).then(
-                                CommandManager.argument("uuid", UuidArgumentType.uuid()).executes(context -> {
-                                    UUID uuid = UuidArgumentType.getUuid(context, "uuid");
+                Commands.literal("concerto-server").then(
+                        Commands.literal("audit").requires(source -> source.hasPermission(2)).then(
+                                Commands.argument("uuid", UuidArgument.uuid()).executes(context -> {
+                                    UUID uuid = UuidArgument.getUuid(context, "uuid");
                                     ServerMusicNetworkHandler.passAudition(context.getSource().getPlayer(), uuid);
                                     return 0;
                                 })
                         ).then(
-                                CommandManager.literal("reject").then(
-                                        CommandManager.argument("uuid", UuidArgumentType.uuid()).executes(context -> {
-                                            UUID uuid = UuidArgumentType.getUuid(context, "uuid");
+                                Commands.literal("reject").then(
+                                        Commands.argument("uuid", UuidArgument.uuid()).executes(context -> {
+                                            UUID uuid = UuidArgument.getUuid(context, "uuid");
                                             ServerMusicNetworkHandler.rejectAudition(context.getSource().getPlayer(), uuid);
                                             return 0;
                                         })
-                                ).then(CommandManager.literal("all").executes(context -> {
+                                ).then(Commands.literal("all").executes(context -> {
                                     ServerMusicNetworkHandler.rejectAll(context.getSource().getPlayer());
                                     return 0;
                                 }))
                         ).then(
-                                CommandManager.literal("list").then(
-                                        CommandManager.argument("page", IntegerArgumentType.integer(1)).executes(context -> {
+                                Commands.literal("list").then(
+                                        Commands.argument("page", IntegerArgumentType.integer(1)).executes(context -> {
                                             ConcertoRunner.run(() -> {
                                                 int page = IntegerArgumentType.getInteger(context, "page");
                                                 Map<UUID, MusicDataPacket> map = ServerMusicNetworkHandler.WAIT_AUDITION;
@@ -62,7 +62,7 @@ public class ConcertoServerCommand {
                                                 for (int i = 10 * (page - 1); i < Math.min(10 * page, map.size()) && iterator.hasNext(); ++i) {
                                                     Map.Entry<UUID, MusicDataPacket> entry = iterator.next();
                                                     MusicDataPacket packet = entry.getValue();
-                                                    MinecraftTextUtil.commandMessageServer(context, Text.literal((i + 1) + ". ").append(chatMessageBuilder(
+                                                    MinecraftTextUtil.commandMessageServer(context, Component.literal((i + 1) + ". ").append(chatMessageBuilder(
                                                             entry.getKey(), packet.from, packet.music.getMeta().title()
                                                     )));
                                                 }
@@ -73,13 +73,13 @@ public class ConcertoServerCommand {
                                 )
                         )
                 ).then(
-                        CommandManager.literal("reload").requires(source -> source.hasPermissionLevel(2))
+                        Commands.literal("reload").requires(source -> source.hasPermission(2))
                                 .executes(context -> {
                                     ConcertoServer.reload();
                                     return 0;
                                 })
                 ).then(
-                        CommandManager.literal("reload-cookie").requires(source -> source.hasPermissionLevel(2))
+                        Commands.literal("reload-cookie").requires(source -> source.hasPermission(2))
                                 .executes(context -> {
                                     NeteaseCloudApiClient.INSTANCE.readCookie();
                                     QQMusicApiClient.INSTANCE.readCookie();
@@ -87,36 +87,36 @@ public class ConcertoServerCommand {
                                     return 0;
                                 })
                 ).then(
-                        CommandManager.literal("clean-cache").requires(source -> source.hasPermissionLevel(2))
+                        Commands.literal("clean-cache").requires(source -> source.hasPermission(2))
                                 .executes(context -> {
                                     CacheManager.cleanAllCache();
                                     return 0;
                                 })
                 ).then(
-                        CommandManager.literal("fetch-radios")
-                                .requires(source -> source.hasPermissionLevel(0)).executes(context -> {
-                                    ServerPlayerEntity player = context.getSource().getPlayer();
+                        Commands.literal("fetch-radios")
+                                .requires(source -> source.hasPermission(0)).executes(context -> {
+                                    ServerPlayer player = context.getSource().getPlayer();
                                     if (player != null) ServerMusicNetworkHandler.sendS2CPresetRadiosPacket(player);
                                     return 0;
                                 })
                 ).then(
-                        CommandManager.literal("agent").requires(source -> source.hasPermissionLevel(2)).then(
-                                CommandManager.literal("reset").executes(context -> {
+                        Commands.literal("agent").requires(source -> source.hasPermission(2)).then(
+                                Commands.literal("reset").executes(context -> {
                                     ServerMusicAgent.INSTANCE.reset();
                                     return 0;
                                 })
                         ).then(
-                                CommandManager.literal("cut").executes(context -> {
+                                Commands.literal("cut").executes(context -> {
                                     ServerMusicAgent.INSTANCE.schedulePlayNext(0, false);
                                     return 0;
                                 })
                         ).then(
-                                CommandManager.literal("stop").executes(context -> {
+                                Commands.literal("stop").executes(context -> {
                                     ServerMusicAgent.INSTANCE.stop();
                                     return 0;
                                 })
                         ).then(
-                                CommandManager.literal("start").executes(context -> {
+                                Commands.literal("start").executes(context -> {
                                     ServerMusicAgent.INSTANCE.start();
                                     return 0;
                                 })
@@ -125,15 +125,15 @@ public class ConcertoServerCommand {
         );
     }
 
-    public static Text chatMessageBuilder(UUID uuid, String name, String title) {
-        return Text.translatable("concerto.audit.message", name, title)
-                .append(Text.literal("  ["))
-                .append(Text.translatable("concerto.accept").setStyle(
-                        MinecraftTextUtil.getRunCommandStyle("/concerto-server audit " + uuid).withColor(Formatting.GREEN)))
-                .append(Text.literal("]"))
-                .append(Text.literal("  ["))
-                .append(Text.translatable("concerto.reject").setStyle(
-                        MinecraftTextUtil.getRunCommandStyle("/concerto-server audit reject " + uuid).withColor(Formatting.RED)))
-                .append(Text.literal("]"));
+    public static Component chatMessageBuilder(UUID uuid, String name, String title) {
+        return Component.translatable("concerto.audit.message", name, title)
+                .append(Component.literal("  ["))
+                .append(Component.translatable("concerto.accept").setStyle(
+                        MinecraftTextUtil.getRunCommandStyle("/concerto-server audit " + uuid).withColor(ChatFormatting.GREEN)))
+                .append(Component.literal("]"))
+                .append(Component.literal("  ["))
+                .append(Component.translatable("concerto.reject").setStyle(
+                        MinecraftTextUtil.getRunCommandStyle("/concerto-server audit reject " + uuid).withColor(ChatFormatting.RED)))
+                .append(Component.literal("]"));
     }
 }

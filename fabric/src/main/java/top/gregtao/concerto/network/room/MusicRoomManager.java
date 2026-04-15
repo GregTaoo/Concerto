@@ -2,10 +2,10 @@ package top.gregtao.concerto.network.room;
 
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
-import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.Minecraft;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.text.Text;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.network.chat.Component;
 import top.gregtao.concerto.ConcertoClient;
 import top.gregtao.concerto.ConcertoServer;
 import top.gregtao.concerto.core.config.ServerConfig;
@@ -17,7 +17,7 @@ import java.util.*;
 
 public class MusicRoomManager {
 
-    public static void serverSender(String command, String payloadString, ServerPlayerEntity player) {
+    public static void serverSender(String command, String payloadString, ServerPlayer player) {
         if (player == null) return;
         ConcertoPayload payload = new ConcertoPayload(ConcertoPayload.Channel.MUSIC_ROOM, command + ":" + payloadString);
         ServerPlayNetworking.send(player, payload);
@@ -27,26 +27,26 @@ public class MusicRoomManager {
         return new MusicRoom.ServerNetworkBridge() {
             @Override
             public void sendMessage(String targetPlayer, String translationKey, Object... args) {
-                ServerPlayerEntity p = server.getPlayerManager().getPlayer(targetPlayer);
-                if (p != null) p.sendMessage(Text.translatable(translationKey, args));
+                ServerPlayer p = server.getPlayerList().getPlayerByName(targetPlayer);
+                if (p != null) p.sendSystemMessage(Component.translatable(translationKey, args));
             }
 
             @Override
             public void sendRoomCommand(String targetPlayer, MusicRoom.Command command, String payload) {
-                ServerPlayerEntity p = server.getPlayerManager().getPlayer(targetPlayer);
+                ServerPlayer p = server.getPlayerList().getPlayerByName(targetPlayer);
                 if (p != null) serverSender(command.name(), payload, p);
             }
 
             @Override
             public boolean hasExternalPermission(String player, int level) {
-                ServerPlayerEntity p = server.getPlayerManager().getPlayer(player);
-                return p != null && p.hasPermissionLevel(ServerConfig.INSTANCE.options.musicRoomCommandPermission);
+                ServerPlayer p = server.getPlayerList().getPlayerByName(player);
+                return p != null && p.hasPermissions(ServerConfig.INSTANCE.options.musicRoomCommandPermission);
             }
         };
     }
 
     public static void serverReceiver(ConcertoPayload payload, ServerPlayNetworking.Context context) {
-        ServerPlayerEntity player = context.player();
+        ServerPlayer player = context.player();
         MinecraftServer server = context.player().getServer();
         String[] args = payload.string.split(":", 3);
         if (args.length != 3) {
@@ -68,14 +68,14 @@ public class MusicRoomManager {
 
         @Override
         public void onErrorMessageUpdate(String message) {
-            if (MinecraftClient.getInstance().player != null) {
-                MinecraftClient.getInstance().player.sendMessage(Text.literal(message), false);
+            if (Minecraft.getInstance().player != null) {
+                Minecraft.getInstance().player.displayClientMessage(Component.literal(message), false);
             }
         }
     };
 
     public static void clientReceiver(ConcertoPayload payload, ClientPlayNetworking.Context context) {
-        MinecraftClient client = context.client();
+        Minecraft client = context.client();
         if (client.player == null) {
             ConcertoClient.LOGGER.error("Client player not found.");
             return;

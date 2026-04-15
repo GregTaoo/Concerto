@@ -1,8 +1,8 @@
 package top.gregtao.concerto.bridge;
 
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.network.ClientPlayerEntity;
-import net.minecraft.text.Text;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.network.chat.Component;
 import top.gregtao.concerto.core.bridge.CoreBridge;
 import top.gregtao.concerto.core.network.SyncRecord;
 import top.gregtao.concerto.core.player.MusicPlayerState;
@@ -12,27 +12,27 @@ public class CoreBridgeImpl implements CoreBridge {
 
     @Override
     public String getTranslatableText(String key, Object... args) {
-        return Text.translatable(key, args).getString();
+        return Component.translatable(key, args).getString();
     }
 
     @Override
     public void setClientClipboard(String text) {
-        MinecraftClient.getInstance().keyboard.setClipboard(text);
+        Minecraft.getInstance().keyboardHandler.setClipboard(text);
     }
 
     @Override
     public String getClientPlayerName() {
-        if (MinecraftClient.getInstance().player != null) {
-            return MinecraftClient.getInstance().player.getName().getString();
+        if (Minecraft.getInstance().player != null) {
+            return Minecraft.getInstance().player.getName().getString();
         }
         return null;
     }
 
     @Override
     public void sendMessageToClientPlayer(String message, boolean overlay) {
-        ClientPlayerEntity player = MinecraftClient.getInstance().player;
+        LocalPlayer player = Minecraft.getInstance().player;
         if (player != null) {
-            player.sendMessage(Text.literal(message), overlay);
+            player.displayClientMessage(Component.literal(message), overlay);
         }
     }
 

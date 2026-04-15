@@ -1,13 +1,14 @@
 package top.gregtao.concerto.network;
 
-import net.minecraft.network.PacketByteBuf;
-import net.minecraft.network.codec.PacketCodec;
-import net.minecraft.network.packet.CustomPayload;
-import net.minecraft.util.Identifier;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload.Type;
+import net.minecraft.resources.ResourceLocation;
 
-public class ConcertoPayload implements CustomPayload {
+public class ConcertoPayload implements CustomPacketPayload {
 
-    public static final Id<ConcertoPayload> ID = new Id<>(Identifier.of("concerto", "string"));
+    public static final Type<ConcertoPayload> ID = new Type<>(ResourceLocation.fromNamespaceAndPath("concerto", "string"));
     public String string;
     public Channel channel;
 
@@ -16,22 +17,22 @@ public class ConcertoPayload implements CustomPayload {
         this.string = s;
     }
 
-    public static final PacketCodec<PacketByteBuf, ConcertoPayload> CODEC = new PacketCodec<>() {
+    public static final StreamCodec<FriendlyByteBuf, ConcertoPayload> CODEC = new StreamCodec<>() {
         @Override
-        public void encode(PacketByteBuf buf, ConcertoPayload value) {
-            buf.writeString(value.channel.id + value.string, Integer.MAX_VALUE);
+        public void encode(FriendlyByteBuf buf, ConcertoPayload value) {
+            buf.writeUtf(value.channel.id + value.string, Integer.MAX_VALUE);
         }
 
         @Override
-        public ConcertoPayload decode(PacketByteBuf buf) {
-            String s = buf.readString(Integer.MAX_VALUE);
+        public ConcertoPayload decode(FriendlyByteBuf buf) {
+            String s = buf.readUtf(Integer.MAX_VALUE);
             Channel channel1 = Channel.getById(s.charAt(0));
             return new ConcertoPayload(channel1, s.substring(1));
         }
     };
 
     @Override
-    public Id<? extends CustomPayload> getId() {
+    public Type<? extends CustomPacketPayload> type() {
         return ID;
     }
 

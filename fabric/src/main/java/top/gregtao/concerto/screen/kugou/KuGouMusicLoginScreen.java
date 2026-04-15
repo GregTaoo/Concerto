@@ -2,10 +2,10 @@ package top.gregtao.concerto.screen.kugou;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.widget.ButtonWidget;
-import net.minecraft.text.Text;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.gui.components.Button;
+import net.minecraft.network.chat.Component;
 import top.gregtao.concerto.ConcertoClient;
 import top.gregtao.concerto.core.http.kugou.KuGouMusicApiClient;
 import top.gregtao.concerto.screen.ConcertoScreen;
@@ -25,27 +25,27 @@ import java.util.Optional;
 
 public class KuGouMusicLoginScreen extends ConcertoScreen {
 
-    public static Text SOURCE_TEXT = Text.translatable("concerto.source.kugou_music");
+    public static Component SOURCE_TEXT = Component.translatable("concerto.source.kugou_music");
 
     public KuGouMusicLoginScreen(Screen parent) {
-        super(Text.literal(Text.translatable("concerto.screen.login").getString() + SOURCE_TEXT.getString()), parent);
+        super(Component.literal(Component.translatable("concerto.screen.login").getString() + SOURCE_TEXT.getString()), parent);
     }
 
     @Override
     protected void init() {
         super.init();
-        this.addDrawableChild(ButtonWidget.builder(Text.translatable("concerto.screen.login.type.password"),
-                button -> MinecraftClient.getInstance().setScreen(this.passwordLogin())
-        ).size(100, 20).position(this.width / 2 - 50, 40).build());
-        this.addDrawableChild(ButtonWidget.builder(Text.translatable("concerto.screen.login.type.captcha"),
-                button -> MinecraftClient.getInstance().setScreen(this.captchaLogin())
-        ).size(100, 20).position(this.width / 2 - 50, 70).build());
-        this.addDrawableChild(ButtonWidget.builder(Text.translatable("concerto.screen.login.type.qrcode"),
-                button -> MinecraftClient.getInstance().setScreen(this.qrCodeLogin())
-        ).size(100, 20).position(this.width / 2 - 50, 100).build());
-        this.addDrawableChild(ButtonWidget.builder(Text.translatable("concerto.screen.login.type.cookie"),
-                button -> MinecraftClient.getInstance().setScreen(this.cookieLogin())
-        ).size(100, 20).position(this.width / 2 - 50, 130).build());
+        this.addRenderableWidget(Button.builder(Component.translatable("concerto.screen.login.type.password"),
+                button -> Minecraft.getInstance().setScreen(this.passwordLogin())
+        ).size(100, 20).pos(this.width / 2 - 50, 40).build());
+        this.addRenderableWidget(Button.builder(Component.translatable("concerto.screen.login.type.captcha"),
+                button -> Minecraft.getInstance().setScreen(this.captchaLogin())
+        ).size(100, 20).pos(this.width / 2 - 50, 70).build());
+        this.addRenderableWidget(Button.builder(Component.translatable("concerto.screen.login.type.qrcode"),
+                button -> Minecraft.getInstance().setScreen(this.qrCodeLogin())
+        ).size(100, 20).pos(this.width / 2 - 50, 100).build());
+        this.addRenderableWidget(Button.builder(Component.translatable("concerto.screen.login.type.cookie"),
+                button -> Minecraft.getInstance().setScreen(this.cookieLogin())
+        ).size(100, 20).pos(this.width / 2 - 50, 130).build());
     }
 
     private static boolean loginChecker() {
@@ -61,12 +61,12 @@ public class KuGouMusicLoginScreen extends ConcertoScreen {
                         if (optional.isPresent()) {
                             Pair<Long, String> pair = optional.get();
                             setCookies(pair.getFirst(), pair.getSecond());
-                            return Text.translatable("concerto.login.kugou.success");
+                            return Component.translatable("concerto.login.kugou.success");
                         } else {
-                            return Text.translatable("concerto.login.kugou.failed");
+                            return Component.translatable("concerto.login.kugou.failed");
                         }
                     } catch (Exception e) {
-                        return Text.translatable("concerto.login.kugou.error");
+                        return Component.translatable("concerto.login.kugou.error");
                     }
                 },
                 SOURCE_TEXT,
@@ -91,12 +91,12 @@ public class KuGouMusicLoginScreen extends ConcertoScreen {
                             Pair<Long, String> pair = result.get();
 
                             setCookies(pair.getFirst(), pair.getSecond());
-                            return Text.translatable("concerto.login.kugou.success");
+                            return Component.translatable("concerto.login.kugou.success");
                         } else {
-                            return Text.translatable("concerto.login.kugou.failed");
+                            return Component.translatable("concerto.login.kugou.failed");
                         }
                     } catch (Exception e) {
-                        return Text.translatable("concerto.login.kugou.error");
+                        return Component.translatable("concerto.login.kugou.error");
                     }
                 },
                 SOURCE_TEXT,

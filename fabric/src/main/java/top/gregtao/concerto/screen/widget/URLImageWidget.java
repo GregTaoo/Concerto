@@ -1,16 +1,16 @@
 package top.gregtao.concerto.screen.widget;
 
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.font.TextRenderer;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.Drawable;
-import net.minecraft.client.gui.widget.ClickableWidget;
-import net.minecraft.client.gui.widget.Widget;
-import net.minecraft.client.render.RenderLayer;
-import net.minecraft.client.texture.NativeImage;
-import net.minecraft.client.texture.NativeImageBackedTexture;
-import net.minecraft.text.Text;
-import net.minecraft.util.Identifier;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.Font;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.Renderable;
+import net.minecraft.client.gui.components.AbstractWidget;
+import net.minecraft.client.gui.layouts.LayoutElement;
+import net.minecraft.client.renderer.RenderType;
+import com.mojang.blaze3d.platform.NativeImage;
+import net.minecraft.client.renderer.texture.DynamicTexture;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
 import top.gregtao.concerto.ConcertoClient;
 import top.gregtao.concerto.core.Concerto;
 import top.gregtao.concerto.core.config.CacheManager;
@@ -31,15 +31,15 @@ import java.util.Iterator;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-public class URLImageWidget implements Drawable, Widget, AutoCloseable {
+public class URLImageWidget implements Renderable, LayoutElement, AutoCloseable {
 
     protected int width;
     protected int height;
     private int x;
     private int y;
     private String url;
-    private NativeImageBackedTexture texture;
-    private final Identifier textureId;
+    private DynamicTexture texture;
+    private final ResourceLocation textureId;
     private State state = State.LOADING;
     private boolean border = true;
 
@@ -49,7 +49,7 @@ public class URLImageWidget implements Drawable, Widget, AutoCloseable {
         this.x = x;
         this.y = y;
         this.url = url;
-        this.textureId = Identifier.of(Concerto.MOD_ID, "image" + System.currentTimeMillis());
+        this.textureId = ResourceLocation.fromNamespaceAndPath(Concerto.MOD_ID, "image" + System.currentTimeMillis());
     }
 
     public URLImageWidget(int width, int height, int x, int y, String url, boolean border) {
@@ -163,12 +163,12 @@ public class URLImageWidget implements Drawable, Widget, AutoCloseable {
     private void uploadImage(BufferedImage image, Runnable callback) {
         // ImageIO.write() 是耗时操作, 会卡住渲染线程
         NativeImage nativeImage = toNativeImage(image);
-        MinecraftClient.getInstance().submit(() -> {
+        Minecraft.getInstance().submit(() -> {
             if (this.texture != null) {
-                MinecraftClient.getInstance().getTextureManager().destroyTexture(this.textureId);
+                Minecraft.getInstance().getTextureManager().release(this.textureId);
             }
-            this.texture = new NativeImageBackedTexture(this.textureId::toString, nativeImage);
-            MinecraftClient.getInstance().getTextureManager().registerTexture(this.textureId, this.texture);
+            this.texture = new DynamicTexture(this.textureId::toString, nativeImage);
+            Minecraft.getInstance().getTextureManager().register(this.textureId, this.texture);
         }).thenRun(callback);
     }
 
@@ -222,37 +222,37 @@ public class URLImageWidget implements Drawable, Widget, AutoCloseable {
     @Override
     public void close() {
         this.state = State.FAILED;
-        MinecraftClient.getInstance().getTextureManager().destroyTexture(this.textureId);
+        Minecraft.getInstance().getTextureManager().release(this.textureId);
         if (this.texture != null) this.texture.close();
     }
 
     @Override
-    public void render(DrawContext context, int mouseX, int mouseY, float delta) {
-        if (this.border) context.drawBorder(this.x, this.y, this.width, this.height, 0xffffffff);
-        TextRenderer textRenderer = MinecraftClient.getInstance().textRenderer;
+    public void render(GuiGraphics context, int mouseX, int mouseY, float delta) {
+        if (this.border) context.renderOutline(this.x, this.y, this.width, this.height, 0xffffffff);
+        Font textRenderer = Minecraft.getInstance().font;
         if (this.url == null || this.texture == null) {
-            context.drawCenteredTextWithShadow(
-                textRenderer, Text.translatable("concerto.screen.url_image.empty"),
-                this.x + this.width / 2, this.y + (this.height - textRenderer.fontHeight) / 2, 0xffffffff
+            context.drawCenteredString(
+                textRenderer, Component.translatable("concerto.screen.url_image.empty"),
+                this.x + this.width / 2, this.y + (this.height - textRenderer.lineHeight) / 2, 0xffffffff
             );
         } else {
-            NativeImage image = this.texture.getImage();
+            NativeImage image = this.texture.getPixels();
             if (image != null && this.state == State.READY) {
-                context.getMatrices().push();
-                context.getMatrices().scale(0.0625f, 0.0625f, 1);
-                context.getMatrices().translate(15 * this.x, 15 * this.y, 0);
-                context.drawTexture(RenderLayer::getGuiTextured, this.textureId, this.x, this.y, 0, 0,
+                context.pose().pushPose();
+                context.pose().scale(0.0625f, 0.0625f, 1);
+                context.pose().translate(15 * this.x, 15 * this.y, 0);
+                context.blit(RenderType::guiTextured, this.textureId, this.x, this.y, 0, 0,
                         this.getImageWidth(), this.getImageHeight(), this.getImageWidth(), this.getImageHeight());
-                context.getMatrices().pop();
+                context.pose().popPose();
             } else if (this.state == State.LOADING) {
-                context.drawCenteredTextWithShadow(
-                        textRenderer, Text.translatable("concerto.screen.loading"),
-                        this.x + this.width / 2, this.y + (this.height - textRenderer.fontHeight) / 2, 0xffffffff
+                context.drawCenteredString(
+                        textRenderer, Component.translatable("concerto.screen.loading"),
+                        this.x + this.width / 2, this.y + (this.height - textRenderer.lineHeight) / 2, 0xffffffff
                 );
             } else {
-                context.drawCenteredTextWithShadow(
-                        textRenderer, Text.translatable("concerto.fail"),
-                        this.x + this.width / 2, this.y + (this.height - textRenderer.fontHeight) / 2, 0xffffffff
+                context.drawCenteredString(
+                        textRenderer, Component.translatable("concerto.fail"),
+                        this.x + this.width / 2, this.y + (this.height - textRenderer.lineHeight) / 2, 0xffffffff
                 );
             }
         }
@@ -302,7 +302,7 @@ public class URLImageWidget implements Drawable, Widget, AutoCloseable {
     }
 
     @Override
-    public void forEachChild(Consumer<ClickableWidget> consumer) {}
+    public void visitWidgets(Consumer<AbstractWidget> consumer) {}
 
     enum State {
         LOADING,

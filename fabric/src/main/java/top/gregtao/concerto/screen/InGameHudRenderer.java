@@ -1,14 +1,14 @@
 package top.gregtao.concerto.screen;
 
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.screen.ChatScreen;
-import net.minecraft.text.Text;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.screens.ChatScreen;
+import net.minecraft.network.chat.Component;
 import org.joml.Quaternionf;
 import top.gregtao.concerto.core.config.ClientConfig;
 import top.gregtao.concerto.core.room.MusicRoom;
 import top.gregtao.concerto.core.util.Vector2i;
-import top.gregtao.concerto.mixin.DrawContextAccessor;
+import top.gregtao.concerto.mixin.GuiGraphicsAccessor;
 import top.gregtao.concerto.core.player.MusicPlayer;
 import top.gregtao.concerto.core.player.MusicPlayerHandler;
 import top.gregtao.concerto.screen.widget.URLImageWidget;
@@ -47,7 +47,7 @@ public class InGameHudRenderer {
         public void tick(float speed) {
             if (this.width <= this.maxWidth) return;
 
-            float delta = speed * 40f / MinecraftClient.getInstance().getCurrentFps();
+            float delta = speed * 40f / Minecraft.getInstance().getFps();
             if (this.stop) {
                 this.stopTicks -= delta;
                 if (this.stopTicks <= 0) {
@@ -69,52 +69,52 @@ public class InGameHudRenderer {
         }
     }
 
-    public static void render(DrawContext context, int mouseX, int mouseY, float delta) {
-        MinecraftClient client = MinecraftClient.getInstance();
+    public static void render(GuiGraphics context, int mouseX, int mouseY, float delta) {
+        Minecraft client = Minecraft.getInstance();
         if (MusicPlayer.INSTANCE.isPlaying()) {
 
             ClientConfig config = ClientConfig.INSTANCE;
             ClientConfig.ClientConfigOptions options = config.options;
             
-            if (!(options.hideWhenChat && client.currentScreen instanceof ChatScreen)) {
-                int scaledWidth = client.getWindow().getScaledWidth(), scaledHeight = client.getWindow().getScaledHeight();
+            if (!(options.hideWhenChat && client.screen instanceof ChatScreen)) {
+                int scaledWidth = client.getWindow().getGuiScaledWidth(), scaledHeight = client.getWindow().getGuiScaledHeight();
                 String[] texts = MusicPlayerHandler.INSTANCE.getDisplayTexts();
 
-                context = new DrawContext(MinecraftClient.getInstance(),
-                        ((DrawContextAccessor) context).getVertexConsumers());
+                context = new GuiGraphics(Minecraft.getInstance(),
+                        ((GuiGraphicsAccessor) context).getBufferSource());
 
                 if (options.displayLyrics) {
                     Vector2i pos = config.lyricsPosSupplier.getPos(scaledWidth, scaledHeight);
-                    MinecraftTextUtil.renderText(Text.literal(texts[0]), options.lyricsAlignment,
-                            pos.x, pos.y, context, client.textRenderer, (int) config.lyricsColor.getNumber());
+                    MinecraftTextUtil.renderText(Component.literal(texts[0]), options.lyricsAlignment,
+                            pos.x, pos.y, context, client.font, (int) config.lyricsColor.getNumber());
                 }
                 if (options.displaySubLyrics) {
                     Vector2i pos = config.subLyricsPosSupplier.getPos(scaledWidth, scaledHeight);
-                    MinecraftTextUtil.renderText(Text.literal(texts[1]), options.subLyricsAlignment,
-                            pos.x, pos.y, context, client.textRenderer, (int) config.subLyricsColor.getNumber());
+                    MinecraftTextUtil.renderText(Component.literal(texts[1]), options.subLyricsAlignment,
+                            pos.x, pos.y, context, client.font, (int) config.subLyricsColor.getNumber());
                 }
 
-                Text text3 = Text.literal(texts[3]);
-                int text3Width = client.textRenderer.getWidth(text3);
+                Component text3 = Component.literal(texts[3]);
+                int text3Width = client.font.width(text3);
 
                 if (options.displayMusicDetails) {
                     Vector2i pos = config.musicDetailsPosSupplier.getPos(scaledWidth, scaledHeight);
 
                     MusicRoom.ClientState roomState = MusicRoom.clientGetState();
                     String state = MusicPlayer.INSTANCE.isPlayingTemp ?
-                            roomState == MusicRoom.ClientState.MUSIC_AGENT ? " | " + Text.translatable("concerto.agent").getString() :
-                            (roomState == MusicRoom.ClientState.MUSIC_ROOM ? " | " + Text.translatable("concerto.room").getString() : "")
+                            roomState == MusicRoom.ClientState.MUSIC_AGENT ? " | " + Component.translatable("concerto.agent").getString() :
+                            (roomState == MusicRoom.ClientState.MUSIC_ROOM ? " | " + Component.translatable("concerto.room").getString() : "")
                             : "";
 
-                    Text text2 = Text.literal(texts[2] + state);
+                    Component text2 = Component.literal(texts[2] + state);
                     MUSIC_DETAIL_SCROLL.setMaxWidth(text3Width);
-                    MUSIC_DETAIL_SCROLL.setWidth(client.textRenderer.getWidth(text2));
+                    MUSIC_DETAIL_SCROLL.setWidth(client.font.width(text2));
                     MUSIC_DETAIL_SCROLL.tick(options.scrollingTextSpeed);
 
-                    int startX = MinecraftTextUtil.getTextRenderX(text3, options.musicDetailsAlignment, client.textRenderer, pos.x);
-                    context.enableScissor(startX, pos.y, startX + text3Width, pos.y + client.textRenderer.fontHeight);
-                    context.drawText(
-                            client.textRenderer, text2, startX + MUSIC_DETAIL_SCROLL.getDx(),
+                    int startX = MinecraftTextUtil.getTextRenderX(text3, options.musicDetailsAlignment, client.font, pos.x);
+                    context.enableScissor(startX, pos.y, startX + text3Width, pos.y + client.font.lineHeight);
+                    context.drawString(
+                            client.font, text2, startX + MUSIC_DETAIL_SCROLL.getDx(),
                             pos.y, (int) config.musicDetailsColor.getNumber(),
                             options.textShadow
                     );
@@ -123,8 +123,8 @@ public class InGameHudRenderer {
                 if (options.displayTimeProgress) {
                     Vector2i pos = config.timeProgressPosSupplier.getPos(scaledWidth, scaledHeight);
                     MinecraftTextUtil.renderText(text3, options.timeProgressAlignment,
-                            pos.x, pos.y, context, client.textRenderer, (int) config.timeProgressTextColor.getNumber());
-                    int blankWidth = client.textRenderer.getWidth("                              "); // 兼容不同字体
+                            pos.x, pos.y, context, client.font, (int) config.timeProgressTextColor.getNumber());
+                    int blankWidth = client.font.width("                              "); // 兼容不同字体
                     int timeWidth = (text3Width - blankWidth) / 2;
                     if (MusicPlayer.INSTANCE.currentMeta != null && MusicPlayer.INSTANCE.currentMeta.getDuration() != null) {
                         int x;
@@ -152,9 +152,9 @@ public class InGameHudRenderer {
                         float cy = pos.y + size / 2f;
                         float angleRad = delta * (float) Math.PI / 180f;
 
-                        context.getMatrices().translate(cx, cy, 0); // 先平移到中心
-                        context.getMatrices().multiply(new Quaternionf().rotateZ(angleRad)); // 旋转
-                        context.getMatrices().translate(-cx, -cy, 0); // 再平移回来
+                        context.pose().translate(cx, cy, 0); // 先平移到中心
+                        context.pose().mulPose(new Quaternionf().rotateZ(angleRad)); // 旋转
+                        context.pose().translate(-cx, -cy, 0); // 再平移回来
                     }
 
                     COVER_IMAGE.render(context, mouseX, mouseY, delta);

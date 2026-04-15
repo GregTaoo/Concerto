@@ -2,8 +2,8 @@ package top.gregtao.concerto.util;
 
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
-import net.minecraft.client.option.KeyBinding;
-import net.minecraft.client.util.InputUtil;
+import net.minecraft.client.KeyMapping;
+import com.mojang.blaze3d.platform.InputConstants;
 import org.lwjgl.glfw.GLFW;
 import top.gregtao.concerto.core.player.MusicPlayer;
 import top.gregtao.concerto.core.player.MusicPlayerHandler;
@@ -14,41 +14,41 @@ public class ConcertoHotkeys {
 
     public static String CATEGORY = "concerto.hotkey";
 
-    public static KeyBinding GENERAL_PLAYLIST, INDEX_SCREEN, NEXT_MUSIC, PAUSE_RESUME;
+    public static KeyMapping GENERAL_PLAYLIST, INDEX_SCREEN, NEXT_MUSIC, PAUSE_RESUME;
 
     public static void register() {
-        GENERAL_PLAYLIST = KeyBindingHelper.registerKeyBinding(new KeyBinding(
+        GENERAL_PLAYLIST = KeyBindingHelper.registerKeyBinding(new KeyMapping(
                 "concerto.hotkey.general_music_list",
-                InputUtil.Type.KEYSYM,
+                InputConstants.Type.KEYSYM,
                 GLFW.GLFW_KEY_U,
                 CATEGORY
         ));
-        INDEX_SCREEN = KeyBindingHelper.registerKeyBinding(new KeyBinding(
+        INDEX_SCREEN = KeyBindingHelper.registerKeyBinding(new KeyMapping(
                 "concerto.hotkey.index",
-                InputUtil.Type.KEYSYM,
+                InputConstants.Type.KEYSYM,
                 GLFW.GLFW_KEY_I,
                 CATEGORY
         ));
-        NEXT_MUSIC = KeyBindingHelper.registerKeyBinding(new KeyBinding(
+        NEXT_MUSIC = KeyBindingHelper.registerKeyBinding(new KeyMapping(
                 "concerto.screen.next",
-                InputUtil.Type.KEYSYM,
+                InputConstants.Type.KEYSYM,
                 GLFW.GLFW_KEY_N,
                 CATEGORY
         ));
-        PAUSE_RESUME = KeyBindingHelper.registerKeyBinding(new KeyBinding(
+        PAUSE_RESUME = KeyBindingHelper.registerKeyBinding(new KeyMapping(
                 "concerto.screen.pause_resume",
-                InputUtil.Type.KEYSYM,
+                InputConstants.Type.KEYSYM,
                 GLFW.GLFW_KEY_P,
                 CATEGORY
         ));
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
-            if (GENERAL_PLAYLIST.wasPressed()) {
+            if (GENERAL_PLAYLIST.consumeClick()) {
                 client.setScreen(new MusicPlayerScreen(null));
-            } else if (INDEX_SCREEN.wasPressed()) {
+            } else if (INDEX_SCREEN.consumeClick()) {
                 client.setScreen(new ConcertoIndexScreen(null));
-            } else if (NEXT_MUSIC.wasPressed()) {
+            } else if (NEXT_MUSIC.consumeClick()) {
                 MusicPlayerHandler.INSTANCE.playNextAsync(1);
-            } else if (PAUSE_RESUME.wasPressed()) {
+            } else if (PAUSE_RESUME.consumeClick()) {
                 if (MusicPlayer.INSTANCE.started) {
                     boolean paused = MusicPlayerHandler.INSTANCE.isPaused();
                     MusicPlayerHandler.INSTANCE.tryForcePause(!paused);

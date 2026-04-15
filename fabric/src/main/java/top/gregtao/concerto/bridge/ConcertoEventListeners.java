@@ -1,6 +1,6 @@
 package top.gregtao.concerto.bridge;
 
-import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.Minecraft;
 import top.gregtao.concerto.ConcertoClient;
 import top.gregtao.concerto.core.config.ClientConfig;
 import top.gregtao.concerto.core.event.ConcertoEvents;
@@ -12,8 +12,8 @@ public class ConcertoEventListeners {
     public static void registerClientListeners() {
 
         ConcertoEvents.ON_PLAYER_START.subscribe(() -> {
-            MinecraftClient client = MinecraftClient.getInstance();
-            client.getMusicTracker().stop();
+            Minecraft client = Minecraft.getInstance();
+            client.getMusicManager().stopPlaying();
             ConcertoClient.syncPlayerVolume();
         });
 

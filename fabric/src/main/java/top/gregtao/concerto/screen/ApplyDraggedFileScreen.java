@@ -1,8 +1,8 @@
 package top.gregtao.concerto.screen;
 
-import net.minecraft.client.gui.screen.ConfirmScreen;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.text.Text;
+import net.minecraft.client.gui.screens.ConfirmScreen;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.network.chat.Component;
 import top.gregtao.concerto.core.api.MusicJsonParsers;
 import top.gregtao.concerto.core.music.LocalFileMusic;
 import top.gregtao.concerto.core.music.Music;
@@ -20,15 +20,15 @@ import java.util.stream.Collectors;
 
 public abstract class ApplyDraggedFileScreen extends ConcertoScreen {
 
-    public ApplyDraggedFileScreen(Text title, Screen parent) {
+    public ApplyDraggedFileScreen(Component title, Screen parent) {
         super(title, parent);
     }
 
     @Override
-    public void onFilesDropped(List<Path> paths) {
-        if (this.client == null) return;
+    public void onFilesDrop(List<Path> paths) {
+        if (this.minecraft == null) return;
         String message = paths.stream().map(Path::getFileName).map(Path::toString).collect(Collectors.joining(", "));
-        this.client.setScreen(new ConfirmScreen(confirmed -> {
+        this.minecraft.setScreen(new ConfirmScreen(confirmed -> {
             if (confirmed) {
                 MusicPlayerHandler.INSTANCE.addMusicAsync(() -> {
                     ArrayList<Music> list = new ArrayList<>();
@@ -46,9 +46,9 @@ public abstract class ApplyDraggedFileScreen extends ConcertoScreen {
                                 list.add(new LocalFileMusic(file.getAbsolutePath()));
                             }
                         } catch (IOException e) {
-                            this.displayAlert(Text.literal(e.getMessage()));
+                            this.displayAlert(Component.literal(e.getMessage()));
                         } catch (UnsafeMusicException e) {
-                            this.displayAlert(Text.translatable("concerto.error.invalid_path"));
+                            this.displayAlert(Component.translatable("concerto.error.invalid_path"));
                         }
                     });
                     return list;
@@ -58,7 +58,7 @@ public abstract class ApplyDraggedFileScreen extends ConcertoScreen {
                     }
                 });
             }
-            this.client.setScreen(this);
-        }, Text.translatable("concerto.drag_confirm"), Text.literal(message)));
+            this.minecraft.setScreen(this);
+        }, Component.translatable("concerto.drag_confirm"), Component.literal(message)));
     }
 }

@@ -1,7 +1,7 @@
 package top.gregtao.concerto.screen.widget;
 
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
+import net.minecraft.network.chat.Component;
+import net.minecraft.ChatFormatting;
 import top.gregtao.concerto.core.api.WithMetaData;
 import top.gregtao.concerto.core.music.meta.MetaData;
 import top.gregtao.concerto.core.util.ConcertoRunner;
@@ -22,16 +22,16 @@ public class MetadataListWidget<T extends WithMetaData> extends ConcertoListWidg
     }
 
     @Override
-    public Text getNarration(int index, T t) {
+    public Component getNarration(int index, T t) {
         if (t.isMetaLoaded()) {
             MetaData meta = t.getMeta();
-            return Text.literal(meta.title()).append("  ").append(Text.literal(meta.author()).formatted(Formatting.BOLD, Formatting.GRAY));
+            return Component.literal(meta.title()).append("  ").append(Component.literal(meta.author()).withStyle(ChatFormatting.BOLD, ChatFormatting.GRAY));
         } else {
               if (!this.loadingSet.contains(t)) {
                   this.loadingSet.add(t);
                   ConcertoRunner.run(t::getMeta, () -> this.loadingSet.remove(t));
               }
-            return Text.translatable("concerto.loading");
+            return Component.translatable("concerto.loading");
         }
     }
 }

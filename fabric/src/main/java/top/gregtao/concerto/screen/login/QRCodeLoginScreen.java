@@ -1,11 +1,11 @@
 package top.gregtao.concerto.screen.login;
 
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.widget.ButtonWidget;
-import net.minecraft.client.network.ClientPlayerEntity;
-import net.minecraft.text.Text;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.network.chat.Component;
 import top.gregtao.concerto.screen.ConcertoScreen;
 import top.gregtao.concerto.screen.widget.URLImageWidget;
 import top.gregtao.concerto.core.util.ConcertoRunner;
@@ -22,13 +22,13 @@ public class QRCodeLoginScreen extends ConcertoScreen {
     private int timer = 0;
     private final int qrWidth;
     private final int qrHeight;
-    private Text message = Text.empty();
+    private Component message = Component.empty();
     private boolean updaterLock = false;
     private URLImageWidget urlImageWidget;
 
     public QRCodeLoginScreen(Supplier<String> qrKeySupplier, Function<String, byte[]> imageUpdater,
-                             Function<String, Status> statusUpdater, int width, int height, Text title, Screen parent) {
-        super(Text.literal(Text.translatable("concerto.screen.login").getString() + title.getString()), parent);
+                             Function<String, Status> statusUpdater, int width, int height, Component title, Screen parent) {
+        super(Component.literal(Component.translatable("concerto.screen.login").getString() + title.getString()), parent);
         this.qrKeySupplier = qrKeySupplier;
         this.statusUpdater = statusUpdater;
         this.imageUpdater = imageUpdater;
@@ -39,10 +39,10 @@ public class QRCodeLoginScreen extends ConcertoScreen {
     @Override
     protected void init() {
         super.init();
-        this.addDrawableChild(ButtonWidget.builder(Text.translatable("concerto.screen.login.qrcode.refresh"), button -> {
+        this.addRenderableWidget(Button.builder(Component.translatable("concerto.screen.login.qrcode.refresh"), button -> {
             this.timer = 0;
             this.status = Status.EMPTY;
-        }).size(100, 20).position(this.width / 2 - 50, this.height - 40).build());
+        }).size(100, 20).pos(this.width / 2 - 50, this.height - 40).build());
         this.urlImageWidget = new URLImageWidget(this.qrWidth, this.qrHeight, this.width / 2 - this.qrWidth / 2, 30, null);
     }
 
@@ -52,14 +52,14 @@ public class QRCodeLoginScreen extends ConcertoScreen {
         if (this.timer == 0) {
             switch (this.status) {
                 case EMPTY -> this.loadQRCode();
-                case FAILED -> this.loadQRCode(Text.translatable("concerto.screen.login.qrcode.failed"));
-                case EXPIRED -> this.loadQRCode(Text.translatable("concerto.screen.login.qrcode.expired"));
+                case FAILED -> this.loadQRCode(Component.translatable("concerto.screen.login.qrcode.failed"));
+                case EXPIRED -> this.loadQRCode(Component.translatable("concerto.screen.login.qrcode.expired"));
                 case SUCCESS -> {
-                    ClientPlayerEntity player = MinecraftClient.getInstance().player;
+                    LocalPlayer player = Minecraft.getInstance().player;
                     if (player != null) {
-                        player.sendMessage(Text.translatable("concerto.screen.login.qrcode.success"), false);
+                        player.displayClientMessage(Component.translatable("concerto.screen.login.qrcode.success"), false);
                     }
-                    MinecraftClient.getInstance().setScreen(null);
+                    Minecraft.getInstance().setScreen(null);
                 }
                 case WAITING -> {
                     if (!this.updaterLock) {
@@ -85,21 +85,21 @@ public class QRCodeLoginScreen extends ConcertoScreen {
         });
     }
 
-    public void loadQRCode(Text msg) {
+    public void loadQRCode(Component msg) {
         this.message = msg;
         this.loadQRCode();
     }
 
     @Override
-    public void render(DrawContext matrices, int mouseX, int mouseY, float delta) {
+    public void render(GuiGraphics matrices, int mouseX, int mouseY, float delta) {
         super.render(matrices, mouseX, mouseY, delta);
         this.urlImageWidget.render(matrices, mouseX, mouseY, delta);
-        matrices.drawCenteredTextWithShadow(this.textRenderer, this.message, this.width / 2, 120, 0xffffffff);
+        matrices.drawCenteredString(this.font, this.message, this.width / 2, 120, 0xffffffff);
     }
 
     @Override
-    public void close() {
-        super.close();
+    public void onClose() {
+        super.onClose();
         this.urlImageWidget.close();
     }
 

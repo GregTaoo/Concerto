@@ -5,6 +5,7 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.ObjectSelectionList;
 import net.minecraft.network.chat.Component;
 import net.minecraft.Util;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 import java.util.ListIterator;
@@ -97,7 +98,7 @@ public class ConcertoListWidget<T> extends ObjectSelectionList<ConcertoListWidge
         }
 
         @Override
-        public Component getNarration() {
+        public @NotNull Component getNarration() {
             return ConcertoListWidget.this.getNarration(this.index, this.item);
         }
 

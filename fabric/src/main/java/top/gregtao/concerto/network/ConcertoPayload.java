@@ -3,8 +3,8 @@ package top.gregtao.concerto.network;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.network.protocol.common.custom.CustomPacketPayload.Type;
 import net.minecraft.resources.ResourceLocation;
+import org.jetbrains.annotations.NotNull;
 
 public class ConcertoPayload implements CustomPacketPayload {
 
@@ -24,7 +24,7 @@ public class ConcertoPayload implements CustomPacketPayload {
         }
 
         @Override
-        public ConcertoPayload decode(FriendlyByteBuf buf) {
+        public @NotNull ConcertoPayload decode(FriendlyByteBuf buf) {
             String s = buf.readUtf(Integer.MAX_VALUE);
             Channel channel1 = Channel.getById(s.charAt(0));
             return new ConcertoPayload(channel1, s.substring(1));
@@ -32,7 +32,7 @@ public class ConcertoPayload implements CustomPacketPayload {
     };
 
     @Override
-    public Type<? extends CustomPacketPayload> type() {
+    public @NotNull Type<? extends CustomPacketPayload> type() {
         return ID;
     }
 

@@ -118,7 +118,7 @@ public class KuGouMusicLoginScreen extends ConcertoScreen {
                     try {
                         Optional<JsonObject> optional = KuGouMusicApiClient.INSTANCE.getQRCodeStatus(key);
                         Optional<JsonObject> dataOpt = optional.map(json -> json.getAsJsonObject("data"));
-                        Integer status = dataOpt.map(data -> data.get("status"))
+                        int status = dataOpt.map(data -> data.get("status"))
                                 .map(JsonElement::getAsInt)
                                 .orElse(0);
                         if (status == 1 || status == 2) {
@@ -150,7 +150,7 @@ public class KuGouMusicLoginScreen extends ConcertoScreen {
         );
     }
 
-    public void setCookies(Long userId, String token) throws IOException, URISyntaxException {
+    public void setCookies(Long userId, String token) {
         KuGouMusicApiClient.LOCAL_USER.setUserId(userId);
         KuGouMusicApiClient.INSTANCE.clearCookie();
         KuGouMusicApiClient.INSTANCE.setCookies(

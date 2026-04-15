@@ -11,6 +11,7 @@ import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.ContainerObjectSelectionList;
 import net.minecraft.client.Options;
 import net.minecraft.client.OptionInstance;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import top.gregtao.concerto.screen.ConcertoOptionsScreen;
 
@@ -147,12 +148,12 @@ public class ConcertoOptionListWidget extends ContainerObjectSelectionList<Conce
         }
 
         @Override
-        public List<? extends GuiEventListener> children() {
+        public @NotNull List<? extends GuiEventListener> children() {
             return this.widgets;
         }
 
         @Override
-        public List<? extends NarratableEntry> narratables() {
+        public @NotNull List<? extends NarratableEntry> narratables() {
             return this.widgets;
         }
     }

@@ -158,7 +158,7 @@ public class MusicCommand {
                     if (PresetPlaylistsConfig.saveToLocalPlaylists(new FixedPlaylist(
                             MusicPlayerHandler.INSTANCE.getMusicList().snapshotMusics(),
                             new PlaylistMetaData(
-                                    playerName == null ? "Unknown" : playerName.getString(),
+                                    playerName.getString(),
                                     "Default Playlist",
                                     LocalDateTime.now().toString(),
                                     "Default Playlist"

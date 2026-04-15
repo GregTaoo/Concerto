@@ -42,7 +42,7 @@ public class ChatComponentMixin {
         if (client.player == null) return;
         String[] authors = music.getMeta().getSource().split(",\\s");
         String sender = authors[authors.length - 1];
-        if (client.player.getDisplayName() == null || client.player.getDisplayName().getString().equalsIgnoreCase(sender)) {
+        if (client.player.getDisplayName().getString().equalsIgnoreCase(sender)) {
             try {
                 ClientMusicNetworkHandler.addToWaitList(client, new MusicDataPacket(music, sender, true), client.player);
             } catch (Exception e) {

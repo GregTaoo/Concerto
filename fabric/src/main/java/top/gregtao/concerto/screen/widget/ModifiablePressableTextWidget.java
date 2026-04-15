@@ -2,7 +2,6 @@ package top.gregtao.concerto.screen.widget;
 
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.components.Button.OnPress;
 import net.minecraft.client.gui.components.PlainTextButton;
 import net.minecraft.network.chat.Style;
 import net.minecraft.network.chat.Component;

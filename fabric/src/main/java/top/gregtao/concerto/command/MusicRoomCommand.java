@@ -73,7 +73,7 @@ public class MusicRoomCommand {
                                             LocalPlayer player = context.getSource().getPlayer();
                                             if (checkServerAvailable(player) && checkAgent(player)) {
                                                 if (!ServerMusicAgentManager.clientAddCurrentMusic()) {
-                                                    player.displayClientMessage(Component.translatable("concerto.agent.not_playing"), false);
+                                                    player.displayClientMessage(Component.translatable("concerto.not_playing"), false);
                                                 }
                                             }
                                             return 0;

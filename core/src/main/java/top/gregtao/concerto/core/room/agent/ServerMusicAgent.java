@@ -121,7 +121,7 @@ public class ServerMusicAgent {
             return;
         }
         if (this.trackedPauseState) {
-            this.room.serverBridge.sendMessage(playerName, "concerto.agent.not_playing");
+            this.room.serverBridge.sendMessage(playerName, "concerto.not_playing");
             return;
         }
         this.voteLock.lock();

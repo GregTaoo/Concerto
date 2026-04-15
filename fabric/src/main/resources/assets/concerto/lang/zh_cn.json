@@ -23,6 +23,7 @@
   "concerto.report_bugs": "报告漏洞",
   "concerto.reset": "重置",
   "concerto.reset_confirm": "确定要重置吗？",
+  "concerto.not_playing": "没有歌曲正在播放",
 
   "concerto.playlist": "歌单",
   "concerto.album": "专辑",
@@ -233,7 +234,6 @@
   "concerto.dislike": "取消喜欢了歌曲 %s，来自 %s",
 
   "concerto.agent": "服务器点歌",
-  "concerto.agent.not_playing": "没有歌曲播放中",
   "concerto.agent.invite": "是否加入服务器点歌？",
   "concerto.agent.join": "加入了服务器点歌",
   "concerto.agent.quit": "退出了服务器点歌",

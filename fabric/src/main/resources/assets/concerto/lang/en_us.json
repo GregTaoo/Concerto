@@ -233,7 +233,7 @@
   "concerto.dislike": "Disliked music %s from %s",
 
   "concerto.agent": "Server Agent",
-  "concerto.agent.not_playing": "No music is playing",
+  "concerto.not_playing": "No music is playing",
   "concerto.agent.invite": "Join the server music agent?",
   "concerto.agent.join": "Joined the server music agent.",
   "concerto.agent.quit": "Quited the server music agent.",

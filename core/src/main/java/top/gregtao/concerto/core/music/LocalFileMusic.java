@@ -92,13 +92,13 @@ public class LocalFileMusic extends PathFileMusic {
         long duration = TimeTool.durationInMilliseconds(new File(this.getRawPath()).getAbsolutePath(), AudioType.FILE);
         if (duration <= 0) {
             this.setMusicMeta(new TimelessMusicMetaData(
-                    author == null || author.isEmpty() ? Concerto.getCoreBridge().getTranslatableText("concerto.unknown") : author,
+                    author == null || author.isEmpty() ? Concerto.getCoreBridge().getTranslatable("concerto.unknown") : author,
                     title == null || title.isEmpty() ? this.getRawPath() : title,
                     Sources.LOCAL_FILE.getName()
             ));
         } else {
             this.setMusicMeta(new BasicMusicMetaData(
-                    author == null || author.isEmpty() ? Concerto.getCoreBridge().getTranslatableText("concerto.unknown") : author,
+                    author == null || author.isEmpty() ? Concerto.getCoreBridge().getTranslatable("concerto.unknown") : author,
                     title == null || title.isEmpty() ? this.getRawPath() : title,
                     Sources.LOCAL_FILE.getName(),
                     TimeTool.durationInMilliseconds(new File(this.getRawPath()).getAbsolutePath(), AudioType.FILE),

@@ -18,7 +18,8 @@ import top.gregtao.concerto.core.room.agent.ServerMusicAgent;
 import top.gregtao.concerto.network.MusicDataPacket;
 import top.gregtao.concerto.network.ServerMusicNetworkHandler;
 import top.gregtao.concerto.core.util.ConcertoRunner;
-import top.gregtao.concerto.util.MinecraftTextUtil;
+import top.gregtao.concerto.util.CommandUtil;
+import top.gregtao.concerto.util.ComponentUtil;
 
 import java.util.Iterator;
 import java.util.Map;
@@ -55,18 +56,18 @@ public class ConcertoServerCommand {
                                                 Map<UUID, MusicDataPacket> map = ServerMusicNetworkHandler.WAIT_AUDITION;
                                                 Iterator<Map.Entry<UUID, MusicDataPacket>> iterator = map.entrySet().iterator();
                                                 page = Math.min(page, (int) Math.ceil(map.size() / 10f));
-                                                MinecraftTextUtil.commandMessageServer(context, MinecraftTextUtil.PAGE_SPLIT);
+                                                CommandUtil.commandMessageServer(context, CommandUtil.PAGE_SPLIT);
                                                 for (int i = 1; i < 10 * (page - 1); ++i) {
                                                     if (iterator.hasNext()) iterator.next();
                                                 }
                                                 for (int i = 10 * (page - 1); i < Math.min(10 * page, map.size()) && iterator.hasNext(); ++i) {
                                                     Map.Entry<UUID, MusicDataPacket> entry = iterator.next();
                                                     MusicDataPacket packet = entry.getValue();
-                                                    MinecraftTextUtil.commandMessageServer(context, Component.literal((i + 1) + ". ").append(chatMessageBuilder(
+                                                    CommandUtil.commandMessageServer(context, Component.literal((i + 1) + ". ").append(chatMessageBuilder(
                                                             entry.getKey(), packet.from, packet.music.getMeta().title()
                                                     )));
                                                 }
-                                                MinecraftTextUtil.commandMessageServer(context, MinecraftTextUtil.PAGE_SPLIT);
+                                                CommandUtil.commandMessageServer(context, CommandUtil.PAGE_SPLIT);
                                             });
                                             return 0;
                                         })
@@ -129,11 +130,11 @@ public class ConcertoServerCommand {
         return Component.translatable("concerto.audit.message", name, title)
                 .append(Component.literal("  ["))
                 .append(Component.translatable("concerto.accept").setStyle(
-                        MinecraftTextUtil.getRunCommandStyle("/concerto-server audit " + uuid).withColor(ChatFormatting.GREEN)))
+                        ComponentUtil.getRunCommandStyle("/concerto-server audit " + uuid).withColor(ChatFormatting.GREEN)))
                 .append(Component.literal("]"))
                 .append(Component.literal("  ["))
                 .append(Component.translatable("concerto.reject").setStyle(
-                        MinecraftTextUtil.getRunCommandStyle("/concerto-server audit reject " + uuid).withColor(ChatFormatting.RED)))
+                        ComponentUtil.getRunCommandStyle("/concerto-server audit reject " + uuid).withColor(ChatFormatting.RED)))
                 .append(Component.literal("]"));
     }
 }

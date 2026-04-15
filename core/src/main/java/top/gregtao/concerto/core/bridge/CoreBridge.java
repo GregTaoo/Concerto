@@ -6,7 +6,7 @@ import top.gregtao.concerto.core.player.MusicPlayerState;
 public interface CoreBridge {
 
     // Common
-    String getTranslatableText(String key, Object... args);
+    String getTranslatable(String key, Object... args);
 
     // Client
     void setClientClipboard(String text);
@@ -15,6 +15,6 @@ public interface CoreBridge {
     SyncRecord<MusicPlayerState> getCurrentPlayerState();
 
     default void sendTranslatableToClientPlayer(String key, boolean overlay, Object... args) {
-        sendMessageToClientPlayer(getTranslatableText(key, args), overlay);
+        sendMessageToClientPlayer(getTranslatable(key, args), overlay);
     }
 }

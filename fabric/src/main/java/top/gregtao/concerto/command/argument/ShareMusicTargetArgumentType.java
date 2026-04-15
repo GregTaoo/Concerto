@@ -6,7 +6,6 @@ import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.suggestion.SuggestionsBuilder;
-import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;
 import net.minecraft.commands.SharedSuggestionProvider;
 import net.minecraft.commands.arguments.EntityArgument;
 
@@ -28,7 +27,7 @@ public class ShareMusicTargetArgumentType implements ArgumentType<String> {
         return players;
     }
 
-    public static String get(CommandContext<FabricClientCommandSource> context, String key) throws CommandSyntaxException {
+    public static <S extends SharedSuggestionProvider> String get(CommandContext<S> context, String key) throws CommandSyntaxException {
         String str = context.getArgument(key, String.class);
         if (getPlayerNameList(context.getSource()).contains(str)) return str;
         else throw EntityArgument.NO_PLAYERS_FOUND.create();

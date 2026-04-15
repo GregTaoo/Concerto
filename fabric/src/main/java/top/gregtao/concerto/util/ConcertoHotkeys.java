@@ -1,10 +1,9 @@
 package top.gregtao.concerto.util;
 
-import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
-import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.minecraft.client.KeyMapping;
 import com.mojang.blaze3d.platform.InputConstants;
 import org.lwjgl.glfw.GLFW;
+import top.gregtao.concerto.bridge.MinecraftClientBridge;
 import top.gregtao.concerto.core.player.MusicPlayer;
 import top.gregtao.concerto.core.player.MusicPlayerHandler;
 import top.gregtao.concerto.screen.ConcertoIndexScreen;
@@ -16,32 +15,32 @@ public class ConcertoHotkeys {
 
     public static KeyMapping GENERAL_PLAYLIST, INDEX_SCREEN, NEXT_MUSIC, PAUSE_RESUME;
 
-    public static void register() {
-        GENERAL_PLAYLIST = KeyBindingHelper.registerKeyBinding(new KeyMapping(
+    public static void register(MinecraftClientBridge bridge) {
+        GENERAL_PLAYLIST = bridge.registerKeyMapping(new KeyMapping(
                 "concerto.hotkey.general_music_list",
                 InputConstants.Type.KEYSYM,
                 GLFW.GLFW_KEY_U,
                 CATEGORY
         ));
-        INDEX_SCREEN = KeyBindingHelper.registerKeyBinding(new KeyMapping(
+        INDEX_SCREEN = bridge.registerKeyMapping(new KeyMapping(
                 "concerto.hotkey.index",
                 InputConstants.Type.KEYSYM,
                 GLFW.GLFW_KEY_I,
                 CATEGORY
         ));
-        NEXT_MUSIC = KeyBindingHelper.registerKeyBinding(new KeyMapping(
+        NEXT_MUSIC = bridge.registerKeyMapping(new KeyMapping(
                 "concerto.screen.next",
                 InputConstants.Type.KEYSYM,
                 GLFW.GLFW_KEY_N,
                 CATEGORY
         ));
-        PAUSE_RESUME = KeyBindingHelper.registerKeyBinding(new KeyMapping(
+        PAUSE_RESUME = bridge.registerKeyMapping(new KeyMapping(
                 "concerto.screen.pause_resume",
                 InputConstants.Type.KEYSYM,
                 GLFW.GLFW_KEY_P,
                 CATEGORY
         ));
-        ClientTickEvents.END_CLIENT_TICK.register(client -> {
+        bridge.registerEndOfTickListener(client -> {
             if (GENERAL_PLAYLIST.consumeClick()) {
                 client.setScreen(new MusicPlayerScreen(null));
             } else if (INDEX_SCREEN.consumeClick()) {

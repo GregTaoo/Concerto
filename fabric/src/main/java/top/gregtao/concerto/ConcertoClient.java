@@ -2,10 +2,15 @@ package top.gregtao.concerto;
 
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback;
+import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
+import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
+import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.resource.ResourceManagerHelper;
 import net.fabricmc.fabric.api.resource.SimpleSynchronousResourceReloadListener;
+import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.Options;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.server.packs.PackType;
 import net.minecraft.sounds.SoundSource;
@@ -13,6 +18,7 @@ import net.minecraft.resources.ResourceLocation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import top.gregtao.concerto.bridge.ConcertoEventListeners;
+import top.gregtao.concerto.bridge.MinecraftClientBridge;
 import top.gregtao.concerto.command.MusicCommand;
 import top.gregtao.concerto.command.MusicRoomCommand;
 import top.gregtao.concerto.command.ShareMusicCommand;
@@ -31,6 +37,7 @@ import top.gregtao.concerto.util.ConcertoOptions;
 import top.gregtao.concerto.core.util.ConcertoRunner;
 
 import java.util.List;
+import java.util.function.Consumer;
 
 public class ConcertoClient implements ClientModInitializer {
 
@@ -54,47 +61,97 @@ public class ConcertoClient implements ClientModInitializer {
 				Minecraft.getInstance().isLocalServer();
 	}
 
-	@Override
-	public void onInitializeClient() {
+    private static MinecraftClientBridge BRIDGE;
+
+    public static MinecraftClientBridge getBridge() {
+        if (BRIDGE == null)
+            throw new NullPointerException("Bridge not initialized yet");
+        return BRIDGE;
+    }
+
+    public static void initializeClient(MinecraftClientBridge bridge) {
+        BRIDGE = bridge;
+
         ConcertoEventListeners.registerClientListeners();
 
-		ClientCommandRegistrationCallback.EVENT.register(MusicCommand::register);
-		ClientCommandRegistrationCallback.EVENT.register(ShareMusicCommand::register);
-		ClientCommandRegistrationCallback.EVENT.register(MusicRoomCommand::register);
+        bridge.registerClientCommand(MusicCommand::register);
+        bridge.registerClientCommand(ShareMusicCommand::register);
+        bridge.registerClientCommand(MusicRoomCommand::register);
 
-		ResourceManagerHelper.get(PackType.CLIENT_RESOURCES).registerReloadListener(new SimpleSynchronousResourceReloadListener() {
-			@Override
-			public ResourceLocation getFabricId() {
-				return ResourceLocation.fromNamespaceAndPath(Concerto.MOD_ID, "music");
-			}
-
-			@Override
-			public void onResourceManagerReload(ResourceManager manager) {
-				ConcertoRunner.run(() -> {
-					ClientConfig.INSTANCE.readOptions();
-					ConcertoOptions.INSTANCE.readOptions();
-					MusicPlayerHandler.reloadConfig(() -> LOGGER.info("Loaded general music playlist"));
+        bridge.registerResourceReloadListener(
+                ResourceLocation.fromNamespaceAndPath(Concerto.MOD_ID, "music"),
+                manager -> ConcertoRunner.run(() -> {
+                    ClientConfig.INSTANCE.readOptions();
+                    ConcertoOptions.INSTANCE.readOptions();
+                    MusicPlayerHandler.reloadConfig(() -> LOGGER.info("Loaded general music playlist"));
                     PresetPlaylistsConfig.LOCAL_PLAYLISTS.read();
-					NeteaseCloudApiClient.LOCAL_USER.updateLoginStatus();
-					QQMusicApiClient.LOCAL_USER.updateLoginStatus();
+                    NeteaseCloudApiClient.LOCAL_USER.updateLoginStatus();
+                    QQMusicApiClient.LOCAL_USER.updateLoginStatus();
 
-					// 酷狗音乐相关
-					KuGouMusicApiClient.LOCAL_USER.updateLoginStatusAndDfid();
-					// 刷新 token, 延长 token 有效时间
-					KuGouMusicApiClient.INSTANCE.refreshToken();
-					// 更新 VIP 状态
-					KuGouMusicApiClient.LOCAL_USER.updateVIPStatus();
-					// 自动获取每日酷狗音乐 VIP
-					if (ClientConfig.INSTANCE.options.kuGouMusicLite &&
-							KuGouMusicApiClient.LOCAL_USER.isLoggedIn() &&
-							ClientConfig.INSTANCE.options.autoGetKuGouDailyVIP) {
-						KuGouMusicApiClient.INSTANCE.receiveVip();
-					}
-				});
-			}
-		});
+                    // 酷狗音乐相关
+                    KuGouMusicApiClient.LOCAL_USER.updateLoginStatusAndDfid();
+                    // 刷新 token, 延长 token 有效时间
+                    KuGouMusicApiClient.INSTANCE.refreshToken();
+                    // 更新 VIP 状态
+                    KuGouMusicApiClient.LOCAL_USER.updateVIPStatus();
+                    // 自动获取每日酷狗音乐 VIP
+                    if (ClientConfig.INSTANCE.options.kuGouMusicLite &&
+                            KuGouMusicApiClient.LOCAL_USER.isLoggedIn() &&
+                            ClientConfig.INSTANCE.options.autoGetKuGouDailyVIP) {
+                        KuGouMusicApiClient.INSTANCE.receiveVip();
+                    }
+                })
+        );
 
-		ClientMusicNetworkHandler.register();
-		ConcertoHotkeys.register();
+        ClientMusicNetworkHandler.register(bridge);
+        ConcertoHotkeys.register(bridge);
+    }
+
+    static class FabricClientBridge implements MinecraftClientBridge {
+
+        @Override
+        public void registerClientCommand(ClientCommandRegister register) {
+            ClientCommandRegistrationCallback.EVENT.register(register::register);
+        }
+
+        @Override
+        public void registerResourceReloadListener(ResourceLocation id, Consumer<ResourceManager> listener) {
+            ResourceManagerHelper.get(PackType.CLIENT_RESOURCES).registerReloadListener(new SimpleSynchronousResourceReloadListener() {
+                @Override
+                public ResourceLocation getFabricId() {
+                    return id;
+                }
+
+                @Override
+                public void onResourceManagerReload(ResourceManager manager) {
+                    listener.accept(manager);
+                }
+            });
+        }
+
+        @Override
+        public <T extends CustomPacketPayload> void registerClientPayloadReceiver(CustomPacketPayload.Type<T> type, Consumer<T> handler) {
+            ClientPlayNetworking.registerGlobalReceiver(type, (payload, context) -> handler.accept(payload));
+        }
+
+        @Override
+        public KeyMapping registerKeyMapping(KeyMapping keyMapping) {
+            return KeyBindingHelper.registerKeyBinding(keyMapping);
+        }
+
+        @Override
+        public void registerEndOfTickListener(Consumer<Minecraft> listener) {
+            ClientTickEvents.END_CLIENT_TICK.register(listener::accept);
+        }
+
+        @Override
+        public void sendPayload(CustomPacketPayload payload) {
+            ClientPlayNetworking.send(payload);
+        }
+    }
+
+	@Override
+	public void onInitializeClient() {
+        initializeClient(new FabricClientBridge());
 	}
 }

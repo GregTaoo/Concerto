@@ -11,7 +11,7 @@ import top.gregtao.concerto.core.room.MusicRoom;
 public class CoreBridgeImpl implements CoreBridge {
 
     @Override
-    public String getTranslatableText(String key, Object... args) {
+    public String getTranslatable(String key, Object... args) {
         return Component.translatable(key, args).getString();
     }
 

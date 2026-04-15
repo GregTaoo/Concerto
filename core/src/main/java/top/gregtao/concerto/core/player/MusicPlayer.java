@@ -178,7 +178,7 @@ public class MusicPlayer extends StreamPlayer implements StreamPlayerListener {
 
         if (this.currentLyrics != null) this.displayTexts[0] = this.currentLyrics.stayOrNext(millisecond);
         else if (millisecond < 5000)
-            this.displayTexts[0] = Concerto.getCoreBridge().getTranslatableText("concerto.no_subtitle");
+            this.displayTexts[0] = Concerto.getCoreBridge().getTranslatable("concerto.no_subtitle");
         else this.displayTexts[0] = "";
 
         if (this.currentSubLyrics != null) this.displayTexts[1] = this.currentSubLyrics.stayOrNext(millisecond);

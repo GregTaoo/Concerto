@@ -12,7 +12,7 @@ import top.gregtao.concerto.mixin.GuiGraphicsAccessor;
 import top.gregtao.concerto.core.player.MusicPlayer;
 import top.gregtao.concerto.core.player.MusicPlayerHandler;
 import top.gregtao.concerto.screen.widget.URLImageWidget;
-import top.gregtao.concerto.util.MinecraftTextUtil;
+import top.gregtao.concerto.util.ComponentUtil;
 
 public class InGameHudRenderer {
 
@@ -85,12 +85,12 @@ public class InGameHudRenderer {
 
                 if (options.displayLyrics) {
                     Vector2i pos = config.lyricsPosSupplier.getPos(scaledWidth, scaledHeight);
-                    MinecraftTextUtil.renderText(Component.literal(texts[0]), options.lyricsAlignment,
+                    ComponentUtil.renderText(Component.literal(texts[0]), options.lyricsAlignment,
                             pos.x, pos.y, context, client.font, (int) config.lyricsColor.getNumber());
                 }
                 if (options.displaySubLyrics) {
                     Vector2i pos = config.subLyricsPosSupplier.getPos(scaledWidth, scaledHeight);
-                    MinecraftTextUtil.renderText(Component.literal(texts[1]), options.subLyricsAlignment,
+                    ComponentUtil.renderText(Component.literal(texts[1]), options.subLyricsAlignment,
                             pos.x, pos.y, context, client.font, (int) config.subLyricsColor.getNumber());
                 }
 
@@ -111,7 +111,7 @@ public class InGameHudRenderer {
                     MUSIC_DETAIL_SCROLL.setWidth(client.font.width(text2));
                     MUSIC_DETAIL_SCROLL.tick(options.scrollingTextSpeed);
 
-                    int startX = MinecraftTextUtil.getTextRenderX(text3, options.musicDetailsAlignment, client.font, pos.x);
+                    int startX = ComponentUtil.getTextRenderX(text3, options.musicDetailsAlignment, client.font, pos.x);
                     context.enableScissor(startX, pos.y, startX + text3Width, pos.y + client.font.lineHeight);
                     context.drawString(
                             client.font, text2, startX + MUSIC_DETAIL_SCROLL.getDx(),
@@ -122,7 +122,7 @@ public class InGameHudRenderer {
                 }
                 if (options.displayTimeProgress) {
                     Vector2i pos = config.timeProgressPosSupplier.getPos(scaledWidth, scaledHeight);
-                    MinecraftTextUtil.renderText(text3, options.timeProgressAlignment,
+                    ComponentUtil.renderText(text3, options.timeProgressAlignment,
                             pos.x, pos.y, context, client.font, (int) config.timeProgressTextColor.getNumber());
                     int blankWidth = client.font.width("                              "); // 兼容不同字体
                     int timeWidth = (text3Width - blankWidth) / 2;

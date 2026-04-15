@@ -6,8 +6,8 @@ public class UnknownMusicMeta extends TimelessMusicMetaData {
 
     public UnknownMusicMeta(String source) {
         super(
-            Concerto.getCoreBridge().getTranslatableText("concerto.unknown"),
-            Concerto.getCoreBridge().getTranslatableText("concerto.unknown"),
+            Concerto.getCoreBridge().getTranslatable("concerto.unknown"),
+            Concerto.getCoreBridge().getTranslatable("concerto.unknown"),
             source
         );
     }

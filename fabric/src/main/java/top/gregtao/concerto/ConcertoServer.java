@@ -3,9 +3,15 @@ package top.gregtao.concerto;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
+import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.fabricmc.fabric.api.resource.ResourceManagerHelper;
 import net.fabricmc.fabric.api.resource.SimpleSynchronousResourceReloadListener;
 import net.fabricmc.loader.api.FabricLoader;
+import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.server.packs.PackType;
 import net.minecraft.resources.ResourceLocation;
@@ -13,6 +19,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import top.gregtao.concerto.bridge.CoreBridgeImpl;
 import top.gregtao.concerto.bridge.LoggerFactoryImpl;
+import top.gregtao.concerto.bridge.MinecraftServerBridge;
 import top.gregtao.concerto.command.ConcertoServerCommand;
 import top.gregtao.concerto.core.Concerto;
 import top.gregtao.concerto.core.config.ClientConfig;
@@ -21,8 +28,11 @@ import top.gregtao.concerto.core.config.ServerConfig;
 import top.gregtao.concerto.core.http.kugou.KuGouMusicApiClient;
 import top.gregtao.concerto.core.http.netease.NeteaseCloudApiClient;
 import top.gregtao.concerto.core.http.qq.QQMusicApiClient;
-import top.gregtao.concerto.network.ConcertoNetworking;
+import top.gregtao.concerto.network.ConcertoPayload;
 import top.gregtao.concerto.network.ServerMusicNetworkHandler;
+
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 
 public class ConcertoServer implements ModInitializer {
 
@@ -30,25 +40,77 @@ public class ConcertoServer implements ModInitializer {
     public static final CoreBridgeImpl CORE_BRIDGE = new CoreBridgeImpl();
     public static final LoggerFactoryImpl LOGGER_FACTORY = new LoggerFactoryImpl();
 
-    @Override
-    public void onInitialize() {
+    private static MinecraftServerBridge BRIDGE;
+
+    public static MinecraftServerBridge getBridge() {
+        if (BRIDGE == null)
+            throw new NullPointerException("Bridge not initialized yet");
+        return BRIDGE;
+    }
+
+    public static void initializeServer(MinecraftServerBridge bridge) {
+        BRIDGE = bridge;
+
         Concerto.registerCoreBridge(CORE_BRIDGE, LOGGER_FACTORY);
 
-        CommandRegistrationCallback.EVENT.register(ConcertoServerCommand::register);
-        ConcertoNetworking.register();
-        ServerMusicNetworkHandler.register();
+        bridge.registerCommand(ConcertoServerCommand::register);
+        ConcertoPayload.register(bridge);
+        ServerMusicNetworkHandler.register(bridge);
+        
+        bridge.registerResourceReloadListener(
+                ResourceLocation.fromNamespaceAndPath(Concerto.MOD_ID, "music"),
+                manager -> reload()
+        );
+    }
 
-        ResourceManagerHelper.get(PackType.SERVER_DATA).registerReloadListener(new SimpleSynchronousResourceReloadListener() {
-            @Override
-            public ResourceLocation getFabricId() {
-                return ResourceLocation.fromNamespaceAndPath(Concerto.MOD_ID, "music");
-            }
+    static class FabricServerBridge implements MinecraftServerBridge {
 
-            @Override
-            public void onResourceManagerReload(ResourceManager manager) {
-                ConcertoServer.reload();
-            }
-        });
+        @Override
+        public void registerCommand(CommandRegister register) {
+            CommandRegistrationCallback.EVENT.register(register::register);
+        }
+
+        @Override
+        public void registerResourceReloadListener(ResourceLocation id, Consumer<ResourceManager> listener) {
+            ResourceManagerHelper.get(PackType.SERVER_DATA).registerReloadListener(new SimpleSynchronousResourceReloadListener() {
+                @Override
+                public ResourceLocation getFabricId() {
+                    return id;
+                }
+
+                @Override
+                public void onResourceManagerReload(ResourceManager manager) {
+                   listener.accept(manager);
+                }
+            });
+        }
+
+        @Override
+        public <T extends CustomPacketPayload> void registerS2CPayload(CustomPacketPayload.Type<T> id, StreamCodec<? super RegistryFriendlyByteBuf, T> codec) {
+            PayloadTypeRegistry.playS2C().register(id, codec);
+
+        }
+
+        @Override
+        public <T extends CustomPacketPayload> void registerC2SPayload(CustomPacketPayload.Type<T> id, StreamCodec<? super RegistryFriendlyByteBuf, T> codec) {
+            PayloadTypeRegistry.playC2S().register(id, codec);
+        }
+
+        @Override
+        public <T extends CustomPacketPayload> void registerServerPayloadReceiver(CustomPacketPayload.Type<T> type, BiConsumer<T, NetworkingContext> handler) {
+            ServerPlayNetworking.registerGlobalReceiver(type, (payload, context) ->
+                    handler.accept(payload, new NetworkingContext(context.player(), context.server())));
+        }
+
+        @Override
+        public void sendPayload(ServerPlayer player, CustomPacketPayload payload) {
+            ServerPlayNetworking.send(player, payload);
+        }
+    }
+
+    @Override
+    public void onInitialize() {
+        initializeServer(new FabricServerBridge());
     }
 
     public static void reload() {

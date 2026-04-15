@@ -32,7 +32,7 @@ public class HttpFileMusic extends PathFileMusic implements CacheableMusic {
     @Override
     public void load() {
         this.setMusicMeta(new TimelessMusicMetaData(
-                Concerto.getCoreBridge().getTranslatableText("concerto.unknown"), this.getRawPath(),
+                Concerto.getCoreBridge().getTranslatable("concerto.unknown"), this.getRawPath(),
                 Sources.INTERNET.getName()
         ));
         super.load();

@@ -17,10 +17,6 @@ public class ConcertoEventListeners {
             ConcertoClient.syncPlayerVolume();
         });
 
-//        ConcertoEvents.ON_PLAYER_PAUSE.subscribe(() -> MusicRoom.clientPause(true));
-
-//        ConcertoEvents.ON_PLAYER_RESUME.subscribe(() -> MusicRoom.clientPause(false));
-
         ConcertoEvents.ON_MUSIC_INFO_RESET.subscribe(() -> InGameHudRenderer.COVER_IMAGE.setUrl(null));
 
         ConcertoEvents.ON_MUSIC_INFO_UPDATE.subscribe(() -> {
@@ -29,7 +25,5 @@ public class ConcertoEventListeners {
                 InGameHudRenderer.COVER_IMAGE.loadImage(true, ClientConfig.INSTANCE.options.coverImgInCircle);
             }
         });
-
-//        ConcertoEvents.ON_NEXT_MUSIC.subscribe(MusicRoom::clientUpdate);
     }
 }

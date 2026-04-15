@@ -405,7 +405,7 @@ public class MusicRoom {
                             return;
                         }
                     }
-                    String error = Concerto.getCoreBridge().getTranslatableText("concerto.player.unable",
+                    String error = Concerto.getCoreBridge().getTranslatable("concerto.player.unable",
                             music.getMeta().title(), music.getMeta().author(), music.getMeta().getSource());
                     o.set(s -> {
                         MusicRoomState rs = (MusicRoomState) s;

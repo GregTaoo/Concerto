@@ -1,13 +1,12 @@
 package top.gregtao.concerto.network.room;
 
-import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
-import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.client.Minecraft;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.network.chat.Component;
 import top.gregtao.concerto.ConcertoClient;
 import top.gregtao.concerto.ConcertoServer;
+import top.gregtao.concerto.bridge.MinecraftServerBridge;
 import top.gregtao.concerto.core.config.ServerConfig;
 import top.gregtao.concerto.network.ConcertoPayload;
 
@@ -20,7 +19,7 @@ public class MusicRoomManager {
     public static void serverSender(String command, String payloadString, ServerPlayer player) {
         if (player == null) return;
         ConcertoPayload payload = new ConcertoPayload(ConcertoPayload.Channel.MUSIC_ROOM, command + ":" + payloadString);
-        ServerPlayNetworking.send(player, payload);
+        ConcertoServer.getBridge().sendPayload(player, payload);
     }
     
     public static MusicRoom.ServerNetworkBridge createServerBridge(MinecraftServer server) {
@@ -45,9 +44,9 @@ public class MusicRoomManager {
         };
     }
 
-    public static void serverReceiver(ConcertoPayload payload, ServerPlayNetworking.Context context) {
+    public static void serverReceiver(ConcertoPayload payload, MinecraftServerBridge.NetworkingContext context) {
         ServerPlayer player = context.player();
-        MinecraftServer server = context.player().getServer();
+        MinecraftServer server = context.server();
         String[] args = payload.string.split(":", 3);
         if (args.length != 3) {
             ConcertoServer.LOGGER.error("Invalid arguments for server receiver: {}", payload);
@@ -63,7 +62,7 @@ public class MusicRoomManager {
         public void sendRoomCommand(String uuid, MusicRoom.Command command, String payloadString) {
             ConcertoPayload payload = new ConcertoPayload(
                     ConcertoPayload.Channel.MUSIC_ROOM, uuid + ":" + command + ":" + payloadString);
-            ClientPlayNetworking.send(payload);
+            ConcertoClient.getBridge().sendPayload(payload);
         }
 
         @Override
@@ -74,8 +73,8 @@ public class MusicRoomManager {
         }
     };
 
-    public static void clientReceiver(ConcertoPayload payload, ClientPlayNetworking.Context context) {
-        Minecraft client = context.client();
+    public static void clientReceiver(ConcertoPayload payload) {
+        Minecraft client = Minecraft.getInstance();
         if (client.player == null) {
             ConcertoClient.LOGGER.error("Client player not found.");
             return;

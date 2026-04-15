@@ -92,6 +92,10 @@ public class MusicPlayerScreen extends ConcertoScreen {
     public void render(GuiGraphics context, int mouseX, int mouseY, float delta) {
         super.render(context, mouseX, mouseY, delta);
 
+        if (MusicPlayer.INSTANCE.currentMeta == null) {
+            return;
+        }
+
         if (MusicPlayer.INSTANCE.isPlaying() && !MusicPlayerHandler.INSTANCE.getState().get().paused) {
             this.rotationAngle += delta * 0.3f;
             if (this.rotationAngle >= 360f) this.rotationAngle -= 360f;
@@ -103,7 +107,7 @@ public class MusicPlayerScreen extends ConcertoScreen {
         int imgY = (this.height - imgSize) / 2 - 8;
 
         context.pose().pushPose();
-        
+
         InGameHudRenderer.COVER_IMAGE.setX(imgX);
         InGameHudRenderer.COVER_IMAGE.setY(imgY);
         InGameHudRenderer.COVER_IMAGE.setSize(imgSize, imgSize);
@@ -111,7 +115,7 @@ public class MusicPlayerScreen extends ConcertoScreen {
         context.pose().translate(imgX + imgSize / 2f, imgY + imgSize / 2f, 0);
         context.pose().mulPose(new Quaternionf().rotateZ(this.rotationAngle * (float) Math.PI / 180f));
         context.pose().translate(-(imgX + imgSize / 2f), -(imgY + imgSize / 2f), 0);
-        
+
         InGameHudRenderer.COVER_IMAGE.render(context, mouseX, mouseY, delta);
 
         context.pose().popPose();
@@ -119,24 +123,22 @@ public class MusicPlayerScreen extends ConcertoScreen {
         int rightHalfX = this.width / 2; // lyrics start at mid-screen for >= 1/2 width
         int lyricsWidth = this.width - rightHalfX - 20;
 
-        if (MusicPlayer.INSTANCE.currentMeta != null) {
-            String title = MusicPlayer.INSTANCE.currentMeta.title();
-            String author = MusicPlayer.INSTANCE.currentMeta.author();
-            int centerX = this.width / 2;
-            int titleY = 8;
-            context.drawString(this.font, title, centerX - this.font.width(title) / 2, titleY, 0xFFFFFF, false);
-            if (author != null && !author.isEmpty()) {
-                int authorY = titleY + 12;
-                context.drawString(this.font, author, centerX - this.font.width(author) / 2, authorY, 0xAAAAAA, false);
-            }
+        String title = MusicPlayer.INSTANCE.currentMeta.title();
+        String author = MusicPlayer.INSTANCE.currentMeta.author();
+        int centerX = this.width / 2;
+        int titleY = 8;
+        context.drawString(this.font, title, centerX - this.font.width(title) / 2, titleY, 0xFFFFFF, false);
+        if (author != null && !author.isEmpty()) {
+            int authorY = titleY + 12;
+            context.drawString(this.font, author, centerX - this.font.width(author) / 2, authorY, 0xAAAAAA, false);
         }
 
         if (MusicPlayer.INSTANCE.currentLyrics != null && !MusicPlayer.INSTANCE.currentLyrics.isEmpty()) {
             ArrayList<Pair<MusicTimestamp, String>> lyrics = MusicPlayer.INSTANCE.currentLyrics.getLyricBody();
             ArrayList<Pair<MusicTimestamp, String>> subLyrics = MusicPlayer.INSTANCE.currentSubLyrics != null ? MusicPlayer.INSTANCE.currentSubLyrics.getLyricBody() : null;
-            
+
             long t = (long) (MusicPlayer.INSTANCE.progressPercentage * (MusicPlayer.INSTANCE.currentMeta != null && MusicPlayer.INSTANCE.currentMeta.getDuration() != null ? MusicPlayer.INSTANCE.currentMeta.getDuration().asMilliseconds() : 0));
-            
+
             int activeIndex = Math.max(0, MathUtil.upperBound(lyrics, Pair.of(MusicTimestamp.ofMilliseconds(t), ""), Comparator.comparing(Pair::getFirst)) - 1);
 
             int lineHeight = subLyrics != null ? 27 : 17;
@@ -144,7 +146,7 @@ public class MusicPlayerScreen extends ConcertoScreen {
             int endY = this.height - 40;
 
             int targetScrollOffset = (activeIndex * lineHeight) - ((endY - startY) / 2) + (lineHeight / 2);
-            this.scrollOffset += (int)((targetScrollOffset - this.scrollOffset) * 0.15f);
+            this.scrollOffset += (int) ((targetScrollOffset - this.scrollOffset) * 0.15f);
 
             context.enableScissor(rightHalfX, startY, this.width - 20, endY);
             for (int i = 0; i < lyrics.size(); i++) {
@@ -159,13 +161,13 @@ public class MusicPlayerScreen extends ConcertoScreen {
                 }
 
                 int y = startY + (i * lineHeight) - this.scrollOffset;
-                
+
                 if (y > startY - lineHeight && y < endY + lineHeight) {
                     boolean isActive = (i == activeIndex);
                     int alpha = Math.max(15, 255 - Math.abs(i - activeIndex) * 35);
-                    
+
                     int color = isActive ? ((int) ClientConfig.INSTANCE.lyricsColor.getNumber() | 0xFF000000) : ((alpha << 24) | 0xAAAAAA);
-                    
+
                     context.drawString(this.font, line, rightHalfX + (lyricsWidth - this.font.width(line)) / 2, y, color, isActive);
 
                     if (subLine != null) {
@@ -176,6 +178,9 @@ public class MusicPlayerScreen extends ConcertoScreen {
                 }
             }
             context.disableScissor();
+        } else {
+            int placeholderY = this.height / 2;
+            context.drawCenteredString(this.font, Component.translatable("concerto.no_subtitle"), rightHalfX + lyricsWidth / 2, placeholderY, 0xAAAAAA);
         }
     }
 }

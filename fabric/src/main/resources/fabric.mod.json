@@ -19,10 +19,10 @@
   "environment": "*",
   "entrypoints": {
     "main": [
-      "top.gregtao.concerto.ConcertoServer"
+      "top.gregtao.concerto.fabric.FabricServer"
     ],
     "client": [
-      "top.gregtao.concerto.ConcertoClient"
+      "top.gregtao.concerto.fabric.FabricClient"
     ]
   },
   "mixins": [

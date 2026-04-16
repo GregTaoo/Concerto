@@ -1,61 +1,67 @@
 plugins {
-    id 'fabric-loom' version '1.10-SNAPSHOT'
+    id 'com.gradleup.shadow'
 }
 
-sourceCompatibility = JavaVersion.VERSION_21
-targetCompatibility = JavaVersion.VERSION_21
+architectury {
+    platformSetupLoomIde()
+    fabric()
+}
 
-archivesBaseName = project.archives_base_name + "-fabric"
-project.mod_version += "-mc" + project.minecraft_version
-version = project.mod_version
-group = project.maven_group
+configurations {
+    common {
+        canBeResolved = true
+        canBeConsumed = false
+    }
+    compileClasspath.extendsFrom common
+    runtimeClasspath.extendsFrom common
+    developmentFabric.extendsFrom common
+
+    // Files in this configuration will be bundled into your mod using the Shadow plugin.
+    // Don't use the `shadow` configuration from the plugin itself as it's meant for excluding files.
+    shadowBundle {
+        canBeResolved = true
+        canBeConsumed = false
+    }
+}
 
 dependencies {
+    modImplementation "net.fabricmc:fabric-loader:$rootProject.fabric_loader_version"
 
-    minecraft "com.mojang:minecraft:${project.minecraft_version}"
+    // Fabric API. This is technically optional, but you probably want it anyway.
+    modImplementation "net.fabricmc.fabric-api:fabric-api:$rootProject.fabric_api_version"
 
-    mappings loom.officialMojangMappings()
-
-    modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
-
-    modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
-
-    implementation project(":core")
+    common(project(path: ':common', configuration: 'namedElements'))
+    shadowBundle project(path: ':common', configuration: 'transformProductionFabric')
 }
 
 processResources {
-    inputs.property "version", project.version
+    from project(":common").sourceSets.main.resources
+    from project(":core").sourceSets.main.resources
 
-    filesMatching("fabric.mod.json") {
-        expand "version": project.version
+    inputs.property 'version', project.version
+
+    filesMatching('fabric.mod.json') {
+        expand version: inputs.properties.version
     }
 }
 
-tasks.withType(JavaCompile).configureEach {
-    it.options.release = 21
+shadowJar {
+    configurations = [project.configurations.my]
+    dependencies {
+        exclude(dependency('junit:junit'))
+    }
+
+    exclude 'META-INF/maven/**'
+    exclude 'META-INF/versions/**/*'
+
+    from(rootProject.file("LICENSE")) {
+        rename {"LICENSE_${project.archives_base_name}"}
+        into("META-INF")
+    }
+
+    mergeServiceFiles()
 }
 
-java {
-    // Loom will automatically attach sourcesJar to a RemapSourcesJar task and to the "build" task
-    // if it is present.
-    // If you remove this line, sources will not be generated.
-    // withSourcesJar()
-}
-
-jar {
-    from("LICENSE") {
-        rename { "${it}_${project.archivesBaseName}"}
-    }
-    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-    from {
-        configurations.my.collect {
-            it.isDirectory() ? it : zipTree(it)
-        }
-    }
-    from(project(":core").sourceSets.main.output)
-    from {
-        project(":core").configurations.my.collect {
-            it.isDirectory() ? it : zipTree(it)
-        }
-    }
+remapJar {
+    inputFile.set shadowJar.archiveFile
 }

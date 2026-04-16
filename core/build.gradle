@@ -1,11 +1,13 @@
-plugins {
-    id "java-library"
+java {
+    toolchain.languageVersion = JavaLanguageVersion.of(21)
+    sourceCompatibility = JavaVersion.VERSION_16
+    targetCompatibility = JavaVersion.VERSION_16
 }
 
-group = project.maven_group
-
-sourceCompatibility = JavaVersion.VERSION_16
-targetCompatibility = JavaVersion.VERSION_16
+repositories {
+    mavenCentral()
+    maven { url 'https://jitpack.io' }
+}
 
 dependencies {
     implementation 'com.google.code.gson:gson:2.11.0'

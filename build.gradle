@@ -1,6 +1,6 @@
 plugins {
-    id 'dev.architectury.loom' version '1.11-SNAPSHOT' apply false
     id 'architectury-plugin' version '3.4-SNAPSHOT'
+    id 'dev.architectury.loom' version '1.11-SNAPSHOT' apply false
     id 'com.gradleup.shadow' version '8.3.6' apply false
 }
 
@@ -21,19 +21,20 @@ allprojects {
 }
 
 subprojects {
+    apply plugin: 'maven-publish'
+
     if (project.name != 'core') {
         apply plugin: 'dev.architectury.loom'
         apply plugin: 'architectury-plugin'
     }
-    apply plugin: 'maven-publish'
 
     if (project.name == 'core') {
         apply plugin: 'java-library'
     }
 
     configurations {
-        my.canBeResolved(true)
-        api.extendsFrom(my)
+        bundled.canBeResolved(true)
+        api.extendsFrom(bundled)
     }
 
     base {

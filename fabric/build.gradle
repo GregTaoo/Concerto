@@ -32,6 +32,8 @@ dependencies {
 
     common(project(path: ':common', configuration: 'namedElements'))
     shadowBundle project(path: ':common', configuration: 'transformProductionFabric')
+
+    shadowBundle project(':core')
 }
 
 processResources {
@@ -46,22 +48,12 @@ processResources {
 }
 
 shadowJar {
-    configurations = [project.configurations.my]
-    dependencies {
-        exclude(dependency('junit:junit'))
-    }
-
-    exclude 'META-INF/maven/**'
-    exclude 'META-INF/versions/**/*'
-
-    from(rootProject.file("LICENSE")) {
-        rename {"LICENSE_${project.archives_base_name}"}
-        into("META-INF")
-    }
-
+    configurations = [project.configurations.shadowBundle, project(':core').configurations.bundled]
     mergeServiceFiles()
+    archiveClassifier = 'dev-shadow'
 }
 
 remapJar {
     inputFile.set shadowJar.archiveFile
+    archiveClassifier.set(null)
 }

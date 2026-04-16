@@ -18,7 +18,7 @@ import net.minecraft.resources.ResourceLocation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import top.gregtao.concerto.bridge.CoreBridgeImpl;
-import top.gregtao.concerto.bridge.LoggerFactoryImpl;
+import top.gregtao.concerto.bridge.LoggerImpl;
 import top.gregtao.concerto.bridge.MinecraftServerBridge;
 import top.gregtao.concerto.command.ConcertoServerCommand;
 import top.gregtao.concerto.core.Concerto;
@@ -38,7 +38,7 @@ public class ConcertoServer implements ModInitializer {
 
     public static Logger LOGGER = LoggerFactory.getLogger("ConcertoServer");
     public static final CoreBridgeImpl CORE_BRIDGE = new CoreBridgeImpl();
-    public static final LoggerFactoryImpl LOGGER_FACTORY = new LoggerFactoryImpl();
+    public static final LoggerImpl.Factory LOGGER_FACTORY = new LoggerImpl.Factory();
 
     private static MinecraftServerBridge BRIDGE;
 

@@ -5,6 +5,14 @@ import top.gregtao.concerto.core.bridge.Logger;
 
 public class LoggerImpl implements Logger {
 
+    public static class Factory implements Logger.Factory {
+
+        @Override
+        public Logger getLogger(String name) {
+            return new LoggerImpl(name);
+        }
+    }
+
     private final org.slf4j.Logger logger;
 
     public LoggerImpl(String name) {

@@ -2,6 +2,10 @@ package top.gregtao.concerto.core.bridge;
 
 public interface Logger {
 
+    interface Factory {
+        Logger getLogger(String name);
+    }
+
     void debug(String message);
 
     void debug(String message, Throwable t);

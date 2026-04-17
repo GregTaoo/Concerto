@@ -1,36 +1,70 @@
+plugins {
+    id 'com.gradleup.shadow'
+}
+
 java {
     toolchain.languageVersion = JavaLanguageVersion.of(21)
     sourceCompatibility = JavaVersion.VERSION_16
     targetCompatibility = JavaVersion.VERSION_16
 }
 
-apply plugin: "com.gradleup.shadow"
-
 repositories {
     mavenCentral()
     maven { url 'https://jitpack.io' }
+}
+
+configurations {
+    my.canBeResolved(true)
+    api.extendsFrom(my)
+
+    my {
+        exclude group: 'com.jcraft', module: 'jorbis'
+        exclude group: 'com.jcraft', module: 'jogg'
+        exclude group: 'junit', module: 'junit'
+        exclude group: 'com.googlecode.soundlibs', module: 'tritonus-share'
+    }
 }
 
 dependencies {
     implementation 'com.google.code.gson:gson:2.11.0'
     implementation "org.jetbrains:annotations:24.1.0"
 
-    bundled 'com.google.zxing:core:3.3.0'
+    my('com.google.zxing:core:3.3.0')
 
-    bundled('com.googlecode.soundlibs:mp3spi:1.9.5.4') {
-        exclude group: 'com.googlecode.soundlibs', module: 'tritonus-share'
-        exclude group: 'junit', module: 'junit'
+    my('com.googlecode.soundlibs:mp3spi:1.9.5.4')
+
+    my('com.github.GregTaoo:JustFLAC:1.0.0')
+
+    my('com.github.trilarion:vorbis-support:1.1.0')
+
+    my('com.googlecode.soundlibs:tritonus-all:0.3.7.2')
+
+    my('net.jthink:jaudiotagger:3.0.1')
+}
+
+jar {
+    from("LICENSE") {
+        rename { "${it}_${project.archivesBaseName}"}
     }
-
-    bundled 'com.github.GregTaoo:JustFLAC:1.0.0'
-
-    bundled 'com.github.trilarion:vorbis-support:1.1.0'
-
-    bundled('com.googlecode.soundlibs:tritonus-all:0.3.7.2') {
-        exclude group: 'com.googlecode.soundlibs', module: 'tritonus-share'
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    from {
+        configurations.my
+                .filter { !it.name.contains("jorbis") }
+                .collect { it.isDirectory() ? it : zipTree(it) }
     }
+}
 
-    bundled 'net.jthink:jaudiotagger:3.0.1'
+shadowJar {
+    configurations = [project.configurations.my]
+    mergeServiceFiles()
+    archiveClassifier = ''
+
+    dependencies {
+        exclude(dependency('com.jcraft:jorbis'))
+        exclude(dependency('com.jcraft:jogg'))
+        exclude(dependency('junit:junit'))
+        exclude(dependency('com.googlecode.soundlibs:tritonus-share'))
+    }
 }
 
 tasks.withType(JavaCompile).configureEach {

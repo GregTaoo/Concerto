@@ -32,7 +32,9 @@ public interface MinecraftServerBridge {
 
     record NetworkingContext(ServerPlayer player, MinecraftServer server) {}
 
-    <T extends CustomPacketPayload> void registerServerPayloadReceiver(CustomPacketPayload.Type<T> type, BiConsumer<T, NetworkingContext> handler);
+    <T extends CustomPacketPayload> void registerServerPayloadReceiver(CustomPacketPayload.Type<T> type, StreamCodec<? super RegistryFriendlyByteBuf, T> codec, BiConsumer<T, NetworkingContext> handler);
 
     void sendPayload(ServerPlayer player, CustomPacketPayload payload);
+
+    boolean isDedicatedServer();
 }

@@ -1,11 +1,13 @@
 package top.gregtao.concerto.fabric;
 
+import net.fabricmc.api.EnvType;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.fabricmc.fabric.api.resource.ResourceManagerHelper;
 import net.fabricmc.fabric.api.resource.SimpleSynchronousResourceReloadListener;
+import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
@@ -54,7 +56,7 @@ public class FabricServer implements ModInitializer {
         }
 
         @Override
-        public <T extends CustomPacketPayload> void registerServerPayloadReceiver(CustomPacketPayload.Type<T> type, BiConsumer<T, NetworkingContext> handler) {
+        public <T extends CustomPacketPayload> void registerServerPayloadReceiver(CustomPacketPayload.Type<T> type, StreamCodec<? super RegistryFriendlyByteBuf, T> codec, BiConsumer<T, NetworkingContext> handler) {
             ServerPlayNetworking.registerGlobalReceiver(type, (payload, context) ->
                     handler.accept(payload, new NetworkingContext(context.player(), context.server())));
         }
@@ -62,6 +64,11 @@ public class FabricServer implements ModInitializer {
         @Override
         public void sendPayload(ServerPlayer player, CustomPacketPayload payload) {
             ServerPlayNetworking.send(player, payload);
+        }
+
+        @Override
+        public boolean isDedicatedServer() {
+            return FabricLoader.getInstance().getEnvironmentType() == EnvType.SERVER;
         }
     }
 

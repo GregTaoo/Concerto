@@ -5,6 +5,8 @@ import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.commands.CommandBuildContext;
 import net.minecraft.commands.SharedSuggestionProvider;
+import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.ResourceManager;
@@ -25,7 +27,7 @@ public interface MinecraftClientBridge {
 
     void registerEndOfTickListener(Consumer<Minecraft> listener);
 
-    <T extends CustomPacketPayload> void registerClientPayloadReceiver(CustomPacketPayload.Type<T> type, Consumer<T> handler);
+    <T extends CustomPacketPayload> void registerClientPayloadReceiver(CustomPacketPayload.Type<T> type, StreamCodec<? super RegistryFriendlyByteBuf, T> codec, Consumer<T> handler);
 
     void sendPayload(CustomPacketPayload payload);
 }

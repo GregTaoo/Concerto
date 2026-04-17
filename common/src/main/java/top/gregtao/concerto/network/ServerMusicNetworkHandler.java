@@ -24,7 +24,7 @@ public class ServerMusicNetworkHandler {
     public static final int WAIT_LIST_MAX_SIZE = 300;
 
     public static void register(MinecraftServerBridge bridge) {
-        bridge.registerServerPayloadReceiver(ConcertoPayload.ID, ServerMusicNetworkHandler::generalReceiver);
+        bridge.registerServerPayloadReceiver(ConcertoPayload.ID, ConcertoPayload.CODEC, ServerMusicNetworkHandler::generalReceiver);
     }
 
     public static Map<UUID, MusicDataPacket> WAIT_AUDITION = new HashMap<>();

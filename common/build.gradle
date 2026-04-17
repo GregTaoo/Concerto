@@ -1,15 +1,16 @@
 architectury {
-    common rootProject.enabled_platforms.split(',')
+    common(rootProject.enabled_platforms.split(",")) {
+        it.platformPackage "neoforge", "forge"
+    }
+}
+
+repositories {
+    maven {
+        url = 'https://repo.spongepowered.org/repository/maven-public/'
+    }
 }
 
 dependencies {
-    // We depend on Fabric Loader here to use the Fabric @Environment annotations,
-    // which get remapped to the correct annotations on each platform.
-    // Do NOT use other classes from Fabric Loader.
-    modImplementation "net.fabricmc:fabric-loader:$rootProject.fabric_loader_version"
+    compileOnly 'org.spongepowered:mixin:0.8.7'
     api project(":core")
-}
-
-processResources {
-    from project(":core").sourceSets.main.resources
 }

@@ -26,15 +26,14 @@ subprojects {
     if (project.name != 'core') {
         apply plugin: 'dev.architectury.loom'
         apply plugin: 'architectury-plugin'
+
+//        architectury {
+//            compileOnly()
+//        }
     }
 
     if (project.name == 'core') {
         apply plugin: 'java-library'
-    }
-
-    configurations {
-        bundled.canBeResolved(true)
-        api.extendsFrom(bundled)
     }
 
     base {

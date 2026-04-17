@@ -9,6 +9,8 @@ import net.fabricmc.fabric.api.resource.ResourceManagerHelper;
 import net.fabricmc.fabric.api.resource.SimpleSynchronousResourceReloadListener;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
+import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.server.packs.PackType;
@@ -42,7 +44,7 @@ public class FabricClient implements ClientModInitializer {
         }
 
         @Override
-        public <T extends CustomPacketPayload> void registerClientPayloadReceiver(CustomPacketPayload.Type<T> type, Consumer<T> handler) {
+        public <T extends CustomPacketPayload> void registerClientPayloadReceiver(CustomPacketPayload.Type<T> type, StreamCodec<? super RegistryFriendlyByteBuf, T> codec, Consumer<T> handler) {
             ClientPlayNetworking.registerGlobalReceiver(type, (payload, context) -> handler.accept(payload));
         }
 

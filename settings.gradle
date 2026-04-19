@@ -1,14 +1,17 @@
 pluginManagement {
     repositories {
-        maven {
-            name = 'Fabric'
-            url = 'https://maven.fabricmc.net/'
-        }
-        maven {
-            name = 'Jitpack'
-            url = 'https://jitpack.io'
-        }
+        maven { url "https://maven.fabricmc.net/" }
+        maven { url "https://maven.architectury.dev/" }
+        maven { url "https://maven.neoforged.net/releases/" }
+        maven { url 'https://jitpack.io' }
         mavenCentral()
         gradlePluginPortal()
     }
 }
+
+include("core")
+include("common")
+include("fabric")
+include("neoforge")
+
+rootProject.name = "concerto"

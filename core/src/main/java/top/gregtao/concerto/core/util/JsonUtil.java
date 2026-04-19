@@ -1,0 +1,41 @@
+package top.gregtao.concerto.core.util;
+
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import com.google.gson.stream.JsonReader;
+
+import java.io.StringReader;
+import java.util.UUID;
+
+public class JsonUtil {
+
+    public static JsonObject from(String raw) {
+        JsonReader reader = new JsonReader(new StringReader(raw));
+        reader.setLenient(true);
+        return JsonParser.parseReader(reader).getAsJsonObject();
+    }
+
+    public static String getStringOrElse(JsonObject object, String name, String def) {
+        try {
+            return object.get(name).getAsString();
+        } catch (Exception e) {
+            return def;
+        }
+    }
+
+    public static UUID getUUIDOrElse(JsonObject object, String name, UUID def) {
+        try {
+            return UUID.fromString(object.get(name).getAsString());
+        } catch (Exception e) {
+            return def;
+        }
+    }
+
+    public static int getIntOrElse(JsonObject object, String name, int def) {
+        try {
+            return object.get(name).getAsInt();
+        } catch (Exception e) {
+            return def;
+        }
+    }
+}

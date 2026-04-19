@@ -1,0 +1,41 @@
+{
+  "schemaVersion": 1,
+  "id": "concerto",
+  "version": "${version}",
+
+  "name": "Concerto",
+  "description": "Concerto",
+  "authors": [
+    "GregTao"
+  ],
+  "contact": {
+    "homepage": "https://github.com/GregTaoo/Concerto",
+    "sources": "https://github.com/GregTaoo/Concerto"
+  },
+
+  "license": "GPL-v3 & more",
+  "icon": "assets/concerto/icon.png",
+
+  "environment": "*",
+  "entrypoints": {
+    "main": [
+      "top.gregtao.concerto.fabric.FabricServer"
+    ],
+    "client": [
+      "top.gregtao.concerto.fabric.FabricClient"
+    ]
+  },
+  "mixins": [
+    "concerto.mixins.json"
+  ],
+
+  "depends": {
+    "fabricloader": ">=0.16.10",
+    "fabric-api": "*",
+    "minecraft": "~1.21.6",
+    "java": ">=21"
+  },
+  "suggests": {
+    "another-mod": "*"
+  }
+}

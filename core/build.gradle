@@ -1,0 +1,61 @@
+plugins {
+    id "com.github.johnrengelman.shadow" version "7.1.2"
+}
+
+configurations {
+    my.canBeResolved(true)
+    implementation.extendsFrom(my)
+
+    my {
+        exclude group: 'com.jcraft', module: 'jorbis'
+        exclude group: 'com.jcraft', module: 'jogg'
+        exclude group: 'junit', module: 'junit'
+        exclude group: 'com.googlecode.soundlibs', module: 'tritonus-share'
+    }
+}
+
+dependencies {
+    implementation 'com.google.code.gson:gson:2.11.0'
+    implementation "org.jetbrains:annotations:24.1.0"
+
+    my('com.googlecode.soundlibs:mp3spi:1.9.5.4')
+
+    my('com.github.GregTaoo:JustFLAC:1.0.0')
+
+    my('com.github.trilarion:vorbis-support:1.1.0')
+
+    my('com.googlecode.soundlibs:tritonus-all:0.3.7.2')
+
+    my('net.jthink:jaudiotagger:3.0.1')
+}
+
+jar {
+    dependsOn shadowJar
+    enabled = false
+}
+
+shadowJar {
+    configurations = [project.configurations.my]
+    mergeServiceFiles()
+    archiveClassifier = ''
+
+    dependencies {
+        exclude(dependency('com.jcraft:jorbis'))
+        exclude(dependency('com.jcraft:jogg'))
+        exclude(dependency('junit:junit'))
+        exclude(dependency('com.googlecode.soundlibs:tritonus-share'))
+    }
+
+    relocate 'org.jaudiotagger', 'top.gregtao.concerto.libs.jaudiotagger'
+    relocate 'com.googlecode.soundlibs', 'top.gregtao.concerto.libs.soundlibs'
+    relocate 'javazoom', 'top.gregtao.concerto.libs.javazoom'
+    relocate 'org.tritonus', 'top.gregtao.concerto.libs.tritonus'
+    relocate 'com.jcraft.jogg', 'top.gregtao.concerto.libs.jogg'
+    relocate 'com.jcraft.jorbis', 'top.gregtao.concerto.libs.jorbis'
+    relocate 'org.kc7bfi.jflac', 'top.gregtao.concerto.libs.jflac'
+    relocate 'com.github.trilarion', 'top.gregtao.concerto.libs.trilarion'
+}
+
+tasks.withType(JavaCompile).configureEach {
+    it.options.release = 16
+}

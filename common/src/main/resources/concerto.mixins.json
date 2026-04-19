@@ -1,0 +1,23 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "top.gregtao.concerto.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "mixins": [
+    "MinecraftServerMixin",
+    "PlayerListMixin"
+  ],
+  "client": [
+    "ChatComponentMixin",
+    "GuiGraphicsAccessor",
+    "PauseScreenMixin",
+    "MinecraftMixin",
+    "MusicManagerMixin",
+    "SoundManagerMixin"
+  ],
+  "server": [
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

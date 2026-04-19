@@ -194,7 +194,11 @@ public class MusicRoom {
                         room.serverOnJoin(sender);
                         bridge.sendRoomCommand(sender, Command.JOIN, room.uuid.toString());
                         bridge.sendRoomCommand(sender, Command.SYNC, room.serverState.buildFull().toString());
-                        bridge.sendMessage(sender, "concerto.room.join", uuid.toString());
+                        if (ServerMusicAgent.isServerAgent(uuid)) {
+                            bridge.sendMessage(sender, "concerto.agent.join");
+                        } else {
+                            bridge.sendMessage(sender, "concerto.room.join", uuid.toString());
+                        }
                     }
                 }
                 case REMOVE -> {
@@ -219,7 +223,11 @@ public class MusicRoom {
                     if (room != null) {
                         room.serverOnQuit(sender);
                         bridge.sendRoomCommand(sender, Command.QUIT, uuid.toString());
-                        bridge.sendMessage(sender, "concerto.room.quit", uuid.toString());
+                        if (ServerMusicAgent.isServerAgent(uuid)) {
+                            bridge.sendMessage(sender, "concerto.agent.quit");
+                        } else {
+                            bridge.sendMessage(sender, "concerto.room.quit", uuid.toString());
+                        }
                     }
                 }
                 case SET_OP -> {

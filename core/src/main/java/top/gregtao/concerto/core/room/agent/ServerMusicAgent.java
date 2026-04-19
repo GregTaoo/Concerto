@@ -26,6 +26,10 @@ public class ServerMusicAgent {
     public static final UUID ROOM_UUID = UUID.fromString("00000000-0000-0000-0000-000000000000");
     public static ServerMusicAgent INSTANCE;
 
+    public static boolean isServerAgent(UUID uuid) {
+        return uuid.equals(ROOM_UUID);
+    }
+
     public static void init(ServerNetworkBridge serverBridge, MusicRoom.ServerNetworkBridge roomServerBridge) {
         INSTANCE = new ServerMusicAgent(serverBridge, roomServerBridge);
     }

@@ -164,7 +164,7 @@ public class ServerMusicAgent {
         }
 
         this.room.serverBridge.sendMessage(playerName, "concerto.agent.vote_for", 
-                vote ? "concerto.accept" : "concerto.reject");
+                Concerto.getCoreBridge().getTranslatable(vote ? "concerto.accept" : "concerto.reject"));
     }
 
     private void endVoting() {

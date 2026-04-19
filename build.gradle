@@ -66,3 +66,42 @@ allprojects {
         withSourcesJar()
     }
 }
+
+build {
+    dependsOn("buildAll")
+}
+
+tasks.register("buildAll") {
+    group = "build"
+    description = "Build shadow jars and collect outputs"
+
+    dependsOn(":fabric:shadowJar", ":neoforge:shadowJar")
+
+    doLast {
+        def outDir = file("$rootDir/build/libs")
+        outDir.mkdirs()
+
+        def mc = rootProject.minecraft_version
+        def ver = rootProject.mod_version
+
+        // fabric jar
+        def fabricJar = file("${project(":fabric").buildDir}/libs/Concerto-${ver}.jar")
+        if (fabricJar.exists()) {
+            copy {
+                from fabricJar
+                into outDir
+                rename { "Concerto-mc${mc}-fabric-${ver}.jar" }
+            }
+        }
+
+        // neoforge jar
+        def neoJar = file("${project(":neoforge").buildDir}/libs/Concerto-${ver}.jar")
+        if (neoJar.exists()) {
+            copy {
+                from neoJar
+                into outDir
+                rename { "Concerto-mc${mc}-neoforge-${ver}.jar" }
+            }
+        }
+    }
+}

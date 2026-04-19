@@ -51,7 +51,7 @@ public class KuGouLyricsUtil {
                     String[] strings = first.split(",");
                     String time = strings[0];
                     String formattedTime = formatTime(Integer.parseInt(time));
-                    String lyric = second.replaceAll("<\\d+,[^>]+>", "");
+                    String lyric = second.replaceAll("<-?\\d+,[^>]+>", "");
                     mainLyric.add(formattedTime + lyric);
 
                     if (transLyricStr.size() > i) {

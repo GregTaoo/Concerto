@@ -158,16 +158,26 @@ public class ClientMusicNetworkHandler {
 
     public static void playerJoinHandshake(ConcertoPayload payload) {
         String str = payload.string;
-        if (!str.startsWith(ConcertoPayload.HANDSHAKE_STRING)) return;
+        LocalPlayer player = Minecraft.getInstance().player;
+        if (!str.startsWith(ConcertoPayload.HANDSHAKE_STRING) || player == null) return;
         String[] args = str.split(":");
-        if (args.length < 3) return;
-        if (args[1].equals("CallJoin")) {
-            String playerName = args[2];
-            LocalPlayer player = Minecraft.getInstance().player;
-            if (player != null && playerName.equals(player.getName().getString())) {
+        if (args.length < 4) {
+            player.displayClientMessage(Component.translatable("concerto.server_invalid_version"), false);
+            ConcertoClient.LOGGER.warn("Server handshake with an invalid version");
+            return;
+        }
+        String version = args[1];
+        if (!version.equals(ConcertoPayload.VERSION)) {
+            player.displayClientMessage(Component.translatable("concerto.invalid_version", version), false);
+            ConcertoClient.LOGGER.warn("Server/Client handshake with an invalid version");
+            return;
+        }
+        if (args[2].equals("CallJoin")) {
+            String playerName = args[3];
+            if (playerName.equals(player.getName().getString())) {
                 ConcertoClient.serverAvailable = true;
                 ConcertoClient.LOGGER.info("Concerto has been installed in this server");
-                if (args.length > 3 && !Minecraft.getInstance().isLocalServer() && args[3].equals("Invite")) {
+                if (args.length > 4 && !Minecraft.getInstance().isLocalServer() && args[4].equals("Invite")) {
                     if (ClientConfig.INSTANCE.options.joinAgentWhenInvited) {
                         player.connection.sendCommand("musicroom agent join");
                     } else {

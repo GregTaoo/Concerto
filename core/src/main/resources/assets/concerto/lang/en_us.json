@@ -23,6 +23,8 @@
   "concerto.report_bugs": "Report Bugs",
   "concerto.reset": "Reset",
   "concerto.reset_confirm": "Are you sure you want to reset?",
+  "concerto.server_invalid_version": "The server-side mod version is outdated. Please update to the latest version.",
+  "concerto.invalid_version": "The client and server mod versions are incompatible. Please update the mod to the latest version.",
 
   "concerto.playlist": "Playlist",
   "concerto.album": "Album",

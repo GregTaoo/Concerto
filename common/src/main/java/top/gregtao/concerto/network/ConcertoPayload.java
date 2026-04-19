@@ -8,9 +8,9 @@ import org.jetbrains.annotations.NotNull;
 
 public class ConcertoPayload implements CustomPacketPayload {
 
-    public static final String VERSION = "1.6.0";
+    public static final String VERSION = "2";
     public static final Type<ConcertoPayload> ID = new Type<>(ResourceLocation.fromNamespaceAndPath("concerto", "s"));
-    public static final String HANDSHAKE_STRING = "CONCERTO:";
+    public static final String HANDSHAKE_STRING = "CONCERTO:" + VERSION + ":";
 
     public String string;
     public Channel channel;

@@ -2,11 +2,18 @@ pluginManagement {
     repositories {
         maven { url "https://maven.fabricmc.net/" }
         maven { url "https://maven.architectury.dev/" }
-        maven { url "https://maven.minecraftforge.net/" }
+        maven { url "https://files.minecraftforge.net/maven/" }
+        maven { url "https://maven.neoforged.net/releases/" }
+        maven { url 'https://jitpack.io' }
+        mavenCentral()
         gradlePluginPortal()
     }
 }
 
-rootProject.name = "concerto"
+include("core")
+include("common")
+include("fabric")
+include("forge")
+include("neoforge")
 
-include("core", "common", "fabric", "neoforge", "forge")
+rootProject.name = "concerto"

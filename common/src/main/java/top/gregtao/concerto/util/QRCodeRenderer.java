@@ -1,10 +1,10 @@
 package top.gregtao.concerto.util;
 
-import com.google.zxing.BarcodeFormat;
-import com.google.zxing.EncodeHintType;
-import com.google.zxing.WriterException;
-import com.google.zxing.common.BitMatrix;
-import com.google.zxing.qrcode.QRCodeWriter;
+import top.gregtao.concerto.libs.zxing.BarcodeFormat;
+import top.gregtao.concerto.libs.zxing.EncodeHintType;
+import top.gregtao.concerto.libs.zxing.WriterException;
+import top.gregtao.concerto.libs.zxing.common.BitMatrix;
+import top.gregtao.concerto.libs.zxing.qrcode.QRCodeWriter;
 import top.gregtao.concerto.ConcertoClient;
 
 import javax.imageio.ImageIO;

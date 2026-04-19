@@ -1,3 +1,5 @@
+modLoader = "javafml"
+loaderVersion = "[47,)"
 issueTrackerURL = "https://github.com/GregTaoo/Concerto"
 license = "GPL-v3 & more"
 
@@ -11,16 +13,16 @@ Concerto
 '''
 logoFile = "assets/concerto/icon.png"
 
-[[dependencies.concerto]]
+[[dependencies.examplemod]]
 modId = "forge"
 mandatory = true
 versionRange = "[49,)"
 ordering = "NONE"
 side = "BOTH"
 
-[[dependencies.concerto]]
+[[dependencies.examplemod]]
 modId = "minecraft"
 mandatory = true
-versionRange = "[1.21.5,)"
+versionRange = "[1.20.5,)"
 ordering = "NONE"
 side = "BOTH"

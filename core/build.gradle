@@ -1,21 +1,10 @@
 plugins {
-    id 'com.gradleup.shadow'
-}
-
-java {
-    toolchain.languageVersion = JavaLanguageVersion.of(21)
-    sourceCompatibility = JavaVersion.VERSION_16
-    targetCompatibility = JavaVersion.VERSION_16
-}
-
-repositories {
-    mavenCentral()
-    maven { url 'https://jitpack.io' }
+    id "com.github.johnrengelman.shadow" version "7.1.2"
 }
 
 configurations {
     my.canBeResolved(true)
-    api.extendsFrom(my)
+    implementation.extendsFrom(my)
 
     my {
         exclude group: 'com.jcraft', module: 'jorbis'
@@ -43,15 +32,8 @@ dependencies {
 }
 
 jar {
-    from("LICENSE") {
-        rename { "${it}_${project.archivesBaseName}"}
-    }
-    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-    from {
-        configurations.my
-                .filter { !it.name.contains("jorbis") }
-                .collect { it.isDirectory() ? it : zipTree(it) }
-    }
+    dependsOn shadowJar
+    enabled = false
 }
 
 shadowJar {
@@ -65,6 +47,16 @@ shadowJar {
         exclude(dependency('junit:junit'))
         exclude(dependency('com.googlecode.soundlibs:tritonus-share'))
     }
+
+    relocate 'org.jaudiotagger', 'top.gregtao.concerto.libs.jaudiotagger'
+    relocate 'com.google.zxing', 'top.gregtao.concerto.libs.zxing'
+    relocate 'com.googlecode.soundlibs', 'top.gregtao.concerto.libs.soundlibs'
+    relocate 'javazoom', 'top.gregtao.concerto.libs.javazoom'
+    relocate 'org.tritonus', 'top.gregtao.concerto.libs.tritonus'
+    relocate 'com.jcraft.jogg', 'top.gregtao.concerto.libs.jogg'
+    relocate 'com.jcraft.jorbis', 'top.gregtao.concerto.libs.jorbis'
+    relocate 'org.kc7bfi.jflac', 'top.gregtao.concerto.libs.jflac'
+    relocate 'com.github.trilarion', 'top.gregtao.concerto.libs.trilarion'
 }
 
 tasks.withType(JavaCompile).configureEach {

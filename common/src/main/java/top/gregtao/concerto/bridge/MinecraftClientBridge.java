@@ -10,6 +10,7 @@ import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.ResourceManager;
+import top.gregtao.concerto.network.ConcertoPayload;
 
 import java.util.function.Consumer;
 
@@ -27,7 +28,7 @@ public interface MinecraftClientBridge {
 
     void registerEndOfTickListener(Consumer<Minecraft> listener);
 
-    <T extends CustomPacketPayload> void registerClientPayloadReceiver(CustomPacketPayload.Type<T> type, StreamCodec<? super RegistryFriendlyByteBuf, T> codec, Consumer<T> handler);
+    void registerClientPayloadReceiver(CustomPacketPayload.Type<ConcertoPayload> type, StreamCodec<RegistryFriendlyByteBuf, ConcertoPayload> codec, Consumer<ConcertoPayload> handler);
 
-    void sendPayload(CustomPacketPayload payload);
+    void sendPayload(ConcertoPayload payload);
 }

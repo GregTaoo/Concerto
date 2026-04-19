@@ -1,6 +1,6 @@
 plugins {
-    id 'architectury-plugin' version '3.4-SNAPSHOT'
-    id 'dev.architectury.loom' version '1.11-SNAPSHOT' apply false
+    id 'architectury-plugin' version '3.5-SNAPSHOT'
+    id 'dev.architectury.loom' version '1.13-SNAPSHOT' apply false
     id 'com.gradleup.shadow' version '8.3.6' apply false
 }
 
@@ -22,6 +22,7 @@ allprojects {
 
 subprojects {
     apply plugin: 'maven-publish'
+    apply plugin: 'java-library'
 
     if (project.name != 'core') {
         apply plugin: 'dev.architectury.loom'
@@ -30,10 +31,6 @@ subprojects {
 //        architectury {
 //            compileOnly()
 //        }
-    }
-
-    if (project.name == 'core') {
-        apply plugin: 'java-library'
     }
 
     base {
@@ -72,23 +69,5 @@ subprojects {
 
     tasks.withType(JavaCompile).configureEach {
         it.options.release = 21
-    }
-
-    // Configure Maven publishing.
-    publishing {
-        publications {
-            mavenJava(MavenPublication) {
-                artifactId = base.archivesName.get()
-                from components.java
-            }
-        }
-
-        // See https://docs.gradle.org/current/userguide/publishing_maven.html for information on how to set up publishing.
-        repositories {
-            // Add repositories to publish to here.
-            // Notice: This block does NOT have the same function as the block in the top level.
-            // The repositories here will be used for publishing your artifact, not for
-            // retrieving dependencies.
-        }
     }
 }

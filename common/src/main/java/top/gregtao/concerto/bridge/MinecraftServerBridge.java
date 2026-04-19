@@ -11,6 +11,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.packs.resources.ResourceManager;
+import top.gregtao.concerto.network.ConcertoPayload;
 
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -26,15 +27,11 @@ public interface MinecraftServerBridge {
 
     void registerResourceReloadListener(ResourceLocation id, Consumer<ResourceManager> listener);
 
-    <T extends CustomPacketPayload> void registerS2CPayload(CustomPacketPayload.Type<T> id, StreamCodec<? super RegistryFriendlyByteBuf, T> codec);
-
-    <T extends CustomPacketPayload> void registerC2SPayload(CustomPacketPayload.Type<T> id, StreamCodec<? super RegistryFriendlyByteBuf, T> codec);
-
     record NetworkingContext(ServerPlayer player, MinecraftServer server) {}
 
-    <T extends CustomPacketPayload> void registerServerPayloadReceiver(CustomPacketPayload.Type<T> type, StreamCodec<? super RegistryFriendlyByteBuf, T> codec, BiConsumer<T, NetworkingContext> handler);
+    void registerServerPayloadReceiver(CustomPacketPayload.Type<ConcertoPayload> type, StreamCodec<RegistryFriendlyByteBuf, ConcertoPayload> codec, BiConsumer<ConcertoPayload, NetworkingContext> handler);
 
-    void sendPayload(ServerPlayer player, CustomPacketPayload payload);
+    void sendPayload(ServerPlayer player, ConcertoPayload payload);
 
     boolean isDedicatedServer();
 }

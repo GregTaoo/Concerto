@@ -56,24 +56,6 @@ public class NeoForgeClient {
         }
 
         @Override
-        public <T extends CustomPacketPayload> void registerClientPayloadReceiver(CustomPacketPayload.Type<T> type, StreamCodec<? super RegistryFriendlyByteBuf, T> codec, Consumer<T> handler) {
-            IPayloadHandler<T> clientHandler = (payload, context) -> handler.accept(payload);
-            if (NETWORK_HANDLERS.containsKey(type)) {
-                @SuppressWarnings("unchecked")
-                NeoForgeServer.NetworkingHandler<T> handlers = (NeoForgeServer.NetworkingHandler<T>) NETWORK_HANDLERS.get(type);
-                handlers.setClientHandler(clientHandler);
-            } else {
-                NeoForgeServer.NetworkingHandler<T> handlers = new NeoForgeServer.NetworkingHandler<>();
-                handlers.setClientHandler(clientHandler);
-                this.modEventBus.addListener((RegisterPayloadHandlersEvent event) -> {
-                    PayloadRegistrar registrar = event.registrar(ConcertoPayload.VERSION).optional();
-                    registrar.playBidirectional(type, codec, handlers);
-                });
-                NETWORK_HANDLERS.put(type, handlers);
-            }
-        }
-
-        @Override
         public KeyMapping registerKeyMapping(KeyMapping keyMapping) {
             this.modEventBus.addListener((RegisterKeyMappingsEvent event) -> event.register(keyMapping));
             return keyMapping;
@@ -85,7 +67,24 @@ public class NeoForgeClient {
         }
 
         @Override
-        public void sendPayload(CustomPacketPayload payload) {
+        public void registerClientPayloadReceiver(CustomPacketPayload.Type<ConcertoPayload> type, StreamCodec<RegistryFriendlyByteBuf, ConcertoPayload> codec, Consumer<ConcertoPayload> handler) {
+            IPayloadHandler<ConcertoPayload> clientHandler = (payload, context) -> handler.accept(payload);
+            if (NETWORK_HANDLERS.containsKey(type)) {
+                NeoForgeServer.NetworkingHandler<ConcertoPayload> handlers = NETWORK_HANDLERS.get(type);
+                handlers.setClientHandler(clientHandler);
+            } else {
+                NeoForgeServer.NetworkingHandler<ConcertoPayload> handlers = new NeoForgeServer.NetworkingHandler<>();
+                handlers.setClientHandler(clientHandler);
+                this.modEventBus.addListener((RegisterPayloadHandlersEvent event) -> {
+                    PayloadRegistrar registrar = event.registrar(ConcertoPayload.VERSION).optional();
+                    registrar.playBidirectional(type, codec, handlers);
+                });
+                NETWORK_HANDLERS.put(type, handlers);
+            }
+        }
+
+        @Override
+        public void sendPayload(ConcertoPayload payload) {
             PacketDistributor.sendToServer(payload);
         }
     }

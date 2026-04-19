@@ -1,7 +1,6 @@
 package top.gregtao.concerto.core.music;
 
 import com.google.gson.JsonObject;
-import top.gregtao.concerto.core.Concerto;
 import top.gregtao.concerto.core.api.CacheableMusic;
 import top.gregtao.concerto.core.api.JsonParser;
 import top.gregtao.concerto.core.api.MusicJsonParsers;

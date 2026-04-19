@@ -60,7 +60,7 @@ public class NeoForgeServer {
         }
     }
 
-    public static final HashMap<CustomPacketPayload.Type<?>, NetworkingHandler<?>> NETWORK_HANDLERS = new HashMap<>();
+    public static final HashMap<CustomPacketPayload.Type<ConcertoPayload>, NetworkingHandler<ConcertoPayload>> NETWORK_HANDLERS = new HashMap<>();
 
     static class NeoForgeServerBridge implements MinecraftServerBridge {
 
@@ -85,26 +85,17 @@ public class NeoForgeServer {
         }
 
         @Override
-        public <T extends CustomPacketPayload> void registerS2CPayload(CustomPacketPayload.Type<T> id, StreamCodec<? super RegistryFriendlyByteBuf, T> codec) {
-        }
-
-        @Override
-        public <T extends CustomPacketPayload> void registerC2SPayload(CustomPacketPayload.Type<T> id, StreamCodec<? super RegistryFriendlyByteBuf, T> codec) {
-        }
-
-        @Override
-        public <T extends CustomPacketPayload> void registerServerPayloadReceiver(CustomPacketPayload.Type<T> type, StreamCodec<? super RegistryFriendlyByteBuf, T> codec, BiConsumer<T, NetworkingContext> handler) {
-            IPayloadHandler<T> serverHandler = (payload, context) -> {
+        public void registerServerPayloadReceiver(CustomPacketPayload.Type<ConcertoPayload> type, StreamCodec<RegistryFriendlyByteBuf, ConcertoPayload> codec, BiConsumer<ConcertoPayload, NetworkingContext> handler) {
+            IPayloadHandler<ConcertoPayload> serverHandler = (payload, context) -> {
                 if (context.player() instanceof ServerPlayer player) {
                     handler.accept(payload, new NetworkingContext(player, player.getServer()));
                 }
             };
             if (NETWORK_HANDLERS.containsKey(type)) {
-                @SuppressWarnings("unchecked")
-                NetworkingHandler<T> handlers = (NetworkingHandler<T>) NETWORK_HANDLERS.get(type);
+                NetworkingHandler<ConcertoPayload> handlers = NETWORK_HANDLERS.get(type);
                 handlers.setServerHandler(serverHandler);
             } else {
-                NetworkingHandler<T> handlers = new NetworkingHandler<>();
+                NetworkingHandler<ConcertoPayload> handlers = new NetworkingHandler<>();
                 handlers.setServerHandler(serverHandler);
                 this.modEventBus.addListener((RegisterPayloadHandlersEvent event) -> {
                     PayloadRegistrar registrar = event.registrar(ConcertoPayload.VERSION).optional();
@@ -115,7 +106,7 @@ public class NeoForgeServer {
         }
 
         @Override
-        public void sendPayload(ServerPlayer player, CustomPacketPayload payload) {
+        public void sendPayload(ServerPlayer player, ConcertoPayload payload) {
             PacketDistributor.sendToPlayer(player, payload);
         }
 

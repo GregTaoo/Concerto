@@ -1,11 +1,10 @@
 package top.gregtao.concerto.network;
 
-import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.NotNull;
-import top.gregtao.concerto.bridge.MinecraftServerBridge;
 
 public class ConcertoPayload implements CustomPacketPayload {
 
@@ -21,24 +20,19 @@ public class ConcertoPayload implements CustomPacketPayload {
         this.string = s;
     }
 
-    public static final StreamCodec<FriendlyByteBuf, ConcertoPayload> CODEC = new StreamCodec<>() {
+    public static final StreamCodec<RegistryFriendlyByteBuf, ConcertoPayload> CODEC = new StreamCodec<>() {
         @Override
-        public void encode(FriendlyByteBuf buf, ConcertoPayload value) {
+        public void encode(RegistryFriendlyByteBuf buf, ConcertoPayload value) {
             buf.writeUtf(value.channel.id + value.string, Integer.MAX_VALUE);
         }
 
         @Override
-        public @NotNull ConcertoPayload decode(FriendlyByteBuf buf) {
+        public @NotNull ConcertoPayload decode(RegistryFriendlyByteBuf buf) {
             String s = buf.readUtf(Integer.MAX_VALUE);
             Channel channel1 = Channel.getById(s.charAt(0));
             return new ConcertoPayload(channel1, s.substring(1));
         }
     };
-
-    public static void register(MinecraftServerBridge bridge) {
-        bridge.registerC2SPayload(ID, CODEC);
-        bridge.registerS2CPayload(ID, CODEC);
-    }
 
     @Override
     public @NotNull Type<? extends CustomPacketPayload> type() {

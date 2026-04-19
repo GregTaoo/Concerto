@@ -38,7 +38,6 @@ public class ConcertoServer {
         Concerto.registerCoreBridge(CORE_BRIDGE, LOGGER_FACTORY);
 
         bridge.registerCommand(ConcertoServerCommand::register);
-        ConcertoPayload.register(bridge);
         ServerMusicNetworkHandler.register(bridge);
         
         bridge.registerResourceReloadListener(

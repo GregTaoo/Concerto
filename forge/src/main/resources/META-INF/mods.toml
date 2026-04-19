@@ -1,0 +1,26 @@
+issueTrackerURL = "https://github.com/GregTaoo/Concerto"
+license = "GPL-v3 & more"
+
+[[mods]]
+modId = "concerto"
+version = "${version}"
+displayName = "Concerto"
+authors = "GregTao"
+description = '''
+Concerto
+'''
+logoFile = "assets/concerto/icon.png"
+
+[[dependencies.concerto]]
+modId = "forge"
+mandatory = true
+versionRange = "[49,)"
+ordering = "NONE"
+side = "BOTH"
+
+[[dependencies.concerto]]
+modId = "minecraft"
+mandatory = true
+versionRange = "[1.21.5,)"
+ordering = "NONE"
+side = "BOTH"

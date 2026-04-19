@@ -17,6 +17,7 @@ import net.minecraft.server.packs.PackType;
 import net.minecraft.resources.ResourceLocation;
 import top.gregtao.concerto.ConcertoClient;
 import top.gregtao.concerto.bridge.MinecraftClientBridge;
+import top.gregtao.concerto.network.ConcertoPayload;
 
 import java.util.function.Consumer;
 
@@ -44,11 +45,6 @@ public class FabricClient implements ClientModInitializer {
         }
 
         @Override
-        public <T extends CustomPacketPayload> void registerClientPayloadReceiver(CustomPacketPayload.Type<T> type, StreamCodec<? super RegistryFriendlyByteBuf, T> codec, Consumer<T> handler) {
-            ClientPlayNetworking.registerGlobalReceiver(type, (payload, context) -> handler.accept(payload));
-        }
-
-        @Override
         public KeyMapping registerKeyMapping(KeyMapping keyMapping) {
             return KeyBindingHelper.registerKeyBinding(keyMapping);
         }
@@ -59,7 +55,12 @@ public class FabricClient implements ClientModInitializer {
         }
 
         @Override
-        public void sendPayload(CustomPacketPayload payload) {
+        public void registerClientPayloadReceiver(CustomPacketPayload.Type<ConcertoPayload> type, StreamCodec<RegistryFriendlyByteBuf, ConcertoPayload> codec, Consumer<ConcertoPayload> handler) {
+            ClientPlayNetworking.registerGlobalReceiver(type, (payload, context) -> handler.accept(payload));
+        }
+
+        @Override
+        public void sendPayload(ConcertoPayload payload) {
             ClientPlayNetworking.send(payload);
         }
     }

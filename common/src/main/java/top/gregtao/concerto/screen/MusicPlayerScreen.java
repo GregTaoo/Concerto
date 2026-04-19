@@ -36,7 +36,7 @@ public class MusicPlayerScreen extends ConcertoScreen {
         super.init();
 
         int y = this.height - 30;
-        int totalWidth = 4 * 60 + 3 * 2; // four buttons, 2px gaps
+        int totalWidth = 4 * 80 + 3 * 2; // four buttons, 2px gaps
         int x = (this.width - totalWidth) / 2;
 
         Button playlistButton = Button.builder(
@@ -46,9 +46,9 @@ public class MusicPlayerScreen extends ConcertoScreen {
                         this.minecraft.setScreen(new GeneralPlaylistScreen(this));
                     }
                 }
-        ).pos(x, y).size(60, 20).build();
+        ).pos(x, y).size(80, 20).build();
         this.addRenderableWidget(playlistButton);
-        x += 62;
+        x += 82;
 
         this.playPauseButton = Button.builder(
                 Component.translatable(MusicPlayerHandler.INSTANCE.getState().get().paused ? "concerto.screen.play" : "concerto.screen.pause"),
@@ -57,19 +57,19 @@ public class MusicPlayerScreen extends ConcertoScreen {
                     MusicPlayerHandler.INSTANCE.tryForcePause(!paused);
                     button.setMessage(Component.translatable(!paused ? "concerto.screen.play" : "concerto.screen.pause"));
                 }
-        ).pos(x, y).size(60, 20).build();
-        x += 62;
+        ).pos(x, y).size(80, 20).build();
+        x += 82;
 
         this.nextButton = Button.builder(
                 Component.translatable("concerto.screen.next"),
                 button -> MusicPlayerHandler.INSTANCE.playNextAsync(1)
-        ).pos(x, y).size(60, 20).build();
-        x += 62;
+        ).pos(x, y).size(80, 20).build();
+        x += 82;
 
         this.orderButton = CycleButton.builder((OrderType val) -> Component.literal(val.getName()))
                 .withValues(OrderType.values())
                 .withInitialValue(MusicPlayerHandler.INSTANCE.getOrderType())
-                .create(x, y, 60, 20, Component.translatable("concerto.screen.order"),
+                .create(x, y, 80, 20, Component.translatable("concerto.screen.order"),
                         (widget, orderType) -> MusicPlayerHandler.INSTANCE.setOrderType(orderType));
 
         this.addRenderableWidget(this.playPauseButton);

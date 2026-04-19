@@ -34,16 +34,16 @@ public class KuGouMusicLoginScreen extends ConcertoScreen {
         super.init();
         this.addRenderableWidget(Button.builder(Component.translatable("concerto.screen.login.type.password"),
                 button -> Minecraft.getInstance().setScreen(this.passwordLogin())
-        ).size(100, 20).pos(this.width / 2 - 50, 40).build());
+        ).size(150, 20).pos(this.width / 2 - 75, 40).build());
         this.addRenderableWidget(Button.builder(Component.translatable("concerto.screen.login.type.captcha"),
                 button -> Minecraft.getInstance().setScreen(this.captchaLogin())
-        ).size(100, 20).pos(this.width / 2 - 50, 70).build());
+        ).size(150, 20).pos(this.width / 2 - 75, 70).build());
         this.addRenderableWidget(Button.builder(Component.translatable("concerto.screen.login.type.qrcode"),
                 button -> Minecraft.getInstance().setScreen(this.qrCodeLogin())
-        ).size(100, 20).pos(this.width / 2 - 50, 100).build());
+        ).size(150, 20).pos(this.width / 2 - 75, 100).build());
         this.addRenderableWidget(Button.builder(Component.translatable("concerto.screen.login.type.cookie"),
                 button -> Minecraft.getInstance().setScreen(this.cookieLogin())
-        ).size(100, 20).pos(this.width / 2 - 50, 130).build());
+        ).size(150, 20).pos(this.width / 2 - 75, 130).build());
     }
 
     private static boolean loginChecker() {

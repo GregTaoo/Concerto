@@ -16,8 +16,6 @@ import top.gregtao.concerto.screen.login.QRCodeLoginScreen;
 import top.gregtao.concerto.core.util.Pair;
 import top.gregtao.concerto.util.QRCodeRenderer;
 
-import java.io.IOException;
-import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -113,7 +111,7 @@ public class KuGouMusicLoginScreen extends ConcertoScreen {
                         throw new RuntimeException(e);
                     }
                 },
-                key -> QRCodeRenderer.generateQRCode(KuGouMusicApiClient.INSTANCE.getQRCodeLoginLink(key), 5),
+                key -> QRCodeRenderer.generateQRCode(KuGouMusicApiClient.INSTANCE.getQRCodeLoginLink(key)),
                 key -> {
                     try {
                         Optional<JsonObject> optional = KuGouMusicApiClient.INSTANCE.getQRCodeStatus(key);

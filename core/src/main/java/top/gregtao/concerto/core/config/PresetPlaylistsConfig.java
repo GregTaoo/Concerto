@@ -1,4 +1,4 @@
-package top.gregtao.concerto.config;
+package top.gregtao.concerto.core.config;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;

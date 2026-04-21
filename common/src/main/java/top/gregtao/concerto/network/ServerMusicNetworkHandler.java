@@ -10,7 +10,7 @@ import top.gregtao.concerto.ConcertoServer;
 import top.gregtao.concerto.bridge.MinecraftServerBridge;
 import top.gregtao.concerto.core.api.MusicJsonParsers;
 import top.gregtao.concerto.command.ConcertoServerCommand;
-import top.gregtao.concerto.config.PresetPlaylistsConfig;
+import top.gregtao.concerto.core.config.PresetPlaylistsConfig;
 import top.gregtao.concerto.core.config.ServerConfig;
 import top.gregtao.concerto.core.music.meta.music.MusicMetaData;
 import top.gregtao.concerto.network.room.MusicRoomManager;

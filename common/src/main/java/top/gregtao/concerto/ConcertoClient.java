@@ -13,7 +13,7 @@ import top.gregtao.concerto.command.MusicRoomCommand;
 import top.gregtao.concerto.command.ShareMusicCommand;
 import top.gregtao.concerto.core.Concerto;
 import top.gregtao.concerto.core.config.ClientConfig;
-import top.gregtao.concerto.config.PresetPlaylistsConfig;
+import top.gregtao.concerto.core.config.PresetPlaylistsConfig;
 import top.gregtao.concerto.core.http.kugou.KuGouMusicApiClient;
 import top.gregtao.concerto.core.http.netease.NeteaseCloudApiClient;
 import top.gregtao.concerto.core.http.qq.QQMusicApiClient;

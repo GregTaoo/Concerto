@@ -1,7 +1,3 @@
-plugins {
-    id "com.github.johnrengelman.shadow" version "7.1.2"
-}
-
 configurations {
     my.canBeResolved(true)
     implementation.extendsFrom(my)
@@ -36,7 +32,6 @@ jar {
 
 shadowJar {
     configurations = [project.configurations.my]
-    mergeServiceFiles()
     archiveClassifier = ''
 
     dependencies {
@@ -54,6 +49,16 @@ shadowJar {
     relocate 'com.jcraft.jorbis', 'top.gregtao.concerto.libs.jorbis'
     relocate 'org.kc7bfi.jflac', 'top.gregtao.concerto.libs.jflac'
     relocate 'com.github.trilarion', 'top.gregtao.concerto.libs.trilarion'
+
+    mergeServiceFiles()
+    exclude('META-INF/MANIFEST.MF')
+    exclude('META-INF/maven/')
+    exclude('META-INF/LICENSE')
+    exclude('META-INF/license.txt')
+
+    from(rootProject.file("LICENSE")) {
+        into("")
+    }
 }
 
 tasks.withType(JavaCompile).configureEach {

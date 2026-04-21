@@ -1,0 +1,15 @@
+name: Concerto
+version: 1.0.0
+main: top.gregtao.concerto.paper.ConcertoPaperPlugin
+description: Concerto
+author: GregTao
+website: https://papermc.io
+api-version: '${version}'
+
+channels:
+  - concerto:main
+
+permissions:
+  concerto.room.create:
+    description: Allow player to create music rooms
+    default: op

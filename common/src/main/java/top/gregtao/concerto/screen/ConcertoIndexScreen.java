@@ -10,7 +10,7 @@ import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.network.chat.Component;
 import net.minecraft.Util;
 import top.gregtao.concerto.ConcertoClient;
-import top.gregtao.concerto.config.PresetPlaylistsConfig;
+import top.gregtao.concerto.core.config.PresetPlaylistsConfig;
 import top.gregtao.concerto.core.room.MusicRoom;
 import top.gregtao.concerto.screen.kugou.KuGouMusicIndexScreen;
 import top.gregtao.concerto.screen.qq.QQMusicIndexScreen;

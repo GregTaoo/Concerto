@@ -1,0 +1,33 @@
+repositories {
+    maven { url "https://repo.papermc.io/repository/maven-public/" }
+}
+
+configurations {
+    my.canBeResolved(true)
+    implementation.extendsFrom(my)
+}
+
+dependencies {
+    compileOnly("io.papermc.paper:paper-api:${rootProject.minecraft_version}-R0.1-SNAPSHOT")
+
+    my(project(path: ":core", configuration: "shadow")) { transitive = false }
+}
+
+processResources {
+    inputs.property "version", project.version
+
+    filesMatching("plugin.yml") {
+        expand "version": project.version
+    }
+}
+
+jar {
+    enabled = false
+    dependsOn(shadowJar)
+}
+
+shadowJar {
+    configurations = [project.configurations.my]
+    archiveClassifier = null
+    exclude("top/gregtao/concerto/libs/**")
+}

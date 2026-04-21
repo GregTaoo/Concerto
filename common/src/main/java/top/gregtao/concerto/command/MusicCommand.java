@@ -12,7 +12,7 @@ import top.gregtao.concerto.core.api.CacheableMusic;
 import top.gregtao.concerto.core.api.Likeable;
 import top.gregtao.concerto.core.config.CacheManager;
 import top.gregtao.concerto.core.config.MusicCacheManager;
-import top.gregtao.concerto.config.PresetPlaylistsConfig;
+import top.gregtao.concerto.core.config.PresetPlaylistsConfig;
 import top.gregtao.concerto.core.music.list.FixedPlaylist;
 import top.gregtao.concerto.core.config.ClientConfig;
 import top.gregtao.concerto.core.music.Music;

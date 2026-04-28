@@ -1,19 +1,25 @@
 package top.gregtao.concerto.screen;
 
+import com.mojang.blaze3d.vertex.*;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.CycleButton;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.network.chat.Component;
+import org.joml.Matrix4f;
 import org.joml.Quaternionf;
 import top.gregtao.concerto.core.enums.OrderType;
 import top.gregtao.concerto.core.music.MusicTimestamp;
+import top.gregtao.concerto.core.music.lyrics.Lyrics;
+import top.gregtao.concerto.core.music.meta.music.MusicMetaData;
 import top.gregtao.concerto.core.player.MusicPlayer;
 import top.gregtao.concerto.core.player.MusicPlayerHandler;
 import top.gregtao.concerto.core.player.PlayerPermissions;
 import top.gregtao.concerto.core.config.ClientConfig;
 import top.gregtao.concerto.core.util.MathUtil;
 import top.gregtao.concerto.core.util.Pair;
+import top.gregtao.concerto.mixin.GuiGraphicsAccessor;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -92,7 +98,8 @@ public class MusicPlayerScreen extends ConcertoScreen {
     public void render(GuiGraphics context, int mouseX, int mouseY, float delta) {
         super.render(context, mouseX, mouseY, delta);
 
-        if (MusicPlayer.INSTANCE.currentMeta == null) {
+        MusicMetaData metaData = MusicPlayer.INSTANCE.currentMeta;
+        if (metaData == null) {
             context.drawCenteredString(this.font, Component.translatable("concerto.not_playing"), this.width / 2, this.height / 2, 0xAAAAAA);
             return;
         }
@@ -124,8 +131,8 @@ public class MusicPlayerScreen extends ConcertoScreen {
         int rightHalfX = this.width / 2; // lyrics start at mid-screen for >= 1/2 width
         int lyricsWidth = this.width - rightHalfX - 20;
 
-        String title = MusicPlayer.INSTANCE.currentMeta.title();
-        String author = MusicPlayer.INSTANCE.currentMeta.author();
+        String title = metaData.title();
+        String author = metaData.author();
         int centerX = this.width / 2;
         int titleY = 8;
         context.drawString(this.font, title, centerX - this.font.width(title) / 2, titleY, 0xFFFFFF, false);
@@ -134,11 +141,13 @@ public class MusicPlayerScreen extends ConcertoScreen {
             context.drawString(this.font, author, centerX - this.font.width(author) / 2, authorY, 0xAAAAAA, false);
         }
 
-        if (MusicPlayer.INSTANCE.currentLyrics != null && !MusicPlayer.INSTANCE.currentLyrics.isEmpty()) {
-            ArrayList<Pair<MusicTimestamp, String>> lyrics = MusicPlayer.INSTANCE.currentLyrics.getLyricBody();
-            ArrayList<Pair<MusicTimestamp, String>> subLyrics = MusicPlayer.INSTANCE.currentSubLyrics != null ? MusicPlayer.INSTANCE.currentSubLyrics.getLyricBody() : null;
+        Lyrics currentLyrics = MusicPlayer.INSTANCE.currentLyrics;
+        Lyrics currentSubLyrics = MusicPlayer.INSTANCE.currentSubLyrics;
+        if (currentLyrics != null && !currentLyrics.isEmpty()) {
+            ArrayList<Pair<MusicTimestamp, String>> lyrics = currentLyrics.getLyricBody();
+            ArrayList<Pair<MusicTimestamp, String>> subLyrics = currentSubLyrics != null ? currentSubLyrics.getLyricBody() : null;
 
-            long t = (long) (MusicPlayer.INSTANCE.progressPercentage * (MusicPlayer.INSTANCE.currentMeta != null && MusicPlayer.INSTANCE.currentMeta.getDuration() != null ? MusicPlayer.INSTANCE.currentMeta.getDuration().asMilliseconds() : 0));
+            long t = (long) (MusicPlayer.INSTANCE.progressPercentage * (metaData.getDuration() != null ? metaData.getDuration().asMilliseconds() : 0));
 
             int activeIndex = Math.max(0, MathUtil.upperBound(lyrics, Pair.of(MusicTimestamp.ofMilliseconds(t), ""), Comparator.comparing(Pair::getFirst)) - 1);
 
@@ -183,5 +192,76 @@ public class MusicPlayerScreen extends ConcertoScreen {
             int placeholderY = this.height / 2;
             context.drawCenteredString(this.font, Component.translatable("concerto.no_subtitle"), rightHalfX + lyricsWidth / 2, placeholderY, 0xAAAAAA);
         }
+        renderSpectrum(context);
+    }
+
+    private static final int SPECTRUM_BAR_COUNT = 64;
+
+    private void renderSpectrum(GuiGraphics g) {
+        MusicPlayer.INSTANCE.audioSpectrum.update();
+        float[] spectrumBars = MusicPlayer.INSTANCE.audioSpectrum.getSpectrum(SPECTRUM_BAR_COUNT);
+        int barCount = spectrumBars.length;
+
+        int leftWidth = this.width / 2;
+        int imageSize = Math.max(96, Math.min(120, leftWidth - 60));
+        int imageX = (leftWidth - imageSize) / 2;
+        int imageY = (this.height - imageSize) / 2 - 8;
+        float centerX = imageX + imageSize / 2f;
+        float centerY = imageY + imageSize / 2f;
+
+        float radiusInner = imageSize / 2f + 8f;
+        float radiusOuter = radiusInner + 38f;
+        float maxBarLength = radiusOuter - radiusInner;
+
+        g.pose().pushPose();
+
+        VertexConsumer vertexConsumer = ((GuiGraphicsAccessor) g).getBufferSource().getBuffer(RenderType.gui());
+        Matrix4f matrix = g.pose().last().pose();
+
+        float angleStep = 360f / barCount;
+        float spanDegrees = angleStep * 0.85f;
+
+        for (int i = 0; i < barCount; i++) {
+            float value = spectrumBars[i];
+            if (Float.isNaN(value)) value = 0f;
+
+            float dynamicScale = (float) (1.3f * Math.log10(1.0 + value * 60.0));
+
+            float barLength = dynamicScale * (maxBarLength / 1.5f);
+            barLength = Math.max(2f, Math.min(barLength, maxBarLength));
+
+            float currentOuterRadius = radiusInner + barLength;
+
+            float alphaFactor = 0.35f + 0.65f * Math.min(dynamicScale, 1.0f);
+            int a = (int) (alphaFactor * 255f);
+            int r = 150, green = 200, b = 255;
+            int color = (a << 24) | (r << 16) | (green << 8) | b;
+
+            float centerAngle = (i * angleStep) - 90f;
+            float a1 = (float) Math.toRadians(centerAngle - spanDegrees / 2f);
+            float a2 = (float) Math.toRadians(centerAngle + spanDegrees / 2f);
+
+            float cos1 = (float) Math.cos(a1);
+            float sin1 = (float) Math.sin(a1);
+            float cos2 = (float) Math.cos(a2);
+            float sin2 = (float) Math.sin(a2);
+
+            float x1 = centerX + cos1 * radiusInner;
+            float y1 = centerY + sin1 * radiusInner;
+            float x2 = centerX + cos1 * currentOuterRadius;
+            float y2 = centerY + sin1 * currentOuterRadius;
+            float x3 = centerX + cos2 * currentOuterRadius;
+            float y3 = centerY + sin2 * currentOuterRadius;
+            float x4 = centerX + cos2 * radiusInner;
+            float y4 = centerY + sin2 * radiusInner;
+
+            vertexConsumer.addVertex(matrix, x1, y1, 0).setColor(color);
+            vertexConsumer.addVertex(matrix, x4, y4, 0).setColor(color);
+            vertexConsumer.addVertex(matrix, x3, y3, 0).setColor(color);
+            vertexConsumer.addVertex(matrix, x2, y2, 0).setColor(color);
+        }
+
+        g.flush();
+        g.pose().popPose();
     }
 }

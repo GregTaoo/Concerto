@@ -40,6 +40,8 @@ public class MusicPlayer extends StreamPlayer implements StreamPlayerListener {
     public boolean isPlayingTemp = false;
     private volatile Music pendingMusic = null;
 
+    public final AudioSpectrum audioSpectrum = new AudioSpectrum();
+
     static {
         PLAYER_LOGGER = Logger.getLogger(MusicPlayer.class.getName());
         File file = new File("Concerto");
@@ -209,6 +211,7 @@ public class MusicPlayer extends StreamPlayer implements StreamPlayerListener {
     @Override
     public void progress(int nEncodedBytes, long microsecondPosition, byte[] pcmData, Map<String, Object> properties) {
         this.updateDisplayTexts(microsecondPosition / 1000);
+        this.audioSpectrum.onAudioFrame(pcmData);
     }
 
     @Override

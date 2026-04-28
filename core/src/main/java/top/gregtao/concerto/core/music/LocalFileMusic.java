@@ -17,10 +17,7 @@ import top.gregtao.concerto.core.enums.Sources;
 import top.gregtao.concerto.core.music.meta.music.TimelessMusicMetaData;
 import top.gregtao.concerto.core.player.streamplayer.enums.AudioType;
 import top.gregtao.concerto.core.player.streamplayer.tools.TimeTool;
-import top.gregtao.concerto.core.util.FileUtil;
-import top.gregtao.concerto.core.util.HttpUtil;
-import top.gregtao.concerto.core.util.Pair;
-import top.gregtao.concerto.core.util.TextUtil;
+import top.gregtao.concerto.core.util.*;
 
 import java.io.*;
 import java.nio.file.Files;
@@ -68,7 +65,7 @@ public class LocalFileMusic extends PathFileMusic {
                     Files.readAllLines(Path.of(HttpUtil.getRawPathWithoutSuffix(this.getRawPath()) + ".lrc"))));
         } catch (NoSuchFileException e) {
             try {
-                lyrics = new DefaultFormatLyrics().load(FileUtil.getLocalAudioLyrics(
+                lyrics = new DefaultFormatLyrics().load(AudioUtil.getLocalAudioLyrics(
                         AudioFileIO.read(new File(this.getRawPath()))));
             } catch (IOException | CannotReadException | TagException | InvalidAudioFrameException | ReadOnlyFileException e1) {
                 Concerto.getLogger().warn("Error occurs while loading file: '{}'", this.getRawPath());
@@ -84,8 +81,8 @@ public class LocalFileMusic extends PathFileMusic {
             AudioFile file = AudioFileIO.read(new File(this.getRawPath()));
             Tag tag = file.getTagAndConvertOrCreateDefault();
             title = tag.getFirst(FieldKey.TITLE);
-            author = FileUtil.getLocalAudioAuthors(file);
-            coverImg = FileUtil.getCoverAsObjectURL(file);
+            author = AudioUtil.getLocalAudioAuthors(file);
+            coverImg = AudioUtil.getCoverAsObjectURL(file);
         } catch (Exception e) {
             author = title = coverImg = null;
         }

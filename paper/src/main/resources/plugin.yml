@@ -1,10 +1,10 @@
 name: Concerto
-version: 1.0.0
+version: '${version}'
 main: top.gregtao.concerto.paper.ConcertoPaperPlugin
 description: Concerto
-author: GregTao
-website: https://papermc.io
-api-version: '${version}'
+author: [GregTao]
+website: https://github.com/gregtaoo/concerto
+api-version: '${apiVersion}'
 
 channels:
   - concerto:main

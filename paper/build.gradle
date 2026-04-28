@@ -7,17 +7,23 @@ configurations {
     implementation.extendsFrom(my)
 }
 
+def paperVersion = "${rootProject.minecraft_version}-R0.1-SNAPSHOT"
+
 dependencies {
-    compileOnly("io.papermc.paper:paper-api:${rootProject.minecraft_version}-R0.1-SNAPSHOT")
+    compileOnly("io.papermc.paper:paper-api:${paperVersion}")
 
     my(project(path: ":core", configuration: "shadow")) { transitive = false }
 }
 
 processResources {
     inputs.property "version", project.version
+    inputs.property "apiVersion", rootProject.minecraft_version
 
     filesMatching("plugin.yml") {
-        expand "version": project.version
+        expand(
+                version: project.version,
+                apiVersion: rootProject.minecraft_version
+        )
     }
 }
 

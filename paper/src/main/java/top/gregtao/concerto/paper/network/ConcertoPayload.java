@@ -1,5 +1,8 @@
 package top.gregtao.concerto.paper.network;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
 public class ConcertoPayload {
@@ -16,12 +19,51 @@ public class ConcertoPayload {
         this.string = s;
     }
 
+    public static void writeVarInt(ByteArrayOutputStream out, int value) {
+        while ((value & -128) != 0) {
+            out.write((value & 127) | 128);
+            value >>>= 7;
+        }
+        out.write(value);
+    }
+
+    public static int readVarInt(ByteArrayInputStream in) {
+        try {
+            int i = 0;
+            int j = 0;
+
+            byte b;
+            do {
+                b = in.readNBytes(1)[0];
+                i |= (b & 127) << j++ * 7;
+                if (j > 5) {
+                    throw new RuntimeException("VarInt too big");
+                }
+            } while ((b & 128) == 128);
+
+            return i;
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     public byte[] encode() {
-        return (this.channel.id + this.string).getBytes(StandardCharsets.UTF_8);
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        byte[] bytes = (this.channel.id + this.string).getBytes(StandardCharsets.UTF_8);
+        writeVarInt(out, bytes.length);
+        out.write(bytes, 0, bytes.length);
+        return out.toByteArray();
     }
 
     public static ConcertoPayload decode(byte[] buf) {
-        String s = new String(buf, StandardCharsets.UTF_8);
+        ByteArrayInputStream in = new ByteArrayInputStream(buf);
+        int len = readVarInt(in);
+        byte[] bytes = new byte[len];
+        int read = in.read(bytes, 0, len);
+        if (read != len) {
+            throw new RuntimeException("EOF");
+        }
+        String s = new String(bytes, StandardCharsets.UTF_8);
         Channel channel1 = Channel.getById(s.charAt(0));
         return new ConcertoPayload(channel1, s.substring(1));
     }

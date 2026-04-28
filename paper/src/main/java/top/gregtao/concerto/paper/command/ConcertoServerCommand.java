@@ -29,7 +29,7 @@ public class ConcertoServerCommand {
 
     public static LiteralCommandNode<CommandSourceStack> build() {
         return Commands.literal("concerto-server").then(
-                Commands.literal("audit").requires(source -> source.getExecutor().isOp()).then(
+                Commands.literal("audit").requires(source -> source.getExecutor() != null && source.getExecutor().isOp()).then(
                         Commands.argument("uuid", ArgumentTypes.uuid()).executes(context -> {
                             UUID uuid = context.getArgument("uuid", UUID.class);
                             ServerMusicNetworkHandler.passAudition(context.getSource().getSender(), uuid);
@@ -72,13 +72,13 @@ public class ConcertoServerCommand {
                         )
                 )
         ).then(
-                Commands.literal("reload").requires(source -> source.getExecutor().isOp())
+                Commands.literal("reload").requires(source -> source.getExecutor() != null && source.getExecutor().isOp())
                         .executes(context -> {
                             ConcertoPaperPlugin.reload();
                             return 0;
                         })
         ).then(
-                Commands.literal("reload-cookie").requires(source -> source.getExecutor().isOp())
+                Commands.literal("reload-cookie").requires(source -> source.getExecutor() != null && source.getExecutor().isOp())
                         .executes(context -> {
                             NeteaseCloudApiClient.INSTANCE.readCookie();
                             QQMusicApiClient.INSTANCE.readCookie();
@@ -86,7 +86,7 @@ public class ConcertoServerCommand {
                             return 0;
                         })
         ).then(
-                Commands.literal("clean-cache").requires(source -> source.getExecutor().isOp())
+                Commands.literal("clean-cache").requires(source -> source.getExecutor() != null && source.getExecutor().isOp())
                         .executes(context -> {
                             CacheManager.cleanAllCache();
                             return 0;
@@ -99,7 +99,7 @@ public class ConcertoServerCommand {
                             return 0;
                         })
         ).then(
-                Commands.literal("agent").requires(source -> source.getExecutor().isOp()).then(
+                Commands.literal("agent").requires(source -> source.getExecutor() != null && source.getExecutor().isOp()).then(
                         Commands.literal("reset").executes(context -> {
                             ServerMusicAgent.INSTANCE.reset();
                             return 0;

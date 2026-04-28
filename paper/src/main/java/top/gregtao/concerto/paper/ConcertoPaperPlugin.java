@@ -26,6 +26,9 @@ import top.gregtao.concerto.paper.command.ConcertoServerCommand;
 import top.gregtao.concerto.paper.network.ConcertoPayload;
 import top.gregtao.concerto.paper.network.ServerMusicNetworkHandler;
 import top.gregtao.concerto.paper.network.room.ServerMusicAgentManager;
+import top.gregtao.concerto.paper.util.I18n;
+
+import java.util.Locale;
 
 public class ConcertoPaperPlugin extends JavaPlugin implements Listener, PluginMessageListener {
 
@@ -46,13 +49,16 @@ public class ConcertoPaperPlugin extends JavaPlugin implements Listener, PluginM
         messenger.registerIncomingPluginChannel(this, ConcertoPayload.ID, this);
         ServerMusicAgentManager.init();
         ConcertoRunner.run(ConcertoPaperPlugin::reload);
+        I18n.INSTANCE.loadFile(Locale.ENGLISH, this.getResource("assets/concerto/lang/en_us.json"));
+        I18n.INSTANCE.loadFile(Locale.SIMPLIFIED_CHINESE, this.getResource("assets/concerto/lang/zh_cn.json"));
     }
 
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
         Player player = event.getPlayer();
 
-        Bukkit.getScheduler().runTask(INSTANCE, () -> ServerMusicNetworkHandler.playerJoinHandshake(player));
+        // 3s delay
+        Bukkit.getScheduler().runTaskLater(INSTANCE, () -> ServerMusicNetworkHandler.playerJoinHandshake(player), 60L);
     }
 
     @Override

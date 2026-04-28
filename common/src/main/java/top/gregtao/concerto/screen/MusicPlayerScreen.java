@@ -99,12 +99,12 @@ public class MusicPlayerScreen extends ConcertoScreen {
         super.render(context, mouseX, mouseY, delta);
 
         MusicMetaData metaData = MusicPlayer.INSTANCE.currentMeta;
-        if (metaData == null) {
+        if (!MusicPlayer.INSTANCE.isPlaying() || metaData == null) {
             context.drawCenteredString(this.font, Component.translatable("concerto.not_playing"), this.width / 2, this.height / 2, 0xAAAAAA);
             return;
         }
 
-        if (MusicPlayer.INSTANCE.isPlaying() && !MusicPlayerHandler.INSTANCE.getState().get().paused) {
+        if (!MusicPlayerHandler.INSTANCE.getState().get().paused) {
             this.rotationAngle += delta * 0.3f;
             if (this.rotationAngle >= 360f) this.rotationAngle -= 360f;
         }
@@ -141,15 +141,19 @@ public class MusicPlayerScreen extends ConcertoScreen {
             context.drawString(this.font, author, centerX - this.font.width(author) / 2, authorY, 0xAAAAAA, false);
         }
 
+        renderTopProgressBar(context, metaData);
+
         Lyrics currentLyrics = MusicPlayer.INSTANCE.currentLyrics;
         Lyrics currentSubLyrics = MusicPlayer.INSTANCE.currentSubLyrics;
         if (currentLyrics != null && !currentLyrics.isEmpty()) {
             ArrayList<Pair<MusicTimestamp, String>> lyrics = currentLyrics.getLyricBody();
             ArrayList<Pair<MusicTimestamp, String>> subLyrics = currentSubLyrics != null ? currentSubLyrics.getLyricBody() : null;
 
-            long t = (long) (MusicPlayer.INSTANCE.progressPercentage * (metaData.getDuration() != null ? metaData.getDuration().asMilliseconds() : 0));
+            long currentTime = (long) (MusicPlayer.INSTANCE.progressPercentage *
+                    (metaData.getDuration() != null ? metaData.getDuration().asMilliseconds() : 0));
 
-            int activeIndex = Math.max(0, MathUtil.upperBound(lyrics, Pair.of(MusicTimestamp.ofMilliseconds(t), ""), Comparator.comparing(Pair::getFirst)) - 1);
+            int activeIndex = Math.max(0, MathUtil.upperBound(
+                    lyrics, Pair.of(MusicTimestamp.ofMilliseconds(currentTime), ""), Comparator.comparing(Pair::getFirst)) - 1);
 
             int lineHeight = subLyrics != null ? 27 : 17;
             int startY = 45;
@@ -164,8 +168,11 @@ public class MusicPlayerScreen extends ConcertoScreen {
                 String subLine = null;
                 if (subLyrics != null) {
                     long currentLineTime = lyrics.get(i).getFirst().asMilliseconds();
-                    int subIndex = MathUtil.upperBound(subLyrics, Pair.of(MusicTimestamp.ofMilliseconds(currentLineTime), ""), Comparator.comparing(Pair::getFirst)) - 1;
-                    if (subIndex >= 0 && subIndex < subLyrics.size() && Math.abs(subLyrics.get(subIndex).getFirst().asMilliseconds() - currentLineTime) < 500) {
+                    int subIndex = MathUtil.upperBound(subLyrics,
+                            Pair.of(MusicTimestamp.ofMilliseconds(currentLineTime), ""),
+                            Comparator.comparing(Pair::getFirst)) - 1;
+                    if (subIndex >= 0 && subIndex < subLyrics.size() &&
+                            Math.abs(subLyrics.get(subIndex).getFirst().asMilliseconds() - currentLineTime) < 500) {
                         subLine = subLyrics.get(subIndex).getSecond();
                     }
                 }
@@ -193,6 +200,22 @@ public class MusicPlayerScreen extends ConcertoScreen {
             context.drawCenteredString(this.font, Component.translatable("concerto.no_subtitle"), rightHalfX + lyricsWidth / 2, placeholderY, 0xAAAAAA);
         }
         renderSpectrum(context);
+    }
+
+    private void renderTopProgressBar(GuiGraphics context, MusicMetaData metaData) {
+        if (metaData == null || metaData.getDuration() == null) {
+            return;
+        }
+
+        int barHeight = 2;
+        double progress = MusicPlayer.INSTANCE.progressPercentage;
+        progress = Math.max(0.0D, Math.min(1.0D, progress));
+
+        int bgColor = (int) ClientConfig.INSTANCE.timeProgressBgColor.getNumber();
+        int progressColor = (int) ClientConfig.INSTANCE.timeProgressColor.getNumber();
+
+        context.fill(0, 0, this.width, barHeight, bgColor);
+        context.fill(0, 0, (int) Math.round(this.width * progress), barHeight, progressColor);
     }
 
     private static final int SPECTRUM_BAR_COUNT = 64;

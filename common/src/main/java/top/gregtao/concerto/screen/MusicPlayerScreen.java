@@ -99,7 +99,7 @@ public class MusicPlayerScreen extends ConcertoScreen {
         super.render(context, mouseX, mouseY, delta);
 
         MusicMetaData metaData = MusicPlayer.INSTANCE.currentMeta;
-        if (!MusicPlayer.INSTANCE.isPlaying() || metaData == null) {
+        if ((!MusicPlayer.INSTANCE.isPlaying() && !MusicPlayer.INSTANCE.isPaused()) || metaData == null) {
             context.drawCenteredString(this.font, Component.translatable("concerto.not_playing"), this.width / 2, this.height / 2, 0xAAAAAA);
             return;
         }

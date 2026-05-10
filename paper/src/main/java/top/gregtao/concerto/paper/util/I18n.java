@@ -14,6 +14,7 @@ import java.util.Map;
 public final class I18n {
 
     public static final I18n INSTANCE = new I18n(Locale.getDefault());
+
     public static String get(String key, Object... args) {
         return INSTANCE.translate(key, args);
     }
@@ -29,7 +30,8 @@ public final class I18n {
         Gson gson = new Gson();
         Map<String, String> map = gson.fromJson(
                 new InputStreamReader(in, StandardCharsets.UTF_8),
-                new TypeToken<Map<String, String>>() {}.getType()
+                new TypeToken<Map<String, String>>() {
+                }.getType()
         );
         this.languages.put(locale, map);
     }

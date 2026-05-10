@@ -8,10 +8,10 @@ import top.gregtao.concerto.core.config.ServerConfig;
 import top.gregtao.concerto.core.music.Music;
 import top.gregtao.concerto.core.music.SharedMusic;
 import top.gregtao.concerto.core.player.ConcertoPlayerList;
-import top.gregtao.concerto.core.room.MusicRoom;
-import top.gregtao.concerto.core.room.MusicRoom.*;
-import top.gregtao.concerto.core.util.ConcertoRunner;
 import top.gregtao.concerto.core.player.MusicPlayerState;
+import top.gregtao.concerto.core.room.MusicRoom;
+import top.gregtao.concerto.core.room.MusicRoom.MusicRoomState;
+import top.gregtao.concerto.core.util.ConcertoRunner;
 
 import java.lang.reflect.Field;
 import java.util.*;
@@ -39,9 +39,11 @@ public class ServerMusicAgent {
     public interface ServerNetworkBridge {
         void serverSendVoteRequest(String playerName);
     }
+
     public interface ClientNetworkBridge {
         void clientSendAgentCommand(Command command, String payload);
     }
+
     private final ServerNetworkBridge serverBridge;
 
     private final Map<String, Long> addMusicTimeRecord = new ConcurrentHashMap<>();
@@ -163,7 +165,7 @@ public class ServerMusicAgent {
             this.voteLock.unlock();
         }
 
-        this.room.serverBridge.sendMessage(playerName, "concerto.agent.vote_for", 
+        this.room.serverBridge.sendMessage(playerName, "concerto.agent.vote_for",
                 Concerto.getCoreBridge().getTranslatable(vote ? "concerto.accept" : "concerto.reject"));
     }
 
@@ -261,7 +263,7 @@ public class ServerMusicAgent {
                 }
 
                 if (!Objects.equals(this.room.serverState.get().currentIndex, currentUUID)) return;
-                
+
                 String media = MusicJsonParsers.to(resolvedShared).toString();
                 this.updateState(s -> {
                     s.resolvedMedia = media;

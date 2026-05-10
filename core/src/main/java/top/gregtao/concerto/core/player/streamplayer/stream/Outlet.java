@@ -104,9 +104,8 @@ public class Outlet {
     /**
      * Check if the <b>Control</b> is Supported by m_line.
      *
-     * @param control the control
+     * @param control   the control
      * @param component the component
-     *
      * @return true, if successful
      */
     public boolean hasControl(final Control.Type control, final Control component) {
@@ -145,7 +144,7 @@ public class Outlet {
      * Flush and close the {@link #sourceDataLine} in a nice way.
      * Also nullify it. (Is that necessary?)
      */
-     void flushAndFreeDataLine() {
+    void flushAndFreeDataLine() {
         if (sourceDataLine != null) {
             sourceDataLine.flush();
             sourceDataLine.close();
@@ -182,7 +181,8 @@ public class Outlet {
     /**
      * Open the {@link #sourceDataLine}.
      * Also create controls for it.
-     * @param format The wanted audio format.
+     *
+     * @param format     The wanted audio format.
      * @param bufferSize the desired buffer size for the {@link #sourceDataLine}
      * @throws LineUnavailableException
      */

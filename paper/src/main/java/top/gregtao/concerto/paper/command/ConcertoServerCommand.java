@@ -16,10 +16,10 @@ import top.gregtao.concerto.core.http.netease.NeteaseCloudApiClient;
 import top.gregtao.concerto.core.http.qq.QQMusicApiClient;
 import top.gregtao.concerto.core.room.agent.ServerMusicAgent;
 import top.gregtao.concerto.core.util.ConcertoRunner;
-import top.gregtao.concerto.paper.util.ComponentUtil;
 import top.gregtao.concerto.paper.ConcertoPaperPlugin;
 import top.gregtao.concerto.paper.network.MusicDataPacket;
 import top.gregtao.concerto.paper.network.ServerMusicNetworkHandler;
+import top.gregtao.concerto.paper.util.ComponentUtil;
 
 import java.util.Iterator;
 import java.util.Map;

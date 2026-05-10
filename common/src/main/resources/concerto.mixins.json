@@ -10,9 +10,9 @@
   "client": [
     "ChatComponentMixin",
     "GuiGraphicsAccessor",
-    "PauseScreenMixin",
     "MinecraftMixin",
     "MusicManagerMixin",
+    "PauseScreenMixin",
     "SoundManagerMixin"
   ],
   "server": [

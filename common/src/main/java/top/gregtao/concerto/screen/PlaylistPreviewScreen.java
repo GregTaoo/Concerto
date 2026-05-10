@@ -2,17 +2,17 @@ package top.gregtao.concerto.screen;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import top.gregtao.concerto.core.config.PresetPlaylistsConfig;
 import top.gregtao.concerto.core.music.Music;
 import top.gregtao.concerto.core.music.list.Playlist;
 import top.gregtao.concerto.core.player.MusicPlayerHandler;
 import top.gregtao.concerto.core.player.PlayerPermissions;
+import top.gregtao.concerto.core.util.ConcertoRunner;
 import top.gregtao.concerto.screen.widget.ConcertoListWidget;
 import top.gregtao.concerto.screen.widget.MetadataListWidget;
-import top.gregtao.concerto.core.util.ConcertoRunner;
 
 public class PlaylistPreviewScreen extends ConcertoScreen {
     private final Playlist playlist;
@@ -42,7 +42,7 @@ public class PlaylistPreviewScreen extends ConcertoScreen {
         ConcertoRunner.run(() -> this.widget.reset(this.playlist.getList(), null));
 
         this.addPlaylistButton = Button.builder(Component.translatable("concerto.screen.playlist.add"), button ->
-            MusicPlayerHandler.INSTANCE.addMusicAsync(this.playlist.getList(), true))
+                        MusicPlayerHandler.INSTANCE.addMusicAsync(this.playlist.getList(), true))
                 .pos(20, this.height - 30).size(60, 20).build();
         this.addRenderableWidget(this.addPlaylistButton);
 

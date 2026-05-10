@@ -27,7 +27,8 @@ public interface MinecraftServerBridge {
 
     void registerResourceReloadListener(ResourceLocation id, Consumer<ResourceManager> listener);
 
-    record NetworkingContext(ServerPlayer player, MinecraftServer server) {}
+    record NetworkingContext(ServerPlayer player, MinecraftServer server) {
+    }
 
     void registerServerPayloadReceiver(CustomPacketPayload.Type<ConcertoPayload> type, StreamCodec<RegistryFriendlyByteBuf, ConcertoPayload> codec, BiConsumer<ConcertoPayload, NetworkingContext> handler);
 

@@ -2,8 +2,8 @@ package top.gregtao.concerto;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.Options;
-import net.minecraft.sounds.SoundSource;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.sounds.SoundSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import top.gregtao.concerto.bridge.ConcertoEventListeners;
@@ -18,18 +18,18 @@ import top.gregtao.concerto.core.http.kugou.KuGouMusicApiClient;
 import top.gregtao.concerto.core.http.netease.NeteaseCloudApiClient;
 import top.gregtao.concerto.core.http.qq.QQMusicApiClient;
 import top.gregtao.concerto.core.music.list.Playlist;
-import top.gregtao.concerto.core.player.MusicPlayerHandler;
-import top.gregtao.concerto.network.ClientMusicNetworkHandler;
 import top.gregtao.concerto.core.player.MusicPlayer;
+import top.gregtao.concerto.core.player.MusicPlayerHandler;
+import top.gregtao.concerto.core.util.ConcertoRunner;
+import top.gregtao.concerto.network.ClientMusicNetworkHandler;
 import top.gregtao.concerto.util.ConcertoHotkeys;
 import top.gregtao.concerto.util.ConcertoOptions;
-import top.gregtao.concerto.core.util.ConcertoRunner;
 
 import java.util.List;
 
 public class ConcertoClient {
 
-	public static final Logger LOGGER = LoggerFactory.getLogger("ConcertoClient");
+    public static final Logger LOGGER = LoggerFactory.getLogger("ConcertoClient");
 
     public static void syncPlayerVolume() {
         try {
@@ -37,17 +37,18 @@ public class ConcertoClient {
             Options options = client.options;
             double volume = options.getSoundSourceVolume(SoundSource.MASTER) * options.getSoundSourceVolume(SoundSource.MUSIC) * 0.5;
             MusicPlayer.INSTANCE.setGain(volume);
-        } catch (NullPointerException ignore) {}
+        } catch (NullPointerException ignore) {
+        }
     }
 
-	public static boolean serverAvailable = false;
+    public static boolean serverAvailable = false;
 
-	public static List<Playlist> presetRadios = List.of();
+    public static List<Playlist> presetRadios = List.of();
 
-	public static boolean isServerAvailable() {
-		return serverAvailable || !ClientConfig.INSTANCE.options.handshakeRequired ||
-				Minecraft.getInstance().isLocalServer();
-	}
+    public static boolean isServerAvailable() {
+        return serverAvailable || !ClientConfig.INSTANCE.options.handshakeRequired ||
+                Minecraft.getInstance().isLocalServer();
+    }
 
     private static MinecraftClientBridge BRIDGE;
 

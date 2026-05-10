@@ -2,16 +2,16 @@ package top.gregtao.concerto.screen.kugou;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import top.gregtao.concerto.core.config.ClientConfig;
 import top.gregtao.concerto.core.http.kugou.KuGouMusicApiClient;
 import top.gregtao.concerto.core.http.kugou.KuGouMusicUser;
+import top.gregtao.concerto.core.util.ConcertoRunner;
 import top.gregtao.concerto.screen.ConcertoScreen;
 import top.gregtao.concerto.screen.widget.ModifiablePressableTextWidget;
 import top.gregtao.concerto.screen.widget.URLImageWidget;
-import top.gregtao.concerto.core.util.ConcertoRunner;
 
 import java.net.MalformedURLException;
 import java.net.URI;
@@ -110,7 +110,7 @@ public class KuGouMusicIndexScreen extends ConcertoScreen {
                 }
 
                 String levelPrefix = "concerto.screen.kugou.vip.level.";
-                String  levelText = Component.translatable(levelPrefix + vipLevel.name().toLowerCase()).getString();
+                String levelText = Component.translatable(levelPrefix + vipLevel.name().toLowerCase()).getString();
                 Component vipStatus = Component.translatable("concerto.screen.kugou.vip.vip_level", levelText);
                 bottom -= fontHeight;
                 if (vipStatusWidget != null) {

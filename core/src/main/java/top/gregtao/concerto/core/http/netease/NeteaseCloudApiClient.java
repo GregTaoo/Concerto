@@ -251,13 +251,13 @@ public class NeteaseCloudApiClient extends HttpApiClient {
     }
 
     public FixedPlaylist getDailyRecommendation() {
-         JsonObject object = parseJson(this.open().url("http://music.163.com/api/v3/discovery/recommend/songs").post());
-         if (object == null) return null;
-         JsonArray songs = object.getAsJsonObject("data").getAsJsonArray("dailySongs");
-         ArrayList<Music> musics = new ArrayList<>();
-         songs.forEach(element -> musics.add(new NeteaseCloudMusic(element.getAsJsonObject(), ClientConfig.INSTANCE.options.neteaseMusicQuality)));
-         return new FixedPlaylist(musics, new PlaylistMetaData(Concerto.getCoreBridge().getTranslatable("concerto.source.netease_cloud"),
-                 Concerto.getCoreBridge().getTranslatable("concerto.screen.daily_recommendation"), "", ""), false);
+        JsonObject object = parseJson(this.open().url("http://music.163.com/api/v3/discovery/recommend/songs").post());
+        if (object == null) return null;
+        JsonArray songs = object.getAsJsonObject("data").getAsJsonArray("dailySongs");
+        ArrayList<Music> musics = new ArrayList<>();
+        songs.forEach(element -> musics.add(new NeteaseCloudMusic(element.getAsJsonObject(), ClientConfig.INSTANCE.options.neteaseMusicQuality)));
+        return new FixedPlaylist(musics, new PlaylistMetaData(Concerto.getCoreBridge().getTranslatable("concerto.source.netease_cloud"),
+                Concerto.getCoreBridge().getTranslatable("concerto.screen.daily_recommendation"), "", ""), false);
     }
 
     public static Pair<Integer, String> getCodeAndMessage(JsonObject body) {

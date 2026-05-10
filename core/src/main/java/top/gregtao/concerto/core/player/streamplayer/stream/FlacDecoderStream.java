@@ -151,7 +151,8 @@ public class FlacDecoderStream extends InputStream {
                 } else {
                     outputStream.write(byteData.getData(), 0, byteData.getLen());
                 }
-            } catch (IOException ignored) {}
+            } catch (IOException ignored) {
+            }
         }
     }
 }

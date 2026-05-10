@@ -7,7 +7,8 @@ import top.gregtao.concerto.core.api.MusicSourceNotFoundException;
 import top.gregtao.concerto.core.util.HashUtil;
 
 import javax.sound.sampled.UnsupportedAudioFileException;
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
 
 public class MusicCacheManager extends CacheManager {
 

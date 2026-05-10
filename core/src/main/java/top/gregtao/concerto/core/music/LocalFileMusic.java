@@ -9,17 +9,23 @@ import org.jaudiotagger.tag.FieldKey;
 import org.jaudiotagger.tag.Tag;
 import org.jaudiotagger.tag.TagException;
 import top.gregtao.concerto.core.Concerto;
-import top.gregtao.concerto.core.api.*;
+import top.gregtao.concerto.core.api.JsonParser;
+import top.gregtao.concerto.core.api.MusicJsonParsers;
+import top.gregtao.concerto.core.api.MusicSourceNotFoundException;
+import top.gregtao.concerto.core.api.UnsafeMusicException;
+import top.gregtao.concerto.core.enums.Sources;
 import top.gregtao.concerto.core.music.lyrics.DefaultFormatLyrics;
 import top.gregtao.concerto.core.music.lyrics.Lyrics;
 import top.gregtao.concerto.core.music.meta.music.BasicMusicMetaData;
-import top.gregtao.concerto.core.enums.Sources;
 import top.gregtao.concerto.core.music.meta.music.TimelessMusicMetaData;
 import top.gregtao.concerto.core.player.streamplayer.enums.AudioType;
 import top.gregtao.concerto.core.player.streamplayer.tools.TimeTool;
 import top.gregtao.concerto.core.util.*;
 
-import java.io.*;
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
@@ -67,7 +73,8 @@ public class LocalFileMusic extends PathFileMusic {
             try {
                 lyrics = new DefaultFormatLyrics().load(AudioUtil.getLocalAudioLyrics(
                         AudioFileIO.read(new File(this.getRawPath()))));
-            } catch (IOException | CannotReadException | TagException | InvalidAudioFrameException | ReadOnlyFileException e1) {
+            } catch (IOException | CannotReadException | TagException | InvalidAudioFrameException |
+                     ReadOnlyFileException e1) {
                 Concerto.getLogger().warn("Error occurs while loading file: '{}'", this.getRawPath());
             }
         }

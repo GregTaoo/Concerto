@@ -1,6 +1,6 @@
 package top.gregtao.concerto.core.network;
 
-import com.google.gson.*;
+import com.google.gson.JsonObject;
 import top.gregtao.concerto.core.api.Copyable;
 import top.gregtao.concerto.core.player.ConcertoPlayerList;
 

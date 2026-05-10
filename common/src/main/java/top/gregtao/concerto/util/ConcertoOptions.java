@@ -172,7 +172,7 @@ public class ConcertoOptions {
     }
 
     private static Component getPercentValueText(Component prefix, double value) {
-        return Component.translatable("options.percent_value", prefix, (int)(value * 100.0));
+        return Component.translatable("options.percent_value", prefix, (int) (value * 100.0));
     }
 
     private static Component getAlignValueText(Component prefix, int value) {
@@ -190,7 +190,9 @@ public class ConcertoOptions {
 
     private interface OptionsUpdater {
         void readOptions();
+
         void writeOptions();
+
         Stream<OptionInstance<?>> streamOptions();
     }
 
@@ -240,40 +242,40 @@ public class ConcertoOptions {
             this.writer = writer;
             this.reader = reader;
             this.display = OptionInstance.createBoolean(
-                "concerto.options.display." + name, true,
-                value -> this.writeOptions()
+                    "concerto.options.display." + name, true,
+                    value -> this.writeOptions()
             );
             this.posXPercent = new OptionInstance<>(
-                "concerto.options.posXPercent." + name,
-                OptionInstance.noTooltip(),
-                ConcertoOptions::getPercentValueText,
-                OptionInstance.UnitDouble.INSTANCE,
-                1.0,
-                value -> this.writeOptions()
+                    "concerto.options.posXPercent." + name,
+                    OptionInstance.noTooltip(),
+                    ConcertoOptions::getPercentValueText,
+                    OptionInstance.UnitDouble.INSTANCE,
+                    1.0,
+                    value -> this.writeOptions()
             );
             this.posXDelta = new OptionInstance<>(
-                "concerto.options.posXDelta." + name,
-                OptionInstance.noTooltip(),
-                ConcertoOptions::getPixelValueText,
-                new OptionInstance.IntRange(-250, 250),
-                0,
-                value -> this.writeOptions()
+                    "concerto.options.posXDelta." + name,
+                    OptionInstance.noTooltip(),
+                    ConcertoOptions::getPixelValueText,
+                    new OptionInstance.IntRange(-250, 250),
+                    0,
+                    value -> this.writeOptions()
             );
             this.posYPercent = new OptionInstance<>(
-                "concerto.options.posYPercent." + name,
-                OptionInstance.noTooltip(),
-                ConcertoOptions::getPercentValueText,
-                OptionInstance.UnitDouble.INSTANCE,
-                1.0,
-                value -> this.writeOptions()
+                    "concerto.options.posYPercent." + name,
+                    OptionInstance.noTooltip(),
+                    ConcertoOptions::getPercentValueText,
+                    OptionInstance.UnitDouble.INSTANCE,
+                    1.0,
+                    value -> this.writeOptions()
             );
             this.posYDelta = new OptionInstance<>(
-                "concerto.options.posYDelta." + name,
-                OptionInstance.noTooltip(),
-                ConcertoOptions::getPixelValueText,
-                new OptionInstance.IntRange(-250, 250),
-                0,
-                value -> this.writeOptions()
+                    "concerto.options.posYDelta." + name,
+                    OptionInstance.noTooltip(),
+                    ConcertoOptions::getPixelValueText,
+                    new OptionInstance.IntRange(-250, 250),
+                    0,
+                    value -> this.writeOptions()
             );
         }
 
@@ -291,11 +293,11 @@ public class ConcertoOptions {
         public void writeOptions() {
             if (!ConcertoOptions.this.canUpdate) return;
             this.writer.accept(
-                this.display.get(),
-                getPositionXYString(
-                    this.posXPercent.get(), this.posXDelta.get(),
-                    this.posYPercent.get(), this.posYDelta.get()
-                )
+                    this.display.get(),
+                    getPositionXYString(
+                            this.posXPercent.get(), this.posXDelta.get(),
+                            this.posYPercent.get(), this.posYDelta.get()
+                    )
             );
         }
 
@@ -352,17 +354,17 @@ public class ConcertoOptions {
         private final Consumer<ImageOptions> reader;
 
         public ImageOptions(String name, TriConsumer<Boolean, Integer, String> writer,
-                           Consumer<ImageOptions> reader) {
+                            Consumer<ImageOptions> reader) {
             super(name, null, null);
             this.writer = writer;
             this.reader = reader;
             this.size = new OptionInstance<>(
-                "concerto.options.size." + name,
-                OptionInstance.noTooltip(),
-                ConcertoOptions::getPixelValueText,
-                new OptionInstance.IntRange(0, 300),
-                0,
-                value -> this.writeOptions()
+                    "concerto.options.size." + name,
+                    OptionInstance.noTooltip(),
+                    ConcertoOptions::getPixelValueText,
+                    new OptionInstance.IntRange(0, 300),
+                    0,
+                    value -> this.writeOptions()
             );
         }
 
@@ -373,11 +375,11 @@ public class ConcertoOptions {
         public void writeOptions() {
             if (!ConcertoOptions.this.canUpdate) return;
             this.writer.accept(
-                this.display.get(), this.size.get(),
-                getPositionXYString(
-                    this.posXPercent.get(), this.posXDelta.get(),
-                    this.posYPercent.get(), this.posYDelta.get()
-                )
+                    this.display.get(), this.size.get(),
+                    getPositionXYString(
+                            this.posXPercent.get(), this.posXDelta.get(),
+                            this.posYPercent.get(), this.posYDelta.get()
+                    )
             );
         }
 

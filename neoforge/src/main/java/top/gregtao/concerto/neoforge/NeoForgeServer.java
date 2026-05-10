@@ -7,6 +7,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.packs.resources.ResourceManager;
 import net.neoforged.api.distmarker.Dist;
+import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.loading.FMLLoader;
@@ -18,7 +19,6 @@ import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 import net.neoforged.neoforge.network.handling.IPayloadHandler;
 import net.neoforged.neoforge.network.registration.PayloadRegistrar;
-import net.neoforged.bus.api.IEventBus;
 import org.jetbrains.annotations.NotNull;
 import top.gregtao.concerto.ConcertoServer;
 import top.gregtao.concerto.bridge.MinecraftServerBridge;
@@ -65,7 +65,7 @@ public class NeoForgeServer {
     static class NeoForgeServerBridge implements MinecraftServerBridge {
 
         IEventBus modEventBus;
-        
+
         NeoForgeServerBridge(IEventBus modEventBus) {
             this.modEventBus = modEventBus;
         }

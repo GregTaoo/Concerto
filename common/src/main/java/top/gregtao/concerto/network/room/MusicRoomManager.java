@@ -1,18 +1,15 @@
 package top.gregtao.concerto.network.room;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.network.chat.Component;
 import top.gregtao.concerto.ConcertoClient;
 import top.gregtao.concerto.ConcertoServer;
 import top.gregtao.concerto.bridge.MinecraftServerBridge;
 import top.gregtao.concerto.core.config.ServerConfig;
-import top.gregtao.concerto.network.ConcertoPayload;
-
 import top.gregtao.concerto.core.room.MusicRoom;
-
-import java.util.*;
+import top.gregtao.concerto.network.ConcertoPayload;
 
 public class MusicRoomManager {
 
@@ -21,7 +18,7 @@ public class MusicRoomManager {
         ConcertoPayload payload = new ConcertoPayload(ConcertoPayload.Channel.MUSIC_ROOM, command + ":" + payloadString);
         ConcertoServer.getBridge().sendPayload(player, payload);
     }
-    
+
     public static MusicRoom.ServerNetworkBridge createServerBridge(MinecraftServer server) {
         return new MusicRoom.ServerNetworkBridge() {
             @Override
@@ -84,7 +81,7 @@ public class MusicRoomManager {
             ConcertoClient.LOGGER.error("Invalid arguments for client receiver: {}", payload);
             return;
         }
-        
+
         MusicRoom.handleClientCommand(args[0], args[1], CLIENT_BRIDGE);
     }
 

@@ -22,12 +22,12 @@
  */
 package top.gregtao.concerto.core.player.streamplayer.stream;
 
+import top.gregtao.concerto.core.player.streamplayer.enums.Status;
+
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
-import top.gregtao.concerto.core.player.streamplayer.enums.Status;
 
 /**
  * The Class StreamPlayerEventLauncher.
@@ -37,52 +37,58 @@ import top.gregtao.concerto.core.player.streamplayer.enums.Status;
 public class StreamPlayerEventLauncher implements Callable<String> {
 
     private final Logger logger;
-    /** The player state. */
+    /**
+     * The player state.
+     */
     private Status playerState = Status.NOT_SPECIFIED;
 
-    /** The stream position. */
+    /**
+     * The stream position.
+     */
     private int encodedStreamPosition = -1;
 
-    /** The description. */
+    /**
+     * The description.
+     */
     private Object description = null;
 
-    /** The listeners. */
+    /**
+     * The listeners.
+     */
     private List<StreamPlayerListener> listeners = null;
 
-    /** The source. */
+    /**
+     * The source.
+     */
     private StreamPlayer source = null;
 
     /**
      * Instantiates a new stream player event launcher.
-     * 
-     * @param source
-     *            the source
-     * @param playerStatus
-     *            the play state
-     * @param encodedStreamPosition
-     *            the stream position
-     * @param description
-     *            the description
+     *
+     * @param source                the source
+     * @param playerStatus          the play state
+     * @param encodedStreamPosition the stream position
+     * @param description           the description
      * @param listeners
      */
     public StreamPlayerEventLauncher(StreamPlayer source, Status playerStatus, int encodedStreamPosition, Object description,
                                      List<StreamPlayerListener> listeners) {
-	this.source = source;
-	this.playerState = playerStatus;
-	this.encodedStreamPosition = encodedStreamPosition;
-	this.description = description;
-	this.listeners = listeners;
-    this.logger = source.getLogger();
+        this.source = source;
+        this.playerState = playerStatus;
+        this.encodedStreamPosition = encodedStreamPosition;
+        this.description = description;
+        this.listeners = listeners;
+        this.logger = source.getLogger();
     }
 
     @Override
     public String call() {
-	// Notify all the listeners that the state has been updated
-	if (listeners != null) {
-	    listeners.forEach(listener -> listener
-		    .statusUpdated(new StreamPlayerEvent(source, playerState, encodedStreamPosition, description)));
-	}
-	logger.log(Level.INFO, "Stream player Status -> " + playerState);
-	return "OK";
+        // Notify all the listeners that the state has been updated
+        if (listeners != null) {
+            listeners.forEach(listener -> listener
+                    .statusUpdated(new StreamPlayerEvent(source, playerState, encodedStreamPosition, description)));
+        }
+        logger.log(Level.INFO, "Stream player Status -> " + playerState);
+        return "OK";
     }
 }

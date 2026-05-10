@@ -9,11 +9,11 @@ import top.gregtao.concerto.core.api.MusicJsonParsers;
 import top.gregtao.concerto.core.config.PresetPlaylistsConfig;
 import top.gregtao.concerto.core.config.ServerConfig;
 import top.gregtao.concerto.core.music.meta.music.MusicMetaData;
-import top.gregtao.concerto.paper.util.ComponentUtil;
 import top.gregtao.concerto.paper.ConcertoPaperPlugin;
 import top.gregtao.concerto.paper.command.ConcertoServerCommand;
 import top.gregtao.concerto.paper.network.room.MusicRoomManager;
 import top.gregtao.concerto.paper.network.room.ServerMusicAgentManager;
+import top.gregtao.concerto.paper.util.ComponentUtil;
 
 import java.util.*;
 
@@ -68,7 +68,8 @@ public class ServerMusicNetworkHandler {
             if (player != null) player.sendMessage(Component.translatable("concerto.share.rejected", title));
         });
         WAIT_AUDITION.clear();
-        if (auditor != null) auditor.sendMessage(Component.translatable("concerto.audit.reject", Component.text("ALL"), Component.text("ALL")));
+        if (auditor != null)
+            auditor.sendMessage(Component.translatable("concerto.audit.reject", Component.text("ALL"), Component.text("ALL")));
         ConcertoPaperPlugin.LOGGER.info("Auditor {} rejected all request",
                 auditor == null ? "?" : auditor.getName());
     }

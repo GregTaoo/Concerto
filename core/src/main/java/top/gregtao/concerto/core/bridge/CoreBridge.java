@@ -10,8 +10,11 @@ public interface CoreBridge {
 
     // Client
     void setClientClipboard(String text);
+
     String getClientPlayerName();
+
     void sendMessageToClientPlayer(String message, boolean overlay);
+
     SyncRecord<MusicPlayerState> getCurrentPlayerState();
 
     default void sendTranslatableToClientPlayer(String key, boolean overlay, Object... args) {

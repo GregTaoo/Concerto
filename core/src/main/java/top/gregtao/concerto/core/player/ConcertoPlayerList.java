@@ -4,6 +4,7 @@ import com.google.gson.*;
 import top.gregtao.concerto.core.api.Copyable;
 import top.gregtao.concerto.core.api.MusicJsonParsers;
 import top.gregtao.concerto.core.music.Music;
+import top.gregtao.concerto.core.util.Pair;
 
 import java.lang.reflect.Type;
 import java.util.*;
@@ -11,7 +12,6 @@ import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.BiConsumer;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
-import top.gregtao.concerto.core.util.Pair;
 
 public class ConcertoPlayerList implements Copyable<ConcertoPlayerList> {
 
@@ -35,7 +35,8 @@ public class ConcertoPlayerList implements Copyable<ConcertoPlayerList> {
     private final ArrayList<UUID> randomUuids = new ArrayList<>();
     private final HashMap<UUID, Integer> randomPos = new HashMap<>();
 
-    public ConcertoPlayerList() {}
+    public ConcertoPlayerList() {
+    }
 
     public ConcertoPlayerList(Collection<Music> musics) {
         this.addAllLast(musics);

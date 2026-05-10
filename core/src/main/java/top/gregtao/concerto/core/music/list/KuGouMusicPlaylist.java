@@ -2,12 +2,12 @@ package top.gregtao.concerto.core.music.list;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import top.gregtao.concerto.core.http.kugou.KuGouMusicApiClient;
 import top.gregtao.concerto.core.music.Music;
 import top.gregtao.concerto.core.music.meta.music.list.PlaylistMetaData;
 import top.gregtao.concerto.core.util.MathUtil;
 import top.gregtao.concerto.core.util.Optionals;
 import top.gregtao.concerto.core.util.Pair;
-import top.gregtao.concerto.core.http.kugou.KuGouMusicApiClient;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -49,7 +49,7 @@ public class KuGouMusicPlaylist extends Playlist {
     }
 
     public static PlaylistMetaData parsePlaylistInfo(JsonObject jsonObject, boolean isDetail) {
-        String authorKey = isDetail ? "list_create_username" : "nickname" ;
+        String authorKey = isDetail ? "list_create_username" : "nickname";
         String titleKey = isDetail ? "name" : "specialname";
 
         Optional<JsonObject> optional = Optional.ofNullable(jsonObject);
@@ -77,6 +77,7 @@ public class KuGouMusicPlaylist extends Playlist {
 
     /**
      * 解析专辑元数据, 处理 searchAlbum 和 getAlbumDetail 返回的数据
+     *
      * @param jsonObject 专辑的 JsonObject
      * @return 专辑元数据
      */

@@ -5,7 +5,6 @@
   "concerto.source.kugou_music": "酷狗音乐",
   "concerto.source.local_file": "本地文件",
   "concerto.source.internet": "网络资源",
-
   "concerto.donate": "捐赠",
   "concerto.no_subtitle": "无字幕",
   "concerto.loading": "加载中",
@@ -24,15 +23,12 @@
   "concerto.reset": "重置",
   "concerto.reset_confirm": "确定要重置吗？",
   "concerto.not_playing": "没有歌曲正在播放",
-
   "concerto.playlist": "歌单",
   "concerto.album": "专辑",
-
   "concerto.order.normal": "正序",
   "concerto.order.loop": "循环",
   "concerto.order.random": "随机",
   "concerto.order.reversed": "倒序",
-
   "concerto.player.resume": "继续播放",
   "concerto.player.pause": "已暂停",
   "concerto.player.start": "开始播放",
@@ -46,19 +42,15 @@
   "concerto.player.reload": "重新加载了音乐播放队列和客户端配置文件",
   "concerto.player.unable": "无法播放音乐: %s, 作者: %s, 来源: %s。自动跳过中...",
   "concerto.player.error": "播放器内部发生错误 (可能由未支持的格式导致的): %s",
-
   "concerto.playlist.netease_cloud.add": "添加了网易云的歌单，ID为 %s。若未成功添加歌单，请检查登录状态！",
   "concerto.album.netease_cloud.add": "添加了网易云的专辑，ID为 %s",
-
   "concerto.add.local_file": "添加了本地文件 %s 到播放队列",
   "concerto.add.internet": "添加了网络音乐文件 %s 到播放队列",
   "concerto.add.netease_cloud": "添加了网易云音乐 ID %s 到播放队列",
-
   "concerto.audit.message": "%s 的音乐分享请求：%s，请审核",
   "concerto.audit.pass": "审核通过了 %s 的音乐 %s",
   "concerto.audit.reject": "审核拒绝了 %s 的音乐 %s",
   "concerto.audit.uuid_not_found": "UUID 不存在",
-
   "concerto.share.s2c_failed": "试图通过音乐 %s 时发生错误",
   "concerto.share.s2c_player_not_found": "对象 %s 不存在",
   "concerto.share.audition_passed": "你分享给 %s 的 %s 已经被审核通过",
@@ -72,13 +64,11 @@
   "concerto.share.unsafe": "该种音乐暂时不支持分享",
   "concerto.share.rejected": "审核拒绝了你的音乐分享请求 %s",
   "concerto.share.wait_confirmation": "来自 %s 分享的音乐 %s，点击确认并播放",
-
   "concerto.confirm.not_found": "UUID 不存在",
   "concerto.confirm.accept_response": "%s 接受了你的音乐分享",
   "concerto.confirm.reject_response": "%s 拒绝了你的音乐分享",
   "concerto.confirm.accept": "成功接受了音乐分享",
   "concerto.confirm.reject": "拒绝了该音乐分享",
-
   "concerto.screen.next": "下一首",
   "concerto.screen.play": "播放",
   "concerto.screen.delete": "删除",
@@ -104,7 +94,6 @@
   "concerto.screen.daily_vip.success": "领取今日 VIP 成功！",
   "concerto.screen.daily_vip.duplicate": "今日已领取过 VIP！",
   "concerto.screen.daily_vip.failed": "领取今日 VIP 失败！",
-
   "concerto.screen.add.local_file": "本地文件:",
   "concerto.screen.add.local_file.folder": "本地文件夹:",
   "concerto.screen.add.internet": "网络资源:",
@@ -114,7 +103,6 @@
   "concerto.screen.add.qq": "QQ音乐（MID）:",
   "concerto.screen.add.kugou": "酷狗音乐（EMixSongID）:",
   "concerto.screen.add.bilibili": "B站（BV号）",
-
   "concerto.screen.login": "登录到: ",
   "concerto.screen.login.username": "用户名/手机号/邮箱:",
   "concerto.screen.login.password": "密码:",
@@ -175,25 +163,20 @@
   "concerto.screen.login.cookie": "请输入Cookie，格式为 'key1=value1; key2=value2;'",
   "concerto.screen.login.cookie.empty": "没有匹配到正确的Cookie，请检查格式",
   "concerto.screen.login.cookie.failed": "登录失败！(不可用的Cookie或登录已失效)",
-
   "concerto.screen.in_which_room": "您已经加入了：",
   "concerto.screen.in_music_room": "音乐室 %s (点击复制)",
   "concerto.screen.in_music_agent": "服务器音乐点播室",
-
   "concerto.donate.afdian": "爱发电",
   "concerto.donate.bilibili": "哔哩哔哩",
   "concerto.donate.ko-fi": "Ko-fi",
   "concerto.donate.supporters": "支持者名单",
-
   "concerto.playlist.export": "导出JSON",
   "concerto.playlist.export.fail": "导出JSON失败",
   "concerto.playlist.export.success": "导出JSON成功，保存至Concerto/local_playlists文件夹",
-
   "concerto.search_type": "类型",
   "concerto.search_type.music": "单曲",
   "concerto.search_type.album": "专辑",
   "concerto.search_type.playlist": "歌单",
-
   "concerto.login.163.qrcode.success": "成功使用二维码登录了网易云音乐",
   "concerto.login.163.qrcode.expired": "二维码已经失效",
   "concerto.login.163.qrcode.error": "更新二维码扫码状态时发生错误",
@@ -207,15 +190,12 @@
   "concerto.login.163.failed.501": "该手机号码尚未被注册",
   "concerto.login.163.failed.502": "密码或手机号/邮箱错误",
   "concerto.login.163.failed.503": "验证码错误",
-
   "concerto.login.kugou.success": "成功登录了酷狗音乐",
   "concerto.login.kugou.failed": "登录失败",
   "concerto.login.kugou.error": "尝试登录时发生错误",
-
   "concerto.hotkey": "Concerto 热键",
   "concerto.hotkey.general_music_list": "打开全局歌单",
   "concerto.hotkey.index": "打开Concerto索引页",
-
   "concerto.room": "音乐室",
   "concerto.room.permission_denied": "无权限执行该操作，请联系管理员。",
   "concerto.room.create": "创建了UUID为%s的音乐室，UUID已被自动复制到剪贴板",
@@ -229,10 +209,8 @@
   "concerto.room.de_op": "取消了 %s 的音乐室管理员权限",
   "concerto.room.op": "设置了 %s 为音乐室管理员",
   "concerto.room.members": "所有者: %s; 成员: %s.",
-
   "concerto.like": "喜欢了歌曲 %s，来自 %s",
   "concerto.dislike": "取消喜欢了歌曲 %s，来自 %s",
-
   "concerto.agent": "服务器点歌",
   "concerto.agent.invite": "是否加入服务器点歌？",
   "concerto.agent.join": "加入了服务器点歌",
@@ -252,60 +230,50 @@
   "concerto.agent.not_available": "点歌服务不可用",
   "concerto.agent.error": "使用点歌服务时遇到错误",
   "concerto.agent.add.too_quick": "请求过于频繁！请在 %d 秒后重试",
-
   "concerto.error.invalid_path": "不可用的路径或文件格式",
   "concerto.error.unsupported_operation": "不支持的操作！",
-
   "concerto.options.confirmAfterReceived": "手动接受音乐分享",
   "concerto.options.hideWhenChat": "聊天时隐藏",
   "concerto.options.printRequestResults": "打印HTTP请求结果",
   "concerto.options.joinAgentWhenInvited": "自动加入点播",
   "concerto.options.textShadow": "文字阴影",
   "concerto.options.handshakeRequired": "需要服务端握手",
-
   "concerto.options.display.lyrics": "主歌词",
   "concerto.options.align.lyrics": "歌词对齐",
   "concerto.options.posXPercent.lyrics": "歌词 X %",
   "concerto.options.posXDelta.lyrics": "歌词 X ±px",
   "concerto.options.posYPercent.lyrics": "歌词 Y %",
   "concerto.options.posYDelta.lyrics": "歌词 Y ±px",
-
   "concerto.options.display.subLyrics": "副歌词",
   "concerto.options.align.subLyrics": "副歌词对齐",
   "concerto.options.posXPercent.subLyrics": "副歌词 X %",
   "concerto.options.posXDelta.subLyrics": "副歌词 X ±px",
   "concerto.options.posYPercent.subLyrics": "副歌词 Y %",
   "concerto.options.posYDelta.subLyrics": "副歌词 Y ±px",
-
   "concerto.options.display.musicDetails": "歌曲信息",
   "concerto.options.align.musicDetails": "歌曲信息对齐",
   "concerto.options.posXPercent.musicDetails": "歌曲信息 X %",
   "concerto.options.posXDelta.musicDetails": "歌曲信息 X ±px",
   "concerto.options.posYPercent.musicDetails": "歌曲信息 Y %",
   "concerto.options.posYDelta.musicDetails": "歌曲信息 Y ±px",
-
   "concerto.options.display.timeProgress": "进度条",
   "concerto.options.align.timeProgress": "进度条对齐",
   "concerto.options.posXPercent.timeProgress": "进度条 X %",
   "concerto.options.posXDelta.timeProgress": "进度条 X ±px",
   "concerto.options.posYPercent.timeProgress": "进度条 Y %",
   "concerto.options.posYDelta.timeProgress": "进度条 Y ±px",
-
   "concerto.options.display.coverImg": "封面图",
   "concerto.options.size.coverImg": "封面图大小",
   "concerto.options.posXPercent.coverImg": "封面图 X %",
   "concerto.options.posXDelta.coverImg": "封面图 X ±px",
   "concerto.options.posYPercent.coverImg": "封面图 Y %",
   "concerto.options.posYDelta.coverImg": "封面图 Y ±px",
-
   "concerto.options.coverImgInCircle": "圆形封面图",
   "concerto.options.coverImgRotate": "封面图旋转",
-
   "concerto.options.align": "%s: %s",
   "concerto.options.align.left": "左",
   "concerto.options.align.center": "中",
   "concerto.options.align.right": "右",
-
   "concerto.options.kugouIsLite": "使用酷狗概念版接口",
   "concerto.options.autoGetKuGouDailyVIP": "自动领取酷狗每日VIP"
 }

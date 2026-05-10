@@ -2,10 +2,10 @@ package top.gregtao.concerto.screen.qq;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.CycleButton;
 import net.minecraft.client.gui.components.EditBox;
+import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import org.lwjgl.glfw.GLFW;
 import top.gregtao.concerto.ConcertoClient;
@@ -13,16 +13,16 @@ import top.gregtao.concerto.core.api.WithMetaData;
 import top.gregtao.concerto.core.enums.SearchType;
 import top.gregtao.concerto.core.http.qq.QQMusicApiClient;
 import top.gregtao.concerto.core.music.Music;
-import top.gregtao.concerto.core.music.list.QQMusicPlaylist;
 import top.gregtao.concerto.core.music.list.Playlist;
+import top.gregtao.concerto.core.music.list.QQMusicPlaylist;
 import top.gregtao.concerto.core.player.MusicPlayerHandler;
 import top.gregtao.concerto.core.player.PlayerPermissions;
+import top.gregtao.concerto.core.util.ConcertoRunner;
 import top.gregtao.concerto.screen.MusicInfoScreen;
 import top.gregtao.concerto.screen.PageScreen;
 import top.gregtao.concerto.screen.PlaylistPreviewScreen;
 import top.gregtao.concerto.screen.widget.ConcertoListWidget;
 import top.gregtao.concerto.screen.widget.MetadataListWidget;
-import top.gregtao.concerto.core.util.ConcertoRunner;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -88,7 +88,8 @@ public class QQMusicSearchScreen extends PageScreen {
     private void updateSearchType(SearchType type) {
         try {
             this.removeWidget(this.listWidgetsMap.get(this.searchType));
-        } catch (NullPointerException ignored) {}
+        } catch (NullPointerException ignored) {
+        }
         this.addWidget(this.listWidgetsMap.get(type));
         this.searchType = type;
         this.infoButton.active = type == SearchType.MUSIC;
@@ -145,8 +146,8 @@ public class QQMusicSearchScreen extends PageScreen {
 
         this.addRenderableWidget(CycleButton.builder((SearchType type) -> Component.literal(type.getName()))
                 .withValues(SearchType.values()).withInitialValue(this.searchType).create(
-                this.width / 2 + 105, 17, 65, 20, Component.translatable("concerto.search_type"),
-                (widget, type) -> this.updateSearchType(type)));
+                        this.width / 2 + 105, 17, 65, 20, Component.translatable("concerto.search_type"),
+                        (widget, type) -> this.updateSearchType(type)));
 
         this.playButton = Button.builder(Component.translatable("concerto.screen.play"), button -> {
             switch (this.searchType) {

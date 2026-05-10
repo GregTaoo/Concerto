@@ -6,11 +6,11 @@ import net.minecraft.client.gui.screens.ChatScreen;
 import net.minecraft.network.chat.Component;
 import org.joml.Matrix3x2fStack;
 import top.gregtao.concerto.core.config.ClientConfig;
+import top.gregtao.concerto.core.player.MusicPlayer;
+import top.gregtao.concerto.core.player.MusicPlayerHandler;
 import top.gregtao.concerto.core.room.MusicRoom;
 import top.gregtao.concerto.core.util.Vector2i;
 import top.gregtao.concerto.mixin.GuiGraphicsAccessor;
-import top.gregtao.concerto.core.player.MusicPlayer;
-import top.gregtao.concerto.core.player.MusicPlayerHandler;
 import top.gregtao.concerto.screen.widget.URLImageWidget;
 import top.gregtao.concerto.util.ComponentUtil;
 
@@ -65,7 +65,7 @@ public class InGameHudRenderer {
         }
 
         public int getDx() {
-           return this.width <= this.maxWidth ? (this.maxWidth - this.width) / 2 : (int) this.dx;
+            return this.width <= this.maxWidth ? (this.maxWidth - this.width) / 2 : (int) this.dx;
         }
     }
 
@@ -75,7 +75,7 @@ public class InGameHudRenderer {
 
             ClientConfig config = ClientConfig.INSTANCE;
             ClientConfig.ClientConfigOptions options = config.options;
-            
+
             if (!(options.hideWhenChat && client.screen instanceof ChatScreen)) {
                 int scaledWidth = client.getWindow().getGuiScaledWidth(), scaledHeight = client.getWindow().getGuiScaledHeight();
                 String[] texts = MusicPlayerHandler.INSTANCE.getDisplayTexts();
@@ -103,7 +103,7 @@ public class InGameHudRenderer {
                     MusicRoom.ClientState roomState = MusicRoom.clientGetState();
                     String state = MusicPlayer.INSTANCE.isPlayingTemp ?
                             roomState == MusicRoom.ClientState.MUSIC_AGENT ? " | " + Component.translatable("concerto.agent").getString() :
-                            (roomState == MusicRoom.ClientState.MUSIC_ROOM ? " | " + Component.translatable("concerto.room").getString() : "")
+                                    (roomState == MusicRoom.ClientState.MUSIC_ROOM ? " | " + Component.translatable("concerto.room").getString() : "")
                             : "";
 
                     Component text2 = Component.literal(texts[2] + state);

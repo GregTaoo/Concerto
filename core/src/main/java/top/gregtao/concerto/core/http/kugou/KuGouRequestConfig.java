@@ -112,6 +112,7 @@ public class KuGouRequestConfig {
             this.encryptType = encryptType;
             return this;
         }
+
         public Builder clearDefaultParams(boolean clearDefaultParams) {
             this.clearDefaultParams = clearDefaultParams;
             return this;

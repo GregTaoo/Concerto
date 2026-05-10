@@ -1,17 +1,17 @@
 package top.gregtao.concerto.screen.widget;
 
+import com.mojang.blaze3d.platform.NativeImage;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.components.AbstractWidget;
+import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.layouts.LayoutElement;
 import net.minecraft.client.renderer.RenderPipelines;
-import org.joml.Matrix3x2fStack;
-import com.mojang.blaze3d.platform.NativeImage;
 import net.minecraft.client.renderer.texture.DynamicTexture;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
+import org.joml.Matrix3x2fStack;
 import top.gregtao.concerto.ConcertoClient;
 import top.gregtao.concerto.core.Concerto;
 import top.gregtao.concerto.core.config.CacheManager;
@@ -25,7 +25,10 @@ import javax.imageio.stream.ImageOutputStream;
 import java.awt.*;
 import java.awt.geom.Ellipse2D;
 import java.awt.image.BufferedImage;
-import java.io.*;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.util.Iterator;
@@ -233,8 +236,8 @@ public class URLImageWidget implements Renderable, LayoutElement, AutoCloseable 
         Font textRenderer = Minecraft.getInstance().font;
         if (this.url == null || this.texture == null) {
             context.drawCenteredString(
-                textRenderer, Component.translatable("concerto.screen.url_image.empty"),
-                this.x + this.width / 2, this.y + (this.height - textRenderer.lineHeight) / 2, 0xffffffff
+                    textRenderer, Component.translatable("concerto.screen.url_image.empty"),
+                    this.x + this.width / 2, this.y + (this.height - textRenderer.lineHeight) / 2, 0xffffffff
             );
         } else {
             NativeImage image = this.texture.getPixels();
@@ -284,7 +287,7 @@ public class URLImageWidget implements Renderable, LayoutElement, AutoCloseable 
     public int getWidth() {
         return this.width;
     }
-    
+
     public int getImageWidth() {
         return this.getWidth() << 4;
     }
@@ -304,7 +307,8 @@ public class URLImageWidget implements Renderable, LayoutElement, AutoCloseable 
     }
 
     @Override
-    public void visitWidgets(Consumer<AbstractWidget> consumer) {}
+    public void visitWidgets(Consumer<AbstractWidget> consumer) {
+    }
 
     enum State {
         LOADING,

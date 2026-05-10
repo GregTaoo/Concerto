@@ -53,14 +53,14 @@ public interface DataSource {
     /**
      * @return the format of the source data
      * @throws UnsupportedAudioFileException if the file type is unsupported
-     * @throws IOException if there is a runtime problem with IO.
+     * @throws IOException                   if there is a runtime problem with IO.
      */
     AudioFileFormat getAudioFileFormat() throws UnsupportedAudioFileException, IOException;
 
     /**
      * @return a stream representing the input data, regardless of source.
      * @throws UnsupportedAudioFileException if the file type is unsupported
-     * @throws IOException if there is a runtime problem with IO.
+     * @throws IOException                   if there is a runtime problem with IO.
      */
     AudioInputStream getAudioInputStream() throws UnsupportedAudioFileException, IOException;
 
@@ -68,12 +68,12 @@ public interface DataSource {
      * @return The duration of the source data in seconds, or -1 if duration is unavailable.
      */
     int getDurationInSeconds();
-    
+
     /**
      * @return The duration of the source data in milliseconds, or -1 if duration is unavailable.
      */
     long getDurationInMilliseconds();
-    
+
     /**
      * @return The duration of the source data in a {@code java.time.Duration} instance, or null if unavailable
      */

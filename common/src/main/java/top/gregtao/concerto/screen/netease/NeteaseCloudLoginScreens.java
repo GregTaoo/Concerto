@@ -1,19 +1,19 @@
 package top.gregtao.concerto.screen.netease;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import top.gregtao.concerto.ConcertoClient;
 import top.gregtao.concerto.core.http.netease.NeteaseCloudApiClient;
+import top.gregtao.concerto.core.util.Pair;
 import top.gregtao.concerto.core.util.TextUtil;
 import top.gregtao.concerto.screen.ConcertoScreen;
-import top.gregtao.concerto.screen.login.CookieLoginScreen;
-import top.gregtao.concerto.util.QRCodeRenderer;
 import top.gregtao.concerto.screen.login.CaptchaLoginScreen;
+import top.gregtao.concerto.screen.login.CookieLoginScreen;
 import top.gregtao.concerto.screen.login.PasswordLoginScreen;
 import top.gregtao.concerto.screen.login.QRCodeLoginScreen;
-import top.gregtao.concerto.core.util.Pair;
+import top.gregtao.concerto.util.QRCodeRenderer;
 
 import java.util.List;
 

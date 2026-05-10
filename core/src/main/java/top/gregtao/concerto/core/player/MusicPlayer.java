@@ -7,7 +7,10 @@ import top.gregtao.concerto.core.music.MusicTimestamp;
 import top.gregtao.concerto.core.music.lyrics.Lyrics;
 import top.gregtao.concerto.core.music.meta.music.MusicMetaData;
 import top.gregtao.concerto.core.player.streamplayer.enums.Status;
-import top.gregtao.concerto.core.player.streamplayer.stream.*;
+import top.gregtao.concerto.core.player.streamplayer.stream.StreamPlayer;
+import top.gregtao.concerto.core.player.streamplayer.stream.StreamPlayerEvent;
+import top.gregtao.concerto.core.player.streamplayer.stream.StreamPlayerException;
+import top.gregtao.concerto.core.player.streamplayer.stream.StreamPlayerListener;
 import top.gregtao.concerto.core.util.ConcertoRunner;
 import top.gregtao.concerto.core.util.Pair;
 
@@ -84,7 +87,7 @@ public class MusicPlayer extends StreamPlayer implements StreamPlayerListener {
                     this.isPlayingTemp = false;
                     this.stop();
                     this.resetInfo();
-                    
+
                     this.currentMusic = music;
                     this.initMusicStatus();
                     this.updateDisplayTexts();
@@ -232,19 +235,19 @@ public class MusicPlayer extends StreamPlayer implements StreamPlayerListener {
                 this.started = true;
                 this.stop();
                 this.resetInfo();
-                
+
                 this.currentMusic = music;
                 this.initMusicStatus();
                 this.updateDisplayTexts();
                 this.updateDisplayTexts(0);
-                
+
                 InputStream source = music.getMusicSourceOrNull();
                 if (source == null) {
                     this.started = false;
                     this.resetInfo();
                     return;
                 }
-                
+
                 this.currentSource = source;
                 try {
                     this.open(source);

@@ -1,7 +1,7 @@
 package top.gregtao.concerto.util;
 
-import top.gregtao.concerto.core.util.qrcode.QrCode;
 import top.gregtao.concerto.ConcertoClient;
+import top.gregtao.concerto.core.util.qrcode.QrCode;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;

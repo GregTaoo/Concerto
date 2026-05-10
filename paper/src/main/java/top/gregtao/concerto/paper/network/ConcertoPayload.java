@@ -86,6 +86,7 @@ public class ConcertoPayload {
         }
 
         public final char id;
+
         Channel(char id) {
             this.id = id;
         }

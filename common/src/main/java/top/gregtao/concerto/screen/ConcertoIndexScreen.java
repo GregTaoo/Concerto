@@ -1,20 +1,20 @@
 package top.gregtao.concerto.screen;
 
+import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.PlainTextButton;
 import net.minecraft.client.gui.components.StringWidget;
+import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.network.chat.Component;
-import net.minecraft.Util;
 import top.gregtao.concerto.ConcertoClient;
 import top.gregtao.concerto.core.config.PresetPlaylistsConfig;
 import top.gregtao.concerto.core.room.MusicRoom;
 import top.gregtao.concerto.screen.kugou.KuGouMusicIndexScreen;
-import top.gregtao.concerto.screen.qq.QQMusicIndexScreen;
 import top.gregtao.concerto.screen.netease.NeteaseCloudIndexScreen;
+import top.gregtao.concerto.screen.qq.QQMusicIndexScreen;
 
 public class ConcertoIndexScreen extends ConcertoScreen {
     public ConcertoIndexScreen(Screen parent) {
@@ -62,12 +62,12 @@ public class ConcertoIndexScreen extends ConcertoScreen {
         }
 
         this.addRenderableWidget(Button.builder(Component.translatable("concerto.screen.add"),
-                button -> Minecraft.getInstance().setScreen(new AddMusicScreen(this)))
-            .pos(this.width / 2 - 120, 140).size(115, 20).build());
+                        button -> Minecraft.getInstance().setScreen(new AddMusicScreen(this)))
+                .pos(this.width / 2 - 120, 140).size(115, 20).build());
 
         this.addRenderableWidget(Button.builder(Component.translatable("concerto.screen.local_playlists"),
-            button -> Minecraft.getInstance().setScreen(new PlaylistListScreen(
-                Component.translatable("concerto.screen.local_playlists"), this, PresetPlaylistsConfig.LOCAL_PLAYLISTS.getRadios()))
+                button -> Minecraft.getInstance().setScreen(new PlaylistListScreen(
+                        Component.translatable("concerto.screen.local_playlists"), this, PresetPlaylistsConfig.LOCAL_PLAYLISTS.getRadios()))
         ).pos(this.width / 2 + 5, 110).size(115, 20).build());
 
         this.addRenderableWidget(Button.builder(Component.translatable("concerto.report_bugs"),
@@ -85,19 +85,19 @@ public class ConcertoIndexScreen extends ConcertoScreen {
                     Component text = Component.translatable("concerto.screen.in_music_room", uuid);
                     int width = this.font.width(text);
                     this.addRenderableWidget(new PlainTextButton(
-                        (this.width - width) / 2, 215, width,
-                        this.font.lineHeight, text,
-                        button -> this.minecraft.keyboardHandler.setClipboard(uuid),
-                        this.font
+                            (this.width - width) / 2, 215, width,
+                            this.font.lineHeight, text,
+                            button -> this.minecraft.keyboardHandler.setClipboard(uuid),
+                            this.font
                     ));
                 }
                 case MUSIC_AGENT -> {
                     Component text = Component.translatable("concerto.screen.in_music_agent");
                     int width = this.font.width(text);
                     this.addRenderableWidget(new StringWidget(
-                        (this.width - width) / 2, 215, width,
-                        this.font.lineHeight, text,
-                        this.font
+                            (this.width - width) / 2, 215, width,
+                            this.font.lineHeight, text,
+                            this.font
                     ));
                 }
             }
@@ -109,9 +109,9 @@ public class ConcertoIndexScreen extends ConcertoScreen {
         super.render(matrices, mouseX, mouseY, delta);
         if (MusicRoom.clientGetState() != MusicRoom.ClientState.LOCAL) {
             matrices.drawCenteredString(
-                this.font,
-                Component.translatable("concerto.screen.in_which_room"),
-                this.width / 2, 200, 0xffffffff
+                    this.font,
+                    Component.translatable("concerto.screen.in_which_room"),
+                    this.width / 2, 200, 0xffffffff
             );
         }
     }

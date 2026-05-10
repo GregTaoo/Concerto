@@ -6,9 +6,9 @@ import net.kyori.adventure.text.format.TextColor;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import top.gregtao.concerto.core.room.agent.ServerMusicAgent;
-import top.gregtao.concerto.paper.util.ComponentUtil;
 import top.gregtao.concerto.paper.ConcertoPaperPlugin;
 import top.gregtao.concerto.paper.network.ConcertoPayload;
+import top.gregtao.concerto.paper.util.ComponentUtil;
 
 public class ServerMusicAgentManager {
 

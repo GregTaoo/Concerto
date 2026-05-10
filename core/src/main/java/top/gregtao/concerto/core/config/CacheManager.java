@@ -14,7 +14,10 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.attribute.BasicFileAttributeView;
 import java.nio.file.attribute.BasicFileAttributes;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Stream;
 
@@ -115,7 +118,8 @@ public class CacheManager {
 
     public void addFile(String filename, InputStream inputStream) throws IOException {
         File file = this.getChild(filename);
-        if (file.exists() || (!file.getParentFile().exists() && !file.getParentFile().mkdirs()) || !file.createNewFile()) return;
+        if (file.exists() || (!file.getParentFile().exists() && !file.getParentFile().mkdirs()) || !file.createNewFile())
+            return;
         try (FileOutputStream outputStream = new FileOutputStream(file)) {
             outputStream.write(inputStream.readAllBytes());
         }

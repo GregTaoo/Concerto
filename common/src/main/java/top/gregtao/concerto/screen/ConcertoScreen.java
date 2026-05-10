@@ -1,13 +1,13 @@
 package top.gregtao.concerto.screen;
 
+import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.components.FocusableTextWidget;
 import net.minecraft.client.gui.components.PlainTextButton;
-import net.minecraft.network.chat.Style;
+import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
-import net.minecraft.ChatFormatting;
+import net.minecraft.network.chat.Style;
 
 import java.util.List;
 import java.util.concurrent.CompletableFuture;

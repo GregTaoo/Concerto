@@ -57,6 +57,7 @@ public class ConcertoPayload implements CustomPacketPayload {
         }
 
         public final char id;
+
         Channel(char id) {
             this.id = id;
         }

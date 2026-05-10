@@ -9,11 +9,18 @@ public class AudioSpectrum {
             int j = 0;
             for (int i = 0; i < n - 1; i++) {
                 if (i < j) {
-                    float tr = real[i]; real[i] = real[j]; real[j] = tr;
-                    float ti = imag[i]; imag[i] = imag[j]; imag[j] = ti;
+                    float tr = real[i];
+                    real[i] = real[j];
+                    real[j] = tr;
+                    float ti = imag[i];
+                    imag[i] = imag[j];
+                    imag[j] = ti;
                 }
                 int k = half;
-                while (k <= j) { j -= k; k >>= 1; }
+                while (k <= j) {
+                    j -= k;
+                    k >>= 1;
+                }
                 j += k;
             }
             for (int l = 2; l <= n; l <<= 1) {

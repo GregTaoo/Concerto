@@ -1,13 +1,12 @@
 package top.gregtao.concerto.core.player.streamplayer.stream;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.time.Duration;
-
 import javax.sound.sampled.AudioFileFormat;
 import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.UnsupportedAudioFileException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.time.Duration;
 
 public class StreamDataSource implements DataSource {
 
@@ -31,12 +30,12 @@ public class StreamDataSource implements DataSource {
     public int getDurationInSeconds() {
         return -1;
     }
-    
+
     @Override
     public long getDurationInMilliseconds() {
         return -1;
     }
-    
+
     @Override
     public Duration getDuration() {
         return null;
@@ -54,6 +53,6 @@ public class StreamDataSource implements DataSource {
 
     @Override
     public boolean isFile() {
-       return false;
-   }
+        return false;
+    }
 }

@@ -3,10 +3,10 @@ package top.gregtao.concerto.paper.network.room;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import top.gregtao.concerto.core.room.MusicRoom;
-import top.gregtao.concerto.paper.util.ComponentUtil;
 import top.gregtao.concerto.paper.ConcertoPaperPlugin;
 import top.gregtao.concerto.paper.network.ConcertoPayload;
 import top.gregtao.concerto.paper.network.ServerMusicNetworkHandler;
+import top.gregtao.concerto.paper.util.ComponentUtil;
 
 public class MusicRoomManager {
 
@@ -15,7 +15,7 @@ public class MusicRoomManager {
         ConcertoPayload payload = new ConcertoPayload(ConcertoPayload.Channel.MUSIC_ROOM, command + ":" + payloadString);
         ServerMusicNetworkHandler.sendPluginMessage(player, payload);
     }
-    
+
     public static MusicRoom.ServerNetworkBridge createServerBridge() {
         return new MusicRoom.ServerNetworkBridge() {
             @Override

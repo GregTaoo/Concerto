@@ -111,7 +111,9 @@ public class MusicRoom {
     // Server side
     public interface ServerNetworkBridge {
         void sendMessage(String targetPlayer, String translationKey, Object... args);
+
         void sendRoomCommand(String targetPlayer, Command command, String payload);
+
         boolean hasExternalPermission(String player, int level);
     }
 
@@ -256,6 +258,7 @@ public class MusicRoom {
     // Client side
     public interface ClientNetworkBridge {
         void sendRoomCommand(String uuid, Command command, String payload);
+
         void onErrorMessageUpdate(String message);
     }
 

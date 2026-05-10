@@ -1,10 +1,10 @@
 package top.gregtao.concerto.screen;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.components.StringWidget;
+import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import top.gregtao.concerto.core.api.UnsafeMusicException;
 import top.gregtao.concerto.core.config.ClientConfig;
@@ -61,12 +61,15 @@ public class AddMusicScreen extends ApplyDraggedFileScreen {
                 }));
         this.addLabel(Component.translatable("concerto.screen.add.local_file.folder"), this.width / 2, 45, str -> ConcertoRunner.run(() -> {
             ArrayList<Music> list = LocalFileMusic.getMusicsInFolder(new File(str));
-            MusicPlayerHandler.INSTANCE.addMusicAsync(list, true, () -> {});
+            MusicPlayerHandler.INSTANCE.addMusicAsync(list, true, () -> {
+            });
         }));
         this.addLabel(Component.translatable("concerto.screen.add.internet"), this.width / 2, 70,
-                methodSafeWrapper(str -> MusicPlayerHandler.INSTANCE.addMusicHereAsync(new HttpFileMusic(str), true, () -> {})));
+                methodSafeWrapper(str -> MusicPlayerHandler.INSTANCE.addMusicHereAsync(new HttpFileMusic(str), true, () -> {
+                })));
         this.addLabel(Component.translatable("concerto.screen.add.netease_cloud"), this.width / 2, 95,
-                methodSafeWrapper(str -> MusicPlayerHandler.INSTANCE.addMusicHereAsync(new NeteaseCloudMusic(str, ClientConfig.INSTANCE.options.neteaseMusicQuality), true, () -> {})));
+                methodSafeWrapper(str -> MusicPlayerHandler.INSTANCE.addMusicHereAsync(new NeteaseCloudMusic(str, ClientConfig.INSTANCE.options.neteaseMusicQuality), true, () -> {
+                })));
         this.addLabel(Component.translatable("concerto.screen.add.netease_cloud.playlist"), this.width / 2, 120, methodSafeWrapper(str -> {
             NeteaseCloudPlaylist playlist = new NeteaseCloudPlaylist(str, false);
             playlist.load(() -> Minecraft.getInstance().setScreen(new PlaylistPreviewScreen(playlist, this)));
@@ -76,11 +79,13 @@ public class AddMusicScreen extends ApplyDraggedFileScreen {
             playlist.load(() -> Minecraft.getInstance().setScreen(new PlaylistPreviewScreen(playlist, this)));
         }));
         this.addLabel(Component.translatable("concerto.screen.add.qq"), this.width / 2, 170,
-                methodSafeWrapper(str -> MusicPlayerHandler.INSTANCE.addMusicHereAsync(new QQMusic(str), true, () -> {})));
+                methodSafeWrapper(str -> MusicPlayerHandler.INSTANCE.addMusicHereAsync(new QQMusic(str), true, () -> {
+                })));
 
         this.addLabel(
                 Component.translatable("concerto.screen.add.kugou"), this.width / 2, 195,
-                methodSafeWrapper(str -> MusicPlayerHandler.INSTANCE.addMusicHereAsync(new KuGouMusic(str, true), true, () -> {}))
+                methodSafeWrapper(str -> MusicPlayerHandler.INSTANCE.addMusicHereAsync(new KuGouMusic(str, true), true, () -> {
+                }))
         );
 //        this.addLabel(Text.translatable("concerto.screen.add.bilibili"), this.width / 2, 195,
 //                str -> MusicPlayerHandler.INSTANCE.addMusicHere(new BilibiliMusic(str), true));

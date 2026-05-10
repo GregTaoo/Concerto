@@ -1,25 +1,25 @@
 package top.gregtao.concerto.network;
 
 import com.google.gson.JsonObject;
+import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
-import net.minecraft.world.entity.player.Player;
-import net.minecraft.server.MinecraftServer;
 import net.minecraft.network.chat.Component;
-import net.minecraft.ChatFormatting;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.world.entity.player.Player;
 import top.gregtao.concerto.ConcertoClient;
 import top.gregtao.concerto.bridge.MinecraftClientBridge;
-import top.gregtao.concerto.core.api.MusicJsonParsers;
 import top.gregtao.concerto.command.ShareMusicCommand;
+import top.gregtao.concerto.core.api.MusicJsonParsers;
 import top.gregtao.concerto.core.config.ClientConfig;
 import top.gregtao.concerto.core.config.PresetPlaylistsConfig;
 import top.gregtao.concerto.core.music.Music;
-import top.gregtao.concerto.network.room.MusicRoomManager;
 import top.gregtao.concerto.core.player.MusicPlayer;
-import top.gregtao.concerto.screen.MusicAuditionScreen;
-import top.gregtao.concerto.screen.PresetRadiosScreen;
 import top.gregtao.concerto.core.util.ConcertoRunner;
 import top.gregtao.concerto.core.util.JsonUtil;
+import top.gregtao.concerto.network.room.MusicRoomManager;
+import top.gregtao.concerto.screen.MusicAuditionScreen;
+import top.gregtao.concerto.screen.PresetRadiosScreen;
 import top.gregtao.concerto.util.CommandUtil;
 import top.gregtao.concerto.util.ComponentUtil;
 

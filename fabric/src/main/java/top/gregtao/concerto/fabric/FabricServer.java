@@ -11,10 +11,10 @@ import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.server.packs.resources.ResourceManager;
-import net.minecraft.server.packs.PackType;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.packs.PackType;
+import net.minecraft.server.packs.resources.ResourceManager;
 import top.gregtao.concerto.ConcertoServer;
 import top.gregtao.concerto.bridge.MinecraftServerBridge;
 import top.gregtao.concerto.network.ConcertoPayload;
@@ -40,7 +40,7 @@ public class FabricServer implements ModInitializer {
 
                 @Override
                 public void onResourceManagerReload(ResourceManager manager) {
-                   listener.accept(manager);
+                    listener.accept(manager);
                 }
             });
         }

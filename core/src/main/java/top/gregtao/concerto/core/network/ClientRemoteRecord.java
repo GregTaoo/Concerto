@@ -10,7 +10,10 @@ import top.gregtao.concerto.core.util.Pair;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.function.Function;
 
 public abstract class ClientRemoteRecord<T extends Copyable<T>> extends SyncRecord<T> {

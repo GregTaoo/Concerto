@@ -46,6 +46,7 @@ public class KuGouMusic extends Music implements CacheableMusic, DynamicPath {
      * 构造函数, 通过 JsonObject 初始化 KuGouMusic 对象
      * <p>
      * 只接受 searchMusic 和 getPlayListAllTrack 返回的 Json 对象
+     *
      * @param object Json 对象, 来自搜索或歌单等接口
      */
     public KuGouMusic(JsonObject object) {
@@ -244,6 +245,7 @@ public class KuGouMusic extends Music implements CacheableMusic, DynamicPath {
 
     /**
      * 解析音乐元数据, 处理 getDetail 和 getAlbumSongs 返回的 Json 对象
+     *
      * @param object 音乐详情 Json 对象
      * @return 音乐元数据
      */
@@ -333,6 +335,7 @@ public class KuGouMusic extends Music implements CacheableMusic, DynamicPath {
 
     /**
      * 解析音乐元数据, 处理 searchMusic 和 getPlayListAllTrack 返回的 Json 对象
+     *
      * @param object 音乐详情 Json 对象
      * @return 音乐元数据
      */
@@ -422,7 +425,8 @@ public class KuGouMusic extends Music implements CacheableMusic, DynamicPath {
     }
 
     public String toAlbumAudioId(String encodeAlbumAudioId) {
-        if (encodeAlbumAudioId == null || encodeAlbumAudioId.length() < 3) throw new IllegalArgumentException("Invalid encodeAlbumAudioId");
+        if (encodeAlbumAudioId == null || encodeAlbumAudioId.length() < 3)
+            throw new IllegalArgumentException("Invalid encodeAlbumAudioId");
         // 先去除后两位
         encodeAlbumAudioId = encodeAlbumAudioId.substring(0, encodeAlbumAudioId.length() - 2);
         // 再将剩下的部分从36进制转换为10进制
@@ -432,6 +436,7 @@ public class KuGouMusic extends Music implements CacheableMusic, DynamicPath {
 
     /**
      * 获取最高音质的 Hash
+     *
      * @return Hash
      */
     public String getTopHash() {

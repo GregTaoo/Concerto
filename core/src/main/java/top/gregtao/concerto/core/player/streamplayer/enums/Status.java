@@ -37,28 +37,44 @@ public enum Status {
      */
     INIT,
 
-    /** UNKOWN STATUS. */
+    /**
+     * UNKOWN STATUS.
+     */
     NOT_SPECIFIED,
 
-    /** In the process of opening the AudioInputStream. */
+    /**
+     * In the process of opening the AudioInputStream.
+     */
     OPENING,
 
-    /** AudioInputStream is opened. */
+    /**
+     * AudioInputStream is opened.
+     */
     OPENED,
 
-    /** play event has been fired. */
+    /**
+     * play event has been fired.
+     */
     PLAYING,
 
-    /** player is stopped. */
+    /**
+     * player is stopped.
+     */
     STOPPED,
 
-    /** player is paused. */
+    /**
+     * player is paused.
+     */
     PAUSED,
 
-    /** resume event is fired. */
+    /**
+     * resume event is fired.
+     */
     RESUMED,
 
-    /** player is in the process of seeking. */
+    /**
+     * player is in the process of seeking.
+     */
     SEEKING,
 
     /**
@@ -66,16 +82,24 @@ public enum Status {
      */
     BUFFERING,
 
-    /** seek work has been done. */
+    /**
+     * seek work has been done.
+     */
     SEEKED,
 
-    /** EOM stands for "END OF MEDIA". */
+    /**
+     * EOM stands for "END OF MEDIA".
+     */
     EOM,
 
-    /** player pan has changed. */
+    /**
+     * player pan has changed.
+     */
     PAN,
 
-    /** player gain has changed. */
+    /**
+     * player gain has changed.
+     */
     GAIN
 
 }

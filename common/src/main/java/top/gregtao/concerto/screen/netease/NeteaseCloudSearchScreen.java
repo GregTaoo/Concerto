@@ -2,10 +2,10 @@ package top.gregtao.concerto.screen.netease;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.CycleButton;
 import net.minecraft.client.gui.components.EditBox;
+import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import org.lwjgl.glfw.GLFW;
 import top.gregtao.concerto.ConcertoClient;
@@ -17,12 +17,12 @@ import top.gregtao.concerto.core.music.list.NeteaseCloudPlaylist;
 import top.gregtao.concerto.core.music.list.Playlist;
 import top.gregtao.concerto.core.player.MusicPlayerHandler;
 import top.gregtao.concerto.core.player.PlayerPermissions;
+import top.gregtao.concerto.core.util.ConcertoRunner;
 import top.gregtao.concerto.screen.MusicInfoScreen;
 import top.gregtao.concerto.screen.PageScreen;
 import top.gregtao.concerto.screen.PlaylistPreviewScreen;
 import top.gregtao.concerto.screen.widget.ConcertoListWidget;
 import top.gregtao.concerto.screen.widget.MetadataListWidget;
-import top.gregtao.concerto.core.util.ConcertoRunner;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -47,7 +47,8 @@ public class NeteaseCloudSearchScreen extends PageScreen {
                     switch (NeteaseCloudSearchScreen.this.searchType) {
                         case MUSIC: {
                             if (PlayerPermissions.canModifyMusicList()) {
-                                MusicPlayerHandler.INSTANCE.addMusicHereAsync((Music) entry.item, true, () -> {});
+                                MusicPlayerHandler.INSTANCE.addMusicHereAsync((Music) entry.item, true, () -> {
+                                });
                             }
                             break;
                         }
@@ -73,7 +74,8 @@ public class NeteaseCloudSearchScreen extends PageScreen {
         ConcertoRunner.run(() -> {
             switch (this.searchType) {
                 case MUSIC -> this.musicList.reset(NeteaseCloudApiClient.INSTANCE.searchMusic(keyword, page), null);
-                case PLAYLIST -> this.playlistList.reset(NeteaseCloudApiClient.INSTANCE.searchPlaylist(keyword, page), null);
+                case PLAYLIST ->
+                        this.playlistList.reset(NeteaseCloudApiClient.INSTANCE.searchPlaylist(keyword, page), null);
                 case ALBUM -> this.albumList.reset(NeteaseCloudApiClient.INSTANCE.searchAlbum(keyword, page), null);
             }
             this.listWidgetsMap.get(this.searchType).setScrollAmount(0);
@@ -88,7 +90,8 @@ public class NeteaseCloudSearchScreen extends PageScreen {
     private void updateSearchType(SearchType type) {
         try {
             this.removeWidget(this.listWidgetsMap.get(this.searchType));
-        } catch (NullPointerException ignored) {}
+        } catch (NullPointerException ignored) {
+        }
         this.addWidget(this.listWidgetsMap.get(type));
         this.searchType = type;
         this.infoButton.active = type == SearchType.MUSIC;
@@ -145,8 +148,8 @@ public class NeteaseCloudSearchScreen extends PageScreen {
 
         this.addRenderableWidget(CycleButton.builder((SearchType type) -> Component.literal(type.getName()))
                 .withValues(SearchType.values()).withInitialValue(this.searchType).create(
-                this.width / 2 + 105, 17, 65, 20, Component.translatable("concerto.search_type"),
-                (widget, type) -> this.updateSearchType(type)));
+                        this.width / 2 + 105, 17, 65, 20, Component.translatable("concerto.search_type"),
+                        (widget, type) -> this.updateSearchType(type)));
 
         this.playButton = Button.builder(Component.translatable("concerto.screen.play"), button -> {
             switch (this.searchType) {

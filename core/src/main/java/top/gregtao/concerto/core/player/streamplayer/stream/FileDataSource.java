@@ -33,12 +33,12 @@ public class FileDataSource implements DataSource {
     public int getDurationInSeconds() {
         return TimeTool.durationInSeconds(source.getAbsolutePath(), AudioType.FILE);
     }
-    
+
     @Override
     public long getDurationInMilliseconds() {
-    	return TimeTool.durationInMilliseconds(source.getAbsolutePath(), AudioType.FILE);
+        return TimeTool.durationInMilliseconds(source.getAbsolutePath(), AudioType.FILE);
     }
-    
+
     @Override
     public Duration getDuration() {
         return Duration.ofMillis(getDurationInMilliseconds());
@@ -56,6 +56,6 @@ public class FileDataSource implements DataSource {
 
     @Override
     public boolean isFile() {
-       return true;
-   }
+        return true;
+    }
 }

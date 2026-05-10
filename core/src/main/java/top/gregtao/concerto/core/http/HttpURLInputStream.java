@@ -48,7 +48,7 @@ public class HttpURLInputStream extends InputStream {
     }
 
     public static int getTotalBytes(URL url) {
-        try(HttpURLInputStream stream = new HttpURLInputStream(url)) {
+        try (HttpURLInputStream stream = new HttpURLInputStream(url)) {
             return stream.szBytes;
         } catch (IOException e) {
             Concerto.getLogger().error(e.getMessage());

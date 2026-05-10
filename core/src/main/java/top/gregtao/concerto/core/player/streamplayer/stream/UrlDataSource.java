@@ -30,12 +30,12 @@ public class UrlDataSource implements DataSource {
     public int getDurationInSeconds() {
         return -1;
     }
-    
+
     @Override
     public long getDurationInMilliseconds() {
         return -1;
     }
-    
+
     @Override
     public Duration getDuration() {
         return null;
@@ -53,6 +53,6 @@ public class UrlDataSource implements DataSource {
 
     @Override
     public boolean isFile() {
-       return false;
-   }
+        return false;
+    }
 }

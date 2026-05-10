@@ -12,9 +12,9 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.server.packs.resources.ResourceManager;
-import net.minecraft.server.packs.PackType;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.packs.PackType;
+import net.minecraft.server.packs.resources.ResourceManager;
 import top.gregtao.concerto.ConcertoClient;
 import top.gregtao.concerto.bridge.MinecraftClientBridge;
 import top.gregtao.concerto.network.ConcertoPayload;
@@ -65,8 +65,8 @@ public class FabricClient implements ClientModInitializer {
         }
     }
 
-	@Override
-	public void onInitializeClient() {
+    @Override
+    public void onInitializeClient() {
         ConcertoClient.initializeClient(new FabricClientBridge());
-	}
+    }
 }

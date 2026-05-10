@@ -3,7 +3,6 @@ package top.gregtao.concerto.core.http.kugou;
 import com.google.gson.*;
 import top.gregtao.concerto.core.Concerto;
 import top.gregtao.concerto.core.config.ClientConfig;
-import top.gregtao.concerto.core.util.*;
 import top.gregtao.concerto.core.enums.SearchType;
 import top.gregtao.concerto.core.enums.Sources;
 import top.gregtao.concerto.core.http.HttpApiClient;
@@ -14,6 +13,7 @@ import top.gregtao.concerto.core.music.list.KuGouMusicPlaylist;
 import top.gregtao.concerto.core.music.meta.music.MusicMetaData;
 import top.gregtao.concerto.core.music.meta.music.UnknownMusicMeta;
 import top.gregtao.concerto.core.music.meta.music.list.PlaylistMetaData;
+import top.gregtao.concerto.core.util.*;
 
 import java.math.BigInteger;
 import java.net.URLEncoder;

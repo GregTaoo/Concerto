@@ -1,7 +1,7 @@
 package top.gregtao.concerto.util;
 
-import net.minecraft.client.KeyMapping;
 import com.mojang.blaze3d.platform.InputConstants;
+import net.minecraft.client.KeyMapping;
 import org.lwjgl.glfw.GLFW;
 import top.gregtao.concerto.bridge.MinecraftClientBridge;
 import top.gregtao.concerto.core.player.MusicPlayer;

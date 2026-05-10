@@ -31,35 +31,39 @@ import top.gregtao.concerto.core.player.streamplayer.enums.Status;
  */
 public class StreamPlayerEvent {
 
-    /** The status. */
+    /**
+     * The status.
+     */
     private Status playerStatus = Status.NOT_SPECIFIED;
 
-    /** The stream position. */
+    /**
+     * The stream position.
+     */
     private int encodedStreamPosition = -1;
 
-    /** The source. */
+    /**
+     * The source.
+     */
     private StreamPlayer source = null;
 
-    /** The description. */
+    /**
+     * The description.
+     */
     private Object description = null;
 
     /**
      * Constructor.
      *
-     * @param source
-     *            the source
-     * @param status
-     *            the status
-     * @param encodededStreamPosition
-     *            the stream position
-     * @param description
-     *            the description
+     * @param source                  the source
+     * @param status                  the status
+     * @param encodededStreamPosition the stream position
+     * @param description             the description
      */
     public StreamPlayerEvent(StreamPlayer source, Status status, int encodededStreamPosition, Object description) {
-	this.source = source;
-	this.playerStatus = status;
-	this.encodedStreamPosition = encodededStreamPosition;
-	this.description = description;
+        this.source = source;
+        this.playerStatus = status;
+        this.encodedStreamPosition = encodededStreamPosition;
+        this.description = description;
     }
 
     /**
@@ -69,17 +73,17 @@ public class StreamPlayerEvent {
      * @see Status
      */
     public Status getPlayerStatus() {
-	return playerStatus;
+        return playerStatus;
     }
 
     /**
      * Returns the encoded stream position
      *
      * @return EncodedStreamPosition = the position of the encoded audio stream
-     *         right now..
+     * right now..
      */
     public int getEncodedStreamPosition() {
-	return encodedStreamPosition;
+        return encodedStreamPosition;
     }
 
     /**
@@ -88,22 +92,22 @@ public class StreamPlayerEvent {
      * @return the description
      */
     public Object getDescription() {
-	return description;
+        return description;
     }
 
     /**
      * Gets the source.
      *
-     * @return the source 
+     * @return the source
      */
     public Object getSource() {
-	return source;
+        return source;
     }
 
     @Override
     public String toString() {
-	return "Source :=" + source + " , Player Status := " + playerStatus + " , EncodedStreamPosition :="
-		+ encodedStreamPosition + " , Description :=" + description;
+        return "Source :=" + source + " , Player Status := " + playerStatus + " , EncodedStreamPosition :="
+                + encodedStreamPosition + " , Description :=" + description;
 
     }
 

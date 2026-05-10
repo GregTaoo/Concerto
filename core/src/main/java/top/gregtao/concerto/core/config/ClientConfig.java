@@ -11,10 +11,10 @@ public class ClientConfig extends ConfigFile {
     public ClientConfigOptions options = new ClientConfigOptions();
 
     public PositionXYSupplier
-        lyricsPosSupplier, subLyricsPosSupplier, musicDetailsPosSupplier, timeProgressPosSupplier, coverImgPosSupplier;
+            lyricsPosSupplier, subLyricsPosSupplier, musicDetailsPosSupplier, timeProgressPosSupplier, coverImgPosSupplier;
 
     public HexSupplier
-        lyricsColor, subLyricsColor, musicDetailsColor, timeProgressTextColor, timeProgressColor, timeProgressBgColor;
+            lyricsColor, subLyricsColor, musicDetailsColor, timeProgressTextColor, timeProgressColor, timeProgressBgColor;
 
     public ClientConfig() {
         super("Concerto/client_config.json");

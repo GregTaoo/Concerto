@@ -47,7 +47,7 @@ public class KuGouLyricsUtil {
                 }
             } else {
                 String second = pair.getSecond();
-                if (second != null && first.matches("\\d+,.+")){
+                if (second != null && first.matches("\\d+,.+")) {
                     String[] strings = first.split(",");
                     String time = strings[0];
                     String formattedTime = formatTime(Integer.parseInt(time));

@@ -1,17 +1,17 @@
 package top.gregtao.concerto.screen;
 
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import top.gregtao.concerto.core.music.Music;
 import top.gregtao.concerto.core.music.meta.music.MusicMetaData;
 import top.gregtao.concerto.core.player.MusicPlayerHandler;
 import top.gregtao.concerto.core.player.PlayerPermissions;
 import top.gregtao.concerto.core.room.MusicRoom;
+import top.gregtao.concerto.core.util.ConcertoRunner;
 import top.gregtao.concerto.network.room.ServerMusicAgentManager;
 import top.gregtao.concerto.screen.widget.URLImageWidget;
-import top.gregtao.concerto.core.util.ConcertoRunner;
 
 public class MusicInfoScreen extends ConcertoScreen {
 
@@ -44,13 +44,15 @@ public class MusicInfoScreen extends ConcertoScreen {
 
         this.playButton = Button.builder(
                 Component.translatable("concerto.screen.play"),
-                button -> MusicPlayerHandler.INSTANCE.addMusicHereAsync(this.music, true, () -> {})
+                button -> MusicPlayerHandler.INSTANCE.addMusicHereAsync(this.music, true, () -> {
+                })
         ).pos(this.width - 190, this.height - 30).size(50, 20).build();
         this.addRenderableWidget(this.playButton);
 
         this.addButton = Button.builder(
                 Component.translatable("concerto.screen.add"),
-                button -> MusicPlayerHandler.INSTANCE.addMusicAsync(this.music, false, () -> {})
+                button -> MusicPlayerHandler.INSTANCE.addMusicAsync(this.music, false, () -> {
+                })
         ).pos(this.width - 135, this.height - 30).size(50, 20).build();
         this.addRenderableWidget(this.addButton);
 

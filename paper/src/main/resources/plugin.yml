@@ -2,7 +2,7 @@ name: Concerto
 version: '${version}'
 main: top.gregtao.concerto.paper.ConcertoPaperPlugin
 description: Concerto
-author: [GregTao]
+author: [ GregTao ]
 website: https://github.com/gregtaoo/concerto
 api-version: '${apiVersion}'
 

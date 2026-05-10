@@ -2,7 +2,6 @@
   "schemaVersion": 1,
   "id": "concerto",
   "version": "${version}",
-
   "name": "Concerto",
   "description": "Concerto",
   "authors": [
@@ -12,10 +11,8 @@
     "homepage": "https://github.com/GregTaoo/Concerto",
     "sources": "https://github.com/GregTaoo/Concerto"
   },
-
   "license": "GPL-v3 & more",
   "icon": "assets/concerto/icon.png",
-
   "environment": "*",
   "entrypoints": {
     "main": [
@@ -28,7 +25,6 @@
   "mixins": [
     "concerto.mixins.json"
   ],
-
   "depends": {
     "fabricloader": ">=0.16.10",
     "fabric-api": "*",

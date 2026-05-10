@@ -27,13 +27,13 @@ public class Concerto {
     }
 
     public static Logger.Factory getLoggerFactory() {
-        if  (LOGGER_FACTORY == null)
+        if (LOGGER_FACTORY == null)
             throw new NullPointerException("LoggerFactory was not initialized");
         return LOGGER_FACTORY;
     }
 
     public static Logger getLogger() {
-        if  (LOGGER == null)
+        if (LOGGER == null)
             throw new NullPointerException("Logger was not initialized");
         return LOGGER;
     }

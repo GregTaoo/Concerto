@@ -2,13 +2,13 @@ package top.gregtao.concerto.screen.qq;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import top.gregtao.concerto.core.http.qq.QQMusicApiClient;
+import top.gregtao.concerto.core.util.ConcertoRunner;
 import top.gregtao.concerto.screen.ConcertoScreen;
 import top.gregtao.concerto.screen.widget.URLImageWidget;
-import top.gregtao.concerto.core.util.ConcertoRunner;
 
 import java.net.MalformedURLException;
 import java.net.URI;

@@ -1,11 +1,11 @@
 package top.gregtao.concerto.mixin;
 
+import net.minecraft.client.GuiMessageTag;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.ChatComponent;
-import net.minecraft.client.GuiMessageTag;
-import net.minecraft.network.chat.MessageSignature;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MessageSignature;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -14,11 +14,11 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import top.gregtao.concerto.ConcertoClient;
 import top.gregtao.concerto.core.api.MusicJsonParsers;
 import top.gregtao.concerto.core.music.Music;
+import top.gregtao.concerto.core.util.ConcertoRunner;
+import top.gregtao.concerto.core.util.JsonUtil;
 import top.gregtao.concerto.network.ClientMusicNetworkHandler;
 import top.gregtao.concerto.network.MusicDataPacket;
 import top.gregtao.concerto.screen.InGameHudRenderer;
-import top.gregtao.concerto.core.util.ConcertoRunner;
-import top.gregtao.concerto.core.util.JsonUtil;
 
 import java.util.Base64;
 import java.util.regex.Matcher;
@@ -52,12 +52,12 @@ public class ChatComponentMixin {
     }
 
     @Inject(method = "addMessage(Lnet/minecraft/network/chat/Component;)V", at = @At("HEAD"))
-    public void addMessageInject1(Component message, CallbackInfo ci){
+    public void addMessageInject1(Component message, CallbackInfo ci) {
         ConcertoRunner.run(() -> handleMessage(message));
     }
 
     @Inject(method = "addMessage(Lnet/minecraft/network/chat/Component;Lnet/minecraft/network/chat/MessageSignature;Lnet/minecraft/client/GuiMessageTag;)V", at = @At("HEAD"))
-    public void addMessageInject2(Component message, MessageSignature signature, GuiMessageTag indicator, CallbackInfo ci){
+    public void addMessageInject2(Component message, MessageSignature signature, GuiMessageTag indicator, CallbackInfo ci) {
         ConcertoRunner.run(() -> handleMessage(message));
     }
 

@@ -10,8 +10,7 @@ public enum Sources implements SimpleStringIdentifiable {
     QQ_MUSIC,
     KUGOU_MUSIC,
     BILIBILI,
-    SHARED
-    ;
+    SHARED;
 
     public String getName() {
         return Concerto.getCoreBridge().getTranslatable(this.getKey("source"));

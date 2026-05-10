@@ -12,6 +12,7 @@ public class Vector2i {
     int getX() {
         return x;
     }
+
     int getY() {
         return y;
     }

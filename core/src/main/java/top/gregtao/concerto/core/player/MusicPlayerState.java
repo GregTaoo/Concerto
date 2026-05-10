@@ -33,7 +33,8 @@ public class MusicPlayerState implements Copyable<MusicPlayerState> {
         this.paused = paused;
     }
 
-    public MusicPlayerState() {}
+    public MusicPlayerState() {
+    }
 
     public MusicPlayerState copy() {
         return new MusicPlayerState(this.musicList.copy(), this.currentIndex, this.orderType, this.paused);

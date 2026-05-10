@@ -1,15 +1,15 @@
 package top.gregtao.concerto.network;
 
-import net.minecraft.world.entity.player.Player;
-import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.players.PlayerList;
-import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.network.chat.Component;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.players.PlayerList;
+import net.minecraft.world.entity.player.Player;
 import org.jetbrains.annotations.Nullable;
 import top.gregtao.concerto.ConcertoServer;
 import top.gregtao.concerto.bridge.MinecraftServerBridge;
-import top.gregtao.concerto.core.api.MusicJsonParsers;
 import top.gregtao.concerto.command.ConcertoServerCommand;
+import top.gregtao.concerto.core.api.MusicJsonParsers;
 import top.gregtao.concerto.core.config.PresetPlaylistsConfig;
 import top.gregtao.concerto.core.config.ServerConfig;
 import top.gregtao.concerto.core.music.meta.music.MusicMetaData;
@@ -28,6 +28,7 @@ public class ServerMusicNetworkHandler {
     }
 
     public static Map<UUID, MusicDataPacket> WAIT_AUDITION = new HashMap<>();
+
     public static void removeFirst() {
         Iterator<Map.Entry<UUID, MusicDataPacket>> iterator = WAIT_AUDITION.entrySet().iterator();
         if (!iterator.hasNext()) return;
@@ -35,7 +36,7 @@ public class ServerMusicNetworkHandler {
         sendS2CAuditionSyncData(entry.getKey(), entry.getValue(), true);
         iterator.remove();
     }
-    
+
     public static void generalReceiver(ConcertoPayload payload, MinecraftServerBridge.NetworkingContext context) {
         switch (payload.channel) {
             case MUSIC_DATA -> musicDataReceiver(payload, context);
@@ -70,10 +71,12 @@ public class ServerMusicNetworkHandler {
         WAIT_AUDITION.forEach((uuid, packet) -> {
             Player player = packet.server.getPlayerList().getPlayerByName(packet.from);
             String title = packet.music.getMeta().title();
-            if (player != null) player.displayClientMessage(Component.translatable("concerto.share.rejected", title), false);
+            if (player != null)
+                player.displayClientMessage(Component.translatable("concerto.share.rejected", title), false);
         });
         WAIT_AUDITION.clear();
-        if (auditor != null) auditor.displayClientMessage(Component.translatable("concerto.audit.reject", "ALL", "ALL"), false);
+        if (auditor != null)
+            auditor.displayClientMessage(Component.translatable("concerto.audit.reject", "ALL", "ALL"), false);
         ConcertoServer.LOGGER.info("Auditor {} rejected all request", auditor == null ? "?" : auditor.getName().getString());
     }
 
@@ -83,7 +86,8 @@ public class ServerMusicNetworkHandler {
             WAIT_AUDITION.remove(uuid);
             Player player = packet.server.getPlayerList().getPlayerByName(packet.from);
             String title = packet.music.getMeta().title();
-            if (player != null) player.displayClientMessage(Component.translatable("concerto.share.rejected", title), false);
+            if (player != null)
+                player.displayClientMessage(Component.translatable("concerto.share.rejected", title), false);
             if (auditor != null) auditor.displayClientMessage(Component.translatable(
                     "concerto.audit.reject", player == null ? "an unknown player" : player.getName().getString(), title), false);
             ConcertoServer.LOGGER.info("Auditor {} rejected request from {}: {} to {}",

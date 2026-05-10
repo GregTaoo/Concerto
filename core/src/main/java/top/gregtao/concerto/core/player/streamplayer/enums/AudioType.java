@@ -7,20 +7,20 @@ package top.gregtao.concerto.core.player.streamplayer.enums;
  */
 public enum AudioType {
 
-	/**
-	 * Audio is URL
-	 */
-	URL,
-	/**
-	 * Audio is File
-	 */
-	FILE,
-	/**
-	 * Audio is InputStream
-	 */
-	INPUTSTREAM,
-	/**
-	 * Audio is UNKOWN
-	 */
-	UNKNOWN
+    /**
+     * Audio is URL
+     */
+    URL,
+    /**
+     * Audio is File
+     */
+    FILE,
+    /**
+     * Audio is InputStream
+     */
+    INPUTSTREAM,
+    /**
+     * Audio is UNKOWN
+     */
+    UNKNOWN
 }

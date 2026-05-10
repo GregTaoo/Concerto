@@ -3,19 +3,19 @@ package top.gregtao.concerto.screen.kugou;
 import com.google.gson.JsonElement;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import top.gregtao.concerto.core.api.WithMetaData;
 import top.gregtao.concerto.core.config.ClientConfig;
 import top.gregtao.concerto.core.http.kugou.KuGouMusicApiClient;
 import top.gregtao.concerto.core.music.list.KuGouMusicPlaylist;
 import top.gregtao.concerto.core.music.list.Playlist;
+import top.gregtao.concerto.core.util.ConcertoRunner;
 import top.gregtao.concerto.screen.PageScreen;
 import top.gregtao.concerto.screen.PlaylistPreviewScreen;
 import top.gregtao.concerto.screen.widget.ConcertoListWidget;
 import top.gregtao.concerto.screen.widget.MetadataListWidget;
-import top.gregtao.concerto.core.util.ConcertoRunner;
 
 import java.util.concurrent.CompletableFuture;
 

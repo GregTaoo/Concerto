@@ -33,7 +33,6 @@ public interface StreamPlayerInterface {
      * Open the specified object which can be File,URL or InputStream.
      *
      * @param object the object [File or URL or InputStream ]
-     *
      * @throws StreamPlayerException the stream player exception
      * @deprecated Use one of {@link #open(File)}, {@link #open(URL)} or {@link #open(InputStream)} instead.
      */
@@ -44,7 +43,6 @@ public interface StreamPlayerInterface {
      * Open the specified file for playback.
      *
      * @param file the file to be played
-     *
      * @throws StreamPlayerException the stream player exception
      */
     void open(File file) throws StreamPlayerException;
@@ -53,7 +51,6 @@ public interface StreamPlayerInterface {
      * Open the specified location for playback.
      *
      * @param url the location to be played
-     *
      * @throws StreamPlayerException the stream player exception
      */
     void open(URL url) throws StreamPlayerException;
@@ -62,7 +59,6 @@ public interface StreamPlayerInterface {
      * Open the specified stream for playback.
      *
      * @param stream the stream to be played
-     *
      * @throws StreamPlayerException the stream player exception
      */
     void open(InputStream stream) throws StreamPlayerException;
@@ -114,9 +110,7 @@ public interface StreamPlayerInterface {
      * so it will never skip given bytes len
      *
      * @param bytes the bytes
-     *
      * @return value bigger than 0 for File and value = 0 for URL and InputStream
-     *
      * @throws StreamPlayerException the stream player exception
      */
     long seekBytes(long bytes) throws StreamPlayerException;
@@ -139,9 +133,9 @@ public interface StreamPlayerInterface {
     long seekTo(int seconds) throws StreamPlayerException;
 
     int getDurationInSeconds();
-    
+
     long getDurationInMilliseconds();
-    
+
     Duration getDuration();
 
     /**
@@ -302,7 +296,7 @@ public interface StreamPlayerInterface {
      * Changes specific values from equalizer.
      *
      * @param array the array
-     * @param stop the stop
+     * @param stop  the stop
      */
     void setEqualizer(float[] array, int stop);
 
@@ -310,7 +304,7 @@ public interface StreamPlayerInterface {
      * Changes a value from equalizer.
      *
      * @param value the value
-     * @param key the key
+     * @param key   the key
      */
     void setEqualizerKey(float value, int key);
 

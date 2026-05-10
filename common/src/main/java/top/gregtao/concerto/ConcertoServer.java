@@ -38,7 +38,7 @@ public class ConcertoServer {
 
         bridge.registerCommand(ConcertoServerCommand::register);
         ServerMusicNetworkHandler.register(bridge);
-        
+
         bridge.registerResourceReloadListener(
                 ResourceLocation.fromNamespaceAndPath(Concerto.MOD_ID, "music"),
                 manager -> ConcertoRunner.run(ConcertoServer::reload)

@@ -1,10 +1,10 @@
 package top.gregtao.concerto.screen.widget;
 
+import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.ObjectSelectionList;
 import net.minecraft.network.chat.Component;
-import net.minecraft.Util;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
@@ -26,7 +26,8 @@ public class ConcertoListWidget<T> extends ObjectSelectionList<ConcertoListWidge
         return Component.literal(String.valueOf(index));
     }
 
-    public void onDoubleClicked(Entry entry) {}
+    public void onDoubleClicked(Entry entry) {
+    }
 
     public void reset(List<T> list, T selected, String key) {
         this.clearEntries();

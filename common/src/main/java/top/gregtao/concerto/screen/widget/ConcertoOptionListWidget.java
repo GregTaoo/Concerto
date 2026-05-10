@@ -135,13 +135,12 @@ public class ConcertoOptionListWidget extends ContainerObjectSelectionList<Conce
         }
 
         @Override
-        public void render(GuiGraphics context, int index, int y, int x, int entryWidth, int entryHeight,
-                           int mouseX, int mouseY, boolean hovered, float tickProgress) {
+        public void renderContent(GuiGraphics context, int mouseX, int mouseY, boolean hovered, float tickProgress) {
             int i = 0;
             int j = this.screen.width / 2 - 155;
 
             for (AbstractWidget clickableWidget : this.widgets) {
-                clickableWidget.setPosition(j + i, y);
+                clickableWidget.setPosition(j + i, this.getContentY());
                 clickableWidget.render(context, mouseX, mouseY, tickProgress);
                 i += 160;
             }

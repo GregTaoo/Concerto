@@ -36,7 +36,6 @@ public class CaptchaLoginScreen extends ConcertoScreen {
         this.addWidget(this.usernameField);
         this.addRenderableWidget(this.usernameField);
         StringWidget textWidget = new StringWidget(this.width / 2 - 120, 22, 90, 20, Component.translatable("concerto.screen.login.username"), this.font);
-        textWidget.alignLeft();
         this.addRenderableWidget(textWidget);
         this.captchaButton = Button.builder(Component.translatable("concerto.screen.login.get_captcha"), button -> {
             if (this.usernameField.getValue().isEmpty()) {
@@ -53,7 +52,6 @@ public class CaptchaLoginScreen extends ConcertoScreen {
         this.addWidget(this.captchaField);
         this.addRenderableWidget(this.captchaField);
         StringWidget textWidget1 = new StringWidget(this.width / 2 - 120, 52, 90, 20, Component.translatable("concerto.screen.login.captcha"), this.font);
-        textWidget1.alignLeft();
         this.addRenderableWidget(textWidget1);
 
         this.addRenderableWidget(Button.builder(Component.translatable("concerto.screen.login.confirm"), button -> this.tryLogin())

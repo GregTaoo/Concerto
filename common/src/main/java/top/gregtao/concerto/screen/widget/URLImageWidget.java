@@ -10,7 +10,7 @@ import net.minecraft.client.gui.layouts.LayoutElement;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.renderer.texture.DynamicTexture;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import org.joml.Matrix3x2fStack;
 import top.gregtao.concerto.ConcertoClient;
 import top.gregtao.concerto.core.Concerto;
@@ -43,7 +43,7 @@ public class URLImageWidget implements Renderable, LayoutElement, AutoCloseable 
     private int y;
     private String url;
     private DynamicTexture texture;
-    private final ResourceLocation textureId;
+    private final Identifier textureId;
     private State state = State.LOADING;
     private boolean border = true;
 
@@ -53,7 +53,7 @@ public class URLImageWidget implements Renderable, LayoutElement, AutoCloseable 
         this.x = x;
         this.y = y;
         this.url = url;
-        this.textureId = ResourceLocation.fromNamespaceAndPath(Concerto.MOD_ID, "image" + System.currentTimeMillis());
+        this.textureId = Identifier.fromNamespaceAndPath(Concerto.MOD_ID, "image" + System.currentTimeMillis());
     }
 
     public URLImageWidget(int width, int height, int x, int y, String url, boolean border) {

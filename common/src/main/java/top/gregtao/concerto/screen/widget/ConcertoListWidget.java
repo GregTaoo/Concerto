@@ -1,6 +1,7 @@
 package top.gregtao.concerto.screen.widget;
 
-import net.minecraft.Util;
+import net.minecraft.client.input.MouseButtonEvent;
+import net.minecraft.util.Util;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.ObjectSelectionList;
@@ -10,7 +11,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.List;
 import java.util.ListIterator;
 
-public class ConcertoListWidget<T> extends ObjectSelectionList<ConcertoListWidget<T>.Entry> {
+public class ConcertoListWidget<T> extends ObjectSelectionList<ConcertoListWidget<T>.@NotNull Entry> {
     private int color = 0xffffffff;
 
     public ConcertoListWidget(int width, int height, int top, int itemHeight) {
@@ -60,12 +61,12 @@ public class ConcertoListWidget<T> extends ObjectSelectionList<ConcertoListWidge
     }
 
     @Override
-    public boolean removeEntryFromTop(Entry entry) {
+    public void removeEntryFromTop(Entry entry) {
         ListIterator<Entry> iterator = this.children().listIterator(entry.entryIndex + 1);
         while (iterator.hasNext()) {
             iterator.next().index--;
         }
-        return super.removeEntryFromTop(entry);
+        super.removeEntryFromTop(entry);
     }
 
     @Override
@@ -85,8 +86,8 @@ public class ConcertoListWidget<T> extends ObjectSelectionList<ConcertoListWidge
         }
 
         @Override
-        public boolean mouseClicked(double mouseX, double mouseY, int button) {
-            if (button == 0) {
+        public boolean mouseClicked(@NotNull MouseButtonEvent event, boolean doubled) {
+            if (event.button() == 0) {
                 if (Util.getMillis() - this.lastClickTime < 250) {
                     ConcertoListWidget.this.onDoubleClicked(this);
                 } else {
@@ -104,8 +105,8 @@ public class ConcertoListWidget<T> extends ObjectSelectionList<ConcertoListWidge
         }
 
         @Override
-        public void render(GuiGraphics context, int index, int y, int x, int entryWidth, int entryHeight, int mouseX, int mouseY, boolean hovered, float tickDelta) {
-            context.drawString(Minecraft.getInstance().font, this.getNarration(), x, y + 3, ConcertoListWidget.this.color, false);
+        public void renderContent(GuiGraphics context, int mouseX, int mouseY, boolean hovered, float deltaTicks) {
+            context.drawString(Minecraft.getInstance().font, this.getNarration(), this.getContentX(), this.getContentY() + 3, ConcertoListWidget.this.color, false);
         }
     }
 }

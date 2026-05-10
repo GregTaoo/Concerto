@@ -9,6 +9,7 @@ import net.minecraft.commands.Commands;
 import net.minecraft.commands.arguments.UuidArgument;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.permissions.Permissions;
 import top.gregtao.concerto.ConcertoServer;
 import top.gregtao.concerto.core.config.CacheManager;
 import top.gregtao.concerto.core.http.kugou.KuGouMusicApiClient;
@@ -31,7 +32,7 @@ public class ConcertoServerCommand {
                                 Commands.CommandSelection environment) {
         dispatcher.register(
                 Commands.literal("concerto-server").then(
-                        Commands.literal("audit").requires(source -> source.hasPermission(2)).then(
+                        Commands.literal("audit").requires(source -> source.permissions().hasPermission(Permissions.COMMANDS_GAMEMASTER)).then(
                                 Commands.argument("uuid", UuidArgument.uuid()).executes(context -> {
                                     UUID uuid = UuidArgument.getUuid(context, "uuid");
                                     ServerMusicNetworkHandler.passAudition(context.getSource().getPlayer(), uuid);
@@ -74,13 +75,13 @@ public class ConcertoServerCommand {
                                 )
                         )
                 ).then(
-                        Commands.literal("reload").requires(source -> source.hasPermission(2))
+                        Commands.literal("reload").requires(source -> source.permissions().hasPermission(Permissions.COMMANDS_GAMEMASTER))
                                 .executes(context -> {
                                     ConcertoServer.reload();
                                     return 0;
                                 })
                 ).then(
-                        Commands.literal("reload-cookie").requires(source -> source.hasPermission(2))
+                        Commands.literal("reload-cookie").requires(source -> source.permissions().hasPermission(Permissions.COMMANDS_GAMEMASTER))
                                 .executes(context -> {
                                     NeteaseCloudApiClient.INSTANCE.readCookie();
                                     QQMusicApiClient.INSTANCE.readCookie();
@@ -88,20 +89,20 @@ public class ConcertoServerCommand {
                                     return 0;
                                 })
                 ).then(
-                        Commands.literal("clean-cache").requires(source -> source.hasPermission(2))
+                        Commands.literal("clean-cache").requires(source -> source.permissions().hasPermission(Permissions.COMMANDS_GAMEMASTER))
                                 .executes(context -> {
                                     CacheManager.cleanAllCache();
                                     return 0;
                                 })
                 ).then(
                         Commands.literal("fetch-radios")
-                                .requires(source -> source.hasPermission(0)).executes(context -> {
+                                .requires(source -> true).executes(context -> {
                                     ServerPlayer player = context.getSource().getPlayer();
                                     if (player != null) ServerMusicNetworkHandler.sendS2CPresetRadiosPacket(player);
                                     return 0;
                                 })
                 ).then(
-                        Commands.literal("agent").requires(source -> source.hasPermission(2)).then(
+                        Commands.literal("agent").requires(source -> source.permissions().hasPermission(Permissions.COMMANDS_GAMEMASTER)).then(
                                 Commands.literal("reset").executes(context -> {
                                     ServerMusicAgent.INSTANCE.reset();
                                     return 0;

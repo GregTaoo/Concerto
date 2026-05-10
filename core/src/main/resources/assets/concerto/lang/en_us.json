@@ -194,7 +194,7 @@
   "concerto.login.kugou.success": "Successfully logged in to KuGou Music",
   "concerto.login.kugou.failed": "Failed to log in",
   "concerto.login.kugou.error": "Error occurs while trying to login",
-  "concerto.hotkey": "Concerto Hotkeys",
+  "key.category.concerto.hotkey": "Concerto Hotkeys",
   "concerto.hotkey.general_music_list": "Open General playlist",
   "concerto.hotkey.index": "Open Concerto Index Page",
   "concerto.room": "MusicRoom",

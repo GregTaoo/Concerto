@@ -11,6 +11,7 @@ import net.minecraft.client.gui.render.state.GuiElementRenderState;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.network.chat.Component;
+import org.jetbrains.annotations.NotNull;
 import org.joml.Matrix3x2f;
 import org.joml.Matrix3x2fStack;
 import top.gregtao.concerto.core.config.ClientConfig;
@@ -32,7 +33,7 @@ public class MusicPlayerScreen extends ConcertoScreen {
 
     private Button playPauseButton;
     private Button nextButton;
-    private CycleButton<OrderType> orderButton;
+    private CycleButton<@NotNull OrderType> orderButton;
 
     private float rotationAngle = 0f;
     private int scrollOffset = 0;
@@ -51,11 +52,7 @@ public class MusicPlayerScreen extends ConcertoScreen {
 
         Button playlistButton = Button.builder(
                 Component.translatable("concerto.screen.general_list"),
-                button -> {
-                    if (this.minecraft != null) {
-                        this.minecraft.setScreen(new GeneralPlaylistScreen(this));
-                    }
-                }
+                button -> this.minecraft.setScreen(new GeneralPlaylistScreen(this))
         ).pos(x, y).size(80, 20).build();
         this.addRenderableWidget(playlistButton);
         x += 82;
@@ -76,9 +73,8 @@ public class MusicPlayerScreen extends ConcertoScreen {
         ).pos(x, y).size(80, 20).build();
         x += 82;
 
-        this.orderButton = CycleButton.builder((OrderType val) -> Component.literal(val.getName()))
+        this.orderButton = CycleButton.builder((OrderType val) -> Component.literal(val.getName()), MusicPlayerHandler.INSTANCE.getOrderType())
                 .withValues(OrderType.values())
-                .withInitialValue(MusicPlayerHandler.INSTANCE.getOrderType())
                 .create(x, y, 80, 20, Component.translatable("concerto.screen.order"),
                         (widget, orderType) -> MusicPlayerHandler.INSTANCE.setOrderType(orderType));
 
@@ -277,7 +273,7 @@ public class MusicPlayerScreen extends ConcertoScreen {
         }
 
         @Override
-        public void buildVertices(VertexConsumer vertexConsumer, float f) {
+        public void buildVertices(VertexConsumer vertexConsumer) {
             float val = Float.isNaN(this.value) ? 0f : this.value;
 
             float dynamicScale = (float) (1.3f * Math.log10(1.0 + val * 60.0));
@@ -310,10 +306,10 @@ public class MusicPlayerScreen extends ConcertoScreen {
             float x4 = this.centerX + cos2 * this.radiusInner;
             float y4 = this.centerY + sin2 * this.radiusInner;
 
-            vertexConsumer.addVertexWith2DPose(this.pose(), x1, y1, f).setColor(color);
-            vertexConsumer.addVertexWith2DPose(this.pose(), x4, y4, f).setColor(color);
-            vertexConsumer.addVertexWith2DPose(this.pose(), x3, y3, f).setColor(color);
-            vertexConsumer.addVertexWith2DPose(this.pose(), x2, y2, f).setColor(color);
+            vertexConsumer.addVertexWith2DPose(this.pose(), x1, y1).setColor(color);
+            vertexConsumer.addVertexWith2DPose(this.pose(), x4, y4).setColor(color);
+            vertexConsumer.addVertexWith2DPose(this.pose(), x3, y3).setColor(color);
+            vertexConsumer.addVertexWith2DPose(this.pose(), x2, y2).setColor(color);
         }
     }
 }

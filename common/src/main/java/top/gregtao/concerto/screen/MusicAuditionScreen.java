@@ -6,6 +6,7 @@ import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.network.chat.Component;
+import net.minecraft.server.permissions.Permissions;
 import top.gregtao.concerto.core.music.Music;
 import top.gregtao.concerto.core.util.Pair;
 import top.gregtao.concerto.screen.widget.ConcertoListWidget;
@@ -76,7 +77,7 @@ public class MusicAuditionScreen extends ConcertoScreen {
         super.render(matrices, mouseX, mouseY, delta);
         this.widget.render(matrices, mouseX, mouseY, delta);
         LocalPlayer player = Minecraft.getInstance().player;
-        if (player == null || !player.hasPermissions(2)) {
+        if (player == null || !player.permissions().hasPermission(Permissions.COMMANDS_GAMEMASTER)) {
             matrices.drawCenteredString(this.font, Component.translatable("concerto.screen.audition.permission_denied"),
                     this.width / 2, this.height / 2, 0xffffffff);
         }

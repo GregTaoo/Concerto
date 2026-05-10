@@ -3,6 +3,7 @@ package top.gregtao.concerto.network;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.permissions.Permission;
 import net.minecraft.server.players.PlayerList;
 import net.minecraft.world.entity.player.Player;
 import org.jetbrains.annotations.Nullable;
@@ -106,8 +107,9 @@ public class ServerMusicNetworkHandler {
 
     public static void sendS2CAuditionSyncData(UUID uuid, MusicDataPacket packet, boolean isDelete) {
         PlayerList playerManager = packet.server.getPlayerList();
+        Permission permission = new Permission.HasCommandLevel(packet.server.operatorUserPermissions().level());
         for (ServerPlayer player : playerManager.getPlayers()) {
-            if (player.hasPermissions(packet.server.getOperatorUserPermissionLevel())) {
+            if (player.permissions().hasPermission(permission)) {
                 sendAuditionSyncPacket(uuid, player, packet, isDelete);
             }
         }
@@ -174,8 +176,9 @@ public class ServerMusicNetworkHandler {
                     boolean success = true;
                     if (audit) {
                         UUID uuid = UUID.randomUUID();
+                        Permission permission = new Permission.HasCommandLevel(packet.server.operatorUserPermissions().level());
                         for (ServerPlayer player1 : playerManager.getPlayers()) {
-                            if (player1.hasPermissions(server.getOperatorUserPermissionLevel())) {
+                            if (player1.permissions().hasPermission(permission)) {
                                 player1.sendSystemMessage(CommandUtil.PAGE_SPLIT);
                                 player1.sendSystemMessage(ConcertoServerCommand.chatMessageBuilder(
                                         uuid, packet.from, packet.music.getMeta().title()

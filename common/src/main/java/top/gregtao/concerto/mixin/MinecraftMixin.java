@@ -9,6 +9,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import top.gregtao.concerto.ConcertoClient;
 import top.gregtao.concerto.core.player.MusicPlayerHandler;
 import top.gregtao.concerto.core.room.MusicRoom;
+import top.gregtao.concerto.core.util.ConcertoRunner;
 import top.gregtao.concerto.network.ClientMusicNetworkHandler;
 import top.gregtao.concerto.screen.MusicAuditionScreen;
 
@@ -25,5 +26,10 @@ public class MinecraftMixin {
             MusicPlayerHandler.INSTANCE.setPaused(true);
         }
         ConcertoClient.LOGGER.info("Exited from server. Functions of server side are unavailable now.");
+    }
+
+    @Inject(at = @At("HEAD"), method = "disconnectFromWorld")
+    private static void disconnectInject(CallbackInfo ci) {
+        ConcertoRunner.run(() -> MusicPlayerHandler.INSTANCE.setPaused(true));
     }
 }

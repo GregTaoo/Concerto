@@ -22,7 +22,7 @@ public class SoundManagerMixin {
         MusicPlayerHandler.INSTANCE.setPaused(false);
     }
 
-    @Inject(at = @At("TAIL"), method = "updateSourceVolume(Lnet/minecraft/sounds/SoundSource;F)V")
+    @Inject(at = @At("TAIL"), method = "updateCategoryVolume(Lnet/minecraft/sounds/SoundSource;F)V")
     private void updateSoundVolumeInject(SoundSource category, float volume, CallbackInfo ci) {
         if (category == SoundSource.MASTER || category == SoundSource.MUSIC) {
             ConcertoClient.syncPlayerVolume();

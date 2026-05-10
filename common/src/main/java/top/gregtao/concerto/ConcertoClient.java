@@ -2,7 +2,7 @@ package top.gregtao.concerto;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.Options;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.sounds.SoundSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -68,7 +68,7 @@ public class ConcertoClient {
         bridge.registerClientCommand(MusicRoomCommand::register);
 
         bridge.registerResourceReloadListener(
-                ResourceLocation.fromNamespaceAndPath(Concerto.MOD_ID, "music"),
+                Identifier.fromNamespaceAndPath(Concerto.MOD_ID, "music"),
                 manager -> ConcertoRunner.run(() -> {
                     ClientConfig.INSTANCE.readOptions();
                     ConcertoOptions.INSTANCE.readOptions();

@@ -6,7 +6,12 @@ import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.CycleButton;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.gui.screens.worldselection.CreateWorldScreen;
+import net.minecraft.client.input.CharacterEvent;
+import net.minecraft.client.input.KeyEvent;
+import net.minecraft.client.player.KeyboardInput;
 import net.minecraft.network.chat.Component;
+import org.jetbrains.annotations.NotNull;
 import org.lwjgl.glfw.GLFW;
 import top.gregtao.concerto.core.enums.OrderType;
 import top.gregtao.concerto.core.event.ConcertoEvents;
@@ -24,7 +29,7 @@ public class GeneralPlaylistScreen extends ApplyDraggedFileScreen {
     private Button deleteButton;
     private Button pauseButton;
     private Button clearButton;
-    private CycleButton<OrderType> orderButton;
+    private CycleButton<@NotNull OrderType> orderButton;
     private Event.Subscription listSubscription, musicSubscription, orderSubscription;
 
     public GeneralPlaylistScreen(Screen parent) {
@@ -75,8 +80,9 @@ public class GeneralPlaylistScreen extends ApplyDraggedFileScreen {
         }).pos(this.width / 2 - 85, this.height - 30).size(50, 20).build();
         this.addRenderableWidget(this.deleteButton);
 
-        this.orderButton = CycleButton.builder((OrderType x) -> Component.literal(x.getName())).withValues(OrderType.values())
-                .withInitialValue(MusicPlayerHandler.INSTANCE.getOrderType()).create(
+        this.orderButton = CycleButton.builder((orderType) -> Component.literal(orderType.getName()), MusicPlayerHandler.INSTANCE.getOrderType())
+                .withValues(OrderType.values())
+                .create(
                         this.width / 2 - 35, this.height - 30, 60, 20, Component.translatable("concerto.screen.order"),
                         (widget, orderType) -> MusicPlayerHandler.INSTANCE.setOrderType(orderType));
         this.addRenderableWidget(this.orderButton);
@@ -125,20 +131,20 @@ public class GeneralPlaylistScreen extends ApplyDraggedFileScreen {
     }
 
     @Override
-    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-        if (super.keyPressed(keyCode, scanCode, modifiers)) {
+    public boolean keyPressed(@NotNull KeyEvent event) {
+        if (super.keyPressed(event)) {
             return true;
         }
-        if (keyCode == GLFW.GLFW_KEY_ENTER && this.searchBox.isHoveredOrFocused()) {
+        if (event.key() == GLFW.GLFW_KEY_ENTER && this.searchBox.isHoveredOrFocused()) {
             this.toggleSearch();
             return true;
         }
-        return this.searchBox.keyPressed(keyCode, scanCode, modifiers);
+        return this.searchBox.keyPressed(event);
     }
 
     @Override
-    public boolean charTyped(char chr, int modifiers) {
-        return this.searchBox.charTyped(chr, modifiers);
+    public boolean charTyped(@NotNull CharacterEvent event) {
+        return this.searchBox.charTyped(event);
     }
 
     @Override

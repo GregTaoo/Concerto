@@ -1,6 +1,6 @@
 package top.gregtao.concerto;
 
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import top.gregtao.concerto.bridge.CoreBridgeImpl;
@@ -40,7 +40,7 @@ public class ConcertoServer {
         ServerMusicNetworkHandler.register(bridge);
 
         bridge.registerResourceReloadListener(
-                ResourceLocation.fromNamespaceAndPath(Concerto.MOD_ID, "music"),
+                Identifier.fromNamespaceAndPath(Concerto.MOD_ID, "music"),
                 manager -> ConcertoRunner.run(ConcertoServer::reload)
         );
     }

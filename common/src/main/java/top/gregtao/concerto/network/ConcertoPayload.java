@@ -3,13 +3,13 @@ package top.gregtao.concerto.network;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import org.jetbrains.annotations.NotNull;
 
 public class ConcertoPayload implements CustomPacketPayload {
 
     public static final String VERSION = "2";
-    public static final Type<ConcertoPayload> ID = new Type<>(ResourceLocation.fromNamespaceAndPath("concerto", "main"));
+    public static final Type<@NotNull ConcertoPayload> ID = new Type<>(Identifier.fromNamespaceAndPath("concerto", "main"));
     public static final String HANDSHAKE_STRING = "CONCERTO:" + VERSION + ":";
 
     public String string;
@@ -20,7 +20,7 @@ public class ConcertoPayload implements CustomPacketPayload {
         this.string = s;
     }
 
-    public static final StreamCodec<RegistryFriendlyByteBuf, ConcertoPayload> CODEC = new StreamCodec<>() {
+    public static final StreamCodec<@NotNull RegistryFriendlyByteBuf, @NotNull ConcertoPayload> CODEC = new StreamCodec<>() {
         @Override
         public void encode(RegistryFriendlyByteBuf buf, ConcertoPayload value) {
             buf.writeUtf(value.channel.id + value.string, Integer.MAX_VALUE);
@@ -35,7 +35,7 @@ public class ConcertoPayload implements CustomPacketPayload {
     };
 
     @Override
-    public @NotNull Type<? extends CustomPacketPayload> type() {
+    public @NotNull Type<? extends @NotNull CustomPacketPayload> type() {
         return ID;
     }
 

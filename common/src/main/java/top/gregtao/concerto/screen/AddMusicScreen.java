@@ -28,7 +28,6 @@ public class AddMusicScreen extends ApplyDraggedFileScreen {
         EditBox widget = new EditBox(this.font, centerX - 15, y, 90, 20, text);
         widget.setMaxLength(1024);
         StringWidget textWidget = new StringWidget(centerX - 135, y + 2, 120, 20, text, this.font);
-        textWidget.alignLeft();
         Button addButton = Button.builder(Component.translatable("concerto.screen.add"),
                 button -> onClick.accept(widget.getValue())).pos(centerX + 80, y).size(60, 20).build();
         addButton.active = PlayerPermissions.canModifyMusicList();

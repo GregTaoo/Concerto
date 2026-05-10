@@ -12,7 +12,6 @@
     "GuiGraphicsAccessor",
     "MinecraftMixin",
     "MusicManagerMixin",
-    "PauseScreenMixin",
     "SoundManagerMixin"
   ],
   "server": [

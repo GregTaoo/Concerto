@@ -4,6 +4,8 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.permissions.Permission;
+import net.minecraft.server.permissions.PermissionLevel;
 import top.gregtao.concerto.ConcertoClient;
 import top.gregtao.concerto.ConcertoServer;
 import top.gregtao.concerto.bridge.MinecraftServerBridge;
@@ -36,7 +38,9 @@ public class MusicRoomManager {
             @Override
             public boolean hasExternalPermission(String player, int level) {
                 ServerPlayer p = server.getPlayerList().getPlayerByName(player);
-                return p != null && p.hasPermissions(ServerConfig.INSTANCE.options.musicRoomCommandPermission);
+                Permission permission = new Permission.HasCommandLevel(PermissionLevel.byId(
+                        ServerConfig.INSTANCE.options.musicRoomCommandPermission));
+                return p != null && p.permissions().hasPermission(permission);
             }
         };
     }

@@ -1,6 +1,7 @@
 package top.gregtao.concerto.screen;
 
-import net.minecraft.Util;
+import net.minecraft.server.permissions.Permissions;
+import net.minecraft.util.Util;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
@@ -33,7 +34,7 @@ public class ConcertoIndexScreen extends ConcertoScreen {
         ).pos(this.width / 2 + 5, 20).size(115, 20).build();
         this.addRenderableWidget(widget);
         LocalPlayer player = Minecraft.getInstance().player;
-        if (player == null || !player.hasPermissions(2) || !ConcertoClient.isServerAvailable()) {
+        if (player == null || !player.permissions().hasPermission(Permissions.COMMANDS_GAMEMASTER) || !ConcertoClient.isServerAvailable()) {
             widget.active = false;
         }
 

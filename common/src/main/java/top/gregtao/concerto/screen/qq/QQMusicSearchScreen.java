@@ -6,7 +6,10 @@ import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.CycleButton;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.input.CharacterEvent;
+import net.minecraft.client.input.KeyEvent;
 import net.minecraft.network.chat.Component;
+import org.jetbrains.annotations.NotNull;
 import org.lwjgl.glfw.GLFW;
 import top.gregtao.concerto.ConcertoClient;
 import top.gregtao.concerto.core.api.WithMetaData;
@@ -144,8 +147,8 @@ public class QQMusicSearchScreen extends PageScreen {
         this.addRenderableWidget(Button.builder(Component.translatable("concerto.screen.search"),
                 button -> this.toggleSearch()).pos(this.width / 2 + 50, 17).size(52, 20).build());
 
-        this.addRenderableWidget(CycleButton.builder((SearchType type) -> Component.literal(type.getName()))
-                .withValues(SearchType.values()).withInitialValue(this.searchType).create(
+        this.addRenderableWidget(CycleButton.builder((SearchType type) -> Component.literal(type.getName()), this.searchType)
+                .withValues(SearchType.values()).create(
                         this.width / 2 + 105, 17, 65, 20, Component.translatable("concerto.search_type"),
                         (widget, type) -> this.updateSearchType(type)));
 
@@ -216,19 +219,19 @@ public class QQMusicSearchScreen extends PageScreen {
     }
 
     @Override
-    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-        if (super.keyPressed(keyCode, scanCode, modifiers)) {
+    public boolean keyPressed(@NotNull KeyEvent event) {
+        if (super.keyPressed(event)) {
             return true;
         }
-        if (keyCode == GLFW.GLFW_KEY_ENTER && this.searchBox.isHoveredOrFocused()) {
+        if (event.key() == GLFW.GLFW_KEY_ENTER && this.searchBox.isHoveredOrFocused()) {
             this.toggleSearch();
             return true;
         }
-        return this.searchBox.keyPressed(keyCode, scanCode, modifiers);
+        return this.searchBox.keyPressed(event);
     }
 
     @Override
-    public boolean charTyped(char chr, int modifiers) {
-        return this.searchBox.charTyped(chr, modifiers);
+    public boolean charTyped(@NotNull CharacterEvent event) {
+        return this.searchBox.charTyped(event);
     }
 }

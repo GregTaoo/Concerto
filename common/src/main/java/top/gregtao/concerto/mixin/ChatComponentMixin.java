@@ -2,6 +2,7 @@ package top.gregtao.concerto.mixin;
 
 import net.minecraft.client.GuiMessageTag;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.ChatComponent;
 import net.minecraft.network.chat.Component;
@@ -27,12 +28,12 @@ import java.util.regex.Pattern;
 @Mixin(ChatComponent.class)
 public class ChatComponentMixin {
     @Unique
-    private static final Pattern PATTERN = Pattern.compile("Concerto:Share:([a-zA-Z0-9+/=]+)");
+    private static final Pattern concerto$PATTERN = Pattern.compile("Concerto:Share:([a-zA-Z0-9+/=]+)");
 
     @Unique
-    private static void handleMessage(Component text) {
+    private static void concerto$handleMessage(Component text) {
         if (ConcertoClient.isServerAvailable()) return;
-        Matcher matcher = PATTERN.matcher(text.getString());
+        Matcher matcher = concerto$PATTERN.matcher(text.getString());
         if (!matcher.find()) return;
         String code = new String(Base64.getDecoder().decode(matcher.group(1)));
         Music music = MusicJsonParsers.from(JsonUtil.from(code), false);
@@ -53,16 +54,16 @@ public class ChatComponentMixin {
 
     @Inject(method = "addMessage(Lnet/minecraft/network/chat/Component;)V", at = @At("HEAD"))
     public void addMessageInject1(Component message, CallbackInfo ci) {
-        ConcertoRunner.run(() -> handleMessage(message));
+        ConcertoRunner.run(() -> concerto$handleMessage(message));
     }
 
     @Inject(method = "addMessage(Lnet/minecraft/network/chat/Component;Lnet/minecraft/network/chat/MessageSignature;Lnet/minecraft/client/GuiMessageTag;)V", at = @At("HEAD"))
     public void addMessageInject2(Component message, MessageSignature signature, GuiMessageTag indicator, CallbackInfo ci) {
-        ConcertoRunner.run(() -> handleMessage(message));
+        ConcertoRunner.run(() -> concerto$handleMessage(message));
     }
 
-    @Inject(method = "render(Lnet/minecraft/client/gui/GuiGraphics;IIIZ)V", at = @At("HEAD"))
-    public void renderInject(GuiGraphics context, int currentTick, int mouseX, int mouseY, boolean focused, CallbackInfo ci) {
+    @Inject(method = "render(Lnet/minecraft/client/gui/GuiGraphics;Lnet/minecraft/client/gui/Font;IIIZZ)V", at = @At("HEAD"))
+    public void renderInject(GuiGraphics context, Font font, int mouseX, int mouseY, int currentTick, boolean bl, boolean bl2, CallbackInfo ci) {
         InGameHudRenderer.render(context, mouseX, mouseY, currentTick);
     }
 }

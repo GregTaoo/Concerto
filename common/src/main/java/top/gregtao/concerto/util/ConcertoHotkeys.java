@@ -2,8 +2,10 @@ package top.gregtao.concerto.util;
 
 import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.client.KeyMapping;
+import net.minecraft.resources.Identifier;
 import org.lwjgl.glfw.GLFW;
 import top.gregtao.concerto.bridge.MinecraftClientBridge;
+import top.gregtao.concerto.core.Concerto;
 import top.gregtao.concerto.core.player.MusicPlayer;
 import top.gregtao.concerto.core.player.MusicPlayerHandler;
 import top.gregtao.concerto.screen.ConcertoIndexScreen;
@@ -11,7 +13,8 @@ import top.gregtao.concerto.screen.MusicPlayerScreen;
 
 public class ConcertoHotkeys {
 
-    public static String CATEGORY = "concerto.hotkey";
+    public static KeyMapping.Category CATEGORY =
+            KeyMapping.Category.register(Identifier.fromNamespaceAndPath(Concerto.MOD_ID, "hotkey"));
 
     public static KeyMapping GENERAL_PLAYLIST, INDEX_SCREEN, NEXT_MUSIC, PAUSE_RESUME;
 

@@ -5,20 +5,21 @@ import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallba
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
-import net.fabricmc.fabric.api.resource.ResourceManagerHelper;
-import net.fabricmc.fabric.api.resource.SimpleSynchronousResourceReloadListener;
+import net.fabricmc.fabric.api.resource.v1.ResourceLoader;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.packs.PackType;
 import net.minecraft.server.packs.resources.ResourceManager;
+import org.jetbrains.annotations.NotNull;
 import top.gregtao.concerto.ConcertoClient;
 import top.gregtao.concerto.bridge.MinecraftClientBridge;
 import top.gregtao.concerto.network.ConcertoPayload;
 
+import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 
 public class FabricClient implements ClientModInitializer {
@@ -30,18 +31,11 @@ public class FabricClient implements ClientModInitializer {
         }
 
         @Override
-        public void registerResourceReloadListener(ResourceLocation id, Consumer<ResourceManager> listener) {
-            ResourceManagerHelper.get(PackType.CLIENT_RESOURCES).registerReloadListener(new SimpleSynchronousResourceReloadListener() {
-                @Override
-                public ResourceLocation getFabricId() {
-                    return id;
-                }
-
-                @Override
-                public void onResourceManagerReload(ResourceManager manager) {
-                    listener.accept(manager);
-                }
-            });
+        public void registerResourceReloadListener(Identifier id, Consumer<ResourceManager> listener) {
+            ResourceLoader.get(PackType.CLIENT_RESOURCES).registerReloader(id,
+                    (state, executor, barrier, executor2) ->
+                            CompletableFuture.runAsync(() -> listener.accept(state.resourceManager()))
+                                    .thenCompose(barrier::wait));
         }
 
         @Override
@@ -55,7 +49,7 @@ public class FabricClient implements ClientModInitializer {
         }
 
         @Override
-        public void registerClientPayloadReceiver(CustomPacketPayload.Type<ConcertoPayload> type, StreamCodec<RegistryFriendlyByteBuf, ConcertoPayload> codec, Consumer<ConcertoPayload> handler) {
+        public void registerClientPayloadReceiver(CustomPacketPayload.Type<@NotNull ConcertoPayload> type, StreamCodec<@NotNull RegistryFriendlyByteBuf, @NotNull ConcertoPayload> codec, Consumer<ConcertoPayload> handler) {
             ClientPlayNetworking.registerGlobalReceiver(type, (payload, context) -> handler.accept(payload));
         }
 

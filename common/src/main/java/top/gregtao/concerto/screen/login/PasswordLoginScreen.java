@@ -33,14 +33,16 @@ public class PasswordLoginScreen extends ConcertoScreen {
         this.addWidget(this.usernameField);
         this.addRenderableWidget(this.usernameField);
         StringWidget textWidget = new StringWidget(this.width / 2 - 120, 22, 90, 20, Component.translatable("concerto.screen.login.username"), this.font);
-        textWidget.alignLeft();
         this.addRenderableWidget(textWidget);
 
         this.passwordField = new EditBox(this.font, this.width / 2 - 30, 50, 90, 20, Component.empty());
+        this.passwordField.addFormatter((s, f) -> !this.showPassword ?
+                FormattedCharSequence.forward("*".repeat(s.length()), Style.EMPTY) :
+                FormattedCharSequence.forward(s, Style.EMPTY)
+        );
         this.addWidget(this.passwordField);
         this.addRenderableWidget(this.passwordField);
         StringWidget textWidget1 = new StringWidget(this.width / 2 - 120, 52, 90, 20, Component.translatable("concerto.screen.login.password"), this.font);
-        textWidget1.alignLeft();
         this.addRenderableWidget(textWidget1);
         this.addRenderableWidget(Button.builder(Component.translatable("concerto.screen.login.show_password"), button -> this.switchShowPassword())
                 .pos(this.width / 2 + 65, 50).size(60, 20).build());
@@ -53,10 +55,6 @@ public class PasswordLoginScreen extends ConcertoScreen {
 
     public void switchShowPassword() {
         this.showPassword = !this.showPassword;
-        this.passwordField.setFormatter(!this.showPassword ?
-                (s, f) -> FormattedCharSequence.forward("*".repeat(s.length()), Style.EMPTY) :
-                (s, f) -> FormattedCharSequence.forward(s, Style.EMPTY)
-        );
     }
 
     public void tryLogin() {

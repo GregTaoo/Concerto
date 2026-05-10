@@ -14,14 +14,14 @@ logoFile = "assets/concerto/icon.png"
 [[dependencies.concerto]]
 modId = "neoforge"
 type = "required"
-versionRange = "[21.5.97,)"
+versionRange = "[${loaderVersion},)"
 ordering = "NONE"
 side = "BOTH"
 
 [[dependencies.concerto]]
 modId = "minecraft"
 type = "required"
-versionRange = "[1.21.5,)"
+versionRange = "[${mcVersion},)"
 ordering = "NONE"
 side = "BOTH"
 

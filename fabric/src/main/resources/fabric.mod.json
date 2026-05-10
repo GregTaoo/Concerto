@@ -26,9 +26,9 @@
     "concerto.mixins.json"
   ],
   "depends": {
-    "fabricloader": ">=0.16.10",
+    "fabricloader": ">=${loaderVersion}",
     "fabric-api": "*",
-    "minecraft": "~1.21.6",
+    "minecraft": "~${mcVersion}",
     "java": ">=21"
   },
   "suggests": {

@@ -1,4 +1,4 @@
-name: Publish Fabric Builds
+name: Publish Builds
 
 on:
   release:
@@ -16,11 +16,10 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Get Fabric-* branches from remote
+      - name: Get branch matrix from remote
         id: set-branches
         run: |
-          # 列出远程 Fabric-* 分支并构造 JSON 数组
-          readarray -t arr <<< "$(git ls-remote --heads origin 'Fabric-*' | awk '{print $2}' | sed 's|refs/heads/||')"
+          readarray -t arr <<< "$(git ls-remote --heads origin 'mc*' | awk '{print $2}' | sed 's|refs/heads/||')"
           json="["
           first=true
           for b in "${arr[@]}"; do
@@ -37,115 +36,133 @@ jobs:
           json="${json},\"dev\"]"
           echo "branches=$json" >> $GITHUB_OUTPUT
 
-  build:
-    name: Build & Publish
-    needs: generate-branches
-    runs-on: ubuntu-latest
-    environment:
-      name: MODRINTH_TOKEN
-    strategy:
-      fail-fast: false
-      matrix:
-        branch: ${{ fromJson(needs.generate-branches.outputs.branches) }}
-    steps:
-      - name: Checkout branch
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          ref: ${{ matrix.branch }}
-
-      - name: Set up Java
-        uses: actions/setup-java@v4
-        with:
-          java-version: 21
-          distribution: temurin
-          cache: gradle
-
-      - name: Cache Gradle
-        uses: actions/cache@v3
-        with:
-          path: |
-            ~/.gradle/caches
-            ~/.gradle/wrapper
-          key: gradle-${{ runner.os }}-${{ hashFiles('**/gradle/wrapper/gradle-wrapper.properties') }}
-          restore-keys: gradle-${{ runner.os }}-
-
-      - name: Build
+      - name: Build and Split Artifacts
         id: build-run
         run: |
           set -euo pipefail
-
           echo "Processing branch: ${{ matrix.branch }}"
-
           echo "Detected Gradle project"
           chmod +x ./gradlew || true
           ./gradlew clean build
-          ARTIFACT=$(ls fabric/build/libs/*.jar 2>/dev/null | grep -v -- '-dev.jar' | grep -v -- '-sources.jar' | head -n1 || true)
-
-          if [ -z "$ARTIFACT" ]; then
-            echo "No artifact found (non -dev jar). Skipping branch."
-            exit 0
+          
+          # 获取所有有效的 jar 包（排除 dev 和 sources）
+          mapfile -t ARTIFACT_ARRAY < <(ls build/libs/*.jar 2>/dev/null | grep -vE -- '-dev\.jar|-sources\.jar' || true)
+          
+          if [ ${#ARTIFACT_ARRAY[@]} -eq 0 ]; then
+          echo "No artifact found (non -dev jar). Skipping branch."
+          exit 0
           fi
-
-          echo "Built artifact: $ARTIFACT"
-
-          filename=$(basename "$ARTIFACT")
-          version="${filename%.jar}"
-          shorter_version=$(echo "$filename" | sed -E 's/^[Cc]oncerto-[Ff]abric-//; s/\.jar$//')
-
-          # 提取 mc 版本（形如 mc1.16.5 -> 1.16.5）
-          # 先尝试用 grep -P（Ubuntu runner 支持），fallback 用 sed
-          fabric_mc=""
-          if echo "$filename" | grep -oP 'mc\K[0-9]+\.[0-9]+(\.[0-9]+)?' >/dev/null 2>&1; then
-            fabric_mc=$(echo "$filename" | grep -oP 'mc\K[0-9]+\.[0-9]+(\.[0-9]+)?')
+          
+          echo "Built artifacts:"
+          printf '%s\n' "${ARTIFACT_ARRAY[@]}"
+          
+          # 提取共用的短版本号 (如 1.0.0)
+          FIRST_FILE="${ARTIFACT_ARRAY[0]}"
+          FIRST_FNAME=$(basename "$FIRST_FILE")
+          SHORTER_VERSION=$(echo "$FIRST_FNAME" | sed -E 's/^[Cc]oncerto-mc[0-9\.]+-[a-zA-Z]+-//; s/\.jar//')
+          echo "shorter_version=${SHORTER_VERSION}" >> $GITHUB_OUTPUT
+          
+          # 遍历所有文件，根据名字分类到不同的变量中
+          for FILE in "${ARTIFACT_ARRAY[@]}"; do
+          FNAME=$(basename "$FILE")
+          VERSION_NAME="${FNAME%.jar}" # 用作展示的 Release 标题
+          
+          # 提取该文件支持的 MC 版本
+          if echo "$FNAME" | grep -oP 'mc\K[0-9]+\.[0-9]+(\.[0-9]+)?' >/dev/null 2>&1; then
+           MC_VER=$(echo "$FNAME" | grep -oP 'mc\K[0-9]+\.[0-9]+(\.[0-9]+)?')
           else
-            fabric_mc=$(echo "$filename" | sed -n 's/.*mc\([0-9]\+\.[0-9]\+\(\.[0-9]\+\)\?\).*/\1/p')
+           MC_VER=$(echo "$FNAME" | sed -nE 's/.*mc([0-9]+\.[0-9]+(\.[0-9]+)?).*/\1/p')
           fi
-
-          echo "version=${version}" >> $GITHUB_OUTPUT
-          echo "shorter_version=${shorter_version}" >> $GITHUB_OUTPUT
-          echo "artifact=${ARTIFACT}" >> $GITHUB_OUTPUT
-          echo "mc_version=${fabric_mc}" >> $GITHUB_OUTPUT
-
-          # 根据 mc 版本生成 JSON 数组形式的 game_versions
-          case "$fabric_mc" in
-            1.16.5) gv='["1.16.x"]';;
-            1.17.1) gv='["1.17.x"]';;
-            1.18.2) gv='["1.18.x"]';;
-            1.19.4) gv='["1.19.x"]';;
-            1.20.1) gv='["1.20.1","1.20.2","1.20.3"]';;
-            1.20.4) gv='["1.20.4","1.20.5"]';;
-            1.20.6) gv='["1.20.6"]';;
-            1.21.1) gv='["1.21.1","1.21.2","1.21.3"]';;
-            1.21.4) gv='["1.21.4"]';;
-            1.21.5) gv='["1.21.5"]';;
-            1.21.6) gv='["1.21.6","1.21.7","1.21.8","1.21.9"]';;
-            1.21.10) gv='["1.21.10"]';;
-            1.21.11) gv='["1.21.11"]';;
-            "") echo "Could not parse mc version from filename: $filename"; gv='[]' ;;
-            *) echo "Unknown Fabric mc version: $fabric_mc" ; gv='[]' ;;
+          
+          # 映射对应版本 JSON
+          case "$MC_VER" in
+           1.16.5) GV_ARRAY='["1.16.x"]' ;;
+           1.17.1) GV_ARRAY='["1.17.x"]' ;;
+           1.18.2) GV_ARRAY='["1.18.x"]' ;;
+           1.19.4) GV_ARRAY='["1.19.x"]' ;;
+           1.20.1) GV_ARRAY='["1.20.1","1.20.2","1.20.3"]' ;;
+           1.20.4) GV_ARRAY='["1.20.4","1.20.5"]' ;;
+           1.20.6) GV_ARRAY='["1.20.6"]' ;;
+           1.21.1) GV_ARRAY='["1.21.1","1.21.2","1.21.3"]' ;;
+           1.21.4) GV_ARRAY='["1.21.4"]' ;;
+           1.21.5) GV_ARRAY='["1.21.5"]' ;;
+           1.21.6) GV_ARRAY='["1.21.6","1.21.7","1.21.8","1.21.9"]' ;;
+           1.21.10) GV_ARRAY='["1.21.10"]' ;;
+           1.21.11) GV_ARRAY='["1.21.11"]' ;;
+           26.1.2) GV_ARRAY='["26.1.x"]' ;;
+           *) GV_ARRAY='[]' ;;
           esac
+          
+          # 判断 Loader 类型并写入专属的 GITHUB_OUTPUT
+          if echo "$FNAME" | grep -iq "fabric"; then
+           echo "fabric_file=$FILE" >> $GITHUB_OUTPUT
+           echo "fabric_gv=$GV_ARRAY" >> $GITHUB_OUTPUT
+           echo "fabric_name=$VERSION_NAME" >> $GITHUB_OUTPUT
+          elif echo "$FNAME" | grep -iq "neoforge"; then
+           echo "neoforge_file=$FILE" >> $GITHUB_OUTPUT
+           echo "neoforge_gv=$GV_ARRAY" >> $GITHUB_OUTPUT
+           echo "neoforge_name=$VERSION_NAME" >> $GITHUB_OUTPUT
+          elif echo "$FNAME" | grep -iq "paper"; then
+           echo "paper_file=$FILE" >> $GITHUB_OUTPUT
+           echo "paper_gv=$GV_ARRAY" >> $GITHUB_OUTPUT
+           echo "paper_name=$VERSION_NAME" >> $GITHUB_OUTPUT
+          fi
+          done
 
-          echo "game_versions=${gv}" >> $GITHUB_OUTPUT
-          echo "Computed game_versions: ${gv}"
-
-      - name: Publish to Modrinth
-        if: steps.build-run.outputs.artifact != ''
+      # --- 分开上传: Fabric ---
+      - name: Publish Fabric to Modrinth
+        if: steps.build-run.outputs.fabric_file != ''
         uses: cloudnode-pro/modrinth-publish@v2
         with:
           token: ${{ secrets.MODRINTH_TOKEN }}
           project: A0VZd1kW
-          name: ${{ steps.build-run.outputs.version }}
-          version: ${{ steps.build-run.outputs.shorter_version }}
+          name: ${{ steps.build-run.outputs.fabric_name }}
+          version: ${{ steps.build-run.outputs.shorter_version }}-fabric
           changelog: ${{ github.event.release.body }}
           loaders: '["fabric"]'
-          game-versions: ${{ steps.build-run.outputs.game_versions }}
-          files: ${{ steps.build-run.outputs.artifact }}
+          game-versions: ${{ steps.build-run.outputs.fabric_gv }}
+          files: ${{ steps.build-run.outputs.fabric_file }}
 
+      # --- 分开上传: NeoForge ---
+      - name: Publish NeoForge to Modrinth
+        if: steps.build-run.outputs.neoforge_file != ''
+        uses: cloudnode-pro/modrinth-publish@v2
+        with:
+          token: ${{ secrets.MODRINTH_TOKEN }}
+          project: A0VZd1kW
+          name: ${{ steps.build-run.outputs.neoforge_name }}
+          version: ${{ steps.build-run.outputs.shorter_version }}-neoforge
+          changelog: ${{ github.event.release.body }}
+          loaders: '["neoforge"]'
+          game-versions: ${{ steps.build-run.outputs.neoforge_gv }}
+          files: ${{ steps.build-run.outputs.neoforge_file }}
+
+      # --- 分开上传: Paper ---
+      - name: Publish Paper to Modrinth
+        if: steps.build-run.outputs.paper_file != ''
+        uses: cloudnode-pro/modrinth-publish@v2
+        with:
+          token: ${{ secrets.MODRINTH_TOKEN }}
+          project: A0VZd1kW
+          name: ${{ steps.build-run.outputs.paper_name }}
+          version: ${{ steps.build-run.outputs.shorter_version }}-paper
+          changelog: ${{ github.event.release.body }}
+          loaders: '["paper"]'
+          game-versions: ${{ steps.build-run.outputs.paper_gv }}
+          files: ${{ steps.build-run.outputs.paper_file }}
+
+      # --- 总结报告 ---
       - name: Summary
-        if: steps.build-run.outputs.artifact != ''
         run: |
-          echo "Branch: ${{ matrix.branch }}"
-          echo "Artifact: ${{ steps.build-run.outputs.artifact }}"
-          echo "Version: ${{ steps.build-run.outputs.version }}"
-          echo "Game versions: ${{ steps.build-run.outputs.game_versions }}"
+          echo "### Build & Publish Summary" >> $GITHUB_STEP_SUMMARY
+          echo "- **Base Version**: ${{ steps.build-run.outputs.shorter_version }}" >> $GITHUB_STEP_SUMMARY
+          
+          if [ -n "${{ steps.build-run.outputs.fabric_file }}" ]; then
+            echo "- **Fabric**: Uploaded ${{ steps.build-run.outputs.fabric_name }}" >> $GITHUB_STEP_SUMMARY
+          fi
+          if [ -n "${{ steps.build-run.outputs.neoforge_file }}" ]; then
+            echo "- **NeoForge**: Uploaded ${{ steps.build-run.outputs.neoforge_name }}" >> $GITHUB_STEP_SUMMARY
+          fi
+          if [ -n "${{ steps.build-run.outputs.paper_file }}" ]; then
+            echo "- **Paper**: Uploaded ${{ steps.build-run.outputs.paper_name }}" >> $GITHUB_STEP_SUMMARY
+          fi

@@ -26,7 +26,6 @@ public abstract class ApplyDraggedFileScreen extends ConcertoScreen {
 
     @Override
     public void onFilesDrop(List<Path> paths) {
-        if (this.minecraft == null) return;
         String message = paths.stream().map(Path::getFileName).map(Path::toString).collect(Collectors.joining(", "));
         this.minecraft.setScreen(new ConfirmScreen(confirmed -> {
             if (confirmed) {

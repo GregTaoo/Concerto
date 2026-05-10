@@ -53,9 +53,9 @@ public class ServerMusicNetworkHandler {
             boolean success = sendS2CMusicData(packet, true);
             if (auditor != null) {
                 if (success) {
-                    auditor.displayClientMessage(Component.translatable("concerto.audit.pass", packet.from, packet.music.getMeta().title()), false);
+                    auditor.sendSystemMessage(Component.translatable("concerto.audit.pass", packet.from, packet.music.getMeta().title()));
                 } else {
-                    auditor.displayClientMessage(Component.translatable("concerto.share.s2c_failed", uuid.toString()), false);
+                    auditor.sendSystemMessage(Component.translatable("concerto.share.s2c_failed", uuid.toString()));
                 }
                 ConcertoServer.LOGGER.info("Auditor {} passed request from {}: {} to {}",
                         auditor.getName().getString(), packet.from, packet.music.getMeta().title(), packet.to);
@@ -64,7 +64,7 @@ public class ServerMusicNetworkHandler {
                     packet.from, packet.music.getMeta().title(), packet.to);
             sendS2CAuditionSyncData(uuid, packet, true);
         } else if (auditor != null) {
-            auditor.displayClientMessage(Component.translatable("concerto.audit.uuid_not_found"), false);
+            auditor.sendSystemMessage(Component.translatable("concerto.audit.uuid_not_found"));
         }
     }
 
@@ -73,11 +73,11 @@ public class ServerMusicNetworkHandler {
             Player player = packet.server.getPlayerList().getPlayerByName(packet.from);
             String title = packet.music.getMeta().title();
             if (player != null)
-                player.displayClientMessage(Component.translatable("concerto.share.rejected", title), false);
+                player.sendSystemMessage(Component.translatable("concerto.share.rejected", title));
         });
         WAIT_AUDITION.clear();
         if (auditor != null)
-            auditor.displayClientMessage(Component.translatable("concerto.audit.reject", "ALL", "ALL"), false);
+            auditor.sendSystemMessage(Component.translatable("concerto.audit.reject", "ALL", "ALL"));
         ConcertoServer.LOGGER.info("Auditor {} rejected all request", auditor == null ? "?" : auditor.getName().getString());
     }
 
@@ -88,14 +88,14 @@ public class ServerMusicNetworkHandler {
             Player player = packet.server.getPlayerList().getPlayerByName(packet.from);
             String title = packet.music.getMeta().title();
             if (player != null)
-                player.displayClientMessage(Component.translatable("concerto.share.rejected", title), false);
-            if (auditor != null) auditor.displayClientMessage(Component.translatable(
-                    "concerto.audit.reject", player == null ? "an unknown player" : player.getName().getString(), title), false);
+                player.sendSystemMessage(Component.translatable("concerto.share.rejected", title));
+            if (auditor != null) auditor.sendSystemMessage(Component.translatable(
+                    "concerto.audit.reject", player == null ? "an unknown player" : player.getName().getString(), title));
             ConcertoServer.LOGGER.info("Auditor {} rejected request from {}: {} to {}",
                     auditor == null ? "???" : auditor.getName().getString(), packet.from, title, packet.to);
             sendS2CAuditionSyncData(uuid, packet, true);
         } else if (auditor != null) {
-            auditor.displayClientMessage(Component.translatable("concerto.audit.uuid_not_found"), false);
+            auditor.sendSystemMessage(Component.translatable("concerto.audit.uuid_not_found"));
         }
     }
 

@@ -1,7 +1,7 @@
 package top.gregtao.concerto.screen;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.ChatScreen;
 import net.minecraft.network.chat.Component;
 import org.joml.Matrix3x2fStack;
@@ -10,7 +10,7 @@ import top.gregtao.concerto.core.player.MusicPlayer;
 import top.gregtao.concerto.core.player.MusicPlayerHandler;
 import top.gregtao.concerto.core.room.MusicRoom;
 import top.gregtao.concerto.core.util.Vector2i;
-import top.gregtao.concerto.mixin.GuiGraphicsAccessor;
+import top.gregtao.concerto.mixin.GuiGraphicsExtractorAccessor;
 import top.gregtao.concerto.screen.widget.URLImageWidget;
 import top.gregtao.concerto.util.ComponentUtil;
 
@@ -69,7 +69,7 @@ public class InGameHudRenderer {
         }
     }
 
-    public static void render(GuiGraphics context, int mouseX, int mouseY, float delta) {
+    public static void render(GuiGraphicsExtractor context, int mouseX, int mouseY, float delta) {
         Minecraft client = Minecraft.getInstance();
         if (MusicPlayer.INSTANCE.isPlaying()) {
 
@@ -80,8 +80,8 @@ public class InGameHudRenderer {
                 int scaledWidth = client.getWindow().getGuiScaledWidth(), scaledHeight = client.getWindow().getGuiScaledHeight();
                 String[] texts = MusicPlayerHandler.INSTANCE.getDisplayTexts();
 
-                context = new GuiGraphics(Minecraft.getInstance(),
-                        ((GuiGraphicsAccessor) context).getGuiRenderState(), mouseX, mouseY);
+                context = new GuiGraphicsExtractor(Minecraft.getInstance(),
+                        ((GuiGraphicsExtractorAccessor) context).getGuiRenderState(), mouseX, mouseY);
 
                 if (options.displayLyrics) {
                     Vector2i pos = config.lyricsPosSupplier.getPos(scaledWidth, scaledHeight);
@@ -113,7 +113,7 @@ public class InGameHudRenderer {
 
                     int startX = ComponentUtil.getTextRenderX(text3, options.musicDetailsAlignment, client.font, pos.x);
                     context.enableScissor(startX, pos.y, startX + text3Width, pos.y + client.font.lineHeight);
-                    context.drawString(
+                    context.text(
                             client.font, text2, startX + MUSIC_DETAIL_SCROLL.getDx(),
                             pos.y, (int) config.musicDetailsColor.getNumber(),
                             options.textShadow
@@ -158,7 +158,7 @@ public class InGameHudRenderer {
                         matrices.translate(-cx, -cy, matrices); // 再平移回来
                     }
 
-                    COVER_IMAGE.render(context, mouseX, mouseY, delta);
+                    COVER_IMAGE.extractRenderState(context, mouseX, mouseY, delta);
                 }
             }
         }

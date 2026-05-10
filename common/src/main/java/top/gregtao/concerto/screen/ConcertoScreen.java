@@ -2,12 +2,13 @@ package top.gregtao.concerto.screen;
 
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.FocusableTextWidget;
 import net.minecraft.client.gui.components.PlainTextButton;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -77,9 +78,9 @@ public class ConcertoScreen extends Screen {
     }
 
     @Override
-    public void render(GuiGraphics matrices, int mouseX, int mouseY, float delta) {
-        super.render(matrices, mouseX, mouseY, delta);
-        matrices.drawCenteredString(this.font, this.title, this.width / 2, 5, 0xffffffff);
-        this.message.render(matrices, mouseX, mouseY, delta);
+    public void extractRenderState(@NotNull GuiGraphicsExtractor matrices, int mouseX, int mouseY, float delta) {
+        super.extractRenderState(matrices, mouseX, mouseY, delta);
+        matrices.centeredText(this.font, this.title, this.width / 2, 5, 0xffffffff);
+        this.message.extractRenderState(matrices, mouseX, mouseY, delta);
     }
 }

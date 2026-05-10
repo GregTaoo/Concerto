@@ -1,11 +1,12 @@
 package top.gregtao.concerto.screen;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.network.chat.Component;
+import org.jetbrains.annotations.NotNull;
 import top.gregtao.concerto.ConcertoClient;
 import top.gregtao.concerto.core.api.WithMetaData;
 import top.gregtao.concerto.core.music.list.Playlist;
@@ -57,8 +58,8 @@ public class PresetRadiosScreen extends ConcertoScreen {
     }
 
     @Override
-    public void render(GuiGraphics matrices, int mouseX, int mouseY, float delta) {
-        super.render(matrices, mouseX, mouseY, delta);
-        this.playlistList.render(matrices, mouseX, mouseY, delta);
+    public void extractRenderState(@NotNull GuiGraphicsExtractor matrices, int mouseX, int mouseY, float delta) {
+        super.extractRenderState(matrices, mouseX, mouseY, delta);
+        this.playlistList.extractRenderState(matrices, mouseX, mouseY, delta);
     }
 }

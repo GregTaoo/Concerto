@@ -1,11 +1,12 @@
 package top.gregtao.concerto.screen.login;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.network.chat.Component;
+import org.jetbrains.annotations.NotNull;
 import top.gregtao.concerto.core.util.ConcertoRunner;
 import top.gregtao.concerto.screen.ConcertoScreen;
 import top.gregtao.concerto.screen.widget.URLImageWidget;
@@ -57,7 +58,7 @@ public class QRCodeLoginScreen extends ConcertoScreen {
                 case SUCCESS -> {
                     LocalPlayer player = Minecraft.getInstance().player;
                     if (player != null) {
-                        player.displayClientMessage(Component.translatable("concerto.screen.login.qrcode.success"), false);
+                        player.sendSystemMessage(Component.translatable("concerto.screen.login.qrcode.success"));
                     }
                     Minecraft.getInstance().setScreen(null);
                 }
@@ -91,10 +92,10 @@ public class QRCodeLoginScreen extends ConcertoScreen {
     }
 
     @Override
-    public void render(GuiGraphics matrices, int mouseX, int mouseY, float delta) {
-        super.render(matrices, mouseX, mouseY, delta);
-        this.urlImageWidget.render(matrices, mouseX, mouseY, delta);
-        matrices.drawCenteredString(this.font, this.message, this.width / 2, 120, 0xffffffff);
+    public void extractRenderState(@NotNull GuiGraphicsExtractor matrices, int mouseX, int mouseY, float delta) {
+        super.extractRenderState(matrices, mouseX, mouseY, delta);
+        this.urlImageWidget.extractRenderState(matrices, mouseX, mouseY, delta);
+        matrices.centeredText(this.font, this.message, this.width / 2, 120, 0xffffffff);
     }
 
     @Override

@@ -1,10 +1,11 @@
 package top.gregtao.concerto.screen.netease;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
+import org.jetbrains.annotations.NotNull;
 import top.gregtao.concerto.core.http.netease.NeteaseCloudApiClient;
 import top.gregtao.concerto.core.util.ConcertoRunner;
 import top.gregtao.concerto.screen.ConcertoScreen;
@@ -54,11 +55,11 @@ public class NeteaseCloudIndexScreen extends ConcertoScreen {
     }
 
     @Override
-    public void render(GuiGraphics matrices, int mouseX, int mouseY, float delta) {
-        super.render(matrices, mouseX, mouseY, delta);
+    public void extractRenderState(@NotNull GuiGraphicsExtractor matrices, int mouseX, int mouseY, float delta) {
+        super.extractRenderState(matrices, mouseX, mouseY, delta);
         Component text = this.loggedIn() ? Component.translatable("concerto.screen.163.welcome", NeteaseCloudApiClient.LOCAL_USER.nickname) :
                 Component.translatable("concerto.screen.163.not_login");
-        matrices.drawCenteredString(this.font, text, this.width / 2, 90, 0xffffffff);
-        this.avatar.render(matrices, mouseX, mouseY, delta);
+        matrices.centeredText(this.font, text, this.width / 2, 90, 0xffffffff);
+        this.avatar.extractRenderState(matrices, mouseX, mouseY, delta);
     }
 }

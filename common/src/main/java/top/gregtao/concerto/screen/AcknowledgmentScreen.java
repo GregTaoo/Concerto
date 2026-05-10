@@ -1,12 +1,13 @@
 package top.gregtao.concerto.screen;
 
-import net.minecraft.util.Util;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
+import net.minecraft.util.Util;
+import org.jetbrains.annotations.NotNull;
 
 public class AcknowledgmentScreen extends ConcertoScreen {
 
@@ -32,10 +33,10 @@ public class AcknowledgmentScreen extends ConcertoScreen {
     }
 
     @Override
-    public void render(GuiGraphics matrices, int mouseX, int mouseY, float delta) {
-        super.render(matrices, mouseX, mouseY, delta);
+    public void extractRenderState(@NotNull GuiGraphicsExtractor matrices, int mouseX, int mouseY, float delta) {
+        super.extractRenderState(matrices, mouseX, mouseY, delta);
         Font renderer = Minecraft.getInstance().font;
         Component text = Component.translatable("concerto.thank_you");
-        matrices.drawCenteredString(renderer, text, this.width / 2, 150, 0xffffffff);
+        matrices.centeredText(renderer, text, this.width / 2, 150, 0xffffffff);
     }
 }

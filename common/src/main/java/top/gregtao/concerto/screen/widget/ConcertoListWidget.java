@@ -1,11 +1,11 @@
 package top.gregtao.concerto.screen.widget;
 
-import net.minecraft.client.input.MouseButtonEvent;
-import net.minecraft.util.Util;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.ObjectSelectionList;
+import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.Component;
+import net.minecraft.util.Util;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
@@ -74,7 +74,7 @@ public class ConcertoListWidget<T> extends ObjectSelectionList<ConcertoListWidge
         return this.width - 35;
     }
 
-    public class Entry extends ObjectSelectionList.Entry<Entry> {
+    public class Entry extends ObjectSelectionList.Entry<@NotNull Entry> {
         public T item;
         public int index, entryIndex;
         private long lastClickTime = 0;
@@ -105,8 +105,8 @@ public class ConcertoListWidget<T> extends ObjectSelectionList<ConcertoListWidge
         }
 
         @Override
-        public void renderContent(GuiGraphics context, int mouseX, int mouseY, boolean hovered, float deltaTicks) {
-            context.drawString(Minecraft.getInstance().font, this.getNarration(), this.getContentX(), this.getContentY() + 3, ConcertoListWidget.this.color, false);
+        public void extractContent(GuiGraphicsExtractor graphics, int mouseX, int mouseY, boolean hovered, float deltaTicks) {
+            graphics.text(Minecraft.getInstance().font, this.getNarration(), this.getContentX(), this.getContentY() + 3, ConcertoListWidget.this.color, false);
         }
     }
 }

@@ -33,7 +33,7 @@ public class FabricServer implements ModInitializer {
 
         @Override
         public void registerResourceReloadListener(Identifier id, Consumer<ResourceManager> listener) {
-            ResourceLoader.get(PackType.SERVER_DATA).registerReloader(id,
+            ResourceLoader.get(PackType.SERVER_DATA).registerReloadListener(id,
                     (state, executor, barrier, executor2) ->
                             CompletableFuture.runAsync(() -> listener.accept(state.resourceManager()))
                                     .thenCompose(barrier::wait));
@@ -41,8 +41,8 @@ public class FabricServer implements ModInitializer {
 
         @Override
         public void registerServerPayloadReceiver(CustomPacketPayload.Type<@NotNull ConcertoPayload> type, StreamCodec<@NotNull RegistryFriendlyByteBuf, @NotNull ConcertoPayload> codec, BiConsumer<ConcertoPayload, NetworkingContext> handler) {
-            PayloadTypeRegistry.playS2C().register(type, codec);
-            PayloadTypeRegistry.playC2S().register(type, codec);
+            PayloadTypeRegistry.clientboundPlay().register(type, codec);
+            PayloadTypeRegistry.serverboundPlay().register(type, codec);
             ServerPlayNetworking.registerGlobalReceiver(type, (payload, context) ->
                     handler.accept(payload, new NetworkingContext(context.player(), context.server())));
         }

@@ -3,7 +3,7 @@ package top.gregtao.concerto.fabric;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
-import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
+import net.fabricmc.fabric.api.client.keymapping.v1.KeyMappingHelper;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.resource.v1.ResourceLoader;
 import net.minecraft.client.KeyMapping;
@@ -32,7 +32,7 @@ public class FabricClient implements ClientModInitializer {
 
         @Override
         public void registerResourceReloadListener(Identifier id, Consumer<ResourceManager> listener) {
-            ResourceLoader.get(PackType.CLIENT_RESOURCES).registerReloader(id,
+            ResourceLoader.get(PackType.CLIENT_RESOURCES).registerReloadListener(id,
                     (state, executor, barrier, executor2) ->
                             CompletableFuture.runAsync(() -> listener.accept(state.resourceManager()))
                                     .thenCompose(barrier::wait));
@@ -40,7 +40,7 @@ public class FabricClient implements ClientModInitializer {
 
         @Override
         public KeyMapping registerKeyMapping(KeyMapping keyMapping) {
-            return KeyBindingHelper.registerKeyBinding(keyMapping);
+            return KeyMappingHelper.registerKeyMapping(keyMapping);
         }
 
         @Override

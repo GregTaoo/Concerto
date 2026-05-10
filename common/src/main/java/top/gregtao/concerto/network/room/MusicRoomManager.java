@@ -69,7 +69,7 @@ public class MusicRoomManager {
         @Override
         public void onErrorMessageUpdate(String message) {
             if (Minecraft.getInstance().player != null) {
-                Minecraft.getInstance().player.displayClientMessage(Component.literal(message), false);
+                Minecraft.getInstance().player.sendSystemMessage(Component.literal(message));
             }
         }
     };

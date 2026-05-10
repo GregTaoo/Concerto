@@ -1,12 +1,13 @@
 package top.gregtao.concerto.screen;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.permissions.Permissions;
+import org.jetbrains.annotations.NotNull;
 import top.gregtao.concerto.core.music.Music;
 import top.gregtao.concerto.core.util.Pair;
 import top.gregtao.concerto.screen.widget.ConcertoListWidget;
@@ -73,12 +74,12 @@ public class MusicAuditionScreen extends ConcertoScreen {
     }
 
     @Override
-    public void render(GuiGraphics matrices, int mouseX, int mouseY, float delta) {
-        super.render(matrices, mouseX, mouseY, delta);
-        this.widget.render(matrices, mouseX, mouseY, delta);
+    public void extractRenderState(@NotNull GuiGraphicsExtractor matrices, int mouseX, int mouseY, float delta) {
+        super.extractRenderState(matrices, mouseX, mouseY, delta);
+        this.widget.extractRenderState(matrices, mouseX, mouseY, delta);
         LocalPlayer player = Minecraft.getInstance().player;
         if (player == null || !player.permissions().hasPermission(Permissions.COMMANDS_GAMEMASTER)) {
-            matrices.drawCenteredString(this.font, Component.translatable("concerto.screen.audition.permission_denied"),
+            matrices.centeredText(this.font, Component.translatable("concerto.screen.audition.permission_denied"),
                     this.width / 2, this.height / 2, 0xffffffff);
         }
     }

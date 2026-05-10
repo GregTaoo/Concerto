@@ -46,10 +46,10 @@ public class MusicRoomCommand {
                             LocalPlayer player = Minecraft.getInstance().player;
                             if (player == null) return -1;
                             if (MusicRoom.CLIENT_ROOM != null) {
-                                player.displayClientMessage(Component.translatable(
+                                player.sendSystemMessage(Component.translatable(
                                         "concerto.room.members", MusicRoom.CLIENT_ROOM.clientGetOwner(),
                                         String.join(",", MusicRoom.CLIENT_ROOM.clientGetMembers().keySet())
-                                ), false);
+                                ));
                             }
                             return 0;
                         })).then(LiteralArgumentBuilder.<S>literal("op").then(
@@ -82,7 +82,7 @@ public class MusicRoomCommand {
                                             if (player == null) return -1;
                                             if (checkServerAvailable(player) && checkAgent(player)) {
                                                 if (!ServerMusicAgentManager.clientAddCurrentMusic()) {
-                                                    player.displayClientMessage(Component.translatable("concerto.not_playing"), false);
+                                                    player.sendSystemMessage(Component.translatable("concerto.not_playing"));
                                                 }
                                             }
                                             return 0;
@@ -112,7 +112,7 @@ public class MusicRoomCommand {
 
     public static boolean checkServerAvailable(LocalPlayer player) {
         if (!ConcertoClient.isServerAvailable()) {
-            player.displayClientMessage(Component.translatable("concerto.not_available"), false);
+            player.sendSystemMessage(Component.translatable("concerto.not_available"));
             return false;
         }
         return true;
@@ -122,7 +122,7 @@ public class MusicRoomCommand {
         if (MusicRoom.clientGetState() == MusicRoom.ClientState.LOCAL) {
             return true;
         } else {
-            player.displayClientMessage(Component.translatable("concerto.agent.occupied"), false);
+            player.sendSystemMessage(Component.translatable("concerto.agent.occupied"));
             return false;
         }
     }
@@ -131,7 +131,7 @@ public class MusicRoomCommand {
         if (MusicRoom.clientGetState() == MusicRoom.ClientState.MUSIC_AGENT) {
             return true;
         } else {
-            player.displayClientMessage(Component.translatable("concerto.agent.not_in"), false);
+            player.sendSystemMessage(Component.translatable("concerto.agent.not_in"));
             return false;
         }
     }

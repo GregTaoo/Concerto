@@ -1,10 +1,11 @@
 package top.gregtao.concerto.screen;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
+import org.jetbrains.annotations.NotNull;
 import top.gregtao.concerto.core.config.PresetPlaylistsConfig;
 import top.gregtao.concerto.core.music.Music;
 import top.gregtao.concerto.core.music.list.Playlist;
@@ -86,9 +87,9 @@ public class PlaylistPreviewScreen extends ConcertoScreen {
     }
 
     @Override
-    public void render(GuiGraphics matrices, int mouseX, int mouseY, float delta) {
-        super.render(matrices, mouseX, mouseY, delta);
-        matrices.drawCenteredString(this.font, this.title, this.width / 2, 5, 0xffffffff);
-        this.widget.render(matrices, mouseX, mouseY, delta);
+    public void extractRenderState(@NotNull GuiGraphicsExtractor matrices, int mouseX, int mouseY, float delta) {
+        super.extractRenderState(matrices, mouseX, mouseY, delta);
+        matrices.centeredText(this.font, this.title, this.width / 2, 5, 0xffffffff);
+        this.widget.extractRenderState(matrices, mouseX, mouseY, delta);
     }
 }

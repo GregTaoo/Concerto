@@ -1,16 +1,3 @@
-plugins {
-    id "com.github.johnrengelman.shadow" version "7.1.2"
-}
-
-architectury {
-    platformSetupLoomIde()
-    fabric()
-}
-
-loom {
-    accessWidenerPath = project(":common").loom.accessWidenerPath
-}
-
 configurations {
     common
     shadowCommon // Don't use shadow from the shadow plugin since it *excludes* files.
@@ -20,13 +7,13 @@ configurations {
 }
 
 dependencies {
-    modImplementation "net.fabricmc:fabric-loader:${rootProject.fabric_loader_version}"
-    modApi "net.fabricmc.fabric-api:fabric-api:${rootProject.fabric_api_version}"
+    implementation "net.fabricmc:fabric-loader:${rootProject.fabric_loader_version}"
+    api "net.fabricmc.fabric-api:fabric-api:${rootProject.fabric_api_version}"
     // Remove the next line if you don't want to depend on the API
     // modApi "dev.architectury:architectury-fabric:${rootProject.architectury_version}"
 
-    common(project(path: ":common", configuration: "namedElements")) { transitive false }
-    shadowCommon(project(path: ":common", configuration: "transformProductionFabric")) { transitive false }
+    common(project(path: ":common")) { transitive false }
+    shadowCommon(project(path: ":common")) { transitive false }
     common(project(path: ":core", configuration: "shadow")) { transitive false }
     shadowCommon(files(project(":core").tasks.named("shadowJar")))
 }
@@ -46,16 +33,8 @@ processResources {
 }
 
 shadowJar {
-    exclude "architectury.common.json"
-
     configurations = [project.configurations.shadowCommon]
     archiveClassifier = "dev-shadow"
-}
-
-remapJar {
-    injectAccessWidener = true
-    input.set shadowJar.archiveFile
-    dependsOn shadowJar
 }
 
 sourcesJar {

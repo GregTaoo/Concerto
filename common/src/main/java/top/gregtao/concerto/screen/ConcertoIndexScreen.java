@@ -1,15 +1,16 @@
 package top.gregtao.concerto.screen;
 
-import net.minecraft.server.permissions.Permissions;
-import net.minecraft.util.Util;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.PlainTextButton;
 import net.minecraft.client.gui.components.StringWidget;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.network.chat.Component;
+import net.minecraft.server.permissions.Permissions;
+import net.minecraft.util.Util;
+import org.jetbrains.annotations.NotNull;
 import top.gregtao.concerto.ConcertoClient;
 import top.gregtao.concerto.core.config.PresetPlaylistsConfig;
 import top.gregtao.concerto.core.room.MusicRoom;
@@ -106,10 +107,10 @@ public class ConcertoIndexScreen extends ConcertoScreen {
     }
 
     @Override
-    public void render(GuiGraphics matrices, int mouseX, int mouseY, float delta) {
-        super.render(matrices, mouseX, mouseY, delta);
+    public void extractRenderState(@NotNull GuiGraphicsExtractor matrices, int mouseX, int mouseY, float delta) {
+        super.extractRenderState(matrices, mouseX, mouseY, delta);
         if (MusicRoom.clientGetState() != MusicRoom.ClientState.LOCAL) {
-            matrices.drawCenteredString(
+            matrices.centeredText(
                     this.font,
                     Component.translatable("concerto.screen.in_which_room"),
                     this.width / 2, 200, 0xffffffff

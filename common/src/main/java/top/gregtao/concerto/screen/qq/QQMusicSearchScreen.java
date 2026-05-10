@@ -1,7 +1,7 @@
 package top.gregtao.concerto.screen.qq;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.CycleButton;
 import net.minecraft.client.gui.components.EditBox;
@@ -204,18 +204,18 @@ public class QQMusicSearchScreen extends PageScreen {
     }
 
     @Override
-    public void render(GuiGraphics matrices, int mouseX, int mouseY, float delta) {
-        super.render(matrices, mouseX, mouseY, delta);
+    public void extractRenderState(@NotNull GuiGraphicsExtractor matrices, int mouseX, int mouseY, float delta) {
+        super.extractRenderState(matrices, mouseX, mouseY, delta);
         try {
             switch (this.searchType) {
-                case PLAYLIST -> this.playlistList.render(matrices, mouseX, mouseY, delta);
-                case MUSIC -> this.musicList.render(matrices, mouseX, mouseY, delta);
-                case ALBUM -> this.albumList.render(matrices, mouseX, mouseY, delta);
+                case PLAYLIST -> this.playlistList.extractRenderState(matrices, mouseX, mouseY, delta);
+                case MUSIC -> this.musicList.extractRenderState(matrices, mouseX, mouseY, delta);
+                case ALBUM -> this.albumList.extractRenderState(matrices, mouseX, mouseY, delta);
             }
         } catch (IndexOutOfBoundsException e) {
             ConcertoClient.LOGGER.error(e.getMessage());
         }
-        this.searchBox.render(matrices, mouseX, mouseY, delta);
+        this.searchBox.extractRenderState(matrices, mouseX, mouseY, delta);
     }
 
     @Override

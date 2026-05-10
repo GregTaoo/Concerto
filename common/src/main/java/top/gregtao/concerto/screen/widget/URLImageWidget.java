@@ -3,7 +3,7 @@ package top.gregtao.concerto.screen.widget;
 import com.mojang.blaze3d.platform.NativeImage;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.layouts.LayoutElement;
@@ -11,6 +11,7 @@ import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.renderer.texture.DynamicTexture;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
+import org.jetbrains.annotations.NotNull;
 import org.joml.Matrix3x2fStack;
 import top.gregtao.concerto.ConcertoClient;
 import top.gregtao.concerto.core.Concerto;
@@ -231,17 +232,17 @@ public class URLImageWidget implements Renderable, LayoutElement, AutoCloseable 
     }
 
     @Override
-    public void render(GuiGraphics context, int mouseX, int mouseY, float delta) {
-        if (this.border) context.renderOutline(this.x, this.y, this.width, this.height, 0xffffffff);
+    public void extractRenderState(@NotNull GuiGraphicsExtractor context, int mouseX, int mouseY, float delta) {
+        if (this.border) context.outline(this.x, this.y, this.width, this.height, 0xffffffff);
         Font textRenderer = Minecraft.getInstance().font;
         if (this.url == null || this.texture == null) {
-            context.drawCenteredString(
+            context.centeredText(
                     textRenderer, Component.translatable("concerto.screen.url_image.empty"),
                     this.x + this.width / 2, this.y + (this.height - textRenderer.lineHeight) / 2, 0xffffffff
             );
         } else {
             NativeImage image = this.texture.getPixels();
-            if (image != null && this.state == State.READY) {
+            if (this.state == State.READY) {
                 Matrix3x2fStack matrices = context.pose();
                 matrices.pushMatrix();
                 matrices.scale(0.0625f, 0.0625f, matrices);
@@ -250,12 +251,12 @@ public class URLImageWidget implements Renderable, LayoutElement, AutoCloseable 
                         this.getImageWidth(), this.getImageHeight(), this.getImageWidth(), this.getImageHeight());
                 matrices.popMatrix();
             } else if (this.state == State.LOADING) {
-                context.drawCenteredString(
+                context.centeredText(
                         textRenderer, Component.translatable("concerto.screen.loading"),
                         this.x + this.width / 2, this.y + (this.height - textRenderer.lineHeight) / 2, 0xffffffff
                 );
             } else {
-                context.drawCenteredString(
+                context.centeredText(
                         textRenderer, Component.translatable("concerto.fail"),
                         this.x + this.width / 2, this.y + (this.height - textRenderer.lineHeight) / 2, 0xffffffff
                 );

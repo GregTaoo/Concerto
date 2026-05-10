@@ -1,9 +1,10 @@
 package top.gregtao.concerto.screen;
 
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
+import org.jetbrains.annotations.NotNull;
 import top.gregtao.concerto.core.music.Music;
 import top.gregtao.concerto.core.music.meta.music.MusicMetaData;
 import top.gregtao.concerto.core.player.MusicPlayerHandler;
@@ -89,12 +90,12 @@ public class MusicInfoScreen extends ConcertoScreen {
     }
 
     @Override
-    public void render(GuiGraphics matrices, int mouseX, int mouseY, float delta) {
-        super.render(matrices, mouseX, mouseY, delta);
+    public void extractRenderState(@NotNull GuiGraphicsExtractor matrices, int mouseX, int mouseY, float delta) {
+        super.extractRenderState(matrices, mouseX, mouseY, delta);
         this.updateButtonStates();
-        this.headPicture.render(matrices, mouseX, mouseY, delta);
-        matrices.drawString(this.font, this.music.getMeta().getSource(), this.width / 2 + 5, this.height / 2 - 20, 0xffffffff, false);
-        matrices.drawString(this.font, this.music.getMeta().title(), this.width / 2 + 5, this.height / 2 - 5, 0xffffffff, false);
-        matrices.drawString(this.font, this.music.getMeta().author(), this.width / 2 + 5, this.height / 2 + 10, 0xffffffff, false);
+        this.headPicture.extractRenderState(matrices, mouseX, mouseY, delta);
+        matrices.text(this.font, this.music.getMeta().getSource(), this.width / 2 + 5, this.height / 2 - 20, 0xffffffff, false);
+        matrices.text(this.font, this.music.getMeta().title(), this.width / 2 + 5, this.height / 2 - 5, 0xffffffff, false);
+        matrices.text(this.font, this.music.getMeta().author(), this.width / 2 + 5, this.height / 2 + 10, 0xffffffff, false);
     }
 }

@@ -5,7 +5,7 @@ import com.google.common.collect.ImmutableMap;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.OptionInstance;
 import net.minecraft.client.Options;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.ContainerObjectSelectionList;
 import net.minecraft.client.gui.components.events.GuiEventListener;
@@ -135,13 +135,13 @@ public class ConcertoOptionListWidget extends ContainerObjectSelectionList<Conce
         }
 
         @Override
-        public void renderContent(GuiGraphics context, int mouseX, int mouseY, boolean hovered, float tickProgress) {
+        public void extractContent(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, boolean hovered, float tickDelta) {
             int i = 0;
             int j = this.screen.width / 2 - 155;
 
             for (AbstractWidget clickableWidget : this.widgets) {
                 clickableWidget.setPosition(j + i, this.getContentY());
-                clickableWidget.render(context, mouseX, mouseY, tickProgress);
+                clickableWidget.extractRenderState(graphics, mouseX, mouseY, tickDelta);
                 i += 160;
             }
         }

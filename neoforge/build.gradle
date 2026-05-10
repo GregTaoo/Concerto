@@ -1,12 +1,3 @@
-architectury {
-    platformSetupLoomIde()
-    neoForge()
-}
-
-loom {
-    accessWidenerPath = project(":common").loom.accessWidenerPath
-}
-
 configurations {
     common
     shadowCommon // Don't use shadow from the shadow plugin since it *excludes* files.
@@ -16,12 +7,12 @@ configurations {
 }
 
 dependencies {
-    neoForge "net.neoforged:neoforge:$rootProject.neoforge_version"
+    implementation "net.neoforged:neoforge:$rootProject.neoforge_version"
     // Remove the next line if you don't want to depend on the API
     // modApi "dev.architectury:architectury-forge:${rootProject.architectury_version}"
 
-    common(project(path: ":common", configuration: "namedElements")) { transitive false }
-    shadowCommon(project(path: ":common", configuration: "transformProductionNeoForge")) { transitive = false }
+    common(project(path: ":common", configuration: "shadow")) { transitive false }
+    shadowCommon(project(path: ":common", configuration: "shadow")) { transitive false }
     common(project(path: ":core", configuration: "shadow")) { transitive false }
     shadowCommon(files(project(":core").tasks.named("shadowJar")))
 }
@@ -42,15 +33,9 @@ processResources {
 
 shadowJar {
     exclude "fabric.mod.json"
-    exclude "architectury.common.json"
 
     configurations = [project.configurations.shadowCommon]
     archiveClassifier = "dev-shadow"
-}
-
-remapJar {
-    input.set shadowJar.archiveFile
-    dependsOn shadowJar
 }
 
 sourcesJar {
@@ -62,10 +47,6 @@ sourcesJar {
 
     from commonSources.flatMap { it.archiveFile }.map { zipTree(it) }
     from coreSources.flatMap { it.archiveFile }.map { zipTree(it) }
-}
-
-remapSourcesJar {
-    dependsOn(project(":core").tasks.named("jar"))
 }
 
 components.java {

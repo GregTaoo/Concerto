@@ -14,7 +14,7 @@ public class CommandUtil {
 
     public static void commandMessageClient(Component text) {
         LocalPlayer player = Minecraft.getInstance().player;
-        if (player != null) player.displayClientMessage(text, false);
+        if (player != null) player.sendSystemMessage(text);
     }
 
     public static void commandMessageServer(CommandContext<CommandSourceStack> context, Component text) {

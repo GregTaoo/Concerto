@@ -80,7 +80,7 @@ public class CookieLoginScreen extends ConcertoScreen {
             if (this.loginStatusUpdater.get()) {
                 LocalPlayer player = Minecraft.getInstance().player;
                 if (player != null) {
-                    player.displayClientMessage(Component.translatable("concerto.screen.login.success"), false);
+                    player.sendSystemMessage(Component.translatable("concerto.screen.login.success"));
                 }
                 Minecraft.getInstance().setScreen(null);
             } else {

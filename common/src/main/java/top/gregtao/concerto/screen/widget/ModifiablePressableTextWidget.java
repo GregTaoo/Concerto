@@ -1,7 +1,7 @@
 package top.gregtao.concerto.screen.widget;
 
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.PlainTextButton;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.ComponentUtils;
@@ -21,9 +21,9 @@ public class ModifiablePressableTextWidget extends PlainTextButton {
     }
 
     @Override
-    public void renderContents(GuiGraphics context, int mouseX, int mouseY, float deltaTicks) {
+    public void extractContents(GuiGraphicsExtractor context, int mouseX, int mouseY, float deltaTicks) {
         Component text = this.isHoveredOrFocused() ? this.hoverText : this.text;
-        context.drawString(this.textRenderer, text, this.getX(), this.getY(), 16777215 | Mth.ceil(this.alpha * 255.0F) << 24);
+        context.text(this.textRenderer, text, this.getX(), this.getY(), 16777215 | Mth.ceil(this.alpha * 255.0F) << 24);
     }
 
     public void setText(Component text) {

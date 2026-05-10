@@ -1,10 +1,10 @@
 package top.gregtao.concerto.mixin;
 
-import net.minecraft.client.GuiMessageTag;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.ChatComponent;
+import net.minecraft.client.multiplayer.chat.GuiMessageTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MessageSignature;
 import org.spongepowered.asm.mixin.Mixin;
@@ -62,8 +62,8 @@ public class ChatComponentMixin {
         ConcertoRunner.run(() -> concerto$handleMessage(message));
     }
 
-    @Inject(method = "render(Lnet/minecraft/client/gui/GuiGraphics;Lnet/minecraft/client/gui/Font;IIIZZ)V", at = @At("HEAD"))
-    public void renderInject(GuiGraphics context, Font font, int mouseX, int mouseY, int currentTick, boolean bl, boolean bl2, CallbackInfo ci) {
-        InGameHudRenderer.render(context, mouseX, mouseY, currentTick);
+    @Inject(method = "Lnet/minecraft/client/gui/components/ChatComponent;extractRenderState(Lnet/minecraft/client/gui/GuiGraphicsExtractor;Lnet/minecraft/client/gui/Font;IIILnet/minecraft/client/gui/components/ChatComponent$DisplayMode;Z)V", at = @At("HEAD"))
+    public void renderInject(GuiGraphicsExtractor graphics, Font font, int mouseX, int mouseY, int currentTick, boolean bl, boolean bl2, CallbackInfo ci) {
+        InGameHudRenderer.render(graphics, mouseX, mouseY, currentTick);
     }
 }

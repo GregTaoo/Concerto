@@ -2,7 +2,7 @@ package top.gregtao.concerto.util;
 
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.HoverEvent;
@@ -22,8 +22,8 @@ public class ComponentUtil {
         return realX;
     }
 
-    public static void renderText(Component text, TextAlignment align, int x, int y, GuiGraphics matrices, Font renderer, int color) {
-        matrices.drawString(renderer, text, getTextRenderX(text, align, renderer, x), y, color, ClientConfig.INSTANCE.options.textShadow);
+    public static void renderText(Component text, TextAlignment align, int x, int y, GuiGraphicsExtractor matrices, Font renderer, int color) {
+        matrices.text(renderer, text, getTextRenderX(text, align, renderer, x), y, color, ClientConfig.INSTANCE.options.textShadow);
     }
 
     public static Style getRunCommandStyle(String command) {

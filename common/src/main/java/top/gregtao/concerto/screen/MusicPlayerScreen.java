@@ -2,14 +2,14 @@ package top.gregtao.concerto.screen;
 
 import com.mojang.blaze3d.pipeline.RenderPipeline;
 import com.mojang.blaze3d.vertex.VertexConsumer;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.CycleButton;
 import net.minecraft.client.gui.navigation.ScreenRectangle;
 import net.minecraft.client.gui.render.TextureSetup;
-import net.minecraft.client.gui.render.state.GuiElementRenderState;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.renderer.RenderPipelines;
+import net.minecraft.client.renderer.state.gui.GuiElementRenderState;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 import org.joml.Matrix3x2f;
@@ -24,7 +24,7 @@ import top.gregtao.concerto.core.player.MusicPlayerHandler;
 import top.gregtao.concerto.core.player.PlayerPermissions;
 import top.gregtao.concerto.core.util.MathUtil;
 import top.gregtao.concerto.core.util.Pair;
-import top.gregtao.concerto.mixin.GuiGraphicsAccessor;
+import top.gregtao.concerto.mixin.GuiGraphicsExtractorAccessor;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -95,12 +95,12 @@ public class MusicPlayerScreen extends ConcertoScreen {
     }
 
     @Override
-    public void render(GuiGraphics context, int mouseX, int mouseY, float delta) {
-        super.render(context, mouseX, mouseY, delta);
+    public void extractRenderState(@NotNull GuiGraphicsExtractor context, int mouseX, int mouseY, float delta) {
+        super.extractRenderState(context, mouseX, mouseY, delta);
 
         MusicMetaData metaData = MusicPlayer.INSTANCE.currentMeta;
         if ((!MusicPlayer.INSTANCE.isPlaying() && !MusicPlayer.INSTANCE.isPaused()) || metaData == null) {
-            context.drawCenteredString(this.font, Component.translatable("concerto.not_playing"), this.width / 2, this.height / 2, 0xAAAAAAFF);
+            context.centeredText(this.font, Component.translatable("concerto.not_playing"), this.width / 2, this.height / 2, 0xAAAAAAFF);
             return;
         }
 
@@ -125,7 +125,7 @@ public class MusicPlayerScreen extends ConcertoScreen {
         matrices.rotate(this.rotationAngle * (float) Math.PI / 180f); // 旋转
         matrices.translate(-(imgX + imgSize / 2f), -(imgY + imgSize / 2f));
 
-        InGameHudRenderer.COVER_IMAGE.render(context, mouseX, mouseY, delta);
+        InGameHudRenderer.COVER_IMAGE.extractRenderState(context, mouseX, mouseY, delta);
 
         matrices.popMatrix();
 
@@ -136,10 +136,10 @@ public class MusicPlayerScreen extends ConcertoScreen {
         String author = metaData.author();
         int centerX = this.width / 2;
         int titleY = 8;
-        context.drawString(this.font, title, centerX - this.font.width(title) / 2, titleY, 0xFFFFFFFF, false);
+        context.text(this.font, title, centerX - this.font.width(title) / 2, titleY, 0xFFFFFFFF, false);
         if (author != null && !author.isEmpty()) {
             int authorY = titleY + 12;
-            context.drawString(this.font, author, centerX - this.font.width(author) / 2, authorY, 0xFFAAAAAA, false);
+            context.text(this.font, author, centerX - this.font.width(author) / 2, authorY, 0xFFAAAAAA, false);
         }
 
         renderTopProgressBar(context, metaData);
@@ -186,24 +186,24 @@ public class MusicPlayerScreen extends ConcertoScreen {
 
                     int color = isActive ? ((int) ClientConfig.INSTANCE.lyricsColor.getNumber() | 0xFF000000) : ((alpha << 24) | 0xAAAAAA);
 
-                    context.drawString(this.font, line, rightHalfX + (lyricsWidth - this.font.width(line)) / 2, y, color, isActive);
+                    context.text(this.font, line, rightHalfX + (lyricsWidth - this.font.width(line)) / 2, y, color, isActive);
 
                     if (subLine != null) {
                         int subColor = isActive ? ((int) ClientConfig.INSTANCE.subLyricsColor.getNumber() | 0xFF000000) : ((alpha << 24) | 0x888888);
                         int subY = y + 12;
-                        context.drawString(this.font, subLine, rightHalfX + (lyricsWidth - this.font.width(subLine)) / 2, subY, subColor, false);
+                        context.text(this.font, subLine, rightHalfX + (lyricsWidth - this.font.width(subLine)) / 2, subY, subColor, false);
                     }
                 }
             }
             context.disableScissor();
         } else {
             int placeholderY = this.height / 2;
-            context.drawCenteredString(this.font, Component.translatable("concerto.no_subtitle"), rightHalfX + lyricsWidth / 2, placeholderY, 0xFFAAAAAA);
+            context.centeredText(this.font, Component.translatable("concerto.no_subtitle"), rightHalfX + lyricsWidth / 2, placeholderY, 0xFFAAAAAA);
         }
         renderSpectrum(context);
     }
 
-    private void renderTopProgressBar(GuiGraphics context, MusicMetaData metaData) {
+    private void renderTopProgressBar(GuiGraphicsExtractor context, MusicMetaData metaData) {
         if (metaData == null || metaData.getDuration() == null) {
             return;
         }
@@ -221,7 +221,7 @@ public class MusicPlayerScreen extends ConcertoScreen {
 
     private static final int SPECTRUM_BAR_COUNT = 64;
 
-    private void renderSpectrum(GuiGraphics g) {
+    private void renderSpectrum(GuiGraphicsExtractor g) {
         MusicPlayer.INSTANCE.audioSpectrum.update();
         float[] spectrumBars = MusicPlayer.INSTANCE.audioSpectrum.getSpectrum(SPECTRUM_BAR_COUNT);
         int barCount = spectrumBars.length;
@@ -240,13 +240,13 @@ public class MusicPlayerScreen extends ConcertoScreen {
         float angleStep = 360f / barCount;
         float spanDegrees = angleStep * 0.85f;
 
-        GuiGraphicsAccessor accessor = (GuiGraphicsAccessor) g;
+        GuiGraphicsExtractorAccessor accessor = (GuiGraphicsExtractorAccessor) g;
         Matrix3x2fStack matrix = g.pose();
 
         for (int i = 0; i < barCount; i++) {
             float value = spectrumBars[i];
 
-            accessor.getGuiRenderState().submitGuiElement(
+            accessor.getGuiRenderState().addGuiElement(
                     new SpectrumQuadRenderState(
                             RenderPipelines.GUI,
                             TextureSetup.noTexture(),

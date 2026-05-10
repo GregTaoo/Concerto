@@ -7,7 +7,7 @@ configurations {
     implementation.extendsFrom(my)
 }
 
-def paperVersion = "${rootProject.minecraft_version}-R0.1-SNAPSHOT"
+def paperVersion = "${rootProject.minecraft_version}.build.+"
 
 dependencies {
     compileOnly("io.papermc.paper:paper-api:${paperVersion}")

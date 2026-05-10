@@ -1,10 +1,11 @@
 package top.gregtao.concerto.screen.qq;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
+import org.jetbrains.annotations.NotNull;
 import top.gregtao.concerto.core.api.WithMetaData;
 import top.gregtao.concerto.core.http.qq.QQMusicApiClient;
 import top.gregtao.concerto.core.music.list.Playlist;
@@ -69,10 +70,10 @@ public class QQMusicUserScreen extends PageScreen {
     }
 
     @Override
-    public void render(GuiGraphics matrices, int mouseX, int mouseY, float delta) {
-        super.render(matrices, mouseX, mouseY, delta);
+    public void extractRenderState(@NotNull GuiGraphicsExtractor matrices, int mouseX, int mouseY, float delta) {
+        super.extractRenderState(matrices, mouseX, mouseY, delta);
         if (!this.loggedIn()) {
-            matrices.drawCenteredString(this.font, Component.translatable("concerto.screen.qq.not_login"),
+            matrices.centeredText(this.font, Component.translatable("concerto.screen.qq.not_login"),
                     this.width / 2, this.height / 2, 0xffffffff);
         }
     }

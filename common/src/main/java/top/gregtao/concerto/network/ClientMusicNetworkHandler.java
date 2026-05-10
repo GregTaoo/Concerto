@@ -80,18 +80,18 @@ public class ClientMusicNetworkHandler {
 
     public static void accept(Player player, UUID uuid, Minecraft client) {
         if (!WAIT_CONFIRMATION.containsKey(uuid)) {
-            player.displayClientMessage(Component.translatable("concerto.confirm.not_found"), false);
+            player.sendSystemMessage(Component.translatable("concerto.confirm.not_found"));
         } else {
             MusicDataPacket packet = WAIT_CONFIRMATION.get(uuid);
             MinecraftServer server = client.getSingleplayerServer();
             if (server != null) {
                 Player from = server.getPlayerList().getPlayerByName(packet.from);
                 if (from != null)
-                    from.displayClientMessage(Component.translatable("concerto.confirm.accept_response", player.getName().getString()), false);
+                    from.sendSystemMessage(Component.translatable("concerto.confirm.accept_response", player.getName().getString()));
             }
             MusicPlayer.INSTANCE.playTempMusic(packet.music);
             WAIT_CONFIRMATION.remove(uuid);
-            player.displayClientMessage(Component.translatable("concerto.confirm.accept"), false);
+            player.sendSystemMessage(Component.translatable("concerto.confirm.accept"));
         }
     }
 
@@ -101,26 +101,26 @@ public class ClientMusicNetworkHandler {
             if (server != null) {
                 Player from = server.getPlayerList().getPlayerByName(packet.from);
                 if (from != null)
-                    from.displayClientMessage(Component.translatable("concerto.confirm.reject_response", player.getName().getString()), false);
+                    from.sendSystemMessage(Component.translatable("concerto.confirm.reject_response", player.getName().getString()));
             }
         });
         WAIT_CONFIRMATION.clear();
-        player.displayClientMessage(Component.translatable("concerto.confirm.reject"), false);
+        player.sendSystemMessage(Component.translatable("concerto.confirm.reject"));
     }
 
     public static void reject(Player player, UUID uuid, Minecraft client) {
         if (!WAIT_CONFIRMATION.containsKey(uuid)) {
-            player.displayClientMessage(Component.translatable("concerto.confirm.not_found"), false);
+            player.sendSystemMessage(Component.translatable("concerto.confirm.not_found"));
         } else {
             MusicDataPacket packet = WAIT_CONFIRMATION.get(uuid);
             MinecraftServer server = client.getSingleplayerServer();
             if (server != null) {
                 Player from = server.getPlayerList().getPlayerByName(packet.from);
                 if (from != null)
-                    from.displayClientMessage(Component.translatable("concerto.confirm.reject_response", player.getName().getString()), false);
+                    from.sendSystemMessage(Component.translatable("concerto.confirm.reject_response", player.getName().getString()));
             }
             WAIT_CONFIRMATION.remove(uuid);
-            player.displayClientMessage(Component.translatable("concerto.confirm.reject"), false);
+            player.sendSystemMessage(Component.translatable("concerto.confirm.reject"));
         }
     }
 
@@ -132,9 +132,9 @@ public class ClientMusicNetworkHandler {
         }
         ConcertoRunner.run(() -> {
             if (ClientConfig.INSTANCE.options.confirmAfterReceived) {
-                self.displayClientMessage(CommandUtil.PAGE_SPLIT, false);
-                self.displayClientMessage(ShareMusicCommand.chatMessageBuilder(uuid, packet.from, packet.music.getMeta().title()), false);
-                self.displayClientMessage(CommandUtil.PAGE_SPLIT, false);
+                self.sendSystemMessage(CommandUtil.PAGE_SPLIT);
+                self.sendSystemMessage(ShareMusicCommand.chatMessageBuilder(uuid, packet.from, packet.music.getMeta().title()));
+                self.sendSystemMessage(CommandUtil.PAGE_SPLIT);
             } else {
                 accept(self, uuid, client);
             }
@@ -162,13 +162,13 @@ public class ClientMusicNetworkHandler {
         if (!str.startsWith(ConcertoPayload.HANDSHAKE_STRING) || player == null) return;
         String[] args = str.split(":");
         if (args.length < 4) {
-            player.displayClientMessage(Component.translatable("concerto.server_invalid_version"), false);
+            player.sendSystemMessage(Component.translatable("concerto.server_invalid_version"));
             ConcertoClient.LOGGER.warn("Server handshake with an invalid version");
             return;
         }
         String version = args[1];
         if (!version.equals(ConcertoPayload.VERSION)) {
-            player.displayClientMessage(Component.translatable("concerto.invalid_version", version), false);
+            player.sendSystemMessage(Component.translatable("concerto.invalid_version", version));
             ConcertoClient.LOGGER.warn("Server/Client handshake with an invalid version");
             return;
         }
@@ -181,13 +181,13 @@ public class ClientMusicNetworkHandler {
                     if (ClientConfig.INSTANCE.options.joinAgentWhenInvited) {
                         player.connection.sendCommand("musicroom agent join");
                     } else {
-                        player.displayClientMessage(CommandUtil.PAGE_SPLIT, false);
-                        player.displayClientMessage(Component.translatable("concerto.agent.invite")
+                        player.sendSystemMessage(CommandUtil.PAGE_SPLIT);
+                        player.sendSystemMessage(Component.translatable("concerto.agent.invite")
                                 .append(Component.literal("  ["))
                                 .append(Component.translatable("concerto.accept").setStyle(
                                         ComponentUtil.getRunCommandStyle("/musicroom agent join").withColor(ChatFormatting.GREEN)))
-                                .append(Component.literal("]")), false);
-                        player.displayClientMessage(CommandUtil.PAGE_SPLIT, false);
+                                .append(Component.literal("]")));
+                        player.sendSystemMessage(CommandUtil.PAGE_SPLIT);
                     }
                 }
             }

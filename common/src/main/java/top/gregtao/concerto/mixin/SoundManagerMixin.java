@@ -12,7 +12,7 @@ import top.gregtao.concerto.core.player.MusicPlayerHandler;
 @Mixin(SoundManager.class)
 public class SoundManagerMixin {
 
-    @Inject(at = @At("HEAD"), method = "pause()V")
+    @Inject(at = @At("HEAD"), method = "stop()V")
     private void pauseAllInject(CallbackInfo ci) {
         MusicPlayerHandler.INSTANCE.setPaused(true);
     }

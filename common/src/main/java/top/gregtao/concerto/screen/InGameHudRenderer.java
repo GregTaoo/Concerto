@@ -4,7 +4,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.ChatScreen;
 import net.minecraft.network.chat.Component;
-import org.joml.Quaternionf;
+import org.joml.Matrix3x2fStack;
 import top.gregtao.concerto.core.config.ClientConfig;
 import top.gregtao.concerto.core.room.MusicRoom;
 import top.gregtao.concerto.core.util.Vector2i;
@@ -81,7 +81,7 @@ public class InGameHudRenderer {
                 String[] texts = MusicPlayerHandler.INSTANCE.getDisplayTexts();
 
                 context = new GuiGraphics(Minecraft.getInstance(),
-                        ((GuiGraphicsAccessor) context).getBufferSource());
+                        ((GuiGraphicsAccessor) context).getGuiRenderState());
 
                 if (options.displayLyrics) {
                     Vector2i pos = config.lyricsPosSupplier.getPos(scaledWidth, scaledHeight);
@@ -152,9 +152,10 @@ public class InGameHudRenderer {
                         float cy = pos.y + size / 2f;
                         float angleRad = delta * (float) Math.PI / 180f;
 
-                        context.pose().translate(cx, cy, 0); // 先平移到中心
-                        context.pose().mulPose(new Quaternionf().rotateZ(angleRad)); // 旋转
-                        context.pose().translate(-cx, -cy, 0); // 再平移回来
+                        Matrix3x2fStack matrices = context.pose();
+                        matrices.translate(cx, cy, matrices); // 先平移到中心
+                        matrices.rotate(angleRad); // 旋转
+                        matrices.translate(-cx, -cy, matrices); // 再平移回来
                     }
 
                     COVER_IMAGE.render(context, mouseX, mouseY, delta);

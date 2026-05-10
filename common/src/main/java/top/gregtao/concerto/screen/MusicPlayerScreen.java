@@ -7,8 +7,7 @@ import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.CycleButton;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.network.chat.Component;
-import org.joml.Matrix4f;
-import org.joml.Quaternionf;
+import org.joml.Matrix3x2fStack;
 import top.gregtao.concerto.core.enums.OrderType;
 import top.gregtao.concerto.core.music.MusicTimestamp;
 import top.gregtao.concerto.core.music.lyrics.Lyrics;
@@ -100,7 +99,7 @@ public class MusicPlayerScreen extends ConcertoScreen {
 
         MusicMetaData metaData = MusicPlayer.INSTANCE.currentMeta;
         if ((!MusicPlayer.INSTANCE.isPlaying() && !MusicPlayer.INSTANCE.isPaused()) || metaData == null) {
-            context.drawCenteredString(this.font, Component.translatable("concerto.not_playing"), this.width / 2, this.height / 2, 0xAAAAAA);
+            context.drawCenteredString(this.font, Component.translatable("concerto.not_playing"), this.width / 2, this.height / 2, 0xAAAAAAFF);
             return;
         }
 
@@ -114,19 +113,20 @@ public class MusicPlayerScreen extends ConcertoScreen {
         int imgX = (leftWidth - imgSize) / 2;
         int imgY = (this.height - imgSize) / 2 - 8;
 
-        context.pose().pushPose();
+        Matrix3x2fStack matrices = context.pose();
+        matrices.pushMatrix();
 
         InGameHudRenderer.COVER_IMAGE.setX(imgX);
         InGameHudRenderer.COVER_IMAGE.setY(imgY);
         InGameHudRenderer.COVER_IMAGE.setSize(imgSize, imgSize);
 
-        context.pose().translate(imgX + imgSize / 2f, imgY + imgSize / 2f, 0);
-        context.pose().mulPose(new Quaternionf().rotateZ(this.rotationAngle * (float) Math.PI / 180f));
-        context.pose().translate(-(imgX + imgSize / 2f), -(imgY + imgSize / 2f), 0);
+        matrices.translate(imgX + imgSize / 2f, imgY + imgSize / 2f);
+        matrices.rotate(this.rotationAngle * (float) Math.PI / 180f); // 旋转
+        matrices.translate(-(imgX + imgSize / 2f), -(imgY + imgSize / 2f));
 
         InGameHudRenderer.COVER_IMAGE.render(context, mouseX, mouseY, delta);
 
-        context.pose().popPose();
+        matrices.popMatrix();
 
         int rightHalfX = this.width / 2; // lyrics start at mid-screen for >= 1/2 width
         int lyricsWidth = this.width - rightHalfX - 20;
@@ -135,10 +135,10 @@ public class MusicPlayerScreen extends ConcertoScreen {
         String author = metaData.author();
         int centerX = this.width / 2;
         int titleY = 8;
-        context.drawString(this.font, title, centerX - this.font.width(title) / 2, titleY, 0xFFFFFF, false);
+        context.drawString(this.font, title, centerX - this.font.width(title) / 2, titleY, 0xFFFFFFFF, false);
         if (author != null && !author.isEmpty()) {
             int authorY = titleY + 12;
-            context.drawString(this.font, author, centerX - this.font.width(author) / 2, authorY, 0xAAAAAA, false);
+            context.drawString(this.font, author, centerX - this.font.width(author) / 2, authorY, 0xFFAAAAAA, false);
         }
 
         renderTopProgressBar(context, metaData);
@@ -197,7 +197,7 @@ public class MusicPlayerScreen extends ConcertoScreen {
             context.disableScissor();
         } else {
             int placeholderY = this.height / 2;
-            context.drawCenteredString(this.font, Component.translatable("concerto.no_subtitle"), rightHalfX + lyricsWidth / 2, placeholderY, 0xAAAAAA);
+            context.drawCenteredString(this.font, Component.translatable("concerto.no_subtitle"), rightHalfX + lyricsWidth / 2, placeholderY, 0xFFAAAAAA);
         }
         renderSpectrum(context);
     }

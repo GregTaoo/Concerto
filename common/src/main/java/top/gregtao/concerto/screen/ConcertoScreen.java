@@ -78,7 +78,6 @@ public class ConcertoScreen extends Screen {
 
     @Override
     public void render(GuiGraphics matrices, int mouseX, int mouseY, float delta) {
-        this.renderBackground(matrices, mouseX, mouseY, delta);
         super.render(matrices, mouseX, mouseY, delta);
         matrices.drawCenteredString(this.font, this.title, this.width / 2, 5, 0xffffffff);
         this.message.render(matrices, mouseX, mouseY, delta);

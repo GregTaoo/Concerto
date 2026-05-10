@@ -6,7 +6,8 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.layouts.LayoutElement;
-import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.RenderPipelines;
+import org.joml.Matrix3x2fStack;
 import com.mojang.blaze3d.platform.NativeImage;
 import net.minecraft.client.renderer.texture.DynamicTexture;
 import net.minecraft.network.chat.Component;
@@ -238,12 +239,13 @@ public class URLImageWidget implements Renderable, LayoutElement, AutoCloseable 
         } else {
             NativeImage image = this.texture.getPixels();
             if (image != null && this.state == State.READY) {
-                context.pose().pushPose();
-                context.pose().scale(0.0625f, 0.0625f, 1);
-                context.pose().translate(15 * this.x, 15 * this.y, 0);
-                context.blit(RenderType::guiTextured, this.textureId, this.x, this.y, 0, 0,
+                Matrix3x2fStack matrices = context.pose();
+                matrices.pushMatrix();
+                matrices.scale(0.0625f, 0.0625f, matrices);
+                matrices.translate(15 * this.x, 15 * this.y, matrices);
+                context.blit(RenderPipelines.GUI_TEXTURED, this.textureId, this.x, this.y, 0, 0,
                         this.getImageWidth(), this.getImageHeight(), this.getImageWidth(), this.getImageHeight());
-                context.pose().popPose();
+                matrices.popMatrix();
             } else if (this.state == State.LOADING) {
                 context.drawCenteredString(
                         textRenderer, Component.translatable("concerto.screen.loading"),

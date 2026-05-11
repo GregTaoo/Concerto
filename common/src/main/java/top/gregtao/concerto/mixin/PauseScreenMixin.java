@@ -12,7 +12,7 @@ import top.gregtao.concerto.core.util.ConcertoRunner;
 public class PauseScreenMixin {
 
     @Inject(at = @At("HEAD"), method = "onDisconnect()V")
-    private static void disconnectInject(CallbackInfo ci) {
+    private void disconnectInject(CallbackInfo ci) {
         ConcertoRunner.run(() -> MusicPlayerHandler.INSTANCE.setPaused(true));
     }
 }

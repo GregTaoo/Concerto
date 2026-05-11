@@ -68,7 +68,7 @@ public class ConcertoClient {
         bridge.registerClientCommand(MusicRoomCommand::register);
 
         bridge.registerResourceReloadListener(
-                ResourceLocation.fromNamespaceAndPath(Concerto.MOD_ID, "music"),
+                ResourceLocation.tryBuild(Concerto.MOD_ID, "music"),
                 manager -> ConcertoRunner.run(() -> {
                     ClientConfig.INSTANCE.readOptions();
                     ConcertoOptions.INSTANCE.readOptions();

@@ -277,13 +277,12 @@ public class MusicPlayerScreen extends ConcertoScreen {
             float x4 = centerX + cos2 * radiusInner;
             float y4 = centerY + sin2 * radiusInner;
 
-            vertexConsumer.addVertex(matrix, x1, y1, 0).setColor(color);
-            vertexConsumer.addVertex(matrix, x4, y4, 0).setColor(color);
-            vertexConsumer.addVertex(matrix, x3, y3, 0).setColor(color);
-            vertexConsumer.addVertex(matrix, x2, y2, 0).setColor(color);
+            vertexConsumer.vertex(matrix, x1, y1, 0).color(color).endVertex();
+            vertexConsumer.vertex(matrix, x4, y4, 0).color(color).endVertex();
+            vertexConsumer.vertex(matrix, x3, y3, 0).color(color).endVertex();
+            vertexConsumer.vertex(matrix, x2, y2, 0).color(color).endVertex();
         }
 
-        g.flush();
         g.pose().popPose();
     }
 }

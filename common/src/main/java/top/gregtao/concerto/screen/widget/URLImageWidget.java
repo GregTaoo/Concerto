@@ -51,7 +51,7 @@ public class URLImageWidget implements Renderable, LayoutElement, AutoCloseable 
         this.x = x;
         this.y = y;
         this.url = url;
-        this.textureId = ResourceLocation.fromNamespaceAndPath(Concerto.MOD_ID, "image" + System.currentTimeMillis());
+        this.textureId = ResourceLocation.tryBuild(Concerto.MOD_ID, "image" + System.currentTimeMillis());
     }
 
     public URLImageWidget(int width, int height, int x, int y, String url, boolean border) {

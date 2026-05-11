@@ -40,6 +40,7 @@ jobs:
     name: Build and Publish
     needs: generate-branches
     runs-on: ubuntu-latest
+    environment: Modrinth Publish
     strategy:
       fail-fast: false
       matrix:

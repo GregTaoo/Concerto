@@ -135,15 +135,15 @@ jobs:
           if echo "$FNAME" | grep -iq "fabric"; then
            echo "fabric_file=$FILE" >> $GITHUB_OUTPUT
            echo "fabric_gv=$GV_ARRAY" >> $GITHUB_OUTPUT
-           echo "fabric_name=$VERSION_NAME" >> $GITHUB_OUTPUT
+           echo "fabric_name=fabric-${SHORTER_VERSION}-mc${MC_VER}" >> $GITHUB_OUTPUT
           elif echo "$FNAME" | grep -iq "neoforge"; then
            echo "neoforge_file=$FILE" >> $GITHUB_OUTPUT
            echo "neoforge_gv=$GV_ARRAY" >> $GITHUB_OUTPUT
-           echo "neoforge_name=$VERSION_NAME" >> $GITHUB_OUTPUT
+           echo "neoforge_name=neoforge-${SHORTER_VERSION}-mc${MC_VER}" >> $GITHUB_OUTPUT
           elif echo "$FNAME" | grep -iq "paper"; then
            echo "paper_file=$FILE" >> $GITHUB_OUTPUT
            echo "paper_gv=$GV_ARRAY" >> $GITHUB_OUTPUT
-           echo "paper_name=$VERSION_NAME" >> $GITHUB_OUTPUT
+           echo "paper_name=paper-${SHORTER_VERSION}-mc${MC_VER}" >> $GITHUB_OUTPUT
           fi
           done
 

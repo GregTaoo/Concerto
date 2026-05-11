@@ -2,7 +2,7 @@ name: Publish Builds
 
 on:
   release:
-    types: [published]
+    types: [published, edited]
 
 jobs:
   generate-branches:

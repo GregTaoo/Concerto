@@ -80,7 +80,7 @@ jobs:
           echo "Processing branch: ${{ matrix.branch }}"
           echo "Detected Gradle project"
           chmod +x ./gradlew || true
-          ./gradlew clean build
+          ./gradlew clean buildAll
           
           # 获取所有有效的 jar 包（排除 dev 和 sources）
           mapfile -t ARTIFACT_ARRAY < <(ls build/libs/*.jar 2>/dev/null | grep -vE -- '-dev\.jar|-sources\.jar' || true)

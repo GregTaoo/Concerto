@@ -74,7 +74,16 @@ neoForge {
         // multi mod projects should define one per mod
         "${mod_id}" {
             sourceSet(sourceSets.main)
+            sourceSet(project(":common").sourceSets.main)
         }
+    }
+}
+
+jar {
+    manifest {
+        attributes([
+            "Automatic-Module-Name": mod_id
+        ])
     }
 }
 
@@ -90,7 +99,6 @@ processResources {
 
     from(zipTree(project(":core").tasks.named("shadowJar").flatMap { it.archiveFile })) {
         include "assets/**"
-        include "META-INF/**"
     }
 
     inputs.property "version", project.version

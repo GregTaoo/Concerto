@@ -1,6 +1,0 @@
-org.kc7bfi.jflac.sound.spi.FlacFormatConversionProvider
-com.github.trilarion.sound.vorbis.sampled.spi.VorbisFormatConversionProvider
-javazoom.spi.mpeg.sampled.convert.MpegFormatConversionProvider
-org.tritonus.sampled.convert.LawDecoder
-org.tritonus.sampled.convert.LawEncoder
-org.tritonus.sampled.convert.PCM2PCMConversionProvider

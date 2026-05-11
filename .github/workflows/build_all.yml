@@ -16,12 +16,6 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Set up JDK
-        uses: actions/setup-java@v4
-        with:
-          java-version: '25'
-          distribution: 'temurin'
-
       - name: Get branch matrix from remote
         id: set-branches
         run: |
@@ -41,6 +35,43 @@ jobs:
           done
           json="${json},\"dev\"]"
           echo "branches=$json" >> $GITHUB_OUTPUT
+
+  build-and-publish:
+    name: Build and Publish
+    needs: generate-branches
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        branch: ${{ fromJson(needs.generate-branches.outputs.branches) }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ matrix.branch }}
+          fetch-depth: 0
+
+      - name: Determine JDK version
+        run: |
+          BRANCH="${{ matrix.branch }}"
+          VER="${BRANCH#mc}"
+          if [[ ! "$VER" =~ ^[0-9] ]]; then
+            # 针对 dev 等非数字开头的分支默认使用 JDK 21
+            echo "JAVA_VER=21" >> $GITHUB_ENV
+          else
+            # 使用 sort -V 比较版本号：如果 VER >= 26.1.2，则 sort 的首行是 26.1.2
+            if [ "$(printf '%s\n' "26.1.2" "$VER" | sort -V | head -n1)" = "26.1.2" ]; then
+              echo "JAVA_VER=25" >> $GITHUB_ENV
+            else
+              echo "JAVA_VER=21" >> $GITHUB_ENV
+            fi
+          fi
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VER }}
+          distribution: 'temurin'
 
       - name: Build and Split Artifacts
         id: build-run

@@ -1,23 +1,98 @@
+plugins {
+    id 'net.neoforged.moddev' version '2.0.141'
+}
+
 configurations {
     common
     shadowCommon // Don't use shadow from the shadow plugin since it *excludes* files.
     compileClasspath.extendsFrom common
     runtimeClasspath.extendsFrom common
-    developmentNeoForge.extendsFrom common
+}
+
+var mod_id = rootProject.archives_base_name.toLowerCase()
+
+neoForge {
+    // Specify the version of NeoForge to use.
+    version = rootProject.neoforge_version
+
+    // This line is optional. Access Transformers are automatically detected
+    // accessTransformers = project.files('src/main/resources/META-INF/accesstransformer.cfg')
+
+    // Default run configurations.
+    // These can be tweaked, removed, or duplicated as needed.
+    runs {
+        client {
+            client()
+
+            // Comma-separated list of namespaces to load gametests from. Empty = all namespaces.
+            systemProperty 'neoforge.enabledGameTestNamespaces', mod_id
+        }
+
+        server {
+            server()
+            programArgument '--nogui'
+            systemProperty 'neoforge.enabledGameTestNamespaces', mod_id
+        }
+
+        // This run config launches GameTestServer and runs all registered gametests, then exits.
+        // By default, the server will crash when no gametests are provided.
+        // The gametest system is also enabled by default for other run configs under the /test command.
+        gameTestServer {
+            type = "gameTestServer"
+            systemProperty 'neoforge.enabledGameTestNamespaces', mod_id
+        }
+
+        data {
+            clientData()
+
+            // example of overriding the workingDirectory set in configureEach above, uncomment if you want to use it
+            // gameDirectory = project.file('run-data')
+
+            // Specify the modid for data generation, where to output the resulting resource, and where to look for existing resources.
+            programArguments.addAll '--mod', mod_id, '--all', '--output', file('src/generated/resources/').getAbsolutePath(), '--existing', file('src/main/resources/').getAbsolutePath()
+        }
+
+        // applies to all the run configs above
+        configureEach {
+            // Recommended logging data for a userdev environment
+            // The markers can be added/remove as needed separated by commas.
+            // "SCAN": For mods scan.
+            // "REGISTRIES": For firing of registry events.
+            // "REGISTRYDUMP": For getting the contents of all registries.
+            systemProperty 'forge.logging.markers', 'REGISTRIES'
+
+            // Recommended logging level for the console
+            // You can set various levels here.
+            // Please read: https://stackoverflow.com/questions/2031163/when-to-use-the-different-log-levels
+            logLevel = org.slf4j.event.Level.DEBUG
+        }
+    }
+
+    mods {
+        // define mod <-> source bindings
+        // these are used to tell the game which sources are for which mod
+        // multi mod projects should define one per mod
+        "${mod_id}" {
+            sourceSet(sourceSets.main)
+        }
+    }
 }
 
 dependencies {
-    implementation "net.neoforged:neoforge:$rootProject.neoforge_version"
-    // Remove the next line if you don't want to depend on the API
-    // modApi "dev.architectury:architectury-forge:${rootProject.architectury_version}"
-
-    common(project(path: ":common", configuration: "shadow")) { transitive false }
-    shadowCommon(project(path: ":common", configuration: "shadow")) { transitive false }
-    common(project(path: ":core", configuration: "shadow")) { transitive false }
-    shadowCommon(files(project(":core").tasks.named("shadowJar")))
+    implementation(project(path: ":common")) { transitive false }
+    shadowCommon(project(path: ":common")) { transitive false }
+    implementation(project(path: ":core", configuration: "shadow")) { transitive false }
+    shadowCommon(project(path: ":core", configuration: "shadow"))
 }
 
 processResources {
+    dependsOn(":core:shadowJar")
+
+    from(zipTree(project(":core").tasks.named("shadowJar").flatMap { it.archiveFile })) {
+        include "assets/**"
+        include "META-INF/**"
+    }
+
     inputs.property "version", project.version
     inputs.property "loaderVersion", rootProject.neoforge_version
     inputs.property "mcVersion", rootProject.minecraft_version

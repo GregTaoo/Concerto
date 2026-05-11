@@ -4,6 +4,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.ChatComponent;
+import net.minecraft.client.multiplayer.chat.GuiMessageSource;
 import net.minecraft.client.multiplayer.chat.GuiMessageTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MessageSignature;
@@ -52,18 +53,13 @@ public class ChatComponentMixin {
         }
     }
 
-    @Inject(method = "addMessage(Lnet/minecraft/network/chat/Component;)V", at = @At("HEAD"))
-    public void addMessageInject1(Component message, CallbackInfo ci) {
-        ConcertoRunner.run(() -> concerto$handleMessage(message));
-    }
-
-    @Inject(method = "addMessage(Lnet/minecraft/network/chat/Component;Lnet/minecraft/network/chat/MessageSignature;Lnet/minecraft/client/GuiMessageTag;)V", at = @At("HEAD"))
-    public void addMessageInject2(Component message, MessageSignature signature, GuiMessageTag indicator, CallbackInfo ci) {
-        ConcertoRunner.run(() -> concerto$handleMessage(message));
+    @Inject(method = "Lnet/minecraft/client/gui/components/ChatComponent;addMessage(Lnet/minecraft/network/chat/Component;Lnet/minecraft/network/chat/MessageSignature;Lnet/minecraft/client/multiplayer/chat/GuiMessageSource;Lnet/minecraft/client/multiplayer/chat/GuiMessageTag;)V", at = @At("HEAD"))
+    public void addMessageInject2(Component contents, MessageSignature signature, GuiMessageSource source, GuiMessageTag tag, CallbackInfo ci) {
+        ConcertoRunner.run(() -> concerto$handleMessage(contents));
     }
 
     @Inject(method = "Lnet/minecraft/client/gui/components/ChatComponent;extractRenderState(Lnet/minecraft/client/gui/GuiGraphicsExtractor;Lnet/minecraft/client/gui/Font;IIILnet/minecraft/client/gui/components/ChatComponent$DisplayMode;Z)V", at = @At("HEAD"))
-    public void renderInject(GuiGraphicsExtractor graphics, Font font, int mouseX, int mouseY, int currentTick, boolean bl, boolean bl2, CallbackInfo ci) {
-        InGameHudRenderer.render(graphics, mouseX, mouseY, currentTick);
+    public void renderInject(GuiGraphicsExtractor graphics, Font font, int ticks, int mouseX, int mouseY, ChatComponent.DisplayMode displayMode, boolean changeCursorOnInsertions, CallbackInfo ci) {
+        InGameHudRenderer.render(graphics, mouseX, mouseY, ticks);
     }
 }

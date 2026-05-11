@@ -15,10 +15,17 @@ dependencies {
     common(project(path: ":common")) { transitive false }
     shadowCommon(project(path: ":common")) { transitive false }
     common(project(path: ":core", configuration: "shadow")) { transitive false }
-    shadowCommon(files(project(":core").tasks.named("shadowJar")))
+    shadowCommon(project(path: ":core", configuration: "shadow"))
 }
 
 processResources {
+    dependsOn(":core:shadowJar")
+
+    from(zipTree(project(":core").tasks.named("shadowJar").flatMap { it.archiveFile })) {
+        include "assets/**"
+        include "META-INF/**"
+    }
+
     inputs.property "version", project.version
     inputs.property "loaderVersion", rootProject.fabric_loader_version
     inputs.property "mcVersion", rootProject.minecraft_version

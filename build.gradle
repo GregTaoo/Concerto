@@ -13,7 +13,7 @@ subprojects {
         maven { url 'https://jitpack.io' }
     }
 
-    if (platforms.contains(project.name)) {
+    if (platforms.contains(project.name) && project.name != "neoforge") {
         apply plugin: "net.fabricmc.fabric-loom"
 
         repositories {

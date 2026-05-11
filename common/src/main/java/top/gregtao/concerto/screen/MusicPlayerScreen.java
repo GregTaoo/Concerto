@@ -1,18 +1,14 @@
 package top.gregtao.concerto.screen;
 
-import com.mojang.blaze3d.pipeline.RenderPipeline;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.CycleButton;
-import net.minecraft.client.gui.navigation.ScreenRectangle;
-import net.minecraft.client.gui.render.TextureSetup;
-import net.minecraft.client.gui.render.state.GuiElementRenderState;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.client.renderer.RenderPipelines;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.network.chat.Component;
-import org.joml.Matrix3x2f;
-import org.joml.Matrix3x2fStack;
+import org.joml.Matrix4f;
+import org.joml.Quaternionf;
 import top.gregtao.concerto.core.config.ClientConfig;
 import top.gregtao.concerto.core.enums.OrderType;
 import top.gregtao.concerto.core.music.MusicTimestamp;
@@ -23,7 +19,6 @@ import top.gregtao.concerto.core.player.MusicPlayerHandler;
 import top.gregtao.concerto.core.player.PlayerPermissions;
 import top.gregtao.concerto.core.util.MathUtil;
 import top.gregtao.concerto.core.util.Pair;
-import top.gregtao.concerto.mixin.GuiGraphicsAccessor;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -118,20 +113,19 @@ public class MusicPlayerScreen extends ConcertoScreen {
         int imgX = (leftWidth - imgSize) / 2;
         int imgY = (this.height - imgSize) / 2 - 8;
 
-        Matrix3x2fStack matrices = context.pose();
-        matrices.pushMatrix();
+        context.pose().pushPose();
 
         InGameHudRenderer.COVER_IMAGE.setX(imgX);
         InGameHudRenderer.COVER_IMAGE.setY(imgY);
         InGameHudRenderer.COVER_IMAGE.setSize(imgSize, imgSize);
 
-        matrices.translate(imgX + imgSize / 2f, imgY + imgSize / 2f);
-        matrices.rotate(this.rotationAngle * (float) Math.PI / 180f); // 旋转
-        matrices.translate(-(imgX + imgSize / 2f), -(imgY + imgSize / 2f));
+        context.pose().translate(imgX + imgSize / 2f, imgY + imgSize / 2f, 0);
+        context.pose().mulPose(new Quaternionf().rotateZ(this.rotationAngle * (float) Math.PI / 180f)); // 旋转
+        context.pose().translate(-(imgX + imgSize / 2f), -(imgY + imgSize / 2f), 0);
 
         InGameHudRenderer.COVER_IMAGE.render(context, mouseX, mouseY, delta);
 
-        matrices.popMatrix();
+        context.pose().popPose();
 
         int rightHalfX = this.width / 2; // lyrics start at mid-screen for >= 1/2 width
         int lyricsWidth = this.width - rightHalfX - 20;
@@ -241,79 +235,55 @@ public class MusicPlayerScreen extends ConcertoScreen {
         float radiusOuter = radiusInner + 38f;
         float maxBarLength = radiusOuter - radiusInner;
 
+        g.pose().pushPose();
+
+        VertexConsumer vertexConsumer = g.bufferSource().getBuffer(RenderType.gui());
+        Matrix4f matrix = g.pose().last().pose();
+
         float angleStep = 360f / barCount;
         float spanDegrees = angleStep * 0.85f;
 
-        GuiGraphicsAccessor accessor = (GuiGraphicsAccessor) g;
-        Matrix3x2fStack matrix = g.pose();
-
         for (int i = 0; i < barCount; i++) {
             float value = spectrumBars[i];
+            if (Float.isNaN(value)) value = 0f;
 
-            accessor.getGuiRenderState().submitGuiElement(
-                    new SpectrumQuadRenderState(
-                            RenderPipelines.GUI,
-                            TextureSetup.noTexture(),
-                            new Matrix3x2f(matrix),
-                            i, value, centerX, centerY, radiusInner, maxBarLength, angleStep, spanDegrees
-                    )
-            );
-        }
-    }
+            float dynamicScale = (float) (1.3f * Math.log10(1.0 + value * 60.0));
 
-    public record SpectrumQuadRenderState(
-            RenderPipeline pipeline,
-            TextureSetup textureSetup,
-            Matrix3x2f pose,
-            int index, float value, float centerX, float centerY, float radiusInner, float maxBarLength,
-            float angleStep, float spanDegrees,
-            ScreenRectangle scissorArea,
-            ScreenRectangle bounds
-    ) implements GuiElementRenderState {
+            float barLength = dynamicScale * (maxBarLength / 1.5f);
+            barLength = Math.max(2f, Math.min(barLength, maxBarLength));
 
-        public SpectrumQuadRenderState(RenderPipeline pipeline, TextureSetup textureSetup, Matrix3x2f pose, int index, float value, float centerX, float centerY, float radiusInner, float maxBarLength, float angleStep, float spanDegrees) {
-            this(pipeline, textureSetup, pose, index, value, centerX, centerY, radiusInner, maxBarLength, angleStep, spanDegrees, null,
-                    new ScreenRectangle((int) (centerX - (radiusInner + maxBarLength) - 10), (int) (centerY - (radiusInner + maxBarLength) - 10), (int) ((radiusInner + maxBarLength) * 2 + 20), (int) ((radiusInner + maxBarLength) * 2 + 20)));
-        }
-
-        @Override
-        public void buildVertices(VertexConsumer vertexConsumer, float f) {
-            float val = Float.isNaN(this.value) ? 0f : this.value;
-
-            float dynamicScale = (float) (1.3f * Math.log10(1.0 + val * 60.0));
-
-            float barLength = dynamicScale * (this.maxBarLength / 1.5f);
-            barLength = Math.max(2f, Math.min(barLength, this.maxBarLength));
-
-            float currentOuterRadius = this.radiusInner + barLength;
+            float currentOuterRadius = radiusInner + barLength;
 
             float alphaFactor = 0.35f + 0.65f * Math.min(dynamicScale, 1.0f);
             int a = (int) (alphaFactor * 255f);
             int r = 150, green = 200, b = 255;
             int color = (a << 24) | (r << 16) | (green << 8) | b;
 
-            float centerAngle = (this.index * this.angleStep) - 90f;
-            float a1 = (float) Math.toRadians(centerAngle - this.spanDegrees / 2f);
-            float a2 = (float) Math.toRadians(centerAngle + this.spanDegrees / 2f);
+            float centerAngle = (i * angleStep) - 90f;
+            float a1 = (float) Math.toRadians(centerAngle - spanDegrees / 2f);
+            float a2 = (float) Math.toRadians(centerAngle + spanDegrees / 2f);
 
             float cos1 = (float) Math.cos(a1);
             float sin1 = (float) Math.sin(a1);
             float cos2 = (float) Math.cos(a2);
             float sin2 = (float) Math.sin(a2);
 
-            float x1 = this.centerX + cos1 * this.radiusInner;
-            float y1 = this.centerY + sin1 * this.radiusInner;
-            float x2 = this.centerX + cos1 * currentOuterRadius;
-            float y2 = this.centerY + sin1 * currentOuterRadius;
-            float x3 = this.centerX + cos2 * currentOuterRadius;
-            float y3 = this.centerY + sin2 * currentOuterRadius;
-            float x4 = this.centerX + cos2 * this.radiusInner;
-            float y4 = this.centerY + sin2 * this.radiusInner;
+            float x1 = centerX + cos1 * radiusInner;
+            float y1 = centerY + sin1 * radiusInner;
+            float x2 = centerX + cos1 * currentOuterRadius;
+            float y2 = centerY + sin1 * currentOuterRadius;
+            float x3 = centerX + cos2 * currentOuterRadius;
+            float y3 = centerY + sin2 * currentOuterRadius;
+            float x4 = centerX + cos2 * radiusInner;
+            float y4 = centerY + sin2 * radiusInner;
 
-            vertexConsumer.addVertexWith2DPose(this.pose(), x1, y1, f).setColor(color);
-            vertexConsumer.addVertexWith2DPose(this.pose(), x4, y4, f).setColor(color);
-            vertexConsumer.addVertexWith2DPose(this.pose(), x3, y3, f).setColor(color);
-            vertexConsumer.addVertexWith2DPose(this.pose(), x2, y2, f).setColor(color);
+            vertexConsumer.addVertex(matrix, x1, y1, 0).setColor(color);
+            vertexConsumer.addVertex(matrix, x4, y4, 0).setColor(color);
+            vertexConsumer.addVertex(matrix, x3, y3, 0).setColor(color);
+            vertexConsumer.addVertex(matrix, x2, y2, 0).setColor(color);
         }
+
+        g.flush();
+        g.pose().popPose();
     }
 }

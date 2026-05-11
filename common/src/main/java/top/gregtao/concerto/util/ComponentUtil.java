@@ -27,7 +27,7 @@ public class ComponentUtil {
     }
 
     public static Style getRunCommandStyle(String command) {
-        return Style.EMPTY.withClickEvent(new ClickEvent.RunCommand(command))
-                .withHoverEvent(new HoverEvent.ShowText(Component.literal(command).withStyle(ChatFormatting.AQUA)));
+        return Style.EMPTY.withClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, command))
+                .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, Component.literal(command).withStyle(ChatFormatting.AQUA)));
     }
 }

@@ -7,11 +7,9 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.layouts.LayoutElement;
-import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.renderer.texture.DynamicTexture;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
-import org.joml.Matrix3x2fStack;
 import top.gregtao.concerto.ConcertoClient;
 import top.gregtao.concerto.core.Concerto;
 import top.gregtao.concerto.core.config.CacheManager;
@@ -171,7 +169,7 @@ public class URLImageWidget implements Renderable, LayoutElement, AutoCloseable 
             if (this.texture != null) {
                 Minecraft.getInstance().getTextureManager().release(this.textureId);
             }
-            this.texture = new DynamicTexture(this.textureId::toString, nativeImage);
+            this.texture = new DynamicTexture(nativeImage);
             Minecraft.getInstance().getTextureManager().register(this.textureId, this.texture);
         }).thenRun(callback);
     }
@@ -242,13 +240,12 @@ public class URLImageWidget implements Renderable, LayoutElement, AutoCloseable 
         } else {
             NativeImage image = this.texture.getPixels();
             if (image != null && this.state == State.READY) {
-                Matrix3x2fStack matrices = context.pose();
-                matrices.pushMatrix();
-                matrices.scale(0.0625f, 0.0625f, matrices);
-                matrices.translate(15 * this.x, 15 * this.y, matrices);
-                context.blit(RenderPipelines.GUI_TEXTURED, this.textureId, this.x, this.y, 0, 0,
+                context.pose().pushPose();
+                context.pose().scale(0.0625f, 0.0625f, 1);
+                context.pose().translate(15 * this.x, 15 * this.y, 0);
+                context.blit(this.textureId, this.x, this.y, 0, 0,
                         this.getImageWidth(), this.getImageHeight(), this.getImageWidth(), this.getImageHeight());
-                matrices.popMatrix();
+                context.pose().popPose();
             } else if (this.state == State.LOADING) {
                 context.drawCenteredString(
                         textRenderer, Component.translatable("concerto.screen.loading"),

@@ -12,7 +12,7 @@ import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.loading.FMLLoader;
 import net.neoforged.neoforge.common.NeoForge;
-import net.neoforged.neoforge.event.AddServerReloadListenersEvent;
+import net.neoforged.neoforge.event.AddReloadListenerEvent;
 import net.neoforged.neoforge.event.RegisterCommandsEvent;
 import net.neoforged.neoforge.network.PacketDistributor;
 import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
@@ -78,9 +78,9 @@ public class NeoForgeServer {
 
         @Override
         public void registerResourceReloadListener(ResourceLocation id, Consumer<ResourceManager> listener) {
-            NeoForge.EVENT_BUS.addListener((AddServerReloadListenersEvent event) ->
-                    event.addListener(id, (barrier, resourceManager, e1, e2) ->
-                            CompletableFuture.runAsync(() -> listener.accept(resourceManager))
+            NeoForge.EVENT_BUS.addListener((AddReloadListenerEvent event) ->
+                    event.addListener((barrier, resourceManager, filler1, filler2, e1, e2) ->
+                            CompletableFuture.runAsync(() -> listener.accept(resourceManager), e1)
                                     .thenCompose(barrier::wait)));
         }
 

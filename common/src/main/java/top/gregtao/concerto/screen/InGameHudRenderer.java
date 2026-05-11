@@ -4,13 +4,12 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.ChatScreen;
 import net.minecraft.network.chat.Component;
-import org.joml.Matrix3x2fStack;
+import org.joml.Quaternionf;
 import top.gregtao.concerto.core.config.ClientConfig;
 import top.gregtao.concerto.core.player.MusicPlayer;
 import top.gregtao.concerto.core.player.MusicPlayerHandler;
 import top.gregtao.concerto.core.room.MusicRoom;
 import top.gregtao.concerto.core.util.Vector2i;
-import top.gregtao.concerto.mixin.GuiGraphicsAccessor;
 import top.gregtao.concerto.screen.widget.URLImageWidget;
 import top.gregtao.concerto.util.ComponentUtil;
 
@@ -80,8 +79,7 @@ public class InGameHudRenderer {
                 int scaledWidth = client.getWindow().getGuiScaledWidth(), scaledHeight = client.getWindow().getGuiScaledHeight();
                 String[] texts = MusicPlayerHandler.INSTANCE.getDisplayTexts();
 
-                context = new GuiGraphics(Minecraft.getInstance(),
-                        ((GuiGraphicsAccessor) context).getGuiRenderState());
+                context = new GuiGraphics(Minecraft.getInstance(), context.bufferSource());
 
                 if (options.displayLyrics) {
                     Vector2i pos = config.lyricsPosSupplier.getPos(scaledWidth, scaledHeight);
@@ -152,10 +150,9 @@ public class InGameHudRenderer {
                         float cy = pos.y + size / 2f;
                         float angleRad = delta * (float) Math.PI / 180f;
 
-                        Matrix3x2fStack matrices = context.pose();
-                        matrices.translate(cx, cy, matrices); // 先平移到中心
-                        matrices.rotate(angleRad); // 旋转
-                        matrices.translate(-cx, -cy, matrices); // 再平移回来
+                        context.pose().translate(cx, cy, 0); // 先平移到中心
+                        context.pose().mulPose(new Quaternionf().rotateZ(angleRad)); // 旋转
+                        context.pose().translate(-cx, -cy, 0); // 再平移回来
                     }
 
                     COVER_IMAGE.render(context, mouseX, mouseY, delta);

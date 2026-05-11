@@ -11,11 +11,11 @@ import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.common.Mod;
-import net.neoforged.neoforge.client.event.AddClientReloadListenersEvent;
 import net.neoforged.neoforge.client.event.ClientTickEvent;
 import net.neoforged.neoforge.client.event.RegisterClientCommandsEvent;
 import net.neoforged.neoforge.client.event.RegisterKeyMappingsEvent;
 import net.neoforged.neoforge.common.NeoForge;
+import net.neoforged.neoforge.event.AddReloadListenerEvent;
 import net.neoforged.neoforge.network.PacketDistributor;
 import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
 import net.neoforged.neoforge.network.handling.IPayloadHandler;
@@ -49,8 +49,8 @@ public class NeoForgeClient {
 
         @Override
         public void registerResourceReloadListener(ResourceLocation id, Consumer<ResourceManager> listener) {
-            this.modEventBus.addListener((AddClientReloadListenersEvent event) ->
-                    event.addListener(id, (barrier, resourceManager, e1, e2) ->
+            NeoForge.EVENT_BUS.addListener((AddReloadListenerEvent event) ->
+                    event.addListener((barrier, resourceManager, filler1, filler2, e1, e2) ->
                             CompletableFuture.runAsync(() -> listener.accept(resourceManager), e1)
                                     .thenCompose(barrier::wait)));
         }

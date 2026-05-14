@@ -63,7 +63,7 @@ public class ChatComponentMixin {
     }
 
     @Inject(method = "render(Lnet/minecraft/client/gui/GuiGraphics;Lnet/minecraft/client/gui/Font;IIIZZ)V", at = @At("HEAD"))
-    public void renderInject(GuiGraphics context, Font font, int mouseX, int mouseY, int currentTick, boolean bl, boolean bl2, CallbackInfo ci) {
+    public void renderInject(GuiGraphics context, Font font, int currentTick, int mouseX, int mouseY, boolean bl, boolean bl2, CallbackInfo ci) {
         InGameHudRenderer.render(context, mouseX, mouseY, currentTick);
     }
 }

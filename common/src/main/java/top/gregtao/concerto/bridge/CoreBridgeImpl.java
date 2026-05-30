@@ -33,7 +33,11 @@ public class CoreBridgeImpl implements CoreBridge {
         Minecraft.getInstance().execute(() -> {
             LocalPlayer player = Minecraft.getInstance().player;
             if (player != null) {
-                player.displayClientMessage(Component.literal(message), overlay);
+                if (overlay) {
+                    player.sendOverlayMessage(Component.literal(message));
+                } else {
+                    player.sendSystemMessage(Component.literal(message));
+                }
             }
         });
     }

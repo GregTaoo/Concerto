@@ -15,7 +15,7 @@ public class CommandUtil {
     public static void commandMessageClient(Component text) {
         Minecraft.getInstance().execute(() -> {
             LocalPlayer player = Minecraft.getInstance().player;
-            if (player != null) player.displayClientMessage(text, false);
+            if (player != null) player.sendSystemMessage(text);
         });
     }
 

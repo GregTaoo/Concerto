@@ -7,6 +7,10 @@ dependencies {
     implementation project(path: ":core", configuration: "shadow")
 }
 
+shadowJar {
+    configurations = []
+}
+
 publishing {
     publications {
         mavenCommon(MavenPublication) {

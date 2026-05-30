@@ -11,13 +11,15 @@ import top.gregtao.concerto.core.player.streamplayer.stream.StreamPlayer;
 import top.gregtao.concerto.core.player.streamplayer.stream.StreamPlayerEvent;
 import top.gregtao.concerto.core.player.streamplayer.stream.StreamPlayerException;
 import top.gregtao.concerto.core.player.streamplayer.stream.StreamPlayerListener;
-import top.gregtao.concerto.core.util.ConcertoRunner;
 import top.gregtao.concerto.core.util.Pair;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.FileHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -39,9 +41,10 @@ public class MusicPlayer extends StreamPlayer implements StreamPlayerListener {
     private long startTime = 0;
 
     public boolean started = false;
-    public final Object playNextLock = new Object();
+    public final AtomicBoolean playNextLock = new AtomicBoolean(false);
     public boolean isPlayingTemp = false;
-    private volatile Music pendingMusic = null;
+    private final ExecutorService playbackExecutor = Executors.newSingleThreadExecutor();
+    private final AtomicBoolean playbackWorkerScheduled = new AtomicBoolean(false);
 
     public final AudioSpectrum audioSpectrum = new AudioSpectrum();
 
@@ -78,49 +81,90 @@ public class MusicPlayer extends StreamPlayer implements StreamPlayerListener {
 
     public synchronized void internalPlayMusic(Music music) {
         if (music == null) return;
-        this.pendingMusic = music;
-        ConcertoRunner.run(() -> {
-            synchronized (this.playNextLock) {
-                // 如果不匹配直接忽略
-                if (this.pendingMusic != music) return;
-                try {
-                    this.isPlayingTemp = false;
-                    this.stop();
-                    this.resetInfo();
+        this.enqueuePlaybackRequest(music, false, null);
+    }
 
-                    this.currentMusic = music;
-                    this.initMusicStatus();
-                    this.updateDisplayTexts();
-                    this.updateDisplayTexts(0);
+    public void playTempMusic(Music music, Runnable callback) {
+        if (music == null) return;
+        this.enqueuePlaybackRequest(music, true, callback);
+    }
 
-                    InputStream source = music.getMusicSourceOrNull();
-                    if (source == null) {
-                        this.resetInfo();
-                        Concerto.getLogger().error("Unable to play music: {} - {}", music.getMeta().title(), music.getMeta().author());
-                        Concerto.getCoreBridge().sendTranslatableToClientPlayer(
-                                "concerto.player.unable", false, music.getMeta().title(), music.getMeta().author(), music.getMeta().getSource());
+    public void playTempMusic(Music music) {
+        this.playTempMusic(music, null);
+    }
 
-                        MusicPlayerHandler.INSTANCE.playNext(1);
-                        return;
-                    }
+    private void tryCloseStream(InputStream source) {
+        if (source == null) return;
+        try {
+            source.close();
+        } catch (IOException ignored) {
+        }
+    }
 
-                    this.currentSource = source;
+    private void handlePlaybackFailure(InputStream source, Exception e) {
+        this.tryCloseStream(source);
+        this.resetInfo();
+        Concerto.getLogger().error("Internal player error: " + e);
+        Concerto.getCoreBridge().sendTranslatableToClientPlayer("concerto.player.error", false, e.getMessage());
+    }
 
-                    this.open(source);
-                    this.play();
-                    if (MusicPlayerHandler.INSTANCE.isForcePaused()) {
-                        this.pause();
-                    }
-                    this.started = true;
+    private void enqueuePlaybackRequest(Music music, boolean temp, Runnable callback) {
+        if (this.playbackWorkerScheduled.compareAndSet(false, true)) {
+            this.playbackExecutor.execute(() -> this.drainPlaybackRequests(music, temp, callback));
+        }
+    }
 
-                    Concerto.getLogger().info("Start playing music {} - {}", music.getMeta().title(), music.getMeta().author());
-                    ConcertoEvents.ON_NEW_MUSIC_STARTED.emit(music);
-                } catch (Exception e) {
-                    Concerto.getLogger().error("Internal player error: " + e);
-                    Concerto.getCoreBridge().sendTranslatableToClientPlayer("concerto.player.error", false, e.getMessage());
-                }
+    private void drainPlaybackRequests(Music music, boolean temp, Runnable callback) {
+        try {
+            try {
+                this.playManagedMusic(music, temp);
+            } catch (Exception e) {
+                this.handlePlaybackFailure(null, e);
             }
-        });
+            if (callback != null) {
+                callback.run();
+            }
+        } finally {
+            this.playbackWorkerScheduled.set(false);
+        }
+    }
+
+    private void playManagedMusic(Music music, boolean temp) {
+        this.playNextLock.set(true);
+        InputStream source = null;
+        try {
+            this.stop();
+            source = music.getMusicSourceOrNull();
+            if (source == null) {
+                this.resetInfo();
+                Concerto.getLogger().error("Unable to play music: {} - {}", music.getMeta().title(), music.getMeta().author());
+                Concerto.getCoreBridge().sendTranslatableToClientPlayer(
+                        "concerto.player.unable", false, music.getMeta().title(), music.getMeta().author(), music.getMeta().getSource());
+                return;
+            }
+
+            this.currentMusic = music;
+            this.initMusicStatus();
+            this.updateDisplayTexts();
+            this.updateDisplayTexts(0);
+
+            this.open(source);
+
+            this.currentSource = source;
+            this.play();
+            if (MusicPlayerHandler.INSTANCE.isForcePaused()) {
+                this.pause();
+            }
+            this.started = true;
+            this.isPlayingTemp = temp;
+
+            Concerto.getLogger().info("Start playing music {} - {}", music.getMeta().title(), music.getMeta().author());
+            ConcertoEvents.ON_NEW_MUSIC_STARTED.emit(music);
+        } catch (Exception e) {
+            this.handlePlaybackFailure(source, e);
+        } finally {
+            this.playNextLock.set(false);
+        }
     }
 
     public boolean internalPause() {
@@ -134,6 +178,11 @@ public class MusicPlayer extends StreamPlayer implements StreamPlayerListener {
     }
 
     public void resetInfo() {
+        this.started = false;
+        this.isPlayingTemp = false;
+        this.currentMusic = null;
+        this.currentSource = null;
+
         this.currentLyrics = this.currentSubLyrics = null;
         this.currentMeta = null;
         this.currentTime = MusicTimestamp.of(0);
@@ -200,7 +249,7 @@ public class MusicPlayer extends StreamPlayer implements StreamPlayerListener {
         if (status == Status.EOM) {
             if (MusicPlayerHandler.INSTANCE.isEmpty()) {
                 this.stop();
-            } else if (!this.isPlayingTemp) {
+            } else if (!this.playNextLock.get() && !this.isPlayingTemp) {
                 MusicPlayerHandler.INSTANCE.playNext(1);
             }
             this.isPlayingTemp = false;
@@ -225,46 +274,8 @@ public class MusicPlayer extends StreamPlayer implements StreamPlayerListener {
 
     public void stop() {
         this.resetInfo();
-        this.started = false;
         super.stop();
-    }
-
-    public void playTempMusic(Music music, Runnable callback) {
-        ConcertoRunner.run(() -> {
-            synchronized (this.playNextLock) {
-                this.started = true;
-                this.stop();
-                this.resetInfo();
-
-                this.currentMusic = music;
-                this.initMusicStatus();
-                this.updateDisplayTexts();
-                this.updateDisplayTexts(0);
-
-                InputStream source = music.getMusicSourceOrNull();
-                if (source == null) {
-                    this.started = false;
-                    this.resetInfo();
-                    return;
-                }
-
-                this.currentSource = source;
-                try {
-                    this.open(source);
-                    this.play();
-                    if (MusicPlayerHandler.INSTANCE.isForcePaused()) {
-                        this.pause();
-                    }
-                    this.isPlayingTemp = true;
-                } catch (StreamPlayerException e) {
-                    this.started = this.isPlayingTemp = false;
-                }
-            }
-        }, callback);
-    }
-
-    public void playTempMusic(Music music) {
-        this.playTempMusic(music, () -> {
-        });
+        this.tryCloseStream(this.currentSource);
+        this.currentSource = null;
     }
 }

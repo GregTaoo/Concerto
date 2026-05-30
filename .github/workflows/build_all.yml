@@ -2,7 +2,7 @@ name: Publish Builds
 
 on:
   release:
-    types: [published]
+    types: [published, edited]
 
 jobs:
   generate-branches:
@@ -36,6 +36,44 @@ jobs:
           json="${json},\"dev\"]"
           echo "branches=$json" >> $GITHUB_OUTPUT
 
+  build-and-publish:
+    name: Build and Publish
+    needs: generate-branches
+    runs-on: ubuntu-latest
+    environment: Modrinth Publish
+    strategy:
+      fail-fast: false
+      matrix:
+        branch: ${{ fromJson(needs.generate-branches.outputs.branches) }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ matrix.branch }}
+          fetch-depth: 0
+
+      - name: Determine JDK version
+        run: |
+          BRANCH="${{ matrix.branch }}"
+          VER="${BRANCH#mc}"
+          if [[ ! "$VER" =~ ^[0-9] ]]; then
+            # 针对 dev 等非数字开头的分支默认使用 JDK 21
+            echo "JAVA_VER=21" >> $GITHUB_ENV
+          else
+            # 使用 sort -V 比较版本号：如果 VER >= 26.1.2，则 sort 的首行是 26.1.2
+            if [ "$(printf '%s\n' "26.1.2" "$VER" | sort -V | head -n1)" = "26.1.2" ]; then
+              echo "JAVA_VER=25" >> $GITHUB_ENV
+            else
+              echo "JAVA_VER=21" >> $GITHUB_ENV
+            fi
+          fi
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VER }}
+          distribution: 'temurin'
+
       - name: Build and Split Artifacts
         id: build-run
         run: |
@@ -43,7 +81,7 @@ jobs:
           echo "Processing branch: ${{ matrix.branch }}"
           echo "Detected Gradle project"
           chmod +x ./gradlew || true
-          ./gradlew clean build
+          ./gradlew clean buildAll
           
           # 获取所有有效的 jar 包（排除 dev 和 sources）
           mapfile -t ARTIFACT_ARRAY < <(ls build/libs/*.jar 2>/dev/null | grep -vE -- '-dev\.jar|-sources\.jar' || true)
@@ -97,15 +135,15 @@ jobs:
           if echo "$FNAME" | grep -iq "fabric"; then
            echo "fabric_file=$FILE" >> $GITHUB_OUTPUT
            echo "fabric_gv=$GV_ARRAY" >> $GITHUB_OUTPUT
-           echo "fabric_name=$VERSION_NAME" >> $GITHUB_OUTPUT
+           echo "fabric_name=fabric-${SHORTER_VERSION}-mc${MC_VER}" >> $GITHUB_OUTPUT
           elif echo "$FNAME" | grep -iq "neoforge"; then
            echo "neoforge_file=$FILE" >> $GITHUB_OUTPUT
            echo "neoforge_gv=$GV_ARRAY" >> $GITHUB_OUTPUT
-           echo "neoforge_name=$VERSION_NAME" >> $GITHUB_OUTPUT
+           echo "neoforge_name=neoforge-${SHORTER_VERSION}-mc${MC_VER}" >> $GITHUB_OUTPUT
           elif echo "$FNAME" | grep -iq "paper"; then
            echo "paper_file=$FILE" >> $GITHUB_OUTPUT
            echo "paper_gv=$GV_ARRAY" >> $GITHUB_OUTPUT
-           echo "paper_name=$VERSION_NAME" >> $GITHUB_OUTPUT
+           echo "paper_name=paper-${SHORTER_VERSION}-mc${MC_VER}" >> $GITHUB_OUTPUT
           fi
           done
 

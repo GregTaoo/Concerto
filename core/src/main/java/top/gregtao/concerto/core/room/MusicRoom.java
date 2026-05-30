@@ -328,6 +328,7 @@ public class MusicRoom {
                 case JOIN -> {
                     UUID uuid = UUID.fromString(payload);
                     CLIENT_ROOM = new MusicRoom(uuid, bridge);
+                    MusicPlayerHandler.INSTANCE.tryForcePause(false);
                     Concerto.getCoreBridge().setClientClipboard(uuid.toString());
                 }
                 case SYNC -> {

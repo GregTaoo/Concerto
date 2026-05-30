@@ -13,8 +13,10 @@ public class CommandUtil {
     public static Component PAGE_SPLIT = Component.literal("==============================================").withStyle(ChatFormatting.DARK_AQUA);
 
     public static void commandMessageClient(Component text) {
-        LocalPlayer player = Minecraft.getInstance().player;
-        if (player != null) player.displayClientMessage(text, false);
+        Minecraft.getInstance().execute(() -> {
+            LocalPlayer player = Minecraft.getInstance().player;
+            if (player != null) player.displayClientMessage(text, false);
+        });
     }
 
     public static void commandMessageServer(CommandContext<CommandSourceStack> context, Component text) {

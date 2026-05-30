@@ -72,19 +72,19 @@ tasks.register("buildAll", Copy) {
     into(libOut)
 
     def tasksToCollect = [
-            ["fabric",   "remapJar", "Concerto-mc${mcVersion}-fabric-${modVersion}.jar"],
-            ["neoforge", "remapJar", "Concerto-mc${mcVersion}-neoforge-${modVersion}.jar"],
-            ["paper",    "shadowJar", "Concerto-mc${mcVersion}-paper-${modVersion}.jar"]
+            ["fabric",   "Concerto-mc${mcVersion}-fabric-${modVersion}.jar"],
+            ["neoforge", "Concerto-mc${mcVersion}-neoforge-${modVersion}.jar"],
+            ["paper",    "Concerto-mc${mcVersion}-paper-${modVersion}.jar"]
     ]
 
     tasksToCollect.each { entry ->
-        def (modName, taskName, targetName) = entry
+        def (modName, targetName) = entry
 
-        def task = project(":${modName}").tasks.named(taskName)
+        def shadowTask = project(":${modName}").tasks.named("shadowJar")
 
-        dependsOn(task)
+        dependsOn(shadowTask)
 
-        from(task) {
+        from(shadowTask) {
             rename { fileName -> targetName }
         }
     }

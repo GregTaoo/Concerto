@@ -1,280 +1,154 @@
-# Concerto
+<div align="center">
+  <img src="icon-large.png" alt="Concerto" width="256">
+  <h1>Concerto</h1>
+  <p><b>基于 Fabric / NeoForge / Paper 的 Minecraft 内置音乐播放器</b></p>
+</div>
+
+> 支持本地音乐、网络资源，以及网易云音乐、QQ音乐、酷狗音乐等流媒体平台。具备多人联机“一起听”功能。
+
+---
+
+## 🌟 主要功能
+
+- **多平台音频解析**：支持网易云音乐、QQ音乐、酷狗音乐，同时支持本地文件加载与网络直链播放。
+- **音乐室（一起听）**：与服务器内的其他玩家进入同一音乐室，所有成员的播放进度、切换与暂停操作均会实时同步。
+- **全服点播（KTV模式）**：服务器可开启点播功能，玩家自由排队点播歌曲。支持发起切歌投票，以跳过不符合多数人意愿的音乐。
+- **VIP 共享 & 服务端预设**：服主可将个人支持平台配置至服务端，与全服玩家共享 VIP 权限歌曲。此外，还支持上传预设歌单，在无点播任务时自动播放。
+- **跨平台兼容**：客户端支持 Fabric 和 NeoForge，服务端支持专属 Paper 插件版本，实现跨平台互通。
+
+---
+
+## 🛡️ 注意事项与致谢
+
+- ⚠️ **安全提醒**：请妥善保管您 `Concerto` 文件夹中的 `.cookie` 文件，切勿随意分享他人。
+- ⚖️ **协议与声明**：本模组仅供学习交流使用，严禁将其用于非法用途。使用前请仔细阅读 [协议](LICENSE)。本模组**未授权发布于任何收费或附带商业性质的平台**，若有违规发布者需自行承担法律责任。如有侵权，请联系删除。
+- 🤝 **特别鸣谢**：酷狗音乐相关代码由 [ming-sc](https://github.com/ming-sc) 贡献。感谢所有 [支持者](supporters.md)。
+
+> **Wiki 基准模组版本：`2.0.0`**
+
+---
+
+## ⌨️ 快捷操作热键
+
+| 热键 | 功能说明 |
+| :---: | --- |
+| `U` | 打开播放队列管理界面 |
+| `I` | 打开 Concerto 主菜单 |
+| `N` | 播放下一首 |
+| `P` | 暂停 / 继续播放 |
+
+---
+
+## 📜 指令参考
+
+### 1. 客户端功能指令 `/concerto` （可使用别名 `/music`）
+| 指令操作 | 功能说明 |
+| --- | --- |
+| `pause` / `start` / `stop` | 暂停、开始 或 停止播放 |
+| `clear` | 停止播放并清空当前播放列表 |
+| `reload` / `restart` | 重新加载配置及歌单数据 / 重新启动播放器核心（用于修复卡死） |
+| `save` | 缓存当前歌曲（仅限支持缓存的音源，如网易云音乐等） |
+| `like` / `dislike` | 收藏 / 取消收藏当前歌曲（仅限网易云音乐） |
+| `download-current` | 将当前歌曲及相关歌词下载至本地 `Concerto` 文件夹 |
+| `download-all` | 下载当前播放队列中的所有歌曲及歌词 |
+| `export-as-playlist` | 导出当前缓存队列为服务端所需的预设歌单 `JSON` 格式 |
+| `clean-cache` | 清理客户端 `Concerto/cache` 目录下的所有缓存及验证文件（含 cookie） |
+
+### 2. 音乐室指令 `/musicroom` （需服务端安装 Concerto）
+| 指令操作 | 功能说明 |
+| --- | --- |
+| `create` | 创建并加入专属音乐室，成功后将自动复制对应的 UUID（受服务端权限要求限制） |
+| `join [UUID]` / `quit` | 加入对应 UUID 编号的音乐室 / 退出当前的音乐室或点播大厅 |
+| `remove` / `members` | 解散当前音乐室 / 查看所在音乐室的成员列表 |
+| `op [玩家]` | 赋予或撤销指定玩家的管理切歌权限（仅限房间创建者） |
+| `agent join` / `quit` | 加入或退出服务器公共点播队列系统 |
+| `agent add` | 将当前播放的音乐推送至服务器公共点播队列 |
+| `agent vote [true/false]` | 发起集体切歌投票 / 对当前进行的切歌投票投出赞成或反对 |
+
+### 3. P2P 音乐分享指令 `/sharemusic` （客户端间网络直连）
+| 指令操作 | 功能说明 |
+| --- | --- |
+| `to [玩家或@a]` | 将播放内容分享给指定玩家。如服务端未安装模组，命令将回退至原版消息通道尝试推送。仅限白名单平台音源。 |
+| `accept [UUID]` / `reject` | 接受 / 拒绝指定的音乐分享（后接 UUID 或输入 `all` 拒绝全部请求） |
+| `list [页码]` | 查看待处理的音乐分享邀请列表 |
+
+### 4. 服务端管理指令 `/concerto-server` （仅限管理员使用）
+| 指令操作 | 功能说明 |
+| --- | --- |
+| `audit [UUID]` / `reject` | 同意或拒绝全服广播分享的音乐审核请求（后接 `all` 拒绝全部等待请求） |
+| `audit list [页码]` | 列出当前等待服务端管理员审核的广播歌曲队列 |
+| `reload` / `reload-cookie` | 重新加载服务端配置 / 重新加载各个平台的 cookie 文件 |
+| `fetch-radios` | 将服务端的预设歌单同步至本地（普通用户亦可用） |
+| `clean-cache` | 清理服务端缓存数据及缓存的 cookie 信息 |
+| `agent reset` / `cut` | 彻底重置公共点播队列 / 强制全服音乐点播跳过当前歌曲 |
+| `agent stop` / `start` | 停止音乐点播模式 / 重新启动点播模式 |
+
+---
+
+## 📖 进阶使用说明
+
+### 🎧 沉浸组团“一起听”音乐室
+- 身处同一音乐室的成员，所有的切歌、调整播放进度、暂停操作都能做到实时同步。
+- 建议将管理指令权限统一管理，以防止大量玩家频繁争夺切歌控制权。
+- 通过向其他玩家发送音乐室建立时生成的 UUID，即可让他们通过指令快速加入。
+
+### 🎵 队列管理界面
+- 按下按键 `U` 能够呼出详细的播放队列管理面板，支持从文件资源管理器直接拖拽外部音频文件与文件夹执行导入。
+- 面板完整支持双击快速切歌功能，并可以选中目标音乐直接发起向服务端的“推送点播”。
+- 通过导出指令生成的歌单配置文件将默认储存于 `Concerto/local_playlists`，便于后续的跨设备同步管理。
+
+### 📡 全方位点播模式与预设配置
+- 当开启全服务器点播模式时，如果玩家提交的排队歌曲不符预期，可以随时通过指令发起投票跳过。
+- **服务端预设歌单**：服务端管理员可将整理好的歌单文件配置至服务端的 `Concerto/preset_radios/music_agent.json` 中。这样在无人点歌的空闲时刻，服务器也能自动播放预设音乐。
+- **VIP 曲库串流机制**：在服务端 `server_config.json` 中开启 `musicAgentUseShared`，并部署管理员具有 VIP 权限的平台 `.cookie` 文件，全服成员即可通过服务器直接点播 VIP 才能听的歌曲。
 
-基于 Fabric 的 Minecraft 内置音乐播放器。支持本地文件、网络资源、网易云音乐、QQ音乐。支持多人游戏音乐室（一起听）、歌曲点播（KTV模式）、服务端预设歌单、共享 VIP 歌曲等功能。
+### 📨 玩家间点对点音乐分享
+- 当有向特定玩家分享目前正在播放的音乐的需求时，可以使用 `/sharemusic` 指令。由于安全机制，部分直接读取路径的本地音乐可能被标记为不安全而无法分享。
 
-本模组仅供学习使用，不得非法利用本模组。请在使用前阅读 [协议](LICENSE)。如有侵权，请联系删除。
+---
 
-本模组没有发布到任何收费或免费的商用平台，如有发布请发布者自行承担法律责任。
+## ⚙️ 配置文件参数说明
 
-**酷狗音乐相关代码由 [ming-sc](https://github.com/ming-sc) 贡献。**
+### 服务端 (`server_config.json`)
+- `auditionRequired`: 是否需经过管理员审核才能将音乐广播分享给全服（默认 `true`）。
+- `serverMusicAgent`: 是否开启服务端全服点歌功能（默认 `true`）。
+- `agentInviteWhenJoin`: 玩家加入服务器时是否自动发送点歌大厅的邀请（默认 `true`）。
+- `musicRoomCommandPermission`: 玩家创建音乐室需要达到的最低权限级别（默认 `2`）。
+- `musicAgentAddTimeLimit`: 玩家两次提交点播歌曲间的最小间隔时间（默认 `60` 秒）。
+- `musicAgentUseShared`: 全服点播时是否强制由服务端拉取并共享直链（默认 `true`）。
+- `kuGouMusicLite`: 解析酷狗音乐资源时是否使用概念版通道（默认 `false`）。
 
------------------------------
-### [支持者名单](supporters.md)
+### 客户端 (`client_config.json`)
+**【 核心控制 】**
+- `confirmAfterReceived`: 接收到别人的音乐分享时，是否自动接受（默认开启）。
+- `joinAgentWhenInvited`: 接收到服务端的全服点播邀请时，是否自动加入（默认关闭）。
+- `neteaseMusicQuality`: 全局请求的网易云音乐音质等级（可选 `"STANDARD"`, `"HIGHER"`, `"EXHIGH"`, `"LOSSLESS"`， 默认 `"HIRES"`）。
+- `handshakeRequired`: 连接服务端时是否强制进行连接验证握手（默认开启）。
+- `maxCacheSize`: 允许分配给音乐及图片缓存的最大空间（默认 `100MB`）。
+- `hideWhenChat`: 当玩家打开聊天框时，是否自动隐藏屏幕上的播放器信息（默认开启）。
 
------------------------------
+**【 HUD 显示编排 】**
+所有桌面提示元素（歌词、进度、封面等）均支持通过修改配置文件启用或关闭，如 `displayLyrics: true/false`。
+- **坐标规范**：使用 `[横向比例](+/-)[像素偏移],[纵向比例](+/-)[像素偏移]`。例如：`0.5,1-70` 指代居中对齐，并距离底边 70 个像素；`1-30,0+15` 指代表距离右边缘 30 像素距顶部边缘 15 像素。
+- **色彩规范**：文本与进度条颜色使用 ARGB 16 进制码。格式如： `#ffffffff` (完全不透明纯白) , `#ff00aaaa` (完全不透明青色) 。
 
+---
 
-**Wiki 基准模组版本：1.4.1**
+## ❓ 常见问题排查与解答
 
-目前已知支持版本：1.21.7, 1.21.6, 1.21.5, 1.21.4, 1.21.1, 1.21, 1.20.6, 1.20.1, 1.19.4, 1.18.2, 1.17.1, 1.16.5，其余版本未经测试
+#### **1. 如何正确配置服务端的 Cookie 数据？**
+请在本地登录后复制 cookie 文件夹至服务端
 
-### 安全提醒！
+#### **2. 网易云通过二维码登录后无法正常使用并持续报错？**
+网易云音乐的安全风控策略十分严格。在异地跨设备请求过高频时会导致环境被标记并拦截异常登录。推荐您放弃密码或二维码登录途径，直接复制获取当前登录通过的完整网页 Cookie 信息以绕过环境检测。
 
-请不要泄露 `Concerto` 文件夹中的 `.cookie` 文件！
+#### **3. QQ音乐信息更新失效或加载报错**
+由于平台接口机制设定，QQ 音乐请求到的授权具有严格的寿命限制。部分数据几天后可能会超时并请求无效。当发生此类报错影响正常点播时，请服主及时更新服务器上的相关文件配置并执行 `/concerto-server reload-cookie` 进行刷新。
 
-### 默认热键
+#### **4. 加载界面不全和特定 HUD 组件渲染异常**
+这很大可能是由于部分显示缓存出现错乱导致的。首先请优先使用 `/concerto clean-cache` 命令清除客户端缓存，如果故障依然存在且界面依然黑屏，请完全关闭游戏，手动前往 `.minecraft/Concerto/cache` 删除相关所有文件然后再重启游戏重新生成。
 
-1. `U`: 打开播放队列管理界面
-2. `I`: 打开 Concerto 主菜单
-3. `N`: 播放下一首
-4. `P`: 暂停/继续播放
+---
 
-### 指令
-
-1. `/concerto`（客户端指令，可选别名 `/music`，详见 客户端配置文件）
-
-   `pause`: 暂停/继续播放
-
-   `start`: 开始播放
-
-   `stop`: 停止播放
-
-   `skip`: 播放下一首音乐
-
-   `skip [编号]`: 播放第 `[编号]` 首音乐
-
-   `cut`: 切歌/删除当前播放歌曲
-
-   `clear`: 停止播放并清除播放队列
-
-   `mode [normal|random|reversed|loop]`: 切换播放模式为 正序/随机/倒序/循环
-
-   `reload`: 重新加载播放队列和客户端配置文件
-
-   `restart`: 重新启动播放器（可修复卡死）
-
-   `list [页码]`: 显示第 `[页码]` 页播放队列（10条歌曲一页）
-
-   `save`: 缓存当前歌曲（详见 可缓存歌曲）
-
-   `like`: 喜欢当前歌曲（详见 喜欢歌曲）
-
-   `dislike`: 取消喜欢当前歌曲
-
-   `download-current`: 下载当前歌曲到 `Concerto` 文件夹（包括歌词文件）
-
-   `download-all`: 下载播放队列中的所有歌曲到 `Concerto` 文件夹（包括歌词文件）
-
-   `export-as-playlist`: 导出当前播放队列为服务端预设歌单格式 `JSON`（详见 服务端预设歌单）
-
-   `clean-cache`: 删除客户端 `Concerto/cache` 文件夹下所有文件（包括cookie）
-
-2. `/concerto-server`（服务端指令，仅限管理员）
-
-   `audit [UUID]`: 审核通过分享给所有人的音乐（详见 `/sharemusic` 指令）
-
-   `audit reject [UUID]`: 拒绝分享给所有人的音乐
-
-   `audit reject all`: 拒绝所有分享给所有人的音乐
-
-   `audit list [页码]`: 列出第 `[页码]` 页的待审歌曲清单
-
-   `reload`: 重新加载服务端配置文件（详见 服务端配置文件）
-
-   `reload-cookie`: 重新加载所有cookie文件
-
-   `clean-cache`: 删除服务端 `Concerto/cache` 文件夹下所有文件（包括cookie）
-
-   `fetch-radios`: 技术性指令，同步服务端预设歌单到本地（允许普通用户使用）
-
-   `agent reset`: 重新加载服务端歌曲点播队列
-
-   `agent cut`: 强制让服务端点播队列播放下一首/切歌
-
-   `agent stop`: 停止点播歌曲的播放（注意：当前歌曲会被直接切掉）
-
-   `agent start`: 继续点播歌曲的播放（注意：从下一首开始）
-
-
-3. `/sharemusic`（客户端指令，服务端不安装 Concerto 也可使用，非音乐室功能）
-
-   `to [玩家|@a]`: 分享当前播放的歌曲给 `[玩家]` 或所有人（若服务端未安装 Concerto 则通过 `/msg` 指令发送），只能分享被认为安全的音乐（详见 安全的音乐来源）
-
-   `accept [UUID]`: 接受编号为 `[UUID]` 的音乐分享
-
-   `reject [UUID]`: 拒绝编号为 `[UUID]` 的音乐分享
-
-   `reject all`: 拒绝所有音乐分享
-
-   `list [页码]`: 显示第 `[页码]` 页的待接受音乐分享列表
-
-
-4. `/musicroom`（客户端指令，服务端必须安装 Concerto 才能正常使用）
-
-   `create`: 新建并加入音乐室，并自动复制音乐室的 UUID，默认需要管理员（详见 音乐室、服务端配置文件）
-
-   `join [UUID]`: 加入编号为 `[UUID]` 的音乐室
-
-   `quit`: 退出当前音乐室（或者点播室）
-
-   `members`: 显示当前所在音乐室的成员
-
-   `op [玩家]`: 仅限音乐室创建者可用，给予/剥夺 `[玩家]` 的音乐室管理员权限
-
-   `agent join`: 参与服务器音乐点播（详见 服务器音乐点播）
-
-   `agent quit`: 退出服务器音乐点播
-
-   `agent query`: 查询服务器音乐点播待播队列
-
-   `agent add`: 向服务器音乐点播队列添加客户端当前播放的音乐
-
-   `agent vote`: 发起切歌投票
-
-   `agent vote [true/false]`: 给当前进行的切歌投票投 赞成/反对
-
-
-### 本地播放队列
-
-- 按 `U` 打开播放队列管理界面；
-- 单击选中音乐，再点击播放按钮（或直接双击某条音乐）开始播放
-- 单击选中音乐，再点击详情按钮查看音乐具体信息（内有**服务器点歌**按钮）
-- 可将多个文件/文件夹拖入 播放队列管理界面/添加音乐界面 进行添加
-
-
-### 本地预设歌单
-
-- 使用 `/concerto export-as-playlist` 或歌单详情页面按钮导出歌单
-- 导出的 `JSON` 文件已经被放置于 `Concerto/local_playlists` 文件夹下
-- 可用 `/concerto reload` 重新加载最新添加的预设歌单
-- 可在 Concerto 主菜单里看到本地预设歌单的入口
-
-### 服务端预设歌单
-
-- 使用 `/concerto export-as-playlist` 或歌单详情页面按钮导出歌单
-- 将导出的 `JSON` 文件复制并放置于 `Concerto/preset_radios` 文件夹下（默认是导出到本地的文件夹，`Concerto/local_playlists`）
-- 若文件名为 `music_agent.json` 将作为音乐点播室空闲时候的歌单
-- 可用 `/concerto-server reload` 重新加载最新添加的预设歌单
-- 服务器玩家可在 Concerto 主菜单里看到服务端预设歌单的入口
-
-### 服务端配置文件
-
-- 文件位于 `Concerto/server_config.json`
-- `auditionRequired`: 通过 `/sharemusic` 分享给所有人的音乐是否需要审核（默认需要）
-- `serverMusicAgent`：启用服务端歌曲点播功能（默认启用）
-- `agentInviteWhenJoin`：主动邀请进入服务器的玩家加入歌曲点播（默认启用）
-- `musicRoomCommandPermission`：音乐室创建的最低权限要求（默认为2）
-- `musicAgentAddTimeLimit`: 同一玩家两次歌曲点播时间间隔（默认为60秒）
-- `musicAgentUseShared`: 歌曲点播使用服务端解析播放链接（详见 服务器音乐点播，默认启用）
-
-### 音乐分享（非一起听功能）
-
-- 若服务器安装了 Concerto，则会隐藏地向服务器发送请求，否则将直接调用 `/msg` 指令（发送给个人）或直接发送在公屏（发送给所有人）。
-- 服主可在服务端配置中配置审核分享给所有人的音乐。
-- 分享的音乐需要对方确认才会在对方的客户端播放。
-- 只允许分享被认为是安全的音乐（详见 安全的音乐来源）
-
-### 音乐室
-
-- 音乐室内所有人的音乐播放行为都会受到任意音乐室管理员的影响，例如：切换歌曲/暂停播放。
-- 建议不要设置太多管理员以避免争抢问题。
-- 创建音乐室时会自动复制 UUID 到剪贴板。
-- 只允许分享被认为是安全的音乐（详见 安全的音乐来源）
-
-### 服务器音乐点播
-
-- 选中音乐条目，点击详情按钮，歌曲详情页面内有服务器点歌按钮。若服务可用，则按钮可用。
-- 可用 `/musicroom agent vote` 指令发起投票/参与投票
-- 服主可在本地登录VIP账号后将 `Concerto` 文件夹下cookie文件复制到服务端，并开启服务端配置选项中的 `musicAgentUseShared`，即可实现VIP歌曲点播。（若服务端运行过程中复制进去，需要重启服务端）
-- 若存在文件 `Concerto/preset_radios/music_agent.json` 将作为音乐点播室空闲时候的歌单，若有玩家在播放这里面的歌曲时点歌，将会自动切歌
-
-### 客户端配置文件
-
-- 文件位于 `Concerto/client_config.json`
-- `confirmAfterReceived`: 手动接受所有接收到的音乐分享（默认开启）
-- `hideWhenChat`: 在聊天栏打开时隐藏歌词/歌曲信息（默认启用）
-- `printRequestResults`: 输出HTTP请求返回的数据；安全起见，除非有必要，否则最好不要启用（默认关闭）
-- `maxCacheSize`: 最大缓存大小（默认 100MB）
-- `joinAgentWhenInvited`: 被服务器邀请后，自动加入服务器点歌（默认关闭）
-- `registerMusicCommand`: 注册 `/music` 为 `/concerto` 指令的别名（默认启用）
-- `scrollingTextSpeed`: 滚动显示文字的速度（默认1.0）
-- `neteaseMusicQuality`: 网易云音乐音频的质量（"STANDARD","HIGHER","EXHIGH","LOSSLESS","HIRES"，默认"HIRES"）
-- `displayLyrics`: 是否显示歌词（默认启用）
-- `lyricsPosition`: 歌词显示位置（格式详见下方 位置格式配置，默认为 `0.5,1-70`）
-- `lyricsAlignment`: 歌词显示靠左/居中/靠右（"LEFT","CENTER","RIGHT"，默认居中）
-- `lyricsColor`: 歌词颜色（格式详见下方 颜色配置，默认为 `#ff00aaaa`）
-- `displaySubLyrics`: 是否显示翻译歌词 （默认启用）
-- `subLyricsPosition`: 翻译歌词显示位置（格式详见下方 位置格式配置，默认为 `0.5,1-60`）
-- `subLyricsAlignment`: 翻译歌词显示靠左/居中/靠右（"LEFT","CENTER","RIGHT"，默认居中）
-- `subLyricsColor`: 翻译歌词颜色（格式详见下方 颜色配置，默认为 `#ffffaa00`）
-- `displayMusicDetails`: 显示歌曲具体信息（默认启用）
-- `musicDetailsPosition`: 歌曲具体信息显示位置（格式详见下方 位置格式配置，默认为`1-5,0+5`）
-- `musicDetailsAlignment`: 歌曲具体信息靠左/居中/靠右（"LEFT","CENTER","RIGHT"，默认靠右）
-- `musicDetailsColor`: 歌曲具体信息颜色（格式详见下方 颜色配置，默认为 `#ffffffff`）
-- `displayTimeProgress`: 显示歌曲播放进度（默认启用）
-- `timeProgressPosition`: 歌曲播放进度显示位置（格式详见下方 位置格式配置，默认为 `1-5,0+15`）
-- `timeProgressAlignment`: 歌曲播放进度显示靠左/居中/靠右（"LEFT","CENTER","RIGHT"，默认靠右）
-- `timeProgressTextColor`: 歌曲播放进度文字颜色（格式详见下方 颜色配置，默认为 `#ffffffff` ）
-- `timeProgressColor`: 歌曲播放进度条颜色（格式详见下方 颜色配置，默认为 `#ff0155bc` ）
-- `timeProgressBgColor`:  歌曲播放进度条背景颜色（格式详见下方 颜色配置，默认为 `#ffa1c7f6`）
-- `textShadow`: 歌词/音乐信息显示文字阴影（默认开启）
-
-### 位置格式配置
-
-基本格式：`[横向比例](+/-)[横向偏移],[纵向比例](+/-)[纵向偏移]`，若偏移量为0可省略（包括加减号）
-
-例如，`0.5,1-70` 表示屏幕横向中心点底部向上70像素的位置，`1-5,0+5` 表示屏幕右上角分别向下向左5像素的位置
-
-### 颜色配置
-
-基本格式：`(0x|#)[8位16进制数]`，每两位分别表示ARGB，建议使用在线拾色器（若复制的只有6位，请手动在前面加上两位 `ff`），请注意最前面需要加 `0x` 或 `#`
-
-例如，`#ffffffff` 表示完全不透明的纯白色，`#ff00aaaa` 表示完全不透明的青色
-
-### 可缓存歌曲
-
-即网易云音乐，QQ音乐以及其他网络资源
-
-### 喜欢音乐
-
-仅支持网易云音乐
-
-### 安全的音乐来源
-
-即网易云音乐和QQ音乐，不含本地资源、其他网络资源
-
-### 关于直接输入Cookie的登录方式
-
-- 方法1: 打开对应网站登录后，电脑浏览器点按 F12 打开开发者面板的网络面板 (Network)，刷新页面，点击第一个条目，往下滑动找到并复制所有Cookie
-- 方法2（推荐）: 使用 Cookie-Editor 浏览器插件
-
-### Q & A
-
-- Q: 网易云音乐用密码或验证码登录时出现“当前登录存在安全风险”
-- A: 网易云风控导致，请优先考虑使用二维码登录或直接复制Cookie
-
-
-- Q: QQ音乐无法查看个人歌单/无法播放
-- A: 尝试重新登录
-
-
-- Q: QQ音乐服务端cookie隔一段时间就失效
-- A: 只能重新复制，目前无解决方法。可用 `/concerto-server reload-cookie` 重新加载cookie
-
-
-- Q: neoforge+互联环境下二维码无法加载
-- A: 使用 `/concerto clean-cache` 清除缓存后重试，如果还是不行，删除 `.minecraft/Concerto/cache` 文件夹
-
-### 使用的开源项目
-
-- [java-stream-player](https://github.com/goxr3plus/java-stream-player)
-- [ZXing](https://github.com/zxing/zxing)
-- [soundlibs](https://github.com/pdudits/soundlibs)
-- [JustFlac](https://github.com/drogatkin/JustFLAC)
-- [java-vorbis-support](https://github.com/Trilarion/java-vorbis-support)
-- [jaudiotagger](https://github.com/marcoc1712/jaudiotagger)
-- [Fabric](https://github.com/FabricMC/fabric)
-- [Fabric Loader](https://github.com/FabricMC/fabric-loader)
-- [Fabric API](https://github.com/FabricMC/fabric-api)
-- [Yarn](https://github.com/FabricMC/yarn)
-- [gradle](https://github.com/gradle/gradle)
+## 🚀 使用的开源项目鸣谢
+*[java-stream-player](https://github.com/goxr3plus/java-stream-player)* | *[ZXing](https://github.com/zxing/zxing)* | *[soundlibs](https://github.com/pdudits/soundlibs)* | *[JustFlac](https://github.com/drogatkin/JustFLAC)* | *[java-vorbis-support](https://github.com/Trilarion/java-vorbis-support)* | *[jaudiotagger](https://github.com/marcoc1712/jaudiotagger)* | *[Fabric API ](https://github.com/FabricMC)*

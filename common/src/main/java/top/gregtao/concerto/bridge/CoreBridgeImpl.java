@@ -30,14 +30,12 @@ public class CoreBridgeImpl implements CoreBridge {
 
     @Override
     public void sendMessageToClientPlayer(String message, boolean overlay) {
-        LocalPlayer player = Minecraft.getInstance().player;
-        if (player != null) {
-            if (overlay) {
-                player.sendOverlayMessage(Component.literal(message));
-            } else {
-                player.sendSystemMessage(Component.literal(message));
+        Minecraft.getInstance().execute(() -> {
+            LocalPlayer player = Minecraft.getInstance().player;
+            if (player != null) {
+                player.displayClientMessage(Component.literal(message), overlay);
             }
-        }
+        });
     }
 
     @Override

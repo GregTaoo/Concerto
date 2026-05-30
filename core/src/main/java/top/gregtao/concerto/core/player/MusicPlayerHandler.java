@@ -78,13 +78,14 @@ public class MusicPlayerHandler {
 
     public void tryForcePause(boolean paused) {
         boolean isLocal = MusicRoom.clientGetState() == MusicRoom.ClientState.LOCAL;
-        if (isLocal) {
-            if (this.isForcePaused() && !paused) this.forceResume();
-            else if (paused) this.forcePause();
-            return;
+        if (this.isForcePaused() && !paused) {
+            this.forceResume();
+        } else if (paused) {
+            this.forcePause();
         }
-
-        this.setPaused(paused);
+        if (!isLocal) {
+            this.setPaused(paused);
+        }
     }
 
     public static void registerSyncRecordListeners(SyncRecord<MusicPlayerState> record) {

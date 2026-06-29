@@ -30,6 +30,10 @@ public class MinecraftMixin {
 
     @Inject(at = @At("HEAD"), method = "disconnectFromWorld")
     private static void disconnectInject(CallbackInfo ci) {
-        ConcertoRunner.run(() -> MusicPlayerHandler.INSTANCE.setPaused(true));
+        ConcertoRunner.run(() -> {
+            if (MusicPlayerHandler.INSTANCE != null) {
+                MusicPlayerHandler.INSTANCE.setPaused(true);
+            }
+        });
     }
 }

@@ -33,7 +33,7 @@ import java.util.regex.Pattern;
 
 public class MusicPlayerHandler {
 
-    public static MusicPlayerHandler INSTANCE = null;
+    public static MusicPlayerHandler INSTANCE = new MusicPlayerHandler();
 
     private final SyncRecord<MusicPlayerState> localRecord;
     private boolean forcePaused = false;

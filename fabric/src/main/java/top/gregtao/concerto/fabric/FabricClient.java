@@ -61,7 +61,15 @@ public class FabricClient implements ClientModInitializer {
 
         @Override
         public void sendPayload(ConcertoPayload payload) {
-            ClientPlayNetworking.send(payload);
+            Minecraft client = Minecraft.getInstance();
+            if (client.getConnection() == null || !ClientPlayNetworking.canSend(payload.type())) {
+                return;
+            }
+            try {
+                ClientPlayNetworking.send(payload);
+            } catch (IllegalStateException ignored) {
+                // The client can disconnect between the connection check and the send call.
+            }
         }
     }
 

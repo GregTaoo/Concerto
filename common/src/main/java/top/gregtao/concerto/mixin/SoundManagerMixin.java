@@ -14,12 +14,16 @@ public class SoundManagerMixin {
 
     @Inject(at = @At("HEAD"), method = "stop()V")
     private void pauseAllInject(CallbackInfo ci) {
-        MusicPlayerHandler.INSTANCE.setPaused(true);
+        if (MusicPlayerHandler.INSTANCE != null) {
+            MusicPlayerHandler.INSTANCE.setPaused(true);
+        }
     }
 
     @Inject(at = @At("HEAD"), method = "resume()V")
     private void resumeAllInject(CallbackInfo ci) {
-        MusicPlayerHandler.INSTANCE.setPaused(false);
+        if (MusicPlayerHandler.INSTANCE != null) {
+            MusicPlayerHandler.INSTANCE.setPaused(false);
+        }
     }
 
     @Inject(at = @At("TAIL"), method = "updateSourceVolume(Lnet/minecraft/sounds/SoundSource;F)V")

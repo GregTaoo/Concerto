@@ -73,6 +73,7 @@ jobs:
         with:
           java-version: ${{ env.JAVA_VER }}
           distribution: 'temurin'
+          cache: gradle
 
       - name: Build and Split Artifacts
         id: build-run
@@ -155,7 +156,7 @@ jobs:
           token: ${{ secrets.MODRINTH_TOKEN }}
           project: A0VZd1kW
           name: ${{ steps.build-run.outputs.fabric_name }}
-          version: ${{ steps.build-run.outputs.shorter_version }}-fabric
+          version: ${{ steps.build-run.outputs.fabric_name }}
           changelog: ${{ github.event.release.body }}
           loaders: '["fabric"]'
           game-versions: ${{ steps.build-run.outputs.fabric_gv }}
@@ -169,7 +170,7 @@ jobs:
           token: ${{ secrets.MODRINTH_TOKEN }}
           project: A0VZd1kW
           name: ${{ steps.build-run.outputs.neoforge_name }}
-          version: ${{ steps.build-run.outputs.shorter_version }}-neoforge
+          version: ${{ steps.build-run.outputs.neoforge_name }}
           changelog: ${{ github.event.release.body }}
           loaders: '["neoforge"]'
           game-versions: ${{ steps.build-run.outputs.neoforge_gv }}
@@ -183,7 +184,7 @@ jobs:
           token: ${{ secrets.MODRINTH_TOKEN }}
           project: A0VZd1kW
           name: ${{ steps.build-run.outputs.paper_name }}
-          version: ${{ steps.build-run.outputs.shorter_version }}-paper
+          version: ${{ steps.build-run.outputs.paper_name }}
           changelog: ${{ github.event.release.body }}
           loaders: '["paper"]'
           game-versions: ${{ steps.build-run.outputs.paper_gv }}

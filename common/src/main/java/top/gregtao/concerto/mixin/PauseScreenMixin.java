@@ -13,6 +13,10 @@ public class PauseScreenMixin {
 
     @Inject(at = @At("HEAD"), method = "onDisconnect()V")
     private static void disconnectInject(CallbackInfo ci) {
-        ConcertoRunner.run(() -> MusicPlayerHandler.INSTANCE.setPaused(true));
+        ConcertoRunner.run(() -> {
+            if (MusicPlayerHandler.INSTANCE != null) {
+                MusicPlayerHandler.INSTANCE.setPaused(true);
+            }
+        });
     }
 }

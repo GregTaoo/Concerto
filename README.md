@@ -1,154 +1,154 @@
 <div align="center">
   <img src="icon-large.png" alt="Concerto" width="256">
   <h1>Concerto</h1>
-  <p><b>基于 Fabric / NeoForge / Paper 的 Minecraft 内置音乐播放器</b></p>
+  <p><b>Built-in Minecraft Music Player for Fabric / NeoForge / Paper</b></p>
 </div>
 
-> 支持本地音乐、网络资源，以及网易云音乐、QQ音乐、酷狗音乐等流媒体平台。具备多人联机“一起听”功能。
+> Supports local music, online resources, and streaming platforms like NetEase Cloud Music, QQ Music, Kugou Music. Features a "Listen Together" function for multiplayer sessions.
 
 ---
 
-## 🌟 主要功能
+## 🌟 Key Features
 
-- **多平台音频解析**：支持网易云音乐、QQ音乐、酷狗音乐，同时支持本地文件加载与网络直链播放。
-- **音乐室（一起听）**：与服务器内的其他玩家进入同一音乐室，所有成员的播放进度、切换与暂停操作均会实时同步。
-- **全服点播（KTV模式）**：服务器可开启点播功能，玩家自由排队点播歌曲。支持发起切歌投票，以跳过不符合多数人意愿的音乐。
-- **VIP 共享 & 服务端预设**：服主可将个人支持平台配置至服务端，与全服玩家共享 VIP 权限歌曲。此外，还支持上传预设歌单，在无点播任务时自动播放。
-- **跨平台兼容**：客户端支持 Fabric 和 NeoForge，服务端支持专属 Paper 插件版本，实现跨平台互通。
-
----
-
-## 🛡️ 注意事项与致谢
-
-- ⚠️ **安全提醒**：请妥善保管您 `Concerto` 文件夹中的 `.cookie` 文件，切勿随意分享他人。
-- ⚖️ **协议与声明**：本模组仅供学习交流使用，严禁将其用于非法用途。使用前请仔细阅读 [协议](LICENSE)。本模组**未授权发布于任何收费或附带商业性质的平台**，若有违规发布者需自行承担法律责任。如有侵权，请联系删除。
-- 🤝 **特别鸣谢**：酷狗音乐相关代码由 [ming-sc](https://github.com/ming-sc) 贡献。感谢所有 [支持者](supporters.md)。
-
-> **Wiki 基准模组版本：`2.0.0`**
+- **Multi-Platform Audio Parsing**: Supports NetEase Cloud Music, QQ Music, Kugou Music, as well as loading local files and direct online link playback.
+- **Music Room (Listen Together)**: Join the same music room with other players on the server; playback progress, track switching, and pause operations are synchronized in real-time for all members.
+- **Global On-Demand (KTV Mode)**: Servers can enable an on-demand feature where players can queue up songs. Supports initiating "skip song" votes to bypass music that doesn't align with the majority's preference.
+- **VIP Sharing & Server Presets**: Server owners can configure their personal platform support to the server, sharing VIP song access with all players. Additionally, it supports uploading preset playlists that automatically play when there are no on-demand tasks.
+- **Cross-Platform Compatibility**: Client supports Fabric and NeoForge, while the server supports a dedicated Paper plugin version, enabling cross-platform interoperability.
 
 ---
 
-## ⌨️ 快捷操作热键
+## 🛡️ Notes and Acknowledgements
 
-| 热键 | 功能说明 |
+- ⚠️ **Security Reminder**: Please keep your `.cookie` files in the `Concerto` folder secure and do not share them with others.
+- ⚖️ **Agreement and Disclaimer**: This mod is for learning and exchange purposes only. It is strictly forbidden to use it for illegal purposes. Please read the [License](LICENSE) carefully before use. This mod is **not authorized for release on any paid or commercial platforms**. Those who violate this will bear legal responsibility. If there is any infringement, please contact us for removal.
+- 🤝 **Special Thanks**: Kugou Music related code contributed by [ming-sc](https://github.com/ming-sc). Thanks to all [supporters](supporters.md).
+
+> **Wiki Base Mod Version: `2.0.0`**
+
+---
+
+## ⌨️ Hotkeys
+
+| Key | Function |
 | :---: | --- |
-| `U` | 打开播放队列管理界面 |
-| `I` | 打开 Concerto 主菜单 |
-| `N` | 播放下一首 |
-| `P` | 暂停 / 继续播放 |
+| `U` | Open Playlist Management Interface |
+| `I` | Open Concerto Main Menu |
+| `N` | Play Next Song |
+| `P` | Pause / Resume Playback |
 
 ---
 
-## 📜 指令参考
+## 📜 Command Reference
 
-### 1. 客户端功能指令 `/concerto` （可使用别名 `/music`）
-| 指令操作 | 功能说明 |
+### 1. Client-Side Commands `/concerto` (Alias: `/music`)
+| Command | Description |
 | --- | --- |
-| `pause` / `start` / `stop` | 暂停、开始 或 停止播放 |
-| `clear` | 停止播放并清空当前播放列表 |
-| `reload` / `restart` | 重新加载配置及歌单数据 / 重新启动播放器核心（用于修复卡死） |
-| `save` | 缓存当前歌曲（仅限支持缓存的音源，如网易云音乐等） |
-| `like` / `dislike` | 收藏 / 取消收藏当前歌曲（仅限网易云音乐） |
-| `download-current` | 将当前歌曲及相关歌词下载至本地 `Concerto` 文件夹 |
-| `download-all` | 下载当前播放队列中的所有歌曲及歌词 |
-| `export-as-playlist` | 导出当前缓存队列为服务端所需的预设歌单 `JSON` 格式 |
-| `clean-cache` | 清理客户端 `Concerto/cache` 目录下的所有缓存及验证文件（含 cookie） |
+| `pause` / `start` / `stop` | Pause, start, or stop playback |
+| `clear` | Stop playback and clear the current playlist |
+| `reload` / `restart` | Reload configuration and playlist data / Restart the player core (to fix freezes) |
+| `save` | Cache the current song (only for supported sources like NetEase Cloud Music, etc.) |
+| `like` / `dislike` | Like / Unlike the current song (NetEase Cloud Music only) |
+| `download-current` | Download the current song and its lyrics to the local `Concerto` folder |
+| `download-all` | Download all songs and lyrics in the current playback queue |
+| `export-as-playlist` | Export the current cache queue as a preset playlist in the `JSON` format required by the server |
+| `clean-cache` | Clear all cache and verification files (including cookies) in the client's `Concerto/cache` directory |
 
-### 2. 音乐室指令 `/musicroom` （需服务端安装 Concerto）
-| 指令操作 | 功能说明 |
+### 2. Music Room Commands `/musicroom` (Requires Concerto installed on the server)
+| Command | Description |
 | --- | --- |
-| `create` | 创建并加入专属音乐室，成功后将自动复制对应的 UUID（受服务端权限要求限制） |
-| `join [UUID]` / `quit` | 加入对应 UUID 编号的音乐室 / 退出当前的音乐室或点播大厅 |
-| `remove` / `members` | 解散当前音乐室 / 查看所在音乐室的成员列表 |
-| `op [玩家]` | 赋予或撤销指定玩家的管理切歌权限（仅限房间创建者） |
-| `agent join` / `quit` | 加入或退出服务器公共点播队列系统 |
-| `agent add` | 将当前播放的音乐推送至服务器公共点播队列 |
-| `agent vote [true/false]` | 发起集体切歌投票 / 对当前进行的切歌投票投出赞成或反对 |
+| `create` | Create and join a dedicated music room; the corresponding UUID will be automatically copied upon success (subject to server permission restrictions) |
+| `join [UUID]` / `quit` | Join a music room with the specified UUID / Leave the current music room or the on-demand lobby |
+| `remove` / `members` | Disband the current music room / View the list of members in the current music room |
+| `op [player]` | Grant or revoke management (skip song) privileges to a specified player (creator of the room only) |
+| `agent join` / `quit` | Join or leave the server's public on-demand queue system |
+| `agent add` | Push the currently playing music to the server's public on-demand queue |
+| `agent vote [true/false]` | Initiate a collective skip song vote / Vote to approve or reject the current skip song vote |
 
-### 3. P2P 音乐分享指令 `/sharemusic` （客户端间网络直连）
-| 指令操作 | 功能说明 |
+### 3. P2P Music Sharing Commands `/sharemusic` (Direct network connection between clients)
+| Command | Description |
 | --- | --- |
-| `to [玩家或@a]` | 将播放内容分享给指定玩家。如服务端未安装模组，命令将回退至原版消息通道尝试推送。仅限白名单平台音源。 |
-| `accept [UUID]` / `reject` | 接受 / 拒绝指定的音乐分享（后接 UUID 或输入 `all` 拒绝全部请求） |
-| `list [页码]` | 查看待处理的音乐分享邀请列表 |
+| `to [player or @a]` | Share the currently playing content with a specific player. If the mod is not installed on the server, the command will fall back to the vanilla messaging channel to attempt delivery. Only whitelisted platform sources are supported. |
+| `accept [UUID]` / `reject` | Accept / Reject a specific music sharing invitation (followed by UUID or type `all` to reject all requests) |
+| `list [page number]` | View the list of pending music sharing invitations |
 
-### 4. 服务端管理指令 `/concerto-server` （仅限管理员使用）
-| 指令操作 | 功能说明 |
+### 4. Server Management Commands `/concerto-server` (Admin use only)
+| Command | Description |
 | --- | --- |
-| `audit [UUID]` / `reject` | 同意或拒绝全服广播分享的音乐审核请求（后接 `all` 拒绝全部等待请求） |
-| `audit list [页码]` | 列出当前等待服务端管理员审核的广播歌曲队列 |
-| `reload` / `reload-cookie` | 重新加载服务端配置 / 重新加载各个平台的 cookie 文件 |
-| `fetch-radios` | 将服务端的预设歌单同步至本地（普通用户亦可用） |
-| `clean-cache` | 清理服务端缓存数据及缓存的 cookie 信息 |
-| `agent reset` / `cut` | 彻底重置公共点播队列 / 强制全服音乐点播跳过当前歌曲 |
-| `agent stop` / `start` | 停止音乐点播模式 / 重新启动点播模式 |
+| `audit [UUID]` / `reject` | Approve or reject music broadcasting share requests for the entire server (followed by `all` to reject all pending requests) |
+| `audit list [page number]` | List the current queue of songs awaiting server administrator review for broadcast |
+| `reload` / `reload-cookie` | Reload server configuration / Reload cookie files for each platform |
+| `fetch-radios` | Synchronize preset playlists from the server to the local client (also usable by regular users) |
+| `clean-cache` | Clear server cache data and cached cookie information |
+| `agent reset` / `cut` | Completely reset the public on-demand queue / Force skip the current song for all players on the server |
+| `agent stop` / `start` | Stop the music on-demand mode / Restart the on-demand mode |
 
 ---
 
-## 📖 进阶使用说明
+## 📖 Advanced Usage Guide
 
-### 🎧 沉浸组团“一起听”音乐室
-- 身处同一音乐室的成员，所有的切歌、调整播放进度、暂停操作都能做到实时同步。
-- 建议将管理指令权限统一管理，以防止大量玩家频繁争夺切歌控制权。
-- 通过向其他玩家发送音乐室建立时生成的 UUID，即可让他们通过指令快速加入。
+### 🎧 Immersive Group "Listen Together" Music Rooms
+- Members in the same music room will have their song skips, playback progress adjustments, and pause operations synchronized in real-time.
+- It is recommended to manage management command permissions centrally to prevent frequent conflicts over skip song control by many players.
+- By sending the UUID generated when creating a music room to other players, they can quickly join via the command.
 
-### 🎵 队列管理界面
-- 按下按键 `U` 能够呼出详细的播放队列管理面板，支持从文件资源管理器直接拖拽外部音频文件与文件夹执行导入。
-- 面板完整支持双击快速切歌功能，并可以选中目标音乐直接发起向服务端的“推送点播”。
-- 通过导出指令生成的歌单配置文件将默认储存于 `Concerto/local_playlists`，便于后续的跨设备同步管理。
+### 🎵 Queue Management Interface
+- Pressing the `U` key will bring up a detailed playback queue management panel, which supports dragging and dropping external audio files and folders from the file explorer for import.
+- The panel fully supports double-clicking for quick song switching and allows you to select a target song to initiate a "push to on-demand" request to the server.
+- Playlist configuration files generated via the export command will be stored by default in `Concerto/local_playlists`, facilitating subsequent cross-device synchronization management.
 
-### 📡 全方位点播模式与预设配置
-- 当开启全服务器点播模式时，如果玩家提交的排队歌曲不符预期，可以随时通过指令发起投票跳过。
-- **服务端预设歌单**：服务端管理员可将整理好的歌单文件配置至服务端的 `Concerto/preset_radios/music_agent.json` 中。这样在无人点歌的空闲时刻，服务器也能自动播放预设音乐。
-- **VIP 曲库串流机制**：在服务端 `server_config.json` 中开启 `musicAgentUseShared`，并部署管理员具有 VIP 权限的平台 `.cookie` 文件，全服成员即可通过服务器直接点播 VIP 才能听的歌曲。
+### 📡 Comprehensive On-Demand Mode and Preset Configuration
+- When the global server on-demand mode is enabled, if a player-submitted song in the queue is not to your liking, you can initiate a vote to skip it at any time via the command.
+- **Server Preset Playlists**: Server administrators can configure organized playlist files into `Concerto/preset_radios/music_agent.json` on the server. This way, when no one is requesting songs, the server can automatically play preset music.
+- **VIP Library Streaming Mechanism**: Enable `musicAgentUseShared` in the server's `server_config.json` and deploy the `.cookie` files of platforms where the administrator has VIP privileges. Then, all server members can directly request VIP songs through the server.
 
-### 📨 玩家间点对点音乐分享
-- 当有向特定玩家分享目前正在播放的音乐的需求时，可以使用 `/sharemusic` 指令。由于安全机制，部分直接读取路径的本地音乐可能被标记为不安全而无法分享。
-
----
-
-## ⚙️ 配置文件参数说明
-
-### 服务端 (`server_config.json`)
-- `auditionRequired`: 是否需经过管理员审核才能将音乐广播分享给全服（默认 `true`）。
-- `serverMusicAgent`: 是否开启服务端全服点歌功能（默认 `true`）。
-- `agentInviteWhenJoin`: 玩家加入服务器时是否自动发送点歌大厅的邀请（默认 `true`）。
-- `musicRoomCommandPermission`: 玩家创建音乐室需要达到的最低权限级别（默认 `2`）。
-- `musicAgentAddTimeLimit`: 玩家两次提交点播歌曲间的最小间隔时间（默认 `60` 秒）。
-- `musicAgentUseShared`: 全服点播时是否强制由服务端拉取并共享直链（默认 `true`）。
-- `kuGouMusicLite`: 解析酷狗音乐资源时是否使用概念版通道（默认 `false`）。
-
-### 客户端 (`client_config.json`)
-**【 核心控制 】**
-- `confirmAfterReceived`: 接收到别人的音乐分享时，是否自动接受（默认开启）。
-- `joinAgentWhenInvited`: 接收到服务端的全服点播邀请时，是否自动加入（默认关闭）。
-- `neteaseMusicQuality`: 全局请求的网易云音乐音质等级（可选 `"STANDARD"`, `"HIGHER"`, `"EXHIGH"`, `"LOSSLESS"`， 默认 `"HIRES"`）。
-- `handshakeRequired`: 连接服务端时是否强制进行连接验证握手（默认开启）。
-- `maxCacheSize`: 允许分配给音乐及图片缓存的最大空间（默认 `100MB`）。
-- `hideWhenChat`: 当玩家打开聊天框时，是否自动隐藏屏幕上的播放器信息（默认开启）。
-
-**【 HUD 显示编排 】**
-所有桌面提示元素（歌词、进度、封面等）均支持通过修改配置文件启用或关闭，如 `displayLyrics: true/false`。
-- **坐标规范**：使用 `[横向比例](+/-)[像素偏移],[纵向比例](+/-)[像素偏移]`。例如：`0.5,1-70` 指代居中对齐，并距离底边 70 个像素；`1-30,0+15` 指代表距离右边缘 30 像素距顶部边缘 15 像素。
-- **色彩规范**：文本与进度条颜色使用 ARGB 16 进制码。格式如： `#ffffffff` (完全不透明纯白) , `#ff00aaaa` (完全不透明青色) 。
+### 📨 Peer-to-Peer Music Sharing Between Players
+- When there is a need to share the currently playing music with a specific player, you can use the `/sharemusic` command. Due to security mechanisms, some local music that directly reads paths may be flagged as unsafe and cannot be shared.
 
 ---
 
-## ❓ 常见问题排查与解答
+## ⚙️ Configuration File Parameter Explanations
 
-#### **1. 如何正确配置服务端的 Cookie 数据？**
-请在本地登录后复制 cookie 文件夹至服务端
+### Server (`server_config.json`)
+- `auditionRequired`: Whether music broadcast sharing to the entire server requires administrator approval (default `true`).
+- `serverMusicAgent`: Whether to enable the server's global song on-demand feature (default `true`).
+- `agentInviteWhenJoin`: Whether to automatically send an invitation to the on-demand lobby when a player joins the server (default `true`).
+- `musicRoomCommandPermission`: The minimum permission level required for a player to create a music room (default `2`).
+- `musicAgentAddTimeLimit`: The minimum interval time between two on-demand song submissions by a player (default `60` seconds).
+- `musicAgentUseShared`: Whether to force the server to fetch and share direct links when using global on-demand (default `true`).
+- `kuGouMusicLite`: Whether to use the lite version channel when parsing Kugou Music resources (default `false`).
 
-#### **2. 网易云通过二维码登录后无法正常使用并持续报错？**
-网易云音乐的安全风控策略十分严格。在异地跨设备请求过高频时会导致环境被标记并拦截异常登录。推荐您放弃密码或二维码登录途径，直接复制获取当前登录通过的完整网页 Cookie 信息以绕过环境检测。
+### Client (`client_config.json`)
+**【 Core Controls 】**
+- `confirmAfterReceived`: Whether to automatically accept music shares received from others (default enabled).
+- `joinAgentWhenInvited`: Whether to automatically join the global on-demand invitation from the server (default disabled).
+- `neteaseMusicQuality`: Global requested NetEase Cloud Music audio quality level (options: `"STANDARD"`, `"HIGHER"`, `"EXHIGH"`, `"LOSSLESS"`, default `"HIRES"`).
+- `handshakeRequired`: Whether to force a connection verification handshake when connecting to the server (default enabled).
+- `maxCacheSize`: The maximum space allowed for music and image caching (default `100MB`).
+- `hideWhenChat`: Whether to automatically hide on-screen player information when the player opens the chat box (default enabled).
 
-#### **3. QQ音乐信息更新失效或加载报错**
-由于平台接口机制设定，QQ 音乐请求到的授权具有严格的寿命限制。部分数据几天后可能会超时并请求无效。当发生此类报错影响正常点播时，请服主及时更新服务器上的相关文件配置并执行 `/concerto-server reload-cookie` 进行刷新。
-
-#### **4. 加载界面不全和特定 HUD 组件渲染异常**
-这很大可能是由于部分显示缓存出现错乱导致的。首先请优先使用 `/concerto clean-cache` 命令清除客户端缓存，如果故障依然存在且界面依然黑屏，请完全关闭游戏，手动前往 `.minecraft/Concerto/cache` 删除相关所有文件然后再重启游戏重新生成。
+**【 HUD Display Layout 】**
+All on-screen notification elements (lyrics, progress, cover art, etc.) can be enabled or disabled by modifying the configuration file, e.g., `displayLyrics: true/false`.
+- **Coordinate Specification**: Use `[horizontal proportion](+/-)[pixel offset],[vertical proportion](+/-)[pixel offset]`. For example, `0.5,1-70` means center-aligned and 70 pixels from the bottom; `1-30,0+15` means 30 pixels from the right edge and 15 pixels from the top edge.
+- **Color Specification**: Text and progress bar colors use ARGB hexadecimal codes. Format: `#ffffffff` (fully opaque pure white), `#ff00aaaa` (fully opaque cyan).
 
 ---
 
-## 🚀 使用的开源项目鸣谢
+## ❓ Common Troubleshooting and FAQs
+
+#### **1. How to correctly configure the server's Cookie data?**
+Please log in locally and copy the cookie folder to the server.
+
+#### **2. NetEase Cloud Music fails to work properly and gives continuous errors after logging in with a QR code?**
+NetEase Cloud Music has strict security risk control policies. Frequent high-frequency requests from different devices in different locations can cause the environment to be flagged and abnormal logins to be intercepted. It is recommended that you abandon password or QR code login methods and directly copy the complete web Cookie information from your current successful login to bypass environmental detection.
+
+#### **3. QQ Music information updates fail or loading errors occur.**
+Due to the platform's API mechanism, QQ Music authorization has a strict lifespan. Some data may expire and become invalid after a few days. If such errors affect normal on-demand playback, the server owner should promptly update the relevant configuration files on the server and execute `/concerto-server reload-cookie` to refresh.
+
+#### **4. Incomplete loading interface and rendering anomalies in specific HUD components.**
+This is likely caused by corrupted display cache. First, please use the `/concerto clean-cache` command to clear the client cache. If the issue persists and the interface is still black, please completely close the game, manually navigate to `.minecraft/Concerto/cache`, delete all related files, and then restart the game to regenerate them.
+
+---
+
+## 🚀 Acknowledgements for Open Source Projects Used
 *[java-stream-player](https://github.com/goxr3plus/java-stream-player)* | *[ZXing](https://github.com/zxing/zxing)* | *[soundlibs](https://github.com/pdudits/soundlibs)* | *[JustFlac](https://github.com/drogatkin/JustFLAC)* | *[java-vorbis-support](https://github.com/Trilarion/java-vorbis-support)* | *[jaudiotagger](https://github.com/marcoc1712/jaudiotagger)* | *[Fabric API ](https://github.com/FabricMC)*

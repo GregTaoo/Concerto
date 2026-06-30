@@ -33,12 +33,14 @@ public class MusicPlayer extends StreamPlayer implements StreamPlayerListener {
     public Music currentMusic = null;
     public InputStream currentSource = null;
     public Lyrics currentLyrics = null, currentSubLyrics = null;
+    public int[] currentSubLyricsMapping = new int[0];
     public MusicMetaData currentMeta = null;
     private MusicTimestamp currentTime = null;
     private String[] displayTexts = new String[]{"", "", "", ""};
     private String timeFormat = "%s" + " ".repeat(30) + "%s";
     public float progressPercentage = 0;
     private long startTime = 0;
+    private long currentTimeUpdatedAtMs = 0;
 
     public boolean started = false;
     public final AtomicBoolean playNextLock = new AtomicBoolean(false);
@@ -184,12 +186,14 @@ public class MusicPlayer extends StreamPlayer implements StreamPlayerListener {
         this.currentSource = null;
 
         this.currentLyrics = this.currentSubLyrics = null;
+        this.currentSubLyricsMapping = new int[0];
         this.currentMeta = null;
         this.currentTime = MusicTimestamp.of(0);
         this.displayTexts = new String[]{"", "", "", ""};
         this.timeFormat = "%s" + " ".repeat(30) + "%s";
         this.progressPercentage = 0;
         this.startTime = 0;
+        this.currentTimeUpdatedAtMs = 0;
         ConcertoEvents.ON_MUSIC_INFO_RESET.emit();
     }
 
@@ -205,6 +209,7 @@ public class MusicPlayer extends StreamPlayer implements StreamPlayerListener {
         } catch (Exception e) {
             this.currentLyrics = this.currentSubLyrics = null;
         }
+        this.currentSubLyricsMapping = Lyrics.createTimestampMapping(this.currentLyrics, this.currentSubLyrics, 500);
         this.displayTexts[2] = "";
     }
 
@@ -228,6 +233,7 @@ public class MusicPlayer extends StreamPlayer implements StreamPlayerListener {
         MusicTimestamp duration = this.currentMeta.getDuration();
         this.progressPercentage = duration == null ? 0 : ((float) millisecond / duration.asMilliseconds());
         this.currentTime = MusicTimestamp.ofMilliseconds(millisecond);
+        this.currentTimeUpdatedAtMs = System.currentTimeMillis();
         this.displayTexts[3] = this.timeFormat.formatted(this.currentTime.toShortString());
 
         if (this.currentLyrics != null) this.displayTexts[0] = this.currentLyrics.stayOrNext(millisecond);
@@ -241,6 +247,20 @@ public class MusicPlayer extends StreamPlayer implements StreamPlayerListener {
 
     public String[] getDisplayTexts() {
         return this.displayTexts;
+    }
+
+    public long getInterpolatedCurrentTimeMilliseconds() {
+        if (this.currentTime == null) {
+            return 0L;
+        }
+
+        long currentMs = this.currentTime.asMilliseconds();
+        if (this.isPlaying() && !MusicPlayerHandler.INSTANCE.isPaused()) {
+            currentMs += Math.max(0L, System.currentTimeMillis() - this.currentTimeUpdatedAtMs);
+        }
+
+        MusicTimestamp duration = this.currentMeta == null ? null : this.currentMeta.getDuration();
+        return duration == null ? currentMs : Math.min(currentMs, duration.asMilliseconds());
     }
 
     @Override

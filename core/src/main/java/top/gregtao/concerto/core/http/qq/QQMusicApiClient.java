@@ -117,6 +117,18 @@ public class QQMusicApiClient extends HttpApiClient {
     private final Pattern LYRIC_PATTERN = Pattern.compile("MusicJsonCallback_lrc\\(([\\d\\D]+)\\)");
 
     public Pair<String, String> getLyrics(String mid) {
+        try {
+            JsonObject data = this.requestSignedApi("music.musichallSong.PlayLyricInfo", "GetPlayLyricInfo",
+                    "\"songMID\":\"" + mid + "\",\"songID\":0,\"trans\":1")
+                    .getAsJsonObject("data");
+            return Pair.of(TextUtil.fromBase64(data.get("lyric").getAsString()), TextUtil.fromBase64(data.get("trans").getAsString()));
+        } catch (Exception e) {
+            Concerto.getLogger().warn("Error getting lyrics from QQ Music PlayLyricInfo for {}", mid, e);
+            return this.getLegacyLyrics(mid);
+        }
+    }
+
+    private Pair<String, String> getLegacyLyrics(String mid) {
         String url = "https://c.y.qq.com/lyric/fcgi-bin/fcg_query_lyric_new.fcg?callback=MusicJsonCallback_lrc&pcachetime=" + TextUtil.getCurrentTime() + "&songmid=" + mid + "&g_tk=5381&jsonpCallback=MusicJsonCallback_lrc&loginUin=0&hostUin=0&format=jsonp&inCharset=utf8&outCharset=utf-8&platform=yqq&needNewCode=0";
         String result = this.openCApi().setFixedReferer("https://y.qq.com").url(url).get().body();
         Matcher matcher = LYRIC_PATTERN.matcher(result);

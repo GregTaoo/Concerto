@@ -18,6 +18,7 @@ public class ClientConfig extends ConfigFile {
 
     public ClientConfig() {
         super("Concerto/client_config.json");
+        this.readOptions();
     }
 
     public void readOptions() {

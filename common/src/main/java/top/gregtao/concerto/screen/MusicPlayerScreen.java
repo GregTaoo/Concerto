@@ -11,17 +11,16 @@ import org.joml.Matrix4f;
 import org.joml.Quaternionf;
 import top.gregtao.concerto.core.config.ClientConfig;
 import top.gregtao.concerto.core.enums.OrderType;
+import top.gregtao.concerto.core.enums.TextAlignment;
 import top.gregtao.concerto.core.music.MusicTimestamp;
 import top.gregtao.concerto.core.music.lyrics.Lyrics;
 import top.gregtao.concerto.core.music.meta.music.MusicMetaData;
 import top.gregtao.concerto.core.player.MusicPlayer;
 import top.gregtao.concerto.core.player.MusicPlayerHandler;
 import top.gregtao.concerto.core.player.PlayerPermissions;
-import top.gregtao.concerto.core.util.MathUtil;
 import top.gregtao.concerto.core.util.Pair;
 
 import java.util.ArrayList;
-import java.util.Comparator;
 
 public class MusicPlayerScreen extends ConcertoScreen {
 
@@ -148,11 +147,9 @@ public class MusicPlayerScreen extends ConcertoScreen {
             ArrayList<Pair<MusicTimestamp, String>> lyrics = currentLyrics.getLyricBody();
             ArrayList<Pair<MusicTimestamp, String>> subLyrics = currentSubLyrics != null ? currentSubLyrics.getLyricBody() : null;
 
-            long currentTime = (long) (MusicPlayer.INSTANCE.progressPercentage *
-                    (metaData.getDuration() != null ? metaData.getDuration().asMilliseconds() : 0));
+            long currentTime = MusicPlayer.INSTANCE.getInterpolatedCurrentTimeMilliseconds();
 
-            int activeIndex = Math.max(0, MathUtil.upperBound(
-                    lyrics, Pair.of(MusicTimestamp.ofMilliseconds(currentTime), ""), Comparator.comparing(Pair::getFirst)) - 1);
+            int activeIndex = currentLyrics.getCurrentIndex();
 
             int lineHeight = subLyrics != null ? 27 : 17;
             int startY = 45;
@@ -165,13 +162,11 @@ public class MusicPlayerScreen extends ConcertoScreen {
             for (int i = 0; i < lyrics.size(); i++) {
                 String line = lyrics.get(i).getSecond();
                 String subLine = null;
-                if (subLyrics != null) {
-                    long currentLineTime = lyrics.get(i).getFirst().asMilliseconds();
-                    int subIndex = MathUtil.upperBound(subLyrics,
-                            Pair.of(MusicTimestamp.ofMilliseconds(currentLineTime), ""),
-                            Comparator.comparing(Pair::getFirst)) - 1;
-                    if (subIndex >= 0 && subIndex < subLyrics.size() &&
-                            Math.abs(subLyrics.get(subIndex).getFirst().asMilliseconds() - currentLineTime) < 500) {
+                int subIndex = -1;
+                int[] subLyricsMapping = MusicPlayer.INSTANCE.currentSubLyricsMapping;
+                if (subLyrics != null && i < subLyricsMapping.length) {
+                    subIndex = subLyricsMapping[i];
+                    if (subIndex >= 0 && subIndex < subLyrics.size()) {
                         subLine = subLyrics.get(subIndex).getSecond();
                     }
                 }
@@ -183,13 +178,22 @@ public class MusicPlayerScreen extends ConcertoScreen {
                     int alpha = Math.max(15, 255 - Math.abs(i - activeIndex) * 35);
 
                     int color = isActive ? ((int) ClientConfig.INSTANCE.lyricsColor.getNumber() | 0xFF000000) : ((alpha << 24) | 0xAAAAAA);
-
-                    context.drawString(this.font, line, rightHalfX + (lyricsWidth - this.font.width(line)) / 2, y, color, isActive);
+                    long lineStart = currentLyrics.getLineStartMilliseconds(i);
+                    long lineEnd = currentLyrics.getLineEndMilliseconds(i, metaData.getDuration());
+                    InGameHudRenderer.renderTimedScrollableText(context, Component.literal(line),
+                            TextAlignment.CENTER,
+                            rightHalfX + lyricsWidth / 2, y, rightHalfX, lyricsWidth,
+                            lineStart, currentTime, lineEnd, color, isActive);
 
                     if (subLine != null) {
                         int subColor = isActive ? ((int) ClientConfig.INSTANCE.subLyricsColor.getNumber() | 0xFF000000) : ((alpha << 24) | 0x888888);
                         int subY = y + 12;
-                        context.drawString(this.font, subLine, rightHalfX + (lyricsWidth - this.font.width(subLine)) / 2, subY, subColor, false);
+                        long subLineStart = currentSubLyrics.getLineStartMilliseconds(subIndex);
+                        long subLineEnd = currentSubLyrics.getLineEndMilliseconds(subIndex, metaData.getDuration());
+                        InGameHudRenderer.renderTimedScrollableText(context, Component.literal(subLine),
+                                TextAlignment.CENTER,
+                                rightHalfX + lyricsWidth / 2, subY, rightHalfX, lyricsWidth,
+                                subLineStart, currentTime, subLineEnd, subColor, false);
                     }
                 }
             }

@@ -6,6 +6,9 @@ import net.minecraft.client.gui.screens.ChatScreen;
 import net.minecraft.network.chat.Component;
 import org.joml.Quaternionf;
 import top.gregtao.concerto.core.config.ClientConfig;
+import top.gregtao.concerto.core.enums.TextAlignment;
+import top.gregtao.concerto.core.music.MusicTimestamp;
+import top.gregtao.concerto.core.music.lyrics.Lyrics;
 import top.gregtao.concerto.core.player.MusicPlayer;
 import top.gregtao.concerto.core.player.MusicPlayerHandler;
 import top.gregtao.concerto.core.room.MusicRoom;
@@ -46,7 +49,7 @@ public class InGameHudRenderer {
         public void tick(float speed) {
             if (this.width <= this.maxWidth) return;
 
-            float delta = speed * 40f / Minecraft.getInstance().getFps();
+            float delta = speed * 40f / Math.max(1, Minecraft.getInstance().getFps());
             if (this.stop) {
                 this.stopTicks -= delta;
                 if (this.stopTicks <= 0) {
@@ -68,6 +71,47 @@ public class InGameHudRenderer {
         }
     }
 
+    public static void renderTimedScrollableText(
+            GuiGraphics context, Component text, TextAlignment align, int x, int y, int areaX, int areaWidth,
+            long startMs, long currentMs, long endMs, int color, boolean shadow
+    ) {
+        Minecraft client = Minecraft.getInstance();
+        int textWidth = client.font.width(text);
+
+        if (textWidth <= areaWidth) {
+            context.drawString(client.font, text, ComponentUtil.getTextRenderX(text, align, client.font, x), y, color, shadow);
+            return;
+        }
+
+        long duration = Math.max(1L, endMs - startMs);
+        float scrollingDuration = Math.max(1f, duration * 0.9f);
+        float progress = Math.max(0f, Math.min(1f, (currentMs - startMs) / scrollingDuration));
+        int offset = Math.round((areaWidth - textWidth) * progress);
+
+        context.enableScissor(areaX, y, areaX + areaWidth, y + client.font.lineHeight);
+        context.drawString(
+                client.font, text, areaX + offset, y, color, shadow
+        );
+        context.disableScissor();
+    }
+
+    private static long getCurrentTimeMs() {
+        return MusicPlayer.INSTANCE.getInterpolatedCurrentTimeMilliseconds();
+    }
+
+    private static long[] getCurrentLyricLineTimes(Lyrics lyrics, long currentTimeMs) {
+        if (lyrics == null || lyrics.isEmpty()) {
+            return new long[]{currentTimeMs, currentTimeMs};
+        }
+
+        int activeIndex = lyrics.getCurrentIndex();
+        MusicTimestamp duration = MusicPlayer.INSTANCE.currentMeta == null ? null : MusicPlayer.INSTANCE.currentMeta.getDuration();
+        return new long[]{
+                lyrics.getLineStartMilliseconds(activeIndex),
+                lyrics.getLineEndMilliseconds(activeIndex, duration)
+        };
+    }
+
     public static void render(GuiGraphics context, int mouseX, int mouseY, float delta) {
         Minecraft client = Minecraft.getInstance();
         if (MusicPlayer.INSTANCE.isPlaying()) {
@@ -83,13 +127,19 @@ public class InGameHudRenderer {
 
                 if (options.displayLyrics) {
                     Vector2i pos = config.lyricsPosSupplier.getPos(scaledWidth, scaledHeight);
-                    ComponentUtil.renderText(Component.literal(texts[0]), options.lyricsAlignment,
-                            pos.x, pos.y, context, client.font, (int) config.lyricsColor.getNumber());
+                    long currentTimeMs = getCurrentTimeMs();
+                    long[] lineTimes = getCurrentLyricLineTimes(MusicPlayer.INSTANCE.currentLyrics, currentTimeMs);
+                    renderTimedScrollableText(context, Component.literal(texts[0]), options.lyricsAlignment,
+                            pos.x, pos.y, 0, scaledWidth, lineTimes[0], currentTimeMs, lineTimes[1],
+                            (int) config.lyricsColor.getNumber(), options.textShadow);
                 }
                 if (options.displaySubLyrics) {
                     Vector2i pos = config.subLyricsPosSupplier.getPos(scaledWidth, scaledHeight);
-                    ComponentUtil.renderText(Component.literal(texts[1]), options.subLyricsAlignment,
-                            pos.x, pos.y, context, client.font, (int) config.subLyricsColor.getNumber());
+                    long currentTimeMs = getCurrentTimeMs();
+                    long[] lineTimes = getCurrentLyricLineTimes(MusicPlayer.INSTANCE.currentSubLyrics, currentTimeMs);
+                    renderTimedScrollableText(context, Component.literal(texts[1]), options.subLyricsAlignment,
+                            pos.x, pos.y, 0, scaledWidth, lineTimes[0], currentTimeMs, lineTimes[1],
+                            (int) config.subLyricsColor.getNumber(), options.textShadow);
                 }
 
                 Component text3 = Component.literal(texts[3]);

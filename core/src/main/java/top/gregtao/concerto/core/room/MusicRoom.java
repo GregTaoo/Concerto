@@ -25,11 +25,13 @@ public class MusicRoom {
 
     public static class MusicRoomState extends MusicPlayerState {
         public String resolvedMedia = null;
+        public long resolvedStartTime = 0L;
         public String errorMessage = "";
         public String owner = "";
         public Map<String, Integer> members = new HashMap<>();
 
         public static final Field RESOLVED_MEDIA;
+        public static final Field RESOLVED_START_TIME;
         public static final Field ERROR_MESSAGE;
         public static final Field OWNER;
         public static final Field MEMBERS;
@@ -37,6 +39,7 @@ public class MusicRoom {
         static {
             try {
                 RESOLVED_MEDIA = MusicRoomState.class.getField("resolvedMedia");
+                RESOLVED_START_TIME = MusicRoomState.class.getField("resolvedStartTime");
                 ERROR_MESSAGE = MusicRoomState.class.getField("errorMessage");
                 OWNER = MusicRoomState.class.getField("owner");
                 MEMBERS = MusicRoomState.class.getField("members");
@@ -57,6 +60,7 @@ public class MusicRoom {
             c.orderType = this.orderType;
             c.paused = this.paused;
             c.resolvedMedia = this.resolvedMedia;
+            c.resolvedStartTime = this.resolvedStartTime;
             c.errorMessage = this.errorMessage;
             c.owner = this.owner;
             c.members = new HashMap<>(this.members);
@@ -406,14 +410,17 @@ public class MusicRoom {
                 if (current != null && state.musicList.contains(current)) {
                     Music music = state.musicList.get(current);
                     if (music instanceof DynamicPath dp) {
-                        SharedMusic sm = new SharedMusic(dp.getLastRawPath(), music.getMeta(), dp.getLastLyrics(), dp.getLastSubLyrics());
-                        String rawSm = MusicJsonParsers.to(sm).toString();
+                        String rawSm = buildResolvedMediaPayload(music, dp);
                         if (rawSm != null) {
+                            long startTime = MusicPlayer.INSTANCE.started
+                                    ? MusicPlayer.INSTANCE.getInterpolatedCurrentTimeMilliseconds()
+                                    : 0L;
                             o.set(s -> {
                                 MusicRoomState rs = (MusicRoomState) s;
                                 rs.resolvedMedia = rawSm;
+                                rs.resolvedStartTime = startTime;
                                 return rs;
-                            }, List.of(MusicRoomState.RESOLVED_MEDIA));
+                            }, List.of(MusicRoomState.RESOLVED_MEDIA, MusicRoomState.RESOLVED_START_TIME));
                             return;
                         }
                     }
@@ -428,8 +435,9 @@ public class MusicRoom {
                     o.set(s -> {
                         MusicRoomState rs = (MusicRoomState) s;
                         rs.resolvedMedia = null;
+                        rs.resolvedStartTime = 0L;
                         return rs;
-                    }, List.of(MusicRoomState.RESOLVED_MEDIA));
+                    }, List.of(MusicRoomState.RESOLVED_MEDIA, MusicRoomState.RESOLVED_START_TIME));
                 }
             }
         });
@@ -437,6 +445,17 @@ public class MusicRoom {
         record.addListener(MusicRoomState.RESOLVED_MEDIA, (o, playerState, oldVal, newVal) -> {
             MusicRoomState state = (MusicRoomState) playerState;
             clientOnResolvedMediaUpdate(state);
+        });
+
+        record.addListener(MusicRoomState.RESOLVED_START_TIME, (o, playerState, oldVal, newVal) -> {
+            MusicRoomState state = (MusicRoomState) playerState;
+            if (state.resolvedMedia == null || !MusicPlayer.INSTANCE.started) {
+                return;
+            }
+            long currentTime = MusicPlayer.INSTANCE.getInterpolatedCurrentTimeMilliseconds();
+            if (Math.abs(currentTime - state.resolvedStartTime) > 750L) {
+                MusicPlayer.INSTANCE.seekToMillisecondsAsync(state.resolvedStartTime, false);
+            }
         });
 
         record.addListener(MusicRoomState.ERROR_MESSAGE, (o, playerState, oldVal, newVal) -> {
@@ -467,12 +486,51 @@ public class MusicRoom {
         } else {
             try {
                 Music resolved = MusicJsonParsers.from(state.resolvedMedia);
+                if (resolved instanceof SharedMusic sharedMusic) {
+                    sharedMusic.startTime = state.resolvedStartTime;
+                }
                 MusicPlayer.INSTANCE.resetInfo();
                 MusicPlayer.INSTANCE.internalPlayMusic(resolved);
             } catch (Exception e) {
                 Concerto.getLogger().error("Failed to parse resolved media", e);
                 Concerto.getCoreBridge().sendTranslatableToClientPlayer("concerto.player.error", false, e.getMessage());
             }
+        }
+    }
+
+    public static void clientPublishCurrentSeek(long milliseconds) {
+        MusicRoom room = CLIENT_ROOM;
+        if (room == null || room.permission < 2 || room.uuid.equals(ServerMusicAgent.ROOM_UUID)) {
+            return;
+        }
+        MusicPlayerState state = room.clientState.get();
+        UUID current = state.currentIndex;
+        if (current == null || !state.musicList.contains(current)) {
+            return;
+        }
+        Music music = state.musicList.get(current);
+        if (!(music instanceof DynamicPath dynamicPath)) {
+            return;
+        }
+        if (buildResolvedMediaPayload(music, dynamicPath) == null) {
+            return;
+        }
+        room.clientState.set(s -> {
+            MusicRoomState rs = (MusicRoomState) s;
+            rs.resolvedStartTime = Math.max(0L, milliseconds);
+            return rs;
+        }, List.of(MusicRoomState.RESOLVED_START_TIME));
+    }
+
+    private static String buildResolvedMediaPayload(Music music, DynamicPath dynamicPath) {
+        try {
+            SharedMusic sharedMusic = new SharedMusic(dynamicPath.getLastRawPath(), music.getMeta(),
+                    dynamicPath.getLastLyrics(), dynamicPath.getLastSubLyrics());
+            sharedMusic.setMusicMeta(music.getMeta());
+            return MusicJsonParsers.to(sharedMusic).toString();
+        } catch (Exception e) {
+            Concerto.getLogger().warn("Failed to build room resolved media", e);
+            return null;
         }
     }
 

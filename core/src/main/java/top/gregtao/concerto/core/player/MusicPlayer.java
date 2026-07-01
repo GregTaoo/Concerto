@@ -10,6 +10,7 @@ import top.gregtao.concerto.core.music.lyrics.Lyrics;
 import top.gregtao.concerto.core.music.meta.music.MusicMetaData;
 import top.gregtao.concerto.core.player.seek.ProgressiveDataSource;
 import top.gregtao.concerto.core.player.seek.ProgressiveMediaDataSource;
+import top.gregtao.concerto.core.room.MusicRoom;
 import top.gregtao.concerto.core.player.streamplayer.enums.Status;
 import top.gregtao.concerto.core.player.streamplayer.stream.StreamPlayer;
 import top.gregtao.concerto.core.player.streamplayer.stream.StreamPlayerEvent;
@@ -157,13 +158,14 @@ public class MusicPlayer extends StreamPlayer implements StreamPlayerListener {
             }
 
             this.currentMusic = music;
-            this.initMusicStatus();
+            long sharedStartTime = music instanceof SharedMusic sharedMusic ? sharedMusic.getStartTime() : 0L;
+            this.initMusicStatus(sharedStartTime);
             this.updateDisplayTexts();
             this.updateDisplayTexts(0);
 
             ProgressiveDataSource progressiveSource = new ProgressiveDataSource(mediaSource, this.inferSuffix(music, mediaSource));
-            if (music instanceof SharedMusic sharedMusic && sharedMusic.getStartTime() > 0L && progressiveSource.isSeekable()) {
-                progressiveSource.seekToMilliseconds(sharedMusic.getStartTime());
+            if (sharedStartTime > 0L) {
+                progressiveSource.seekToMilliseconds(sharedStartTime);
             }
             this.open(progressiveSource);
 
@@ -306,12 +308,19 @@ public class MusicPlayer extends StreamPlayer implements StreamPlayerListener {
     }
 
     public void seekToMillisecondsAsync(long milliseconds) {
+        this.seekToMillisecondsAsync(milliseconds, true);
+    }
+
+    public void seekToMillisecondsAsync(long milliseconds, boolean publishRoomSync) {
         this.seekDisplayLocked = true;
         this.updateDisplayTexts(milliseconds);
         this.playbackExecutor.execute(() -> {
             try {
                 this.seekToMilliseconds(milliseconds);
                 this.updateDisplayTexts(milliseconds);
+                if (publishRoomSync) {
+                    MusicRoom.clientPublishCurrentSeek(milliseconds);
+                }
             } catch (Exception e) {
                 Concerto.getLogger().error("Seek failed: " + e);
                 Concerto.getCoreBridge().sendTranslatableToClientPlayer("concerto.player.error", false, e.getMessage());

@@ -287,12 +287,14 @@ public class MusicPlayerScreen extends ConcertoScreen {
     }
 
     private boolean isOverProgressBar(double mouseX, double mouseY) {
-        return MusicPlayer.INSTANCE.canSeekCurrentMusic() && mouseX >= 0 && mouseX <= this.width && mouseY >= 0 && mouseY <= 8;
+        return PlayerPermissions.canControlPlayback() && MusicPlayer.INSTANCE.canSeekCurrentMusic()
+                && mouseX >= 0 && mouseX <= this.width && mouseY >= 0 && mouseY <= 8;
     }
 
     private boolean seekProgress(double mouseX, boolean commit) {
         MusicMetaData metaData = MusicPlayer.INSTANCE.currentMeta;
-        if (metaData == null || metaData.getDuration() == null || !MusicPlayer.INSTANCE.canSeekCurrentMusic()) {
+        if (metaData == null || metaData.getDuration() == null || !PlayerPermissions.canControlPlayback()
+                || !MusicPlayer.INSTANCE.canSeekCurrentMusic()) {
             return false;
         }
         double progress = this.width <= 0 ? 0D : Math.max(0D, Math.min(1D, mouseX / this.width));

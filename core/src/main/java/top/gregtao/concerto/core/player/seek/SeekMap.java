@@ -12,8 +12,6 @@ public interface SeekMap {
 
     SeekPoint timeToSeekPoint(long timeMilliseconds);
 
-    boolean canDecodeFromSeekPoint();
-
     AudioFormat getDirectAudioFormat();
 
     long getDirectAudioDataEndOffset();

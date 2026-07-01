@@ -121,9 +121,14 @@ public class LiveSeekIndex implements SeekMap {
 
     public SeekPoint resolveTimeToSeekPoint(ProgressiveMediaDataSource source, long timeMilliseconds) throws IOException {
         SeekPoint known = this.timeToSeekPoint(timeMilliseconds);
+        SeekMap activeDelegate;
         Resolver activeResolver;
         synchronized (this) {
+            activeDelegate = this.delegate;
             activeResolver = this.resolver;
+        }
+        if (activeDelegate != null && activeDelegate.isSeekable()) {
+            return known;
         }
         if (activeResolver == null || known.getTimeMilliseconds() == Math.max(0L, timeMilliseconds)) {
             return known;
@@ -134,15 +139,6 @@ public class LiveSeekIndex implements SeekMap {
             return resolved.withRequestedTime(timeMilliseconds);
         }
         return known;
-    }
-
-    @Override
-    public boolean canDecodeFromSeekPoint() {
-        SeekMap activeDelegate;
-        synchronized (this) {
-            activeDelegate = this.delegate;
-        }
-        return activeDelegate == null || activeDelegate.canDecodeFromSeekPoint();
     }
 
     @Override

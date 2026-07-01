@@ -21,8 +21,8 @@ public class ProgressiveMediaDataSource implements Closeable {
     private static final int HTTP_READ_TIMEOUT_MS = 10000;
     private static final int DEFAULT_FORWARD_READ_CHUNK = 256 * 1024;
     private static final int MEMORY_CHUNK_SIZE = 64 * 1024;
-    private static final int MAX_MEMORY_BUFFER_BYTES = 2 * 1024 * 1024;
-    private static final int FORWARD_BUFFER_BYTES = 1024 * 1024;
+    private static final int MAX_MEMORY_BUFFER_BYTES = 16 * 1024 * 1024;
+    private static final int FORWARD_BUFFER_BYTES = 4 * 1024 * 1024;
 
     private final File localFile;
     private final Supplier<String> urlSupplier;
@@ -36,6 +36,10 @@ public class ProgressiveMediaDataSource implements Closeable {
     private InputStream controlInputStream;
     private long controlPosition = -1L;
     private LiveSeekIndexer liveSeekIndexer;
+    private final Object prefetchLock = new Object();
+    private ProgressiveInputStream pendingPrefetchStream;
+    private volatile ProgressiveInputStream activePlaybackStream;
+    private boolean prefetchWorkerRunning;
 
     private ProgressiveMediaDataSource(File localFile, URL url, Supplier<String> urlSupplier) {
         this.localFile = localFile;
@@ -60,7 +64,12 @@ public class ProgressiveMediaDataSource implements Closeable {
             skipFully(inputStream, safeOffset);
             return new NotifyingInputStream(inputStream, safeOffset);
         }
-        return new ProgressiveInputStream(safeOffset);
+        ProgressiveInputStream stream = new ProgressiveInputStream(safeOffset);
+        synchronized (this.prefetchLock) {
+            this.activePlaybackStream = stream;
+            this.pendingPrefetchStream = null;
+        }
+        return stream;
     }
 
     public InputStream openStream() throws IOException {
@@ -99,7 +108,15 @@ public class ProgressiveMediaDataSource implements Closeable {
                 if (chunk == null) {
                     return false;
                 }
-                position = Math.min(end, chunkStart(chunkIndex) + chunk.length);
+                int chunkOffset = (int) (position - chunkStart(chunkIndex));
+                if (chunkOffset < 0 || chunkOffset >= chunk.length) {
+                    return false;
+                }
+                int copied = Math.min((int) Math.min(Integer.MAX_VALUE, end - position), chunk.length - chunkOffset);
+                if (copied <= 0) {
+                    return false;
+                }
+                position += copied;
             }
             return true;
         }
@@ -132,6 +149,7 @@ public class ProgressiveMediaDataSource implements Closeable {
                 System.arraycopy(bytes, 0, truncated, 0, total);
                 return truncated;
             }
+            writeMemory(offset + total, bytes, total, read);
             notifyLiveIndexer(offset + total, bytes, total, read);
             total += read;
         }
@@ -140,6 +158,10 @@ public class ProgressiveMediaDataSource implements Closeable {
 
     @Override
     public void close() throws IOException {
+        synchronized (this.prefetchLock) {
+            this.pendingPrefetchStream = null;
+            this.activePlaybackStream = null;
+        }
         synchronized (this.memoryLock) {
             this.memoryChunks.clear();
             this.chunkAccessOrder.clear();
@@ -157,7 +179,11 @@ public class ProgressiveMediaDataSource implements Closeable {
             if (offset > 0L) {
                 connection.setRequestProperty("Range", "bytes=" + offset + "-");
             }
+            Concerto.getLogger().info("HTTP media connect GET {} Range={}", this.url,
+                    offset > 0L ? "bytes=" + offset + "-" : "<none>");
             int code = connection.getResponseCode();
+            Concerto.getLogger().info("HTTP media response {} Content-Length={} Content-Range={}",
+                    code, connection.getHeaderField("Content-Length"), connection.getHeaderField("Content-Range"));
             if (code == HttpURLConnection.HTTP_PARTIAL || code == HttpURLConnection.HTTP_OK) {
                 updateLengthFromConnection(connection, offset, code);
                 HttpRangeInputStream inputStream = new HttpRangeInputStream(connection);
@@ -189,7 +215,10 @@ public class ProgressiveMediaDataSource implements Closeable {
             connection.setReadTimeout(HTTP_READ_TIMEOUT_MS);
             connection.setRequestMethod("GET");
             connection.setRequestProperty("Range", "bytes=0-0");
+            Concerto.getLogger().info("HTTP media connect GET {} Range=bytes=0-0", url);
             int code = connection.getResponseCode();
+            Concerto.getLogger().info("HTTP media response {} Content-Length={} Content-Range={}",
+                    code, connection.getHeaderField("Content-Length"), connection.getHeaderField("Content-Range"));
             if (code == HttpURLConnection.HTTP_PARTIAL) {
                 long parsed = parseContentRangeLength(connection.getHeaderField("Content-Range"));
                 if (parsed >= 0L) {
@@ -377,13 +406,61 @@ public class ProgressiveMediaDataSource implements Closeable {
         }
     }
 
+    private void scheduleForwardBuffer(ProgressiveInputStream stream) {
+        if (!isActivePlaybackStream(stream) || stream.closed || this.length >= 0L && stream.position >= this.length) {
+            return;
+        }
+        long targetEnd = this.length >= 0L
+                ? Math.min(this.length, stream.position + FORWARD_BUFFER_BYTES)
+                : stream.position + FORWARD_BUFFER_BYTES;
+        if (isFullyCached(stream.position, Math.max(0L, targetEnd - stream.position))) {
+            return;
+        }
+        synchronized (this.prefetchLock) {
+            if (!isActivePlaybackStream(stream)) {
+                return;
+            }
+            this.pendingPrefetchStream = stream;
+            if (this.prefetchWorkerRunning) {
+                return;
+            }
+            this.prefetchWorkerRunning = true;
+        }
+        Thread thread = new Thread(this::runPrefetchWorker, "Concerto media prefetch");
+        thread.setDaemon(true);
+        thread.start();
+    }
+
+    private void runPrefetchWorker() {
+        while (true) {
+            ProgressiveInputStream stream;
+            synchronized (this.prefetchLock) {
+                stream = this.pendingPrefetchStream;
+                this.pendingPrefetchStream = null;
+                if (stream == null) {
+                    this.prefetchWorkerRunning = false;
+                    return;
+                }
+            }
+            try {
+                if (isActivePlaybackStream(stream)) {
+                    stream.prefetchForwardBuffer();
+                }
+            } catch (IOException ignored) {
+            }
+        }
+    }
+
+    private boolean isActivePlaybackStream(ProgressiveInputStream stream) {
+        return this.activePlaybackStream == stream;
+    }
+
     private final class ProgressiveInputStream extends InputStream {
         private long position;
         private InputStream networkInputStream;
         private long networkPosition = -1L;
         private boolean closed;
         private final Object networkLock = new Object();
-        private volatile boolean prefetching;
 
         private ProgressiveInputStream(long position) {
             this.position = position;
@@ -410,7 +487,7 @@ public class ProgressiveMediaDataSource implements Closeable {
             int cached = readMemory(this.position, buffer, offset, length);
             if (cached > 0) {
                 this.position += cached;
-                scheduleForwardBuffer();
+                ProgressiveMediaDataSource.this.scheduleForwardBuffer(this);
                 return cached;
             }
             int read;
@@ -432,51 +509,47 @@ public class ProgressiveMediaDataSource implements Closeable {
                 this.position += read;
                 this.networkPosition += read;
             }
-            scheduleForwardBuffer();
+            ProgressiveMediaDataSource.this.scheduleForwardBuffer(this);
             return read;
         }
 
-        private void scheduleForwardBuffer() {
-            if (this.prefetching || this.closed
-                    || ProgressiveMediaDataSource.this.length >= 0L && this.position >= ProgressiveMediaDataSource.this.length) {
+        private void prefetchForwardBuffer() throws IOException {
+            if (!ProgressiveMediaDataSource.this.isActivePlaybackStream(this)) {
+                closeNetwork();
                 return;
             }
-            this.prefetching = true;
-            Thread thread = new Thread(() -> {
-                try {
-                    prefetchForwardBuffer();
-                } catch (IOException ignored) {
-                } finally {
-                    this.prefetching = false;
-                }
-            }, "Concerto media prefetch");
-            thread.setDaemon(true);
-            thread.start();
-        }
-
-        private void prefetchForwardBuffer() throws IOException {
             long snapshotPosition = this.position;
             long targetEnd = ProgressiveMediaDataSource.this.length >= 0L
                     ? Math.min(ProgressiveMediaDataSource.this.length, snapshotPosition + FORWARD_BUFFER_BYTES)
                     : snapshotPosition + FORWARD_BUFFER_BYTES;
             byte[] scratch = new byte[8192];
-            synchronized (this.networkLock) {
-                while (!this.closed && this.networkInputStream != null && this.networkPosition < targetEnd
-                        && isFullyCached(snapshotPosition, Math.max(0L, this.networkPosition - snapshotPosition))) {
+            while (ProgressiveMediaDataSource.this.isActivePlaybackStream(this) && !this.closed) {
+                synchronized (this.networkLock) {
+                    if (!ProgressiveMediaDataSource.this.isActivePlaybackStream(this) || this.closed) {
+                        closeNetworkLocked();
+                        return;
+                    }
+                    if (this.networkInputStream == null || this.networkPosition >= targetEnd
+                            || !isFullyCached(snapshotPosition, Math.max(0L, this.networkPosition - snapshotPosition))) {
+                        return;
+                    }
                     int max = (int) Math.min(scratch.length, targetEnd - this.networkPosition);
                     if (max <= 0) {
-                        break;
+                        return;
                     }
                     long writePosition = this.networkPosition;
                     int read = this.networkInputStream.read(scratch, 0, max);
                     if (read == -1) {
                         closeNetworkLocked();
-                        break;
+                        return;
                     }
                     writeMemory(writePosition, scratch, 0, read);
                     notifyLiveIndexer(writePosition, scratch, 0, read);
                     this.networkPosition += read;
                 }
+            }
+            synchronized (this.networkLock) {
+                closeNetworkLocked();
             }
         }
 
@@ -504,6 +577,14 @@ public class ProgressiveMediaDataSource implements Closeable {
         @Override
         public void close() throws IOException {
             this.closed = true;
+            synchronized (ProgressiveMediaDataSource.this.prefetchLock) {
+                if (ProgressiveMediaDataSource.this.pendingPrefetchStream == this) {
+                    ProgressiveMediaDataSource.this.pendingPrefetchStream = null;
+                }
+                if (ProgressiveMediaDataSource.this.activePlaybackStream == this) {
+                    ProgressiveMediaDataSource.this.activePlaybackStream = null;
+                }
+            }
             closeNetwork();
         }
 

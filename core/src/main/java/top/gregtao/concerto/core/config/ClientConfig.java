@@ -68,6 +68,9 @@ public class ClientConfig extends ConfigFile {
         public float scrollingTextSpeed = 1.0f;
         public NeteaseCloudMusic.Level neteaseMusicQuality = NeteaseCloudMusic.Level.HIRES;
 
+        public double playerVolume = 1.0;
+        public boolean playerVolumeFollowsMaster = true;
+
         public boolean displayLyrics = true;
         public String lyricsPosition = "0.5,1-70";
         public TextAlignment lyricsAlignment = TextAlignment.CENTER;

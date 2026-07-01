@@ -35,7 +35,10 @@ public class ConcertoClient {
         try {
             Minecraft client = Minecraft.getInstance();
             Options options = client.options;
-            double volume = options.getSoundSourceVolume(SoundSource.MASTER) * options.getSoundSourceVolume(SoundSource.MUSIC) * 0.5;
+            double volume = Math.clamp(ClientConfig.INSTANCE.options.playerVolume, 0.0, 1.0);
+            if (ClientConfig.INSTANCE.options.playerVolumeFollowsMaster) {
+                volume *= options.getSoundSourceVolume(SoundSource.MASTER);
+            }
             MusicPlayer.INSTANCE.setGain(volume);
         } catch (NullPointerException ignore) {
         }

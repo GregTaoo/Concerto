@@ -98,8 +98,6 @@ public class StreamPlayer implements StreamPlayerInterface, Callable<Void> {
      */
     private double speedFactor = 1;
 
-    private double requestedGain = 1;
-
     /**
      * The Constant EXTERNAL_BUFFER_SIZE.
      */
@@ -527,7 +525,6 @@ public class StreamPlayer implements StreamPlayerInterface, Callable<Void> {
 
         // Open the sourceDataLine
         if (outlet.isStartable()) {
-            applyGain(requestedGain);
             outlet.start();
 
             // Proceed only if we have not problems
@@ -1190,19 +1187,7 @@ public class StreamPlayer implements StreamPlayerInterface, Callable<Void> {
      */
     @Override
     public void setGain(final double fGain) {
-        requestedGain = fGain;
-        applyGain(fGain);
-    }
-
-    private void applyGain(final double fGain) {
-        if (!outlet.hasControl(FloatControl.Type.MASTER_GAIN, outlet.getGainControl())) {
-            return;
-        }
-        if (isPlaying() || isPaused() || outlet.getSourceDataLine().isOpen()) {
-            if (fGain <= 0) {
-                outlet.getGainControl().setValue(outlet.getGainControl().getMinimum());
-                return;
-            }
+        if (isPlaying() || isPaused() && outlet.hasControl(FloatControl.Type.MASTER_GAIN, outlet.getGainControl())) {
             final double logScaleGain = 20 * Math.log10(fGain);
             outlet.getGainControl().setValue((float) logScaleGain);
         }

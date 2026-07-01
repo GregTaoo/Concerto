@@ -4,14 +4,20 @@ import top.gregtao.concerto.core.Concerto;
 import top.gregtao.concerto.core.event.ConcertoEvents;
 import top.gregtao.concerto.core.music.Music;
 import top.gregtao.concerto.core.music.MusicTimestamp;
+import top.gregtao.concerto.core.music.PathFileMusic;
+import top.gregtao.concerto.core.music.SharedMusic;
 import top.gregtao.concerto.core.music.lyrics.Lyrics;
 import top.gregtao.concerto.core.music.meta.music.MusicMetaData;
+import top.gregtao.concerto.core.player.seek.ProgressiveDataSource;
+import top.gregtao.concerto.core.player.seek.ProgressiveMediaDataSource;
 import top.gregtao.concerto.core.player.streamplayer.enums.Status;
 import top.gregtao.concerto.core.player.streamplayer.stream.StreamPlayer;
 import top.gregtao.concerto.core.player.streamplayer.stream.StreamPlayerEvent;
 import top.gregtao.concerto.core.player.streamplayer.stream.StreamPlayerException;
 import top.gregtao.concerto.core.player.streamplayer.stream.StreamPlayerListener;
+import top.gregtao.concerto.core.api.CacheableMusic;
 import top.gregtao.concerto.core.util.Pair;
+import top.gregtao.concerto.core.util.FileUtil;
 
 import java.io.File;
 import java.io.IOException;
@@ -32,6 +38,7 @@ public class MusicPlayer extends StreamPlayer implements StreamPlayerListener {
 
     public Music currentMusic = null;
     public InputStream currentSource = null;
+    private ProgressiveMediaDataSource currentMediaSource = null;
     public Lyrics currentLyrics = null, currentSubLyrics = null;
     public int[] currentSubLyricsMapping = new int[0];
     public MusicMetaData currentMeta = null;
@@ -41,6 +48,7 @@ public class MusicPlayer extends StreamPlayer implements StreamPlayerListener {
     public float progressPercentage = 0;
     private long startTime = 0;
     private long currentTimeUpdatedAtMs = 0;
+    private volatile boolean seekDisplayLocked = false;
 
     public boolean started = false;
     public final AtomicBoolean playNextLock = new AtomicBoolean(false);
@@ -105,6 +113,8 @@ public class MusicPlayer extends StreamPlayer implements StreamPlayerListener {
 
     private void handlePlaybackFailure(InputStream source, Exception e) {
         this.tryCloseStream(source);
+        this.tryCloseMediaSource(this.currentMediaSource);
+        this.currentMediaSource = null;
         this.resetInfo();
         Concerto.getLogger().error("Internal player error: " + e);
         Concerto.getCoreBridge().sendTranslatableToClientPlayer("concerto.player.error", false, e.getMessage());
@@ -134,10 +144,11 @@ public class MusicPlayer extends StreamPlayer implements StreamPlayerListener {
     private void playManagedMusic(Music music, boolean temp) {
         this.playNextLock.set(true);
         InputStream source = null;
+        ProgressiveMediaDataSource mediaSource = null;
         try {
             this.stop();
-            source = music.getMusicSourceOrNull();
-            if (source == null) {
+            mediaSource = music.createProgressiveMediaDataSource();
+            if (mediaSource == null) {
                 this.resetInfo();
                 Concerto.getLogger().error("Unable to play music: {} - {}", music.getMeta().title(), music.getMeta().author());
                 Concerto.getCoreBridge().sendTranslatableToClientPlayer(
@@ -150,9 +161,14 @@ public class MusicPlayer extends StreamPlayer implements StreamPlayerListener {
             this.updateDisplayTexts();
             this.updateDisplayTexts(0);
 
-            this.open(source);
+            ProgressiveDataSource progressiveSource = new ProgressiveDataSource(mediaSource, this.inferSuffix(music, mediaSource));
+            if (music instanceof SharedMusic sharedMusic && sharedMusic.getStartTime() > 0L && progressiveSource.isSeekable()) {
+                progressiveSource.seekToMilliseconds(sharedMusic.getStartTime());
+            }
+            this.open(progressiveSource);
 
-            this.currentSource = source;
+            this.currentSource = null;
+            this.currentMediaSource = mediaSource;
             this.play();
             if (MusicPlayerHandler.INSTANCE.isForcePaused()) {
                 this.pause();
@@ -164,8 +180,28 @@ public class MusicPlayer extends StreamPlayer implements StreamPlayerListener {
             ConcertoEvents.ON_NEW_MUSIC_STARTED.emit(music);
         } catch (Exception e) {
             this.handlePlaybackFailure(source, e);
+            this.tryCloseMediaSource(mediaSource);
         } finally {
             this.playNextLock.set(false);
+        }
+    }
+
+    private String inferSuffix(Music music, ProgressiveMediaDataSource mediaSource) {
+        if (music instanceof CacheableMusic cacheableMusic) {
+            return cacheableMusic.getSuffix();
+        }
+        if (music instanceof PathFileMusic pathFileMusic) {
+            return FileUtil.getSuffix(pathFileMusic.getRawPath());
+        }
+        String suffix = mediaSource.getSuggestedSuffix();
+        return suffix == null ? "" : suffix;
+    }
+
+    private void tryCloseMediaSource(ProgressiveMediaDataSource source) {
+        if (source == null) return;
+        try {
+            source.close();
+        } catch (IOException ignored) {
         }
     }
 
@@ -184,6 +220,7 @@ public class MusicPlayer extends StreamPlayer implements StreamPlayerListener {
         this.isPlayingTemp = false;
         this.currentMusic = null;
         this.currentSource = null;
+        this.currentMediaSource = null;
 
         this.currentLyrics = this.currentSubLyrics = null;
         this.currentSubLyricsMapping = new int[0];
@@ -194,6 +231,7 @@ public class MusicPlayer extends StreamPlayer implements StreamPlayerListener {
         this.progressPercentage = 0;
         this.startTime = 0;
         this.currentTimeUpdatedAtMs = 0;
+        this.seekDisplayLocked = false;
         ConcertoEvents.ON_MUSIC_INFO_RESET.emit();
     }
 
@@ -263,6 +301,26 @@ public class MusicPlayer extends StreamPlayer implements StreamPlayerListener {
         return duration == null ? currentMs : Math.min(currentMs, duration.asMilliseconds());
     }
 
+    public boolean canSeekCurrentMusic() {
+        return this.started && this.currentMeta != null && this.currentMeta.getDuration() != null && this.isSeekable();
+    }
+
+    public void seekToMillisecondsAsync(long milliseconds) {
+        this.seekDisplayLocked = true;
+        this.updateDisplayTexts(milliseconds);
+        this.playbackExecutor.execute(() -> {
+            try {
+                this.seekToMilliseconds(milliseconds);
+                this.updateDisplayTexts(milliseconds);
+            } catch (Exception e) {
+                Concerto.getLogger().error("Seek failed: " + e);
+                Concerto.getCoreBridge().sendTranslatableToClientPlayer("concerto.player.error", false, e.getMessage());
+            } finally {
+                this.seekDisplayLocked = false;
+            }
+        });
+    }
+
     @Override
     public void statusUpdated(StreamPlayerEvent event) {
         Status status = event.getPlayerStatus();
@@ -282,7 +340,9 @@ public class MusicPlayer extends StreamPlayer implements StreamPlayerListener {
 
     @Override
     public void progress(int nEncodedBytes, long microsecondPosition, byte[] pcmData, Map<String, Object> properties) {
-        this.updateDisplayTexts(microsecondPosition / 1000);
+        if (!this.seekDisplayLocked) {
+            this.updateDisplayTexts(microsecondPosition / 1000);
+        }
         this.audioSpectrum.onAudioFrame(pcmData);
     }
 
@@ -293,9 +353,12 @@ public class MusicPlayer extends StreamPlayer implements StreamPlayerListener {
     }
 
     public void stop() {
+        ProgressiveMediaDataSource mediaSource = this.currentMediaSource;
         this.resetInfo();
         super.stop();
         this.tryCloseStream(this.currentSource);
+        this.tryCloseMediaSource(mediaSource);
         this.currentSource = null;
+        this.currentMediaSource = null;
     }
 }

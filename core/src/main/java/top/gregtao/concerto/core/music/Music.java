@@ -4,10 +4,12 @@ import top.gregtao.concerto.core.api.*;
 import top.gregtao.concerto.core.config.MusicCacheManager;
 import top.gregtao.concerto.core.music.lyrics.Lyrics;
 import top.gregtao.concerto.core.music.meta.music.MusicMetaData;
+import top.gregtao.concerto.core.player.seek.ProgressiveMediaDataSource;
 import top.gregtao.concerto.core.util.FileUtil;
 import top.gregtao.concerto.core.util.Pair;
 
 import java.io.*;
+import java.net.URI;
 
 public abstract class Music implements JsonParsable<Music>, LazyLoadable, WithMetaData {
 
@@ -28,6 +30,53 @@ public abstract class Music implements JsonParsable<Music>, LazyLoadable, WithMe
             } catch (MusicSourceNotFoundException e) {
                 return null;
             }
+        }
+    }
+
+    public ProgressiveMediaDataSource createProgressiveMediaDataSource() throws MusicSourceNotFoundException {
+        if (this instanceof CacheableMusic cacheable) {
+            File child = MusicCacheManager.INSTANCE.getChild(cacheable);
+            if (child != null) {
+                try {
+                    return ProgressiveMediaDataSource.forFile(child);
+                } catch (IOException e) {
+                    throw new MusicSourceNotFoundException(e);
+                }
+            }
+        }
+        if (this instanceof LocalFileMusic localFileMusic) {
+            try {
+                return ProgressiveMediaDataSource.forFile(new File(localFileMusic.getRawPath()));
+            } catch (IOException e) {
+                throw new MusicSourceNotFoundException(e);
+            }
+        }
+        if (this instanceof DynamicPath dynamicPath) {
+            String rawPath = dynamicPath.getLastRawPath();
+            if (rawPath == null) {
+                rawPath = dynamicPath.updateRawPath();
+            }
+            return createUrlDataSource(rawPath, dynamicPath::updateRawPath);
+        }
+        if (this instanceof BilibiliMusic bilibiliMusic) {
+            return createUrlDataSource(bilibiliMusic.getRawPath(), null);
+        }
+        if (this instanceof PathFileMusic pathFileMusic) {
+            String rawPath = pathFileMusic.getRawPath();
+            if (rawPath != null && rawPath.startsWith("http")) {
+                return createUrlDataSource(rawPath, null);
+            }
+        }
+        return createUrlDataSource(this.getLink(), null);
+    }
+
+    private static ProgressiveMediaDataSource createUrlDataSource(String rawPath, java.util.function.Supplier<String> supplier)
+            throws MusicSourceNotFoundException {
+        try {
+            URI.create(rawPath);
+            return ProgressiveMediaDataSource.forUrl(rawPath, supplier);
+        } catch (Exception e) {
+            throw new MusicSourceNotFoundException(e);
         }
     }
 

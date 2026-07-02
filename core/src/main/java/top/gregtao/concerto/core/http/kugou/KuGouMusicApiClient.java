@@ -482,7 +482,7 @@ public class KuGouMusicApiClient extends HttpApiClient {
                 "mode", "1",
                 "personal_switch", "1",
                 "extend_fields", "",
-                "pagesize", "1000000",
+                "pagesize", "500",
                 "global_collection_id", id
         );
 

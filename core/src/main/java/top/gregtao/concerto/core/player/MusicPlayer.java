@@ -323,19 +323,18 @@ public class MusicPlayer extends StreamPlayer implements StreamPlayerListener {
     public void seekToMillisecondsAsync(long milliseconds, boolean publishRoomSync) {
         long generation = this.playbackGeneration.incrementAndGet();
         this.seekDisplayLocked = true;
-        this.updateDisplayTexts(milliseconds);
         this.playbackExecutor.execute(() -> {
             try {
                 if (generation != this.playbackGeneration.get()) {
                     return;
                 }
-                this.seekToMilliseconds(milliseconds);
+                long actualMilliseconds = this.seekToMilliseconds(milliseconds);
                 if (generation != this.playbackGeneration.get()) {
                     return;
                 }
-                this.updateDisplayTexts(milliseconds);
+                this.updateDisplayTexts(actualMilliseconds);
                 if (publishRoomSync) {
-                    MusicRoom.clientPublishCurrentSeek(milliseconds);
+                    MusicRoom.clientPublishCurrentSeek(actualMilliseconds);
                 }
             } catch (Exception e) {
                 if (generation == this.playbackGeneration.get()) {

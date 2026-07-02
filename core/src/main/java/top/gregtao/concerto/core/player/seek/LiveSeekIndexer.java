@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
+import java.util.function.BooleanSupplier;
 
 public class LiveSeekIndexer implements LiveSeekIndex.Resolver {
     private final LiveSeekIndex index;
@@ -34,7 +35,7 @@ public class LiveSeekIndexer implements LiveSeekIndex.Resolver {
             }
             case "adts-aac" -> scanAdts(mergedOffset, offset, bytes);
             case "wav" -> scanWav(mergedOffset, bytes);
-            case "flac" -> scanFlac(mergedOffset, offset, bytes);
+            case "flac" -> parseFlacMetadata(mergedOffset, bytes);
             case "ogg" -> scanOgg(mergedOffset, offset, bytes);
             case "mp4-aac" -> scanMp4(mergedOffset, bytes);
             default -> {
@@ -45,11 +46,11 @@ public class LiveSeekIndexer implements LiveSeekIndex.Resolver {
 
     @Override
     public synchronized SeekPoint resolve(ProgressiveMediaDataSource source, long timeMilliseconds) throws IOException {
+        ensureMetadataParsed(source);
         if ("mp3".equals(this.formatName)) {
             return resolveMp3(source, timeMilliseconds);
         }
-        if ("mp4-aac".equals(this.formatName)) {
-            ensureMp4Parsed(source);
+        if ("mp4-aac".equals(this.formatName) || "flac".equals(this.formatName) || "wav".equals(this.formatName)) {
             return this.index.timeToSeekPoint(timeMilliseconds);
         }
         SeekPoint known = this.index.timeToSeekPoint(timeMilliseconds);
@@ -104,6 +105,37 @@ public class LiveSeekIndexer implements LiveSeekIndex.Resolver {
             }
         }
         return this.mp3.timeToSeekPoint(target).withRequestedTime(target);
+    }
+
+    private void ensureMetadataParsed(ProgressiveMediaDataSource source) throws IOException {
+        switch (this.formatName) {
+            case "mp4-aac" -> ensureMp4Parsed(source);
+            case "flac" -> ensureInitialBytesParsed(source, () -> this.linear.flacHeaderComplete);
+            case "wav" -> ensureInitialBytesParsed(source, () -> this.linear.wavConfigured);
+            default -> {
+            }
+        }
+    }
+
+    private void ensureInitialBytesParsed(ProgressiveMediaDataSource source, BooleanSupplier done) throws IOException {
+        if (done.getAsBoolean() || !source.hasLength()) {
+            return;
+        }
+        int readSize = 64 * 1024;
+        while (!done.getAsBoolean()) {
+            int read = (int) Math.min(readSize, source.length());
+            if (read <= 0) {
+                break;
+            }
+            byte[] bytes = source.readAt(0L, read);
+            if (bytes.length == 0) {
+                break;
+            }
+            if (bytes.length < read || read >= source.length() || read >= 1024 * 1024) {
+                break;
+            }
+            readSize *= 2;
+        }
     }
 
     private boolean mp3ScannedPast(long timeMilliseconds) {
@@ -314,30 +346,6 @@ public class LiveSeekIndexer implements LiveSeekIndex.Resolver {
                     channels, blockAlign, sampleRate, false);
             this.index.configureWav(dataStart, dataSize, byteRate, blockAlign, format);
             this.linear.wavConfigured = true;
-        }
-    }
-
-    private void scanFlac(long mergedOffset, long freshOffset, byte[] bytes) {
-        if (!this.linear.flacHeaderComplete) {
-            parseFlacMetadata(mergedOffset, bytes);
-        }
-        if (!this.linear.flacHeaderComplete || this.linear.sampleRate <= 0) {
-            return;
-        }
-        for (int i = Math.max(0, (int) (this.linear.flacFrameStart - mergedOffset)); i + 6 <= bytes.length; i++) {
-            FlacFrame frame = parseFlacFrame(bytes, i);
-            if (frame == null || mergedOffset + i < this.linear.scanPosition) {
-                continue;
-            }
-            long frameOffset = mergedOffset + i;
-            if (frameOffset < freshOffset && i + 16 <= this.linear.tailLength) {
-                continue;
-            }
-            long sampleNumber = frame.variableBlock ? frame.number : frame.number * frame.blockSize;
-            long timeMs = sampleNumber * 1000L / this.linear.sampleRate;
-            this.index.addPoint(timeMs, frameOffset);
-            this.linear.scanPosition = frameOffset + 2L;
-            i++;
         }
     }
 
@@ -620,63 +628,6 @@ public class LiveSeekIndexer implements LiveSeekIndex.Resolver {
         return frameLength >= 7 ? new AdtsFrame(frameLength, sampleRates[sampleRateIndex], rawBlocks) : null;
     }
 
-    private static FlacFrame parseFlacFrame(byte[] bytes, int offset) {
-        if (u8(bytes, offset) != 0xFF || (u8(bytes, offset + 1) & 0xFC) != 0xF8) {
-            return null;
-        }
-        boolean variable = (u8(bytes, offset + 1) & 0x01) != 0;
-        int blockSizeCode = (u8(bytes, offset + 2) >>> 4) & 0x0F;
-        Utf8Number number = readUtf8Number(bytes, offset + 4);
-        if (number == null) {
-            return null;
-        }
-        int cursor = offset + 4 + number.length;
-        int blockSize = switch (blockSizeCode) {
-            case 1 -> 192;
-            case 2, 3, 4, 5 -> 576 << (blockSizeCode - 2);
-            case 6 -> cursor < bytes.length ? u8(bytes, cursor) + 1 : -1;
-            case 7 -> cursor + 1 < bytes.length ? SeekParsing.u16be(bytes, cursor) + 1 : -1;
-            case 8, 9, 10, 11, 12, 13, 14, 15 -> 256 << (blockSizeCode - 8);
-            default -> -1;
-        };
-        return blockSize > 0 ? new FlacFrame(variable, number.value, blockSize) : null;
-    }
-
-    private static Utf8Number readUtf8Number(byte[] bytes, int offset) {
-        if (offset >= bytes.length) return null;
-        int first = u8(bytes, offset);
-        int length;
-        long value;
-        if ((first & 0x80) == 0) {
-            length = 1;
-            value = first;
-        } else if ((first & 0xE0) == 0xC0) {
-            length = 2;
-            value = first & 0x1F;
-        } else if ((first & 0xF0) == 0xE0) {
-            length = 3;
-            value = first & 0x0F;
-        } else if ((first & 0xF8) == 0xF0) {
-            length = 4;
-            value = first & 0x07;
-        } else if ((first & 0xFC) == 0xF8) {
-            length = 5;
-            value = first & 0x03;
-        } else if ((first & 0xFE) == 0xFC) {
-            length = 6;
-            value = first & 0x01;
-        } else {
-            return null;
-        }
-        if (offset + length > bytes.length) return null;
-        for (int i = 1; i < length; i++) {
-            int next = u8(bytes, offset + i);
-            if ((next & 0xC0) != 0x80) return null;
-            value = (value << 6) | (next & 0x3F);
-        }
-        return new Utf8Number(value, length);
-    }
-
     private static Box readBoxHeader(byte[] bytes, int offset, long absoluteOffset, long parentEnd) {
         if (offset + 8 > bytes.length) {
             return null;
@@ -739,12 +690,6 @@ public class LiveSeekIndexer implements LiveSeekIndex.Resolver {
     }
 
     private record AdtsFrame(int frameSize, int sampleRate, int rawBlocks) {
-    }
-
-    private record FlacFrame(boolean variableBlock, long number, int blockSize) {
-    }
-
-    private record Utf8Number(long value, int length) {
     }
 
     private record Box(long start, long size, int headerSize, String type) {

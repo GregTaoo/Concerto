@@ -1,6 +1,5 @@
 package top.gregtao.concerto.core.player.seek;
 
-import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioInputStream;
 import java.io.IOException;
 import java.io.InputStream;

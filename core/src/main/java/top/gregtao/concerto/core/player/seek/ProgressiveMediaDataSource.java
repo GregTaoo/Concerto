@@ -33,13 +33,17 @@ public class ProgressiveMediaDataSource implements Closeable {
     private final Object memoryLock = new Object();
     private final Map<Long, byte[]> memoryChunks = new HashMap<>();
     private final ArrayDeque<Long> chunkAccessOrder = new ArrayDeque<>();
-    private final Object controlLock = new Object();
-    private InputStream controlInputStream;
-    private long controlPosition = -1L;
     private LiveSeekIndexer liveSeekIndexer;
     private final Object prefetchLock = new Object();
-    private ProgressiveInputStream pendingPrefetchStream;
     private volatile ProgressiveInputStream activePlaybackStream;
+    private HttpRangeInputStream prefetchInputStream;
+    private long prefetchPosition = -1L;
+    private boolean prefetchRangeIgnored;
+    private long prefetchRequestPosition = -1L;
+    private long prefetchRequestEnd = -1L;
+    private long prefetchRequestGeneration = 0L;
+    private volatile IOException prefetchFailure;
+    private volatile long prefetchEofPosition = -1L;
     private boolean prefetchWorkerRunning;
     private volatile boolean closed;
 
@@ -47,7 +51,7 @@ public class ProgressiveMediaDataSource implements Closeable {
         this.localFile = localFile;
         this.url = url;
         this.urlSupplier = urlSupplier;
-        this.length = localFile == null ? probeLength(url) : localFile.length();
+        this.length = localFile == null ? -1L : localFile.length();
     }
 
     public static ProgressiveMediaDataSource forFile(File file) throws IOException {
@@ -70,8 +74,8 @@ public class ProgressiveMediaDataSource implements Closeable {
         ProgressiveInputStream stream = new ProgressiveInputStream(safeOffset);
         synchronized (this.prefetchLock) {
             this.activePlaybackStream = stream;
-            this.pendingPrefetchStream = null;
         }
+        scheduleForwardBuffer(stream);
         return stream;
     }
 
@@ -128,6 +132,23 @@ public class ProgressiveMediaDataSource implements Closeable {
 
     public byte[] readAt(long offset, int length) throws IOException {
         ensureOpen();
+        if (this.localFile != null) {
+            byte[] bytes = new byte[length];
+            int total = 0;
+            while (total < length) {
+                int read = readLocal(offset + total, bytes, total, length - total);
+                if (read == -1) {
+                    if (total == 0) {
+                        throw new EOFException();
+                    }
+                    byte[] truncated = new byte[total];
+                    System.arraycopy(bytes, 0, truncated, 0, total);
+                    return truncated;
+                }
+                total += read;
+            }
+            return bytes;
+        }
         byte[] bytes = new byte[length];
         int total = 0;
         while (total < length) {
@@ -137,8 +158,8 @@ public class ProgressiveMediaDataSource implements Closeable {
                 total += cached;
                 continue;
             }
-            int read = readControl(offset + total, bytes, total, length - total);
-            if (read == -1) {
+            long position = offset + total;
+            if (this.length >= 0L && position >= this.length) {
                 if (total == 0) {
                     throw new EOFException();
                 }
@@ -146,9 +167,16 @@ public class ProgressiveMediaDataSource implements Closeable {
                 System.arraycopy(bytes, 0, truncated, 0, total);
                 return truncated;
             }
-            writeMemory(offset + total, bytes, total, read);
-            notifyLiveIndexer(offset + total, bytes, total, read);
-            total += read;
+            requestCache(position, position + length - total);
+            waitForCache(position);
+            if (this.prefetchEofPosition >= 0L && position >= this.prefetchEofPosition) {
+                if (total == 0) {
+                    throw new EOFException();
+                }
+                byte[] truncated = new byte[total];
+                System.arraycopy(bytes, 0, truncated, 0, total);
+                return truncated;
+            }
         }
         return bytes;
     }
@@ -157,18 +185,29 @@ public class ProgressiveMediaDataSource implements Closeable {
     public void close() throws IOException {
         this.closed = true;
         synchronized (this.prefetchLock) {
-            this.pendingPrefetchStream = null;
             this.activePlaybackStream = null;
+            closePrefetchLocked();
+            this.prefetchLock.notifyAll();
         }
         synchronized (this.memoryLock) {
             this.memoryChunks.clear();
             this.chunkAccessOrder.clear();
+            this.memoryLock.notifyAll();
         }
-        closeControl();
     }
 
     public void abortReads() {
         this.closed = true;
+        synchronized (this.prefetchLock) {
+            try {
+                closePrefetchLocked();
+            } catch (IOException ignored) {
+            }
+            this.prefetchLock.notifyAll();
+        }
+        synchronized (this.memoryLock) {
+            this.memoryLock.notifyAll();
+        }
     }
 
     private void ensureOpen() throws IOException {
@@ -177,26 +216,43 @@ public class ProgressiveMediaDataSource implements Closeable {
         }
     }
 
-    private InputStream openHttpRange(long offset) throws IOException {
+    private int readLocal(long position, byte[] buffer, int offset, int length) throws IOException {
+        try (InputStream inputStream = new FileInputStream(this.localFile)) {
+            skipFully(inputStream, position);
+            return inputStream.read(buffer, offset, length);
+        }
+    }
+
+    private HttpRangeInputStream openHttpRange(long offset) throws IOException {
         IOException last = null;
         for (int attempt = 0; attempt < 2; attempt++) {
             HttpURLConnection connection = (HttpURLConnection) this.url.openConnection();
             connection.setConnectTimeout(HTTP_CONNECT_TIMEOUT_MS);
             connection.setReadTimeout(HTTP_READ_TIMEOUT_MS);
             connection.setRequestMethod("GET");
+            connection.setRequestProperty("Accept-Encoding", "identity");
             if (offset > 0L) {
                 connection.setRequestProperty("Range", "bytes=" + offset + "-");
             }
             int code = connection.getResponseCode();
             Concerto.getLogger().info("HTTP media GET {} response {} Content-Length={} Content-Range={}",
                     this.url, code, connection.getHeaderField("Content-Length"), connection.getHeaderField("Content-Range"));
-            if (code == HttpURLConnection.HTTP_PARTIAL || code == HttpURLConnection.HTTP_OK) {
+            if (code == HttpURLConnection.HTTP_PARTIAL || offset == 0L && code == HttpURLConnection.HTTP_OK) {
                 updateLengthFromConnection(connection, offset, code);
-                HttpRangeInputStream inputStream = new HttpRangeInputStream(connection);
-                if (offset > 0L && code == HttpURLConnection.HTTP_OK) {
-                    skipFully(inputStream, offset);
+                return new HttpRangeInputStream(connection, offset);
+            }
+            if (offset > 0L && code == HttpURLConnection.HTTP_OK) {
+                last = new IOException("Server ignored HTTP Range request for media offset " + offset);
+                connection.disconnect();
+                if (this.urlSupplier != null) {
+                    String refreshed = this.urlSupplier.get();
+                    if (refreshed != null && !refreshed.isEmpty() && !refreshed.equals(this.url.toString())) {
+                        this.url = URI.create(refreshed).toURL();
+                        Concerto.getLogger().warn("Refreshing media URL after ignored range request.");
+                        continue;
+                    }
                 }
-                return inputStream;
+                break;
             }
             last = new IOException(code + " - cannot access media url: " + this.url);
             if (code == HttpURLConnection.HTTP_FORBIDDEN && this.urlSupplier != null) {
@@ -211,37 +267,6 @@ public class ProgressiveMediaDataSource implements Closeable {
             break;
         }
         throw last;
-    }
-
-    private long probeLength(URL url) {
-        HttpURLConnection connection = null;
-        try {
-            connection = (HttpURLConnection) url.openConnection();
-            connection.setConnectTimeout(HTTP_CONNECT_TIMEOUT_MS);
-            connection.setReadTimeout(HTTP_READ_TIMEOUT_MS);
-            connection.setRequestMethod("GET");
-            connection.setRequestProperty("Range", "bytes=0-0");
-            Concerto.getLogger().info("HTTP media connect GET {} Range=bytes=0-0", url);
-            int code = connection.getResponseCode();
-            Concerto.getLogger().info("HTTP media response {} Content-Length={} Content-Range={}",
-                    code, connection.getHeaderField("Content-Length"), connection.getHeaderField("Content-Range"));
-            if (code == HttpURLConnection.HTTP_PARTIAL) {
-                long parsed = parseContentRangeLength(connection.getHeaderField("Content-Range"));
-                if (parsed >= 0L) {
-                    return parsed;
-                }
-            }
-            long headerLength = connection.getHeaderFieldLong("Content-Length", -1L);
-            if (code == HttpURLConnection.HTTP_OK) {
-                return headerLength;
-            }
-        } catch (IOException ignored) {
-        } finally {
-            if (connection != null) {
-                connection.disconnect();
-            }
-        }
-        return -1L;
     }
 
     private void updateLengthFromConnection(HttpURLConnection connection, long requestedOffset, int responseCode) {
@@ -305,47 +330,6 @@ public class ProgressiveMediaDataSource implements Closeable {
         }
     }
 
-    private int readControl(long position, byte[] buffer, int offset, int length) throws IOException {
-        if (this.localFile != null) {
-            try (InputStream inputStream = new FileInputStream(this.localFile)) {
-                skipFully(inputStream, position);
-                return inputStream.read(buffer, offset, length);
-            }
-        }
-        synchronized (this.controlLock) {
-            if (this.controlInputStream == null || this.controlPosition != position) {
-                closeControlLocked();
-                this.controlInputStream = openHttpRange(position);
-                this.controlPosition = position;
-            }
-            int max = this.length >= 0L ? (int) Math.min(length, this.length - position) : length;
-            if (max <= 0) {
-                return -1;
-            }
-            int read = this.controlInputStream.read(buffer, offset, max);
-            if (read == -1) {
-                closeControlLocked();
-                return -1;
-            }
-            this.controlPosition += read;
-            return read;
-        }
-    }
-
-    private void closeControl() throws IOException {
-        synchronized (this.controlLock) {
-            closeControlLocked();
-        }
-    }
-
-    private void closeControlLocked() throws IOException {
-        if (this.controlInputStream != null) {
-            this.controlInputStream.close();
-            this.controlInputStream = null;
-            this.controlPosition = -1L;
-        }
-    }
-
     private void writeMemory(long position, byte[] buffer, int offset, int length) {
         synchronized (this.memoryLock) {
             int written = 0;
@@ -366,6 +350,7 @@ public class ProgressiveMediaDataSource implements Closeable {
                 written += copied;
             }
             evictOldChunks();
+            this.memoryLock.notifyAll();
         }
     }
 
@@ -419,41 +404,263 @@ public class ProgressiveMediaDataSource implements Closeable {
         long targetEnd = this.length >= 0L
                 ? Math.min(this.length, stream.position + FORWARD_BUFFER_BYTES)
                 : stream.position + FORWARD_BUFFER_BYTES;
-        if (isFullyCached(stream.position, Math.max(0L, targetEnd - stream.position))) {
-            return;
-        }
-        synchronized (this.prefetchLock) {
-            if (!isActivePlaybackStream(stream)) {
-                return;
-            }
-            this.pendingPrefetchStream = stream;
-            if (this.prefetchWorkerRunning) {
-                return;
-            }
-            this.prefetchWorkerRunning = true;
-        }
-        Thread thread = new Thread(this::runPrefetchWorker, "Concerto media prefetch");
-        thread.setDaemon(true);
-        thread.start();
+        requestCache(stream.position, targetEnd);
     }
 
     private void runPrefetchWorker() {
+        byte[] scratch = new byte[8192];
         while (true) {
-            ProgressiveInputStream stream;
+            long requestPosition;
+            long requestEnd;
+            long requestGeneration;
             synchronized (this.prefetchLock) {
-                stream = this.pendingPrefetchStream;
-                this.pendingPrefetchStream = null;
-                if (stream == null) {
+                while (!this.closed && this.prefetchRequestPosition < 0L) {
+                    try {
+                        this.prefetchLock.wait();
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                        this.prefetchWorkerRunning = false;
+                        return;
+                    }
+                }
+                if (this.closed) {
                     this.prefetchWorkerRunning = false;
                     return;
                 }
+                requestPosition = this.prefetchRequestPosition;
+                requestEnd = this.prefetchRequestEnd;
+                requestGeneration = this.prefetchRequestGeneration;
             }
+
             try {
-                if (isActivePlaybackStream(stream)) {
-                    stream.prefetchForwardBuffer();
+                long missing = firstMissingPosition(requestPosition, requestEnd);
+                if (missing < 0L) {
+                    synchronized (this.prefetchLock) {
+                        if (this.prefetchRequestGeneration == requestGeneration) {
+                            this.prefetchRequestPosition = -1L;
+                            this.prefetchRequestEnd = -1L;
+                        }
+                    }
+                    continue;
                 }
-            } catch (IOException ignored) {
+
+                HttpRangeInputStream stream;
+                long writePosition;
+                int max;
+                boolean needOpen;
+                synchronized (this.prefetchLock) {
+                    boolean canKeepSequentialFallback = this.prefetchRangeIgnored
+                            && this.prefetchInputStream != null
+                            && this.prefetchPosition <= missing;
+                    if (this.prefetchInputStream == null || this.prefetchPosition != missing && !canKeepSequentialFallback) {
+                        closePrefetchLocked();
+                    }
+                    needOpen = this.prefetchInputStream == null;
+                }
+                if (needOpen) {
+                    HttpRangeInputStream opened = openHttpRange(missing);
+                    synchronized (this.prefetchLock) {
+                        if (this.closed) {
+                            opened.close();
+                            continue;
+                        }
+                        if (this.prefetchRequestGeneration != requestGeneration) {
+                            opened.close();
+                            continue;
+                        }
+                        this.prefetchInputStream = opened;
+                        this.prefetchPosition = opened.getStartOffset();
+                        this.prefetchRangeIgnored = opened.getStartOffset() != missing;
+                    }
+                }
+                synchronized (this.prefetchLock) {
+                    if (this.prefetchRequestGeneration != requestGeneration) {
+                        continue;
+                    }
+                    stream = this.prefetchInputStream;
+                    if (stream == null) {
+                        continue;
+                    }
+                    writePosition = this.prefetchPosition;
+                    max = (int) Math.min(scratch.length, requestEnd - this.prefetchPosition);
+                    if (this.length >= 0L) {
+                        max = (int) Math.min(max, this.length - this.prefetchPosition);
+                    }
+                    if (max <= 0) {
+                        this.prefetchRequestPosition = -1L;
+                        this.prefetchRequestEnd = -1L;
+                        continue;
+                    }
+                }
+
+                int read = stream.read(scratch, 0, max);
+                synchronized (this.prefetchLock) {
+                    if (this.prefetchRequestGeneration != requestGeneration
+                            || stream != this.prefetchInputStream || writePosition != this.prefetchPosition) {
+                        continue;
+                    }
+                    if (read == -1) {
+                        this.prefetchEofPosition = this.prefetchPosition;
+                        closePrefetchLocked();
+                        synchronized (this.memoryLock) {
+                            this.memoryLock.notifyAll();
+                        }
+                        continue;
+                    }
+                    this.prefetchPosition += read;
+                }
+
+                writeMemory(writePosition, scratch, 0, read);
+                notifyLiveIndexer(writePosition, scratch, 0, read);
+            } catch (IOException e) {
+                synchronized (this.prefetchLock) {
+                    if (this.prefetchRequestGeneration != requestGeneration) {
+                        continue;
+                    }
+                    try {
+                        closePrefetchLocked();
+                    } catch (IOException ignored) {
+                    }
+                    this.prefetchRequestPosition = -1L;
+                    this.prefetchRequestEnd = -1L;
+                    this.prefetchFailure = e;
+                }
+                synchronized (this.memoryLock) {
+                    this.memoryLock.notifyAll();
+                }
             }
+        }
+    }
+
+    private void requestCache(long position, long targetEnd) {
+        if (this.localFile != null || this.closed) {
+            return;
+        }
+        long safePosition = Math.max(0L, position);
+        long safeEnd = Math.max(safePosition + 1L, targetEnd);
+        if (this.length >= 0L) {
+            safeEnd = Math.min(safeEnd, this.length);
+        }
+        if (safeEnd <= safePosition || firstMissingPosition(safePosition, safeEnd) < 0L) {
+            return;
+        }
+        synchronized (this.prefetchLock) {
+            if (this.closed) {
+                return;
+            }
+            this.prefetchFailure = null;
+            if (this.prefetchEofPosition >= 0L && safePosition < this.prefetchEofPosition) {
+                this.prefetchEofPosition = -1L;
+            }
+            long requestEnd = Math.max(safeEnd, safePosition + DEFAULT_FORWARD_READ_CHUNK);
+            if (this.length >= 0L) {
+                requestEnd = Math.min(requestEnd, this.length);
+            }
+            long missing = firstMissingPosition(safePosition, requestEnd);
+            if (missing < 0L) {
+                return;
+            }
+            this.prefetchRequestPosition = missing;
+            this.prefetchRequestEnd = Math.max(safeEnd, missing + DEFAULT_FORWARD_READ_CHUNK);
+            if (this.length >= 0L) {
+                this.prefetchRequestEnd = Math.min(this.prefetchRequestEnd, this.length);
+            }
+            if (missing >= 0L && this.prefetchInputStream != null
+                    && (missing < this.prefetchPosition || !this.prefetchRangeIgnored && missing != this.prefetchPosition)) {
+                try {
+                    closePrefetchLocked();
+                } catch (IOException ignored) {
+                }
+            }
+            this.prefetchRequestGeneration++;
+            if (!this.prefetchWorkerRunning) {
+                this.prefetchWorkerRunning = true;
+                Thread thread = new Thread(this::runPrefetchWorker, "Concerto media prefetch");
+                thread.setDaemon(true);
+                thread.start();
+            }
+            this.prefetchLock.notifyAll();
+        }
+    }
+
+    private void waitForCache(long position) throws IOException {
+        while (true) {
+            ensureOpen();
+            IOException failure = this.prefetchFailure;
+            if (failure != null) {
+                throw failure;
+            }
+            if (this.length >= 0L && position >= this.length) {
+                return;
+            }
+            if (cachedLength(position, 1) > 0 || this.prefetchEofPosition >= 0L && position >= this.prefetchEofPosition) {
+                return;
+            }
+            synchronized (this.memoryLock) {
+                if (this.length >= 0L && position >= this.length) {
+                    return;
+                }
+                if (cachedLength(position, 1) > 0 || this.prefetchEofPosition >= 0L && position >= this.prefetchEofPosition) {
+                    return;
+                }
+                try {
+                    this.memoryLock.wait(1000L);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    throw new IOException(e);
+                }
+            }
+        }
+    }
+
+    private long firstMissingPosition(long position, long end) {
+        synchronized (this.memoryLock) {
+            long current = position;
+            while (current < end) {
+                long cached = cachedLengthLocked(current, end - current);
+                if (cached <= 0L) {
+                    return current;
+                }
+                current += cached;
+            }
+            return -1L;
+        }
+    }
+
+    private long cachedLength(long position, long length) {
+        synchronized (this.memoryLock) {
+            return cachedLengthLocked(position, length);
+        }
+    }
+
+    private long cachedLengthLocked(long position, long length) {
+        long total = 0L;
+        while (total < length) {
+            long absolute = position + total;
+            long chunkIndex = chunkIndex(absolute);
+            byte[] chunk = this.memoryChunks.get(chunkIndex);
+            if (chunk == null) {
+                break;
+            }
+            int chunkOffset = (int) (absolute - chunkStart(chunkIndex));
+            if (chunkOffset < 0 || chunkOffset >= chunk.length) {
+                break;
+            }
+            int copied = (int) Math.min(length - total, chunk.length - chunkOffset);
+            if (copied <= 0) {
+                break;
+            }
+            total += copied;
+        }
+        return total;
+    }
+
+    private void closePrefetchLocked() throws IOException {
+        if (this.prefetchInputStream != null) {
+            this.prefetchInputStream.close();
+            this.prefetchInputStream = null;
+            this.prefetchPosition = -1L;
+            this.prefetchRangeIgnored = false;
         }
     }
 
@@ -463,10 +670,7 @@ public class ProgressiveMediaDataSource implements Closeable {
 
     private final class ProgressiveInputStream extends InputStream {
         private long position;
-        private InputStream networkInputStream;
-        private long networkPosition = -1L;
         private boolean closed;
-        private final Object networkLock = new Object();
 
         private ProgressiveInputStream(long position) {
             this.position = position;
@@ -491,74 +695,21 @@ public class ProgressiveMediaDataSource implements Closeable {
                 return -1;
             }
             int cached = readMemory(this.position, buffer, offset, length);
-            if (cached > 0) {
-                this.position += cached;
-                ProgressiveMediaDataSource.this.scheduleForwardBuffer(this);
-                return cached;
-            }
-            int read;
-            synchronized (this.networkLock) {
-                if (this.networkInputStream == null || this.networkPosition != this.position) {
-                    closeNetworkLocked();
-                    this.networkInputStream = openHttpRange(this.position);
-                    this.networkPosition = this.position;
-                }
-                int max = ProgressiveMediaDataSource.this.length >= 0L
-                        ? (int) Math.min(length, ProgressiveMediaDataSource.this.length - this.position)
-                        : length;
-                read = this.networkInputStream.read(buffer, offset, max);
-                if (read == -1) {
+            while (cached <= 0) {
+                long targetEnd = ProgressiveMediaDataSource.this.length >= 0L
+                        ? Math.min(ProgressiveMediaDataSource.this.length, this.position + Math.max(length, DEFAULT_FORWARD_READ_CHUNK))
+                        : this.position + Math.max(length, DEFAULT_FORWARD_READ_CHUNK);
+                ProgressiveMediaDataSource.this.requestCache(this.position, targetEnd);
+                ProgressiveMediaDataSource.this.waitForCache(this.position);
+                if (ProgressiveMediaDataSource.this.prefetchEofPosition >= 0L
+                        && this.position >= ProgressiveMediaDataSource.this.prefetchEofPosition) {
                     return -1;
                 }
-                writeMemory(this.position, buffer, offset, read);
-                notifyLiveIndexer(this.position, buffer, offset, read);
-                this.position += read;
-                this.networkPosition += read;
+                cached = readMemory(this.position, buffer, offset, length);
             }
+            this.position += cached;
             ProgressiveMediaDataSource.this.scheduleForwardBuffer(this);
-            return read;
-        }
-
-        private void prefetchForwardBuffer() throws IOException {
-            if (!ProgressiveMediaDataSource.this.isActivePlaybackStream(this)) {
-                closeNetwork();
-                return;
-            }
-            long snapshotPosition = this.position;
-            long targetEnd = ProgressiveMediaDataSource.this.length >= 0L
-                    ? Math.min(ProgressiveMediaDataSource.this.length, snapshotPosition + FORWARD_BUFFER_BYTES)
-                    : snapshotPosition + FORWARD_BUFFER_BYTES;
-            byte[] scratch = new byte[8192];
-            while (ProgressiveMediaDataSource.this.isActivePlaybackStream(this)
-                    && !this.closed && !ProgressiveMediaDataSource.this.closed) {
-                synchronized (this.networkLock) {
-                    if (!ProgressiveMediaDataSource.this.isActivePlaybackStream(this)
-                            || this.closed || ProgressiveMediaDataSource.this.closed) {
-                        closeNetworkLocked();
-                        return;
-                    }
-                    if (this.networkInputStream == null || this.networkPosition >= targetEnd
-                            || !isFullyCached(snapshotPosition, Math.max(0L, this.networkPosition - snapshotPosition))) {
-                        return;
-                    }
-                    int max = (int) Math.min(scratch.length, targetEnd - this.networkPosition);
-                    if (max <= 0) {
-                        return;
-                    }
-                    long writePosition = this.networkPosition;
-                    int read = this.networkInputStream.read(scratch, 0, max);
-                    if (read == -1) {
-                        closeNetworkLocked();
-                        return;
-                    }
-                    writeMemory(writePosition, scratch, 0, read);
-                    notifyLiveIndexer(writePosition, scratch, 0, read);
-                    this.networkPosition += read;
-                }
-            }
-            synchronized (this.networkLock) {
-                closeNetworkLocked();
-            }
+            return cached;
         }
 
         @Override
@@ -570,7 +721,7 @@ public class ProgressiveMediaDataSource implements Closeable {
                     ? Math.min(bytes, ProgressiveMediaDataSource.this.length - this.position)
                     : bytes;
             this.position += skipped;
-            closeNetwork();
+            ProgressiveMediaDataSource.this.scheduleForwardBuffer(this);
             return skipped;
         }
 
@@ -586,27 +737,9 @@ public class ProgressiveMediaDataSource implements Closeable {
         public void close() throws IOException {
             this.closed = true;
             synchronized (ProgressiveMediaDataSource.this.prefetchLock) {
-                if (ProgressiveMediaDataSource.this.pendingPrefetchStream == this) {
-                    ProgressiveMediaDataSource.this.pendingPrefetchStream = null;
-                }
                 if (ProgressiveMediaDataSource.this.activePlaybackStream == this) {
                     ProgressiveMediaDataSource.this.activePlaybackStream = null;
                 }
-            }
-            closeNetwork();
-        }
-
-        private void closeNetwork() throws IOException {
-            synchronized (this.networkLock) {
-                closeNetworkLocked();
-            }
-        }
-
-        private void closeNetworkLocked() throws IOException {
-            if (this.networkInputStream != null) {
-                this.networkInputStream.close();
-                this.networkInputStream = null;
-                this.networkPosition = -1L;
             }
         }
     }
@@ -665,10 +798,16 @@ public class ProgressiveMediaDataSource implements Closeable {
     private static final class HttpRangeInputStream extends InputStream {
         private final HttpURLConnection connection;
         private final InputStream delegate;
+        private final long startOffset;
 
-        private HttpRangeInputStream(HttpURLConnection connection) throws IOException {
+        private HttpRangeInputStream(HttpURLConnection connection, long startOffset) throws IOException {
             this.connection = connection;
             this.delegate = connection.getInputStream();
+            this.startOffset = startOffset;
+        }
+
+        private long getStartOffset() {
+            return this.startOffset;
         }
 
         @Override

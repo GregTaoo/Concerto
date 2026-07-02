@@ -234,8 +234,9 @@ public class ServerMusicAgent {
         if (taskMusic == null) {
             this.updateState(s -> {
                 s.resolvedMedia = null;
+                s.resolvedStartTime = 0L;
                 s.paused = true;
-            }, List.of(MusicRoomState.RESOLVED_MEDIA, MusicRoomState.PAUSED));
+            }, List.of(MusicRoomState.RESOLVED_MEDIA, MusicRoomState.RESOLVED_START_TIME, MusicRoomState.PAUSED));
             return;
         }
 
@@ -267,8 +268,9 @@ public class ServerMusicAgent {
                 String media = MusicJsonParsers.to(resolvedShared).toString();
                 this.updateState(s -> {
                     s.resolvedMedia = media;
+                    s.resolvedStartTime = 0L;
                     s.paused = false;
-                }, List.of(MusicRoomState.RESOLVED_MEDIA, MusicRoomState.PAUSED));
+                }, List.of(MusicRoomState.RESOLVED_MEDIA, MusicRoomState.RESOLVED_START_TIME, MusicRoomState.PAUSED));
 
                 // If the paused state is already false, syncPauseState won't schedule playNext. We must manually schedule it.
                 if (!this.trackedPauseState) {
@@ -345,8 +347,9 @@ public class ServerMusicAgent {
             s.musicList.clear();
             s.currentIndex = null;
             s.resolvedMedia = null;
+            s.resolvedStartTime = 0L;
             s.paused = true;
-        }, List.of(MusicRoomState.MUSIC_LIST, MusicRoomState.CURRENT_INDEX, MusicRoomState.RESOLVED_MEDIA, MusicRoomState.PAUSED));
+        }, List.of(MusicRoomState.MUSIC_LIST, MusicRoomState.CURRENT_INDEX, MusicRoomState.RESOLVED_MEDIA, MusicRoomState.RESOLVED_START_TIME, MusicRoomState.PAUSED));
     }
 
     public Map<String, Integer> getMembers() {

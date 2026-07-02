@@ -3,6 +3,7 @@ package top.gregtao.concerto.util;
 import net.minecraft.client.OptionInstance;
 import net.minecraft.network.chat.Component;
 import org.apache.logging.log4j.util.TriConsumer;
+import top.gregtao.concerto.ConcertoClient;
 import top.gregtao.concerto.core.config.ClientConfig;
 import top.gregtao.concerto.core.enums.TextAlignment;
 
@@ -58,6 +59,24 @@ public class ConcertoOptions {
                 "handshakeRequired",
                 value -> this.config.options.handshakeRequired = value,
                 () -> this.config.options.handshakeRequired
+        ));
+
+        this.updaters.add(new SingleDoubleOption(
+                "playerVolume",
+                value -> {
+                    this.config.options.playerVolume = value;
+                    ConcertoClient.syncPlayerVolume();
+                },
+                () -> this.config.options.playerVolume
+        ));
+
+        this.updaters.add(new SingleBooleanOption(
+                "playerVolumeFollowsMaster",
+                value -> {
+                    this.config.options.playerVolumeFollowsMaster = value;
+                    ConcertoClient.syncPlayerVolume();
+                },
+                () -> this.config.options.playerVolumeFollowsMaster
         ));
 
         this.updaters.add(new TextOptions("lyrics", (display, align, pos) -> {
@@ -220,6 +239,42 @@ public class ConcertoOptions {
         public void writeOptions() {
             if (!ConcertoOptions.this.canUpdate) return;
             this.writer.accept(this.option.get());
+        }
+
+        @Override
+        public Stream<OptionInstance<?>> streamOptions() {
+            return Stream.of(this.option);
+        }
+    }
+
+    private class SingleDoubleOption implements OptionsUpdater {
+        public final OptionInstance<Double> option;
+
+        private final Consumer<Double> writer;
+        private final Supplier<Double> reader;
+
+        public SingleDoubleOption(String name, Consumer<Double> writer, Supplier<Double> reader) {
+            this.writer = writer;
+            this.reader = reader;
+            this.option = new OptionInstance<>(
+                    "concerto.options." + name,
+                    OptionInstance.noTooltip(),
+                    ConcertoOptions::getPercentValueText,
+                    OptionInstance.UnitDouble.INSTANCE,
+                    1.0,
+                    value -> this.writeOptions()
+            );
+        }
+
+        @Override
+        public void readOptions() {
+            this.option.set(Math.clamp(this.reader.get(), 0.0, 1.0));
+        }
+
+        @Override
+        public void writeOptions() {
+            if (!ConcertoOptions.this.canUpdate) return;
+            this.writer.accept(Math.clamp(this.option.get(), 0.0, 1.0));
         }
 
         @Override

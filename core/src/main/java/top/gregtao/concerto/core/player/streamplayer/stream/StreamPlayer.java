@@ -11,6 +11,8 @@
 package top.gregtao.concerto.core.player.streamplayer.stream;
 
 import javazoom.spi.PropertiesContainer;
+import top.gregtao.concerto.core.player.seek.ProgressiveDataSource;
+import top.gregtao.concerto.core.player.seek.SeekPoint;
 import top.gregtao.concerto.core.player.streamplayer.enums.Status;
 import top.gregtao.concerto.core.player.streamplayer.stream.StreamPlayerException.PlayerException;
 
@@ -60,6 +62,8 @@ public class StreamPlayer implements StreamPlayerInterface, Callable<Void> {
      */
     private AudioInputStream encodedAudioInputStream;
 
+    private volatile long playbackBaseMilliseconds = 0L;
+
     // -------------------LOCKS---------------------
 
     /**
@@ -97,8 +101,6 @@ public class StreamPlayer implements StreamPlayerInterface, Callable<Void> {
      * Speed Factor of the Audio
      */
     private double speedFactor = 1;
-
-    private double requestedGain = 1;
 
     /**
      * The Constant EXTERNAL_BUFFER_SIZE.
@@ -317,6 +319,14 @@ public class StreamPlayer implements StreamPlayerInterface, Callable<Void> {
         initAudioInputStream();
     }
 
+    @Override
+    public void open(ProgressiveDataSource source) throws StreamPlayerException {
+        logger.info(() -> "open(" + source + ")\n");
+        this.source = source;
+        this.playbackBaseMilliseconds = source.getCurrentSeekTimeMilliseconds();
+        initAudioInputStream();
+    }
+
     /**
      * Create AudioInputStream and AudioFileFormat from the data source.
      *
@@ -527,12 +537,11 @@ public class StreamPlayer implements StreamPlayerInterface, Callable<Void> {
 
         // Open the sourceDataLine
         if (outlet.isStartable()) {
-            applyGain(requestedGain);
             outlet.start();
 
             // Proceed only if we have not problems
             logger.info("Submitting new StreamPlayer Thread");
-            streamPlayerExecutorService.submit(this);
+            future = streamPlayerExecutorService.submit(this);
 
             // Update the status
             status = Status.PLAYING;
@@ -606,7 +615,7 @@ public class StreamPlayer implements StreamPlayerInterface, Callable<Void> {
                     try {
                         for (int i = 0; i < 50; i++) {
                             if (!future.isDone())
-                                Thread.sleep(20);
+                                Thread.sleep(50);
                             else
                                 break;
                             logger.log(Level.INFO, "StreamPlayer Future is not yet done...");
@@ -643,59 +652,7 @@ public class StreamPlayer implements StreamPlayerInterface, Callable<Void> {
      */
     @Override
     public long seekBytes(final long bytes) throws StreamPlayerException {
-        long totalSkipped = 0;
-
-        // If it is File
-        if (source.isFile()) {
-
-            // Check if the requested bytes are more than totalBytes of Audio
-            final long bytesLength = getTotalBytes();
-            logger.log(Level.INFO, "Bytes: " + bytes + " BytesLength: " + bytesLength);
-            if ((bytesLength <= 0) || (bytes >= bytesLength)) {
-                generateEvent(Status.EOM, getEncodedStreamPosition(), null);
-                return totalSkipped;
-            }
-
-            logger.info(() -> "Bytes to skip : " + bytes);
-            final Status previousStatus = status;
-            status = Status.SEEKING;
-
-            try {
-                synchronized (audioLock) {
-                    generateEvent(Status.SEEKING, AudioSystem.NOT_SPECIFIED, null);
-                    initAudioInputStream();
-                    if (audioInputStream != null) {
-
-                        long skipped;
-                        // Loop until bytes are really skipped.
-                        while (totalSkipped < bytes) { // totalSkipped < (bytes-SKIP_INACCURACY_SIZE)))
-                            skipped = audioInputStream.skip(bytes - totalSkipped);
-                            if (skipped == 0)
-                                break;
-                            totalSkipped += skipped;
-                            logger.info("Skipped : " + totalSkipped + "/" + bytes);
-                            if (totalSkipped == -1)
-                                throw new StreamPlayerException(
-                                        StreamPlayerException.PlayerException.SKIP_NOT_SUPPORTED);
-
-                            logger.info("Skipping:" + totalSkipped);
-                        }
-                    }
-                }
-                generateEvent(Status.SEEKED, getEncodedStreamPosition(), null);
-                status = Status.OPENED;
-                if (previousStatus == Status.PLAYING)
-                    play();
-                else if (previousStatus == Status.PAUSED) {
-                    play();
-                    pause();
-                }
-
-            } catch (final IOException ex) {
-                logger.log(Level.WARNING, ex.getMessage(), ex);
-            }
-        }
-        return totalSkipped;
+        throw new StreamPlayerException(PlayerException.SKIP_NOT_SUPPORTED);
     }
 
     /**
@@ -705,19 +662,8 @@ public class StreamPlayer implements StreamPlayerInterface, Callable<Void> {
      * @param seconds Seconds to Skip
      */
     @Override
-    //todo not finished needs more validations
     public long seekSeconds(int seconds) throws StreamPlayerException {
-        int durationInSeconds = this.getDurationInSeconds();
-
-        //Validate
-        validateSeconds(seconds, durationInSeconds);
-
-        //Calculate Bytes
-        long totalBytes = getTotalBytes();
-        double percentage = (double) (seconds * 100) / durationInSeconds;
-        long bytes = (long) (totalBytes * (percentage / 100));
-
-        return seekBytes(this.getEncodedStreamPosition() + bytes);
+        return seekToMilliseconds(getCurrentPlaybackMilliseconds() + seconds * 1000L);
     }
 
     /**
@@ -728,26 +674,48 @@ public class StreamPlayer implements StreamPlayerInterface, Callable<Void> {
      */
     @Override
     public long seekTo(int seconds) throws StreamPlayerException {
-        int durationInSeconds = this.getDurationInSeconds();
-
-        //Validate
-        validateSeconds(seconds, durationInSeconds);
-
-        //Calculate Bytes
-        long totalBytes = getTotalBytes();
-        double percentage = (double) (seconds * 100) / durationInSeconds;
-        long bytes = (long) (totalBytes * (percentage / 100));
-
-        return seekBytes(bytes);
+        return seekToMilliseconds(seconds * 1000L);
     }
 
-
-    private void validateSeconds(int seconds, int durationInSeconds) {
-        if (seconds < 0) {
-            throw new UnsupportedOperationException("Trying to skip negative seconds ");
-        } else if (seconds >= durationInSeconds) {
-            throw new UnsupportedOperationException("Trying to skip with seconds {" + seconds + "} > maximum {" + durationInSeconds + "}");
+    @Override
+    public long seekToMilliseconds(long milliseconds) throws StreamPlayerException {
+        if (!(this.source instanceof ProgressiveDataSource progressiveDataSource) || !progressiveDataSource.isSeekable()) {
+            throw new StreamPlayerException(PlayerException.SKIP_NOT_SUPPORTED);
         }
+        long duration = getDurationInMilliseconds();
+        long target = Math.max(0L, milliseconds);
+        if (duration > 0L) {
+            target = Math.min(target, Math.max(0L, duration - 1L));
+        }
+        final Status previousStatus = status;
+        status = Status.SEEKING;
+        generateEvent(Status.SEEKING, AudioSystem.NOT_SPECIFIED, null);
+        awaitTermination();
+        SeekPoint seekPoint = progressiveDataSource.seekToMilliseconds(target);
+        this.playbackBaseMilliseconds = seekPoint.getTimeMilliseconds();
+        synchronized (audioLock) {
+            closeStream();
+            outlet.flushAndFreeDataLine();
+            audioInputStream = null;
+            encodedAudioInputStream = null;
+            encodedAudioLength = -1;
+            try {
+                audioInputStream = source.getAudioInputStream();
+                createLine();
+                discardDecodedMilliseconds(seekPoint.getPcmSkipMilliseconds());
+            } catch (LineUnavailableException | UnsupportedAudioFileException | IOException e) {
+                throw new StreamPlayerException(e);
+            }
+        }
+        status = Status.OPENED;
+        generateEvent(Status.SEEKED, getEncodedStreamPosition(), seekPoint);
+        if (previousStatus == Status.PLAYING) {
+            play();
+        } else if (previousStatus == Status.PAUSED) {
+            play();
+            pause();
+        }
+        return this.playbackBaseMilliseconds;
     }
 
 
@@ -765,6 +733,40 @@ public class StreamPlayer implements StreamPlayerInterface, Callable<Void> {
     @Override
     public long getDurationInMilliseconds() {
         return source.getDurationInMilliseconds();
+    }
+
+    @Override
+    public boolean isSeekable() {
+        return this.source instanceof ProgressiveDataSource progressiveDataSource && progressiveDataSource.isSeekable();
+    }
+
+    protected long getCurrentPlaybackMilliseconds() {
+        SourceDataLine line = outlet.getSourceDataLine();
+        long lineMs = line == null ? 0L : line.getMicrosecondPosition() / 1000L;
+        return this.playbackBaseMilliseconds + lineMs;
+    }
+
+    private void discardDecodedMilliseconds(long milliseconds) throws IOException {
+        if (milliseconds <= 0L || audioInputStream == null) {
+            return;
+        }
+        AudioFormat format = audioInputStream.getFormat();
+        int frameSize = format.getFrameSize();
+        float frameRate = format.getFrameRate();
+        if (frameSize <= 0 || frameRate <= 0F) {
+            return;
+        }
+        long bytesToDiscard = ((long) (frameRate * milliseconds / 1000F)) * frameSize;
+        byte[] buffer = new byte[EXTERNAL_BUFFER_SIZE];
+        long discarded = 0L;
+        while (discarded < bytesToDiscard) {
+            int read = audioInputStream.read(buffer, 0, (int) Math.min(buffer.length, bytesToDiscard - discarded));
+            if (read == -1) {
+                break;
+            }
+            discarded += read;
+        }
+        this.playbackBaseMilliseconds += milliseconds;
     }
 
     /**
@@ -834,11 +836,11 @@ public class StreamPlayer implements StreamPlayerInterface, Callable<Void> {
                                 if (audioInputStream instanceof PropertiesContainer) {
                                     // Pass audio parameters such as instant
                                     // bit rate, ...
-                                    listener.progress(nEncodedBytes, outlet.getSourceDataLine().getMicrosecondPosition(),
+                                    listener.progress(nEncodedBytes, getCurrentPlaybackMilliseconds() * 1000L,
                                             trimBuffer, ((PropertiesContainer) audioInputStream).properties());
                                 } else
                                     // Pass audio parameters
-                                    listener.progress(nEncodedBytes, outlet.getSourceDataLine().getMicrosecondPosition(),
+                                    listener.progress(nEncodedBytes, getCurrentPlaybackMilliseconds() * 1000L,
                                             trimBuffer, emptyMap);
                             });
 
@@ -1190,19 +1192,7 @@ public class StreamPlayer implements StreamPlayerInterface, Callable<Void> {
      */
     @Override
     public void setGain(final double fGain) {
-        requestedGain = fGain;
-        applyGain(fGain);
-    }
-
-    private void applyGain(final double fGain) {
-        if (!outlet.hasControl(FloatControl.Type.MASTER_GAIN, outlet.getGainControl())) {
-            return;
-        }
-        if (isPlaying() || isPaused() || outlet.getSourceDataLine().isOpen()) {
-            if (fGain <= 0) {
-                outlet.getGainControl().setValue(outlet.getGainControl().getMinimum());
-                return;
-            }
+        if (isPlaying() || isPaused() && outlet.hasControl(FloatControl.Type.MASTER_GAIN, outlet.getGainControl())) {
             final double logScaleGain = 20 * Math.log10(fGain);
             outlet.getGainControl().setValue((float) logScaleGain);
         }

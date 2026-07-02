@@ -15,6 +15,8 @@ import top.gregtao.concerto.core.player.MusicPlayerHandler;
 import top.gregtao.concerto.core.player.PlayerPermissions;
 import top.gregtao.concerto.screen.widget.ConcertoListWidget;
 import top.gregtao.concerto.screen.widget.GeneralPlaylistWidget;
+import top.gregtao.concerto.screen.widget.VolumeButton;
+import top.gregtao.concerto.screen.widget.VolumeSliderWidget;
 
 public class GeneralPlaylistScreen extends ApplyDraggedFileScreen {
     private GeneralPlaylistWidget widget;
@@ -25,6 +27,9 @@ public class GeneralPlaylistScreen extends ApplyDraggedFileScreen {
     private Button pauseButton;
     private Button clearButton;
     private CycleButton<OrderType> orderButton;
+    private VolumeButton volumeButton;
+    private VolumeSliderWidget volumeSlider;
+    private boolean volumeSliderVisible = false;
     private Event.Subscription listSubscription, musicSubscription, orderSubscription;
 
     public GeneralPlaylistScreen(Screen parent) {
@@ -54,17 +59,24 @@ public class GeneralPlaylistScreen extends ApplyDraggedFileScreen {
         this.addRenderableWidget(Button.builder(Component.translatable("concerto.screen.search"), button ->
                 this.toggleSearch()).pos(this.width / 2 + 125, 17).size(50, 20).build());
 
+        int buttonWidth = 46;
+        int gap = 2;
+        int x = this.width / 2 - 185;
+        int y = this.height - 30;
+
         this.nextButton = Button.builder(Component.translatable("concerto.screen.next"),
-                button -> MusicPlayerHandler.INSTANCE.playNextAsync(1)).pos(this.width / 2 - 185, this.height - 30).size(50, 20).build();
+                button -> MusicPlayerHandler.INSTANCE.playNextAsync(1)).pos(x, y).size(buttonWidth, 20).build();
         this.addRenderableWidget(this.nextButton);
+        x += buttonWidth + gap;
 
         this.playButton = Button.builder(Component.translatable("concerto.screen.play"), button -> {
             ConcertoListWidget<GeneralPlaylistWidget.Entry>.Entry entry = this.widget.getSelected();
             if (entry != null) {
                 MusicPlayerHandler.INSTANCE.setCurrentIndex(entry.item.index());
             }
-        }).pos(this.width / 2 - 135, this.height - 30).size(50, 20).build();
+        }).pos(x, y).size(buttonWidth, 20).build();
         this.addRenderableWidget(this.playButton);
+        x += buttonWidth + gap;
 
         this.deleteButton = Button.builder(Component.translatable("concerto.screen.delete"), button -> {
             ConcertoListWidget<GeneralPlaylistWidget.Entry>.Entry entry = this.widget.getSelected();
@@ -72,33 +84,45 @@ public class GeneralPlaylistScreen extends ApplyDraggedFileScreen {
                 MusicPlayerHandler.INSTANCE.removeAsync(entry.item.index(), () -> {
                 });
             }
-        }).pos(this.width / 2 - 85, this.height - 30).size(50, 20).build();
+        }).pos(x, y).size(buttonWidth, 20).build();
         this.addRenderableWidget(this.deleteButton);
+        x += buttonWidth + gap;
 
-        this.orderButton = CycleButton.builder((OrderType x) -> Component.literal(x.getName())).withValues(OrderType.values())
+        this.orderButton = CycleButton.builder((OrderType orderType) -> Component.literal(orderType.getName())).withValues(OrderType.values())
                 .withInitialValue(MusicPlayerHandler.INSTANCE.getOrderType()).create(
-                        this.width / 2 - 35, this.height - 30, 60, 20, Component.translatable("concerto.screen.order"),
+                        x, y, buttonWidth, 20, Component.translatable("concerto.screen.order"),
                         (widget, orderType) -> MusicPlayerHandler.INSTANCE.setOrderType(orderType));
         this.addRenderableWidget(this.orderButton);
+        x += buttonWidth + gap;
 
         this.pauseButton = Button.builder(Component.translatable("concerto.screen.pause"), button -> {
             boolean paused = MusicPlayerHandler.INSTANCE.isPaused();
             MusicPlayerHandler.INSTANCE.tryForcePause(!paused);
-        }).pos(this.width / 2 + 25, this.height - 30).size(50, 20).build();
+        }).pos(x, y).size(buttonWidth, 20).build();
         this.addRenderableWidget(this.pauseButton);
+        x += buttonWidth + gap;
 
         this.addRenderableWidget(Button.builder(Component.translatable("concerto.screen.info"), button -> {
             ConcertoListWidget<GeneralPlaylistWidget.Entry>.Entry entry = this.widget.getSelected();
             if (entry != null) {
                 Minecraft.getInstance().setScreen(new MusicInfoScreen(entry.item.music(), this));
             }
-        }).pos(this.width / 2 + 75, this.height - 30).size(50, 20).build());
+        }).pos(x, y).size(buttonWidth, 20).build());
+        x += buttonWidth + gap;
 
         this.clearButton = Button.builder(Component.translatable("concerto.screen.clear"), button -> {
             MusicPlayerHandler.INSTANCE.clear();
             Minecraft.getInstance().setScreen(null);
-        }).pos(this.width / 2 + 125, this.height - 30).size(50, 20).build();
+        }).pos(x, y).size(buttonWidth, 20).build();
         this.addRenderableWidget(this.clearButton);
+        x += buttonWidth + gap;
+
+        this.volumeButton = new VolumeButton(
+                x, y, 20, 20,
+                button -> this.setVolumeSliderVisible(!this.volumeSliderVisible)
+        );
+        this.volumeSlider = new VolumeSliderWidget(this.font, x, y - 86, 20, 84);
+        this.volumeSlider.visible = false;
 
         this.listSubscription = ConcertoEvents.ON_MUSIC_LIST_UPDATE.subscribe(this::toggleSearch);
         this.musicSubscription = ConcertoEvents.ON_NEW_MUSIC_STARTED.subscribe(
@@ -118,10 +142,19 @@ public class GeneralPlaylistScreen extends ApplyDraggedFileScreen {
         this.clearButton.active = PlayerPermissions.canModifyMusicList();
     }
 
+    private void setVolumeSliderVisible(boolean visible) {
+        this.volumeSliderVisible = visible;
+        this.volumeSlider.visible = visible;
+    }
+
     @Override
     public void render(GuiGraphics matrices, int mouseX, int mouseY, float delta) {
         super.render(matrices, mouseX, mouseY, delta);
         this.widget.render(matrices, mouseX, mouseY, delta);
+        this.volumeButton.render(matrices, mouseX, mouseY, delta);
+        if (this.volumeSlider.visible) {
+            this.volumeSlider.render(matrices, mouseX, mouseY, delta);
+        }
     }
 
     @Override
@@ -134,6 +167,41 @@ public class GeneralPlaylistScreen extends ApplyDraggedFileScreen {
             return true;
         }
         return this.searchBox.keyPressed(keyCode, scanCode, modifiers);
+    }
+
+    @Override
+    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        if (this.volumeSlider.visible && this.volumeSlider.mouseClicked(mouseX, mouseY, button)) {
+            return true;
+        }
+        if (this.volumeButton.mouseClicked(mouseX, mouseY, button)) {
+            return true;
+        }
+        if (this.volumeSliderVisible && !this.volumeSlider.isMouseOver(mouseX, mouseY) &&
+                !this.volumeButton.isMouseOver(mouseX, mouseY)) {
+            this.setVolumeSliderVisible(false);
+            return true;
+        }
+        if (super.mouseClicked(mouseX, mouseY, button)) {
+            return true;
+        }
+        return false;
+    }
+
+    @Override
+    public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
+        if (this.volumeSlider.visible && this.volumeSlider.mouseDragged(mouseX, mouseY, button, dragX, dragY)) {
+            return true;
+        }
+        return super.mouseDragged(mouseX, mouseY, button, dragX, dragY);
+    }
+
+    @Override
+    public boolean mouseReleased(double mouseX, double mouseY, int button) {
+        if (this.volumeSlider.visible && this.volumeSlider.mouseReleased(mouseX, mouseY, button)) {
+            return true;
+        }
+        return super.mouseReleased(mouseX, mouseY, button);
     }
 
     @Override

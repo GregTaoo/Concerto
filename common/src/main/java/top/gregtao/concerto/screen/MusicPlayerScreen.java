@@ -19,6 +19,8 @@ import top.gregtao.concerto.core.player.MusicPlayer;
 import top.gregtao.concerto.core.player.MusicPlayerHandler;
 import top.gregtao.concerto.core.player.PlayerPermissions;
 import top.gregtao.concerto.core.util.Pair;
+import top.gregtao.concerto.screen.widget.VolumeButton;
+import top.gregtao.concerto.screen.widget.VolumeSliderWidget;
 
 import java.util.ArrayList;
 
@@ -27,9 +29,13 @@ public class MusicPlayerScreen extends ConcertoScreen {
     private Button playPauseButton;
     private Button nextButton;
     private CycleButton<OrderType> orderButton;
+    private VolumeButton volumeButton;
+    private VolumeSliderWidget volumeSlider;
 
     private float rotationAngle = 0f;
     private int scrollOffset = 0;
+    private boolean volumeSliderVisible = false;
+    private boolean seekingProgress = false;
 
     public MusicPlayerScreen(Screen parent) {
         super(Component.empty(), parent);
@@ -40,7 +46,7 @@ public class MusicPlayerScreen extends ConcertoScreen {
         super.init();
 
         int y = this.height - 30;
-        int totalWidth = 4 * 80 + 3 * 2; // four buttons, 2px gaps
+        int totalWidth = 4 * 80 + 20 + 4 * 2;
         int x = (this.width - totalWidth) / 2;
 
         Button playlistButton = Button.builder(
@@ -75,6 +81,15 @@ public class MusicPlayerScreen extends ConcertoScreen {
                 .withInitialValue(MusicPlayerHandler.INSTANCE.getOrderType())
                 .create(x, y, 80, 20, Component.translatable("concerto.screen.order"),
                         (widget, orderType) -> MusicPlayerHandler.INSTANCE.setOrderType(orderType));
+        x += 82;
+
+        this.volumeButton = new VolumeButton(
+                x, y, 20, 20,
+                button -> this.setVolumeSliderVisible(!this.volumeSliderVisible)
+        );
+
+        this.volumeSlider = new VolumeSliderWidget(this.font, x, y - 86, 20, 84);
+        this.volumeSlider.visible = false;
 
         this.addRenderableWidget(this.playPauseButton);
         this.addRenderableWidget(this.nextButton);
@@ -92,13 +107,19 @@ public class MusicPlayerScreen extends ConcertoScreen {
         this.playPauseButton.setMessage(Component.translatable(isPaused ? "concerto.screen.play" : "concerto.screen.pause"));
     }
 
+    private void setVolumeSliderVisible(boolean visible) {
+        this.volumeSliderVisible = visible;
+        this.volumeSlider.visible = visible;
+    }
+
     @Override
     public void render(GuiGraphics context, int mouseX, int mouseY, float delta) {
         super.render(context, mouseX, mouseY, delta);
 
         MusicMetaData metaData = MusicPlayer.INSTANCE.currentMeta;
-        if ((!MusicPlayer.INSTANCE.isPlaying() && !MusicPlayer.INSTANCE.isPaused()) || metaData == null) {
+        if ((!MusicPlayer.INSTANCE.started && !MusicPlayer.INSTANCE.isSeeking() && !MusicPlayer.INSTANCE.isOpened()) || metaData == null) {
             context.drawCenteredString(this.font, Component.translatable("concerto.not_playing"), this.width / 2, this.height / 2, 0xAAAAAAFF);
+            this.renderVolumeControls(context, mouseX, mouseY, delta);
             return;
         }
 
@@ -203,6 +224,80 @@ public class MusicPlayerScreen extends ConcertoScreen {
             context.drawCenteredString(this.font, Component.translatable("concerto.no_subtitle"), rightHalfX + lyricsWidth / 2, placeholderY, 0xFFAAAAAA);
         }
         renderSpectrum(context);
+        this.renderVolumeControls(context, mouseX, mouseY, delta);
+    }
+
+    private void renderVolumeControls(GuiGraphics context, int mouseX, int mouseY, float delta) {
+        this.volumeButton.render(context, mouseX, mouseY, delta);
+        if (this.volumeSlider.visible) {
+            this.volumeSlider.render(context, mouseX, mouseY, delta);
+        }
+    }
+
+    @Override
+    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        if (this.volumeSlider.visible && this.volumeSlider.mouseClicked(mouseX, mouseY, button)) {
+            return true;
+        }
+        if (this.volumeButton.mouseClicked(mouseX, mouseY, button)) {
+            return true;
+        }
+        if (this.volumeSliderVisible && !this.volumeSlider.isMouseOver(mouseX, mouseY) &&
+                !this.volumeButton.isMouseOver(mouseX, mouseY)) {
+            this.setVolumeSliderVisible(false);
+            return true;
+        }
+        if (button == 0 && this.isOverProgressBar(mouseX, mouseY) && this.seekProgress(mouseX, false)) {
+            this.seekingProgress = true;
+            return true;
+        }
+        if (super.mouseClicked(mouseX, mouseY, button)) {
+            return true;
+        }
+        return false;
+    }
+
+    @Override
+    public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
+        if (this.volumeSlider.visible && this.volumeSlider.mouseDragged(mouseX, mouseY, button, dragX, dragY)) {
+            return true;
+        }
+        if (this.seekingProgress && button == 0) {
+            return this.seekProgress(mouseX, false);
+        }
+        return super.mouseDragged(mouseX, mouseY, button, dragX, dragY);
+    }
+
+    @Override
+    public boolean mouseReleased(double mouseX, double mouseY, int button) {
+        if (this.seekingProgress && button == 0) {
+            this.seekingProgress = false;
+            return this.seekProgress(mouseX, true);
+        }
+        if (this.volumeSlider.visible && this.volumeSlider.mouseReleased(mouseX, mouseY, button)) {
+            return true;
+        }
+        return super.mouseReleased(mouseX, mouseY, button);
+    }
+
+    private boolean isOverProgressBar(double mouseX, double mouseY) {
+        return PlayerPermissions.canControlPlayback() && MusicPlayer.INSTANCE.canSeekCurrentMusic()
+                && mouseX >= 0 && mouseX <= this.width && mouseY >= 0 && mouseY <= 8;
+    }
+
+    private boolean seekProgress(double mouseX, boolean commit) {
+        MusicMetaData metaData = MusicPlayer.INSTANCE.currentMeta;
+        if (metaData == null || metaData.getDuration() == null || !PlayerPermissions.canControlPlayback()
+                || !MusicPlayer.INSTANCE.canSeekCurrentMusic()) {
+            return false;
+        }
+        double progress = this.width <= 0 ? 0D : Math.max(0D, Math.min(1D, mouseX / this.width));
+        long targetMs = (long) (metaData.getDuration().asMilliseconds() * progress);
+        MusicPlayer.INSTANCE.updateDisplayTexts(targetMs);
+        if (commit) {
+            MusicPlayer.INSTANCE.seekToMillisecondsAsync(targetMs);
+        }
+        return true;
     }
 
     private void renderTopProgressBar(GuiGraphics context, MusicMetaData metaData) {
@@ -290,4 +385,5 @@ public class MusicPlayerScreen extends ConcertoScreen {
         g.flush();
         g.pose().popPose();
     }
+
 }

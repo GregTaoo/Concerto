@@ -1,6 +1,7 @@
 package top.gregtao.concerto.core.player.streamplayer.stream;
 
 import top.gregtao.concerto.core.player.streamplayer.enums.Status;
+import top.gregtao.concerto.core.player.seek.ProgressiveDataSource;
 
 import javax.sound.sampled.SourceDataLine;
 import java.io.File;
@@ -62,6 +63,8 @@ public interface StreamPlayerInterface {
      * @throws StreamPlayerException the stream player exception
      */
     void open(InputStream stream) throws StreamPlayerException;
+
+    void open(ProgressiveDataSource source) throws StreamPlayerException;
 
     /**
      * Change the Speed Rate of the Audio , this variable affects the Sample Rate ,
@@ -131,6 +134,10 @@ public interface StreamPlayerInterface {
      * @param seconds Seconds to Skip
      */
     long seekTo(int seconds) throws StreamPlayerException;
+
+    long seekToMilliseconds(long milliseconds) throws StreamPlayerException;
+
+    boolean isSeekable();
 
     int getDurationInSeconds();
 

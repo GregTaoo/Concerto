@@ -1,5 +1,6 @@
 package top.gregtao.concerto.core.player.seek;
 
+import org.jetbrains.annotations.NotNull;
 import top.gregtao.concerto.core.Concerto;
 
 import java.io.Closeable;
@@ -40,6 +41,7 @@ public class ProgressiveMediaDataSource implements Closeable {
     private ProgressiveInputStream pendingPrefetchStream;
     private volatile ProgressiveInputStream activePlaybackStream;
     private boolean prefetchWorkerRunning;
+    private volatile boolean closed;
 
     private ProgressiveMediaDataSource(File localFile, URL url, Supplier<String> urlSupplier) {
         this.localFile = localFile;
@@ -58,6 +60,7 @@ public class ProgressiveMediaDataSource implements Closeable {
     }
 
     public InputStream openStream(long offset) throws IOException {
+        ensureOpen();
         long safeOffset = Math.max(0L, offset);
         if (this.localFile != null) {
             InputStream inputStream = new FileInputStream(this.localFile);
@@ -72,20 +75,12 @@ public class ProgressiveMediaDataSource implements Closeable {
         return stream;
     }
 
-    public InputStream openStream() throws IOException {
-        return this.openStream(0L);
-    }
-
     public long length() {
         return this.length;
     }
 
     public boolean hasLength() {
         return this.length >= 0L;
-    }
-
-    public boolean isLocalFile() {
-        return this.localFile != null;
     }
 
     public void setLiveSeekIndex(LiveSeekIndex index) {
@@ -132,9 +127,11 @@ public class ProgressiveMediaDataSource implements Closeable {
     }
 
     public byte[] readAt(long offset, int length) throws IOException {
+        ensureOpen();
         byte[] bytes = new byte[length];
         int total = 0;
         while (total < length) {
+            ensureOpen();
             int cached = readMemory(offset + total, bytes, total, length - total);
             if (cached > 0) {
                 total += cached;
@@ -158,6 +155,7 @@ public class ProgressiveMediaDataSource implements Closeable {
 
     @Override
     public void close() throws IOException {
+        this.closed = true;
         synchronized (this.prefetchLock) {
             this.pendingPrefetchStream = null;
             this.activePlaybackStream = null;
@@ -167,6 +165,16 @@ public class ProgressiveMediaDataSource implements Closeable {
             this.chunkAccessOrder.clear();
         }
         closeControl();
+    }
+
+    public void abortReads() {
+        this.closed = true;
+    }
+
+    private void ensureOpen() throws IOException {
+        if (this.closed) {
+            throw new IOException("Media source closed");
+        }
     }
 
     private InputStream openHttpRange(long offset) throws IOException {
@@ -179,11 +187,9 @@ public class ProgressiveMediaDataSource implements Closeable {
             if (offset > 0L) {
                 connection.setRequestProperty("Range", "bytes=" + offset + "-");
             }
-            Concerto.getLogger().info("HTTP media connect GET {} Range={}", this.url,
-                    offset > 0L ? "bytes=" + offset + "-" : "<none>");
             int code = connection.getResponseCode();
-            Concerto.getLogger().info("HTTP media response {} Content-Length={} Content-Range={}",
-                    code, connection.getHeaderField("Content-Length"), connection.getHeaderField("Content-Range"));
+            Concerto.getLogger().info("HTTP media GET {} response {} Content-Length={} Content-Range={}",
+                    this.url, code, connection.getHeaderField("Content-Length"), connection.getHeaderField("Content-Range"));
             if (code == HttpURLConnection.HTTP_PARTIAL || code == HttpURLConnection.HTTP_OK) {
                 updateLengthFromConnection(connection, offset, code);
                 HttpRangeInputStream inputStream = new HttpRangeInputStream(connection);
@@ -204,7 +210,7 @@ public class ProgressiveMediaDataSource implements Closeable {
             connection.disconnect();
             break;
         }
-        throw last == null ? new IOException("Cannot open media url: " + this.url) : last;
+        throw last;
     }
 
     private long probeLength(URL url) {
@@ -392,7 +398,7 @@ public class ProgressiveMediaDataSource implements Closeable {
         byte[] scratch = null;
         while (skippedTotal < bytes) {
             long skipped = inputStream.skip(bytes - skippedTotal);
-            if (skipped <= 0L) {
+            if (skipped == 0L) {
                 if (scratch == null) {
                     scratch = new byte[8192];
                 }
@@ -474,8 +480,8 @@ public class ProgressiveMediaDataSource implements Closeable {
         }
 
         @Override
-        public int read(byte[] buffer, int offset, int length) throws IOException {
-            if (this.closed) {
+        public int read(byte @NotNull [] buffer, int offset, int length) throws IOException {
+            if (this.closed || ProgressiveMediaDataSource.this.closed) {
                 return -1;
             }
             if (length == 0) {
@@ -523,9 +529,11 @@ public class ProgressiveMediaDataSource implements Closeable {
                     ? Math.min(ProgressiveMediaDataSource.this.length, snapshotPosition + FORWARD_BUFFER_BYTES)
                     : snapshotPosition + FORWARD_BUFFER_BYTES;
             byte[] scratch = new byte[8192];
-            while (ProgressiveMediaDataSource.this.isActivePlaybackStream(this) && !this.closed) {
+            while (ProgressiveMediaDataSource.this.isActivePlaybackStream(this)
+                    && !this.closed && !ProgressiveMediaDataSource.this.closed) {
                 synchronized (this.networkLock) {
-                    if (!ProgressiveMediaDataSource.this.isActivePlaybackStream(this) || this.closed) {
+                    if (!ProgressiveMediaDataSource.this.isActivePlaybackStream(this)
+                            || this.closed || ProgressiveMediaDataSource.this.closed) {
                         closeNetworkLocked();
                         return;
                     }
@@ -627,7 +635,7 @@ public class ProgressiveMediaDataSource implements Closeable {
         }
 
         @Override
-        public int read(byte[] buffer, int offset, int length) throws IOException {
+        public int read(byte @NotNull [] buffer, int offset, int length) throws IOException {
             int read = this.delegate.read(buffer, offset, length);
             if (read > 0) {
                 notifyLiveIndexer(this.position, buffer, offset, read);
@@ -639,7 +647,7 @@ public class ProgressiveMediaDataSource implements Closeable {
         @Override
         public long skip(long bytes) throws IOException {
             long skipped = this.delegate.skip(bytes);
-            this.position += Math.max(0L, skipped);
+            this.position += skipped;
             return skipped;
         }
 
@@ -669,7 +677,7 @@ public class ProgressiveMediaDataSource implements Closeable {
         }
 
         @Override
-        public int read(byte[] buffer, int offset, int length) throws IOException {
+        public int read(byte @NotNull [] buffer, int offset, int length) throws IOException {
             return this.delegate.read(buffer, offset, length);
         }
 

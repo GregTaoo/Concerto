@@ -12,10 +12,6 @@ public interface SeekMap {
 
     SeekPoint timeToSeekPoint(long timeMilliseconds);
 
-    AudioFormat getDirectAudioFormat();
-
-    long getDirectAudioDataEndOffset();
-
     String getFormatName();
 
     default InputStream openSeekInputStream(ProgressiveMediaDataSource source, SeekPoint seekPoint) throws IOException {

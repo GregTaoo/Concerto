@@ -5,11 +5,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class LiveSeekIndexer implements LiveSeekIndex.Resolver {
     private final LiveSeekIndex index;
@@ -17,6 +13,7 @@ public class LiveSeekIndexer implements LiveSeekIndex.Resolver {
     private final ProgressiveMediaDataSource source;
     private final LinearState linear = new LinearState();
     private final Mp4State mp4 = new Mp4State();
+    private final Mp3SeekMap mp3 = new Mp3SeekMap();
 
     public LiveSeekIndexer(String formatName, LiveSeekIndex index, ProgressiveMediaDataSource source) {
         this.formatName = formatName == null ? "" : formatName;
@@ -29,10 +26,12 @@ public class LiveSeekIndexer implements LiveSeekIndex.Resolver {
         if (length <= 0 || this.index == null) {
             return;
         }
-        byte[] bytes = merged(data, dataOffset, length, 65536);
+        byte[] bytes = merged(data, dataOffset, length);
         long mergedOffset = offset - this.linear.tailLength;
         switch (this.formatName) {
-            case "mp3" -> scanMp3(mergedOffset, offset, bytes);
+            case "mp3" -> {
+                // MP3 frame indexing is driven by resolveMp3 so playback and prefetch reads only fill cache.
+            }
             case "adts-aac" -> scanAdts(mergedOffset, offset, bytes);
             case "wav" -> scanWav(mergedOffset, bytes);
             case "flac" -> scanFlac(mergedOffset, offset, bytes);
@@ -41,11 +40,14 @@ public class LiveSeekIndexer implements LiveSeekIndex.Resolver {
             default -> {
             }
         }
-        saveTail(data, dataOffset, length, 65536);
+        saveTail(data, dataOffset, length);
     }
 
     @Override
     public synchronized SeekPoint resolve(ProgressiveMediaDataSource source, long timeMilliseconds) throws IOException {
+        if ("mp3".equals(this.formatName)) {
+            return resolveMp3(source, timeMilliseconds);
+        }
         if ("mp4-aac".equals(this.formatName)) {
             ensureMp4Parsed(source);
             return this.index.timeToSeekPoint(timeMilliseconds);
@@ -73,75 +75,136 @@ public class LiveSeekIndexer implements LiveSeekIndex.Resolver {
         return known;
     }
 
+    private SeekPoint resolveMp3(ProgressiveMediaDataSource source, long timeMilliseconds) throws IOException {
+        long target = Math.max(0L, timeMilliseconds);
+        if (mp3ScannedPast(target) || !source.hasLength()) {
+            return this.mp3.timeToSeekPoint(target).withRequestedTime(target);
+        }
+        initializeMp3ScanPosition(source);
+        long lastScanPosition = -1L;
+        byte[] buffer = new byte[64 * 1024];
+        while (!mp3ScannedPast(target) && this.linear.scanPosition < source.length()) {
+            long position = Math.max(0L, this.linear.scanPosition);
+            if (position == lastScanPosition) {
+                break;
+            }
+            lastScanPosition = position;
+            int read = Math.min(buffer.length, (int) Math.min(Integer.MAX_VALUE, source.length() - position));
+            if (read <= 0) {
+                break;
+            }
+            byte[] bytes = source.readAt(position, read);
+            if (bytes.length == 0) {
+                break;
+            }
+            long before = this.linear.scanPosition;
+            scanMp3(position, position, bytes);
+            if (this.linear.scanPosition <= before) {
+                break;
+            }
+        }
+        return this.mp3.timeToSeekPoint(target).withRequestedTime(target);
+    }
+
+    private boolean mp3ScannedPast(long timeMilliseconds) {
+        return this.linear.sampleRate > 0
+                && this.linear.samples * 1000L / this.linear.sampleRate > Math.max(0L, timeMilliseconds);
+    }
+
+    private void initializeMp3ScanPosition(ProgressiveMediaDataSource source) throws IOException {
+        if (this.linear.sampleRate > 0 || this.linear.scanPosition > 0L || !source.hasLength() || source.length() < 10L) {
+            return;
+        }
+        byte[] header = source.readAt(0L, 10);
+        if (SeekParsing.asciiEquals(header, 0, "ID3")) {
+            this.linear.scanPosition = Math.min(source.length(), 10L + SeekParsing.syncSafeInt(header, 6));
+        }
+    }
+
     private void scanMp3(long mergedOffset, long freshOffset, byte[] bytes) {
         int start = skipId3(bytes, mergedOffset);
         for (int i = Math.max(0, start); i + 4 <= bytes.length; i++) {
             Mp3Frame frame = parseMp3(bytes, i);
-            if (frame == null || mergedOffset + i < this.linear.scanPosition) {
+            if (frame == null) {
                 continue;
             }
+            if (i + frame.frameSize > bytes.length) {
+                break;
+            }
             long frameOffset = mergedOffset + i;
+            if (!isExpectedMp3Frame(frameOffset, mergedOffset)) {
+                continue;
+            }
             if (frameOffset < freshOffset && i + frame.frameSize <= this.linear.tailLength) {
                 continue;
             }
-            if (!this.linear.mp3SeekMapInstalled) {
-                installMp3SeekMap(bytes, i, frameOffset, frame);
+            if (!this.linear.mp3SeekHeaderChecked) {
+                installMp3SeekMap(bytes, i, frame);
+                this.linear.mp3SeekHeaderChecked = true;
             }
             if (this.linear.sampleRate <= 0) {
                 this.linear.sampleRate = frame.sampleRate;
                 this.linear.samples = 0L;
             }
             long timeMs = this.linear.samples * 1000L / this.linear.sampleRate;
+            this.mp3.addPoint(this.linear.samples, frameOffset, frame.sampleRate);
             this.index.addPoint(timeMs, frameOffset);
             this.linear.samples += frame.samplesPerFrame;
-            this.index.setDurationMilliseconds(this.linear.samples * 1000L / this.linear.sampleRate);
             this.linear.scanPosition = frameOffset + frame.frameSize;
+            if (this.source.hasLength() && this.linear.scanPosition >= this.source.length()) {
+                setMp3DurationMilliseconds(this.linear.samples * 1000L / this.linear.sampleRate);
+            }
             i += Math.max(0, frame.frameSize - 1);
         }
     }
 
-    private void installMp3SeekMap(byte[] bytes, int frameOffsetInBuffer, long frameOffset, Mp3Frame frame) {
+    private boolean isExpectedMp3Frame(long frameOffset, long mergedOffset) {
+        if (this.linear.sampleRate <= 0 && this.linear.samples == 0L) {
+            return frameOffset == this.linear.scanPosition || mergedOffset == 0L;
+        }
+        return frameOffset == this.linear.scanPosition;
+    }
+
+    private void installMp3SeekMap(byte[] bytes, int frameOffsetInBuffer, Mp3Frame frame) {
         if (!this.source.hasLength() || frame.sampleRate <= 0 || frame.samplesPerFrame <= 0 || frame.bitrate <= 0) {
             return;
         }
-        long streamLength = this.source.length();
-        Mp3SeekMap seekMap = parseXingSeekMap(bytes, frameOffsetInBuffer, frameOffset, frame, streamLength);
+        Mp3HeaderSeekMap seekMap = parseXingSeekMap(bytes, frameOffsetInBuffer, frame);
         if (seekMap == null) {
-            seekMap = parseVbriSeekMap(bytes, frameOffsetInBuffer, frameOffset, frame, streamLength);
-        }
-        if (seekMap == null) {
-            long audioBytes = Math.max(0L, streamLength - frameOffset);
-            long durationMs = audioBytes * 8000L / frame.bitrate;
-            if (durationMs > 0L) {
-                seekMap = Mp3SeekMap.cbr(frameOffset, streamLength, durationMs, frame);
-            }
+            seekMap = parseVbriSeekMap(bytes, frameOffsetInBuffer, frame);
         }
         if (seekMap != null) {
-            this.index.setDelegate(seekMap);
-            this.linear.mp3SeekMapInstalled = true;
+            setMp3DurationMilliseconds(seekMap.getDurationMilliseconds());
         }
     }
 
-    private static Mp3SeekMap parseXingSeekMap(byte[] bytes, int frameOffset, long absoluteFrameOffset, Mp3Frame frame, long streamLength) {
+    private void setMp3DurationMilliseconds(long durationMilliseconds) {
+        this.mp3.setDurationMilliseconds(durationMilliseconds);
+        this.index.setDurationMilliseconds(durationMilliseconds);
+    }
+
+    private static Mp3HeaderSeekMap parseXingSeekMap(byte[] bytes, int frameOffset, Mp3Frame frame) {
         int sideInfo = frame.versionBits == 3
                 ? (frame.channelMode == 3 ? 17 : 32)
                 : (frame.channelMode == 3 ? 9 : 17);
         int xing = frameOffset + 4 + sideInfo;
-        if (xing + 16 > bytes.length
-                || !SeekParsing.asciiEquals(bytes, xing, "Xing") && !SeekParsing.asciiEquals(bytes, xing, "Info")) {
+        if (xing + 16 > bytes.length) {
+            return null;
+        }
+        boolean xingHeader = SeekParsing.asciiEquals(bytes, xing, "Xing");
+        boolean infoHeader = SeekParsing.asciiEquals(bytes, xing, "Info");
+        if (!xingHeader && !infoHeader) {
             return null;
         }
         int flags = (int) SeekParsing.u32be(bytes, xing + 4);
         int cursor = xing + 8;
         long frames = -1L;
-        long audioBytes = -1L;
         int[] toc = null;
         if ((flags & 0x01) != 0 && cursor + 4 <= bytes.length) {
             frames = SeekParsing.u32be(bytes, cursor);
             cursor += 4;
         }
         if ((flags & 0x02) != 0 && cursor + 4 <= bytes.length) {
-            audioBytes = SeekParsing.u32be(bytes, cursor);
             cursor += 4;
         }
         if ((flags & 0x04) != 0 && cursor + 100 <= bytes.length) {
@@ -154,18 +217,17 @@ public class LiveSeekIndexer implements LiveSeekIndex.Resolver {
         if (durationMs <= 0L) {
             return null;
         }
-        if (audioBytes <= 0L) {
-            audioBytes = Math.max(0L, streamLength - absoluteFrameOffset);
+        if (toc != null) {
+            return Mp3HeaderSeekMap.vbr(durationMs);
         }
-        return Mp3SeekMap.vbr(absoluteFrameOffset, streamLength, durationMs, audioBytes, toc, frame);
+        return infoHeader ? Mp3HeaderSeekMap.info(durationMs) : null;
     }
 
-    private static Mp3SeekMap parseVbriSeekMap(byte[] bytes, int frameOffset, long absoluteFrameOffset, Mp3Frame frame, long streamLength) {
+    private static Mp3HeaderSeekMap parseVbriSeekMap(byte[] bytes, int frameOffset, Mp3Frame frame) {
         int vbri = frameOffset + 4 + 32;
         if (vbri + 26 > bytes.length || !SeekParsing.asciiEquals(bytes, vbri, "VBRI")) {
             return null;
         }
-        long audioBytes = SeekParsing.u32be(bytes, vbri + 10);
         long frames = SeekParsing.u32be(bytes, vbri + 14);
         int entryCount = SeekParsing.u16be(bytes, vbri + 18);
         int scale = SeekParsing.u16be(bytes, vbri + 20);
@@ -179,21 +241,7 @@ public class LiveSeekIndexer implements LiveSeekIndex.Resolver {
             return null;
         }
         long durationMs = frames * frame.samplesPerFrame * 1000L / frame.sampleRate;
-        long[] times = new long[entryCount + 1];
-        long[] offsets = new long[entryCount + 1];
-        times[0] = 0L;
-        offsets[0] = absoluteFrameOffset;
-        long currentOffset = absoluteFrameOffset;
-        for (int i = 0; i < entryCount; i++) {
-            long segmentBytes = 0L;
-            for (int b = 0; b < bytesPerEntry; b++) {
-                segmentBytes = (segmentBytes << 8) | u8(bytes, tableStart + i * bytesPerEntry + b);
-            }
-            currentOffset += segmentBytes * scale;
-            times[i + 1] = Math.min(durationMs, (long) (i + 1) * framesPerEntry * frame.samplesPerFrame * 1000L / frame.sampleRate);
-            offsets[i + 1] = Math.min(streamLength, currentOffset);
-        }
-        return Mp3SeekMap.table(absoluteFrameOffset, streamLength, durationMs, audioBytes, times, offsets, frame);
+        return Mp3HeaderSeekMap.vbri(durationMs);
     }
 
     private int skipId3(byte[] bytes, long mergedOffset) {
@@ -375,7 +423,6 @@ public class LiveSeekIndexer implements LiveSeekIndex.Resolver {
             }
             int serial = (int) SeekParsing.u32le(bytes, i + 14);
             long granule = SeekParsing.u64le(bytes, i + 6);
-            int headerType = SeekParsing.u8(bytes, i + 5);
             int payloadOffset = i + 27 + segments;
             if (this.linear.oggSerial == 0) {
                 this.linear.oggSerial = serial;
@@ -487,15 +534,15 @@ public class LiveSeekIndexer implements LiveSeekIndex.Resolver {
         }
     }
 
-    private byte[] merged(byte[] data, int dataOffset, int length, int maxTail) {
+    private byte[] merged(byte[] data, int dataOffset, int length) {
         byte[] merged = new byte[this.linear.tailLength + length];
         System.arraycopy(this.linear.tail, 0, merged, 0, this.linear.tailLength);
         System.arraycopy(data, dataOffset, merged, this.linear.tailLength, length);
         return merged;
     }
 
-    private void saveTail(byte[] data, int dataOffset, int length, int maxTail) {
-        int keep = Math.min(maxTail, length);
+    private void saveTail(byte[] data, int dataOffset, int length) {
+        int keep = Math.min(65536, length);
         if (this.linear.tail.length < keep) {
             this.linear.tail = new byte[keep];
         }
@@ -514,14 +561,9 @@ public class LiveSeekIndexer implements LiveSeekIndex.Resolver {
         int sampleRateIndex = (b2 >>> 2) & 0x03;
         int padding = (b2 >>> 1) & 0x01;
         if (versionBits == 1 || layerBits == 0 || bitrateIndex == 0 || bitrateIndex == 15 || sampleRateIndex == 3) return null;
-        int[][][] bitrates = {
-                {},
-                {{}, {0, 32, 40, 48, 56, 64, 80, 96, 112, 128, 160, 192, 224, 256, 320}, {0, 32, 48, 56, 64, 80, 96, 112, 128, 160, 192, 224, 256, 320, 384}, {0, 32, 40, 48, 56, 64, 80, 96, 112, 128, 160, 192, 224, 256, 320}},
-                {{}, {0, 8, 16, 24, 32, 40, 48, 56, 64, 80, 96, 112, 128, 144, 160}, {0, 8, 16, 24, 32, 40, 48, 56, 64, 80, 96, 112, 128, 144, 160}, {0, 32, 40, 48, 56, 64, 80, 96, 112, 128, 160, 192, 224, 256, 320}}
-        };
-        int[][] sampleRates = {{11025, 12000, 8000}, {}, {22050, 24000, 16000}, {44100, 48000, 32000}};
-        int bitrate = bitrates[versionBits == 3 ? 1 : 2][layerBits][bitrateIndex] * 1000;
-        int sampleRate = sampleRates[versionBits][sampleRateIndex];
+        int bitrate = mp3Bitrate(versionBits, layerBits, bitrateIndex);
+        int sampleRate = mp3SampleRate(versionBits, sampleRateIndex);
+        if (bitrate <= 0 || sampleRate <= 0) return null;
         int frameSize;
         int samplesPerFrame;
         if (layerBits == 3) {
@@ -537,6 +579,33 @@ public class LiveSeekIndexer implements LiveSeekIndex.Resolver {
         }
         int channelMode = (u8(bytes, offset + 3) >>> 6) & 0x03;
         return frameSize >= 4 ? new Mp3Frame(frameSize, sampleRate, samplesPerFrame, bitrate, versionBits, channelMode) : null;
+    }
+
+    private static int mp3Bitrate(int versionBits, int layerBits, int bitrateIndex) {
+        int[][] mpeg1Kbps = {
+                {},
+                {0, 32, 40, 48, 56, 64, 80, 96, 112, 128, 160, 192, 224, 256, 320},
+                {0, 32, 48, 56, 64, 80, 96, 112, 128, 160, 192, 224, 256, 320, 384},
+                {0, 32, 64, 96, 128, 160, 192, 224, 256, 288, 320, 352, 384, 416, 448}
+        };
+        int[][] mpeg2Kbps = {
+                {},
+                {0, 8, 16, 24, 32, 40, 48, 56, 64, 80, 96, 112, 128, 144, 160},
+                {0, 8, 16, 24, 32, 40, 48, 56, 64, 80, 96, 112, 128, 144, 160},
+                {0, 32, 48, 56, 64, 80, 96, 112, 128, 144, 160, 176, 192, 224, 256}
+        };
+        int[][] table = versionBits == 3 ? mpeg1Kbps : mpeg2Kbps;
+        return table[layerBits][bitrateIndex] * 1000;
+    }
+
+    private static int mp3SampleRate(int versionBits, int sampleRateIndex) {
+        int[][] sampleRates = {
+                {11025, 12000, 8000},
+                {},
+                {22050, 24000, 16000},
+                {44100, 48000, 32000}
+        };
+        return sampleRates[versionBits][sampleRateIndex];
     }
 
     private static AdtsFrame parseAdts(byte[] bytes, int offset) {
@@ -624,7 +693,7 @@ public class LiveSeekIndexer implements LiveSeekIndex.Resolver {
         } else if (size == 0L && parentEnd != Long.MAX_VALUE) {
             size = parentEnd - absoluteOffset;
         }
-        if (size < headerSize || absoluteOffset + size > parentEnd && parentEnd != Long.MAX_VALUE) {
+        if (size < headerSize || absoluteOffset + size > parentEnd) {
             return null;
         }
         return new Box(absoluteOffset, size, headerSize, type);
@@ -653,7 +722,7 @@ public class LiveSeekIndexer implements LiveSeekIndex.Resolver {
         private long oggLastGranule = -1L;
         private boolean oggHeadersComplete;
         private final ByteArrayOutputStream oggInit = new ByteArrayOutputStream();
-        private boolean mp3SeekMapInstalled;
+        private boolean mp3SeekHeaderChecked;
     }
 
     private static final class Mp4State {
@@ -685,131 +754,64 @@ public class LiveSeekIndexer implements LiveSeekIndex.Resolver {
     }
 
     private static final class Mp3SeekMap implements SeekMap {
-        private static final int FRAME_SYNC_SCAN_BYTES = 4096;
+        private final List<Mp3Point> points = new ArrayList<>();
+        private long durationMilliseconds = -1L;
+        private int sampleRate = -1;
 
-        private final long firstFrameOffset;
-        private final long sourceLength;
-        private final long durationMs;
-        private final long audioBytes;
-        private final int[] xingToc;
-        private final long[] tableTimesMs;
-        private final long[] tableOffsets;
-        private final Mp3Frame frame;
-
-        private Mp3SeekMap(long firstFrameOffset, long sourceLength, long durationMs, long audioBytes,
-                           int[] xingToc, long[] tableTimesMs, long[] tableOffsets, Mp3Frame frame) {
-            this.firstFrameOffset = firstFrameOffset;
-            this.sourceLength = sourceLength;
-            this.durationMs = durationMs;
-            this.audioBytes = Math.max(0L, audioBytes);
-            this.xingToc = xingToc;
-            this.tableTimesMs = tableTimesMs;
-            this.tableOffsets = tableOffsets;
-            this.frame = frame;
+        private Mp3SeekMap() {
+            this.points.add(new Mp3Point(0L, 0L));
         }
 
-        private static Mp3SeekMap cbr(long firstFrameOffset, long sourceLength, long durationMs, Mp3Frame frame) {
-            return new Mp3SeekMap(firstFrameOffset, sourceLength, durationMs,
-                    Math.max(0L, sourceLength - firstFrameOffset), null, null, null, frame);
-        }
-
-        private static Mp3SeekMap vbr(long firstFrameOffset, long sourceLength, long durationMs, long audioBytes,
-                                      int[] toc, Mp3Frame frame) {
-            return new Mp3SeekMap(firstFrameOffset, sourceLength, durationMs, audioBytes, toc, null, null, frame);
-        }
-
-        private static Mp3SeekMap table(long firstFrameOffset, long sourceLength, long durationMs, long audioBytes,
-                                        long[] timesMs, long[] offsets, Mp3Frame frame) {
-            return new Mp3SeekMap(firstFrameOffset, sourceLength, durationMs, audioBytes, null, timesMs, offsets, frame);
-        }
-
-        @Override
-        public boolean isSeekable() {
-            return this.durationMs > 0L;
-        }
-
-        @Override
-        public long getDurationMilliseconds() {
-            return this.durationMs;
-        }
-
-        @Override
-        public SeekPoint timeToSeekPoint(long timeMilliseconds) {
-            long target = Math.max(0L, Math.min(timeMilliseconds, Math.max(0L, this.durationMs - 1L)));
-            long offset;
-            if (this.tableTimesMs != null && this.tableOffsets != null) {
-                offset = tableOffsetForTime(target);
-            } else if (this.xingToc != null && this.audioBytes > 0L) {
-                double percent = target * 100D / this.durationMs;
-                int index = Math.max(0, Math.min(99, (int) percent));
-                double previousScaled = index == 0 ? 0D : this.xingToc[index - 1];
-                double nextScaled = this.xingToc[index];
-                double fraction = percent - index;
-                double scaled = previousScaled + (nextScaled - previousScaled) * fraction;
-                offset = this.firstFrameOffset + (long) (scaled / 256D * this.audioBytes);
-            } else {
-                offset = this.firstFrameOffset + target * this.frame.bitrate / 8000L;
+        private synchronized void addPoint(long samples, long byteOffset, int sampleRate) {
+            if (samples < 0L || byteOffset < 0L || sampleRate <= 0) {
+                return;
             }
-            offset = Math.max(this.firstFrameOffset, Math.min(offset, Math.max(this.firstFrameOffset, this.sourceLength - 4L)));
-            long actualMs = byteOffsetToTime(offset);
-            return SeekPoint.at(actualMs, offset).withRequestedTime(target);
+            if (this.sampleRate <= 0) {
+                this.sampleRate = sampleRate;
+            }
+            for (Mp3Point point : this.points) {
+                if (point.samples == samples || point.byteOffset == byteOffset) {
+                    return;
+                }
+            }
+            this.points.add(new Mp3Point(samples, byteOffset));
+            this.points.sort(Comparator.comparingLong(Mp3Point::samples));
         }
 
-        private long tableOffsetForTime(long timeMilliseconds) {
+        private synchronized void setDurationMilliseconds(long durationMilliseconds) {
+            this.durationMilliseconds = durationMilliseconds;
+        }
+
+        @Override
+        public synchronized boolean isSeekable() {
+            return this.points.size() > 1;
+        }
+
+        @Override
+        public synchronized long getDurationMilliseconds() {
+            return this.durationMilliseconds;
+        }
+
+        @Override
+        public synchronized SeekPoint timeToSeekPoint(long timeMilliseconds) {
+            long target = Math.max(0L, timeMilliseconds);
+            if (this.sampleRate <= 0) {
+                return SeekPoint.at(0L, 0L).withRequestedTime(target);
+            }
+            long targetSamples = target * this.sampleRate / 1000L;
             int low = 0;
-            int high = this.tableTimesMs.length - 1;
+            int high = this.points.size() - 1;
             while (low <= high) {
                 int mid = (low + high) >>> 1;
-                if (this.tableTimesMs[mid] <= timeMilliseconds) {
+                if (this.points.get(mid).samples <= targetSamples) {
                     low = mid + 1;
                 } else {
                     high = mid - 1;
                 }
             }
-            int index = Math.max(0, Math.min(high, this.tableTimesMs.length - 1));
-            if (index >= this.tableTimesMs.length - 1) {
-                return this.tableOffsets[index];
-            }
-            long t0 = this.tableTimesMs[index];
-            long t1 = this.tableTimesMs[index + 1];
-            long o0 = this.tableOffsets[index];
-            long o1 = this.tableOffsets[index + 1];
-            if (t1 <= t0) {
-                return o0;
-            }
-            return o0 + (timeMilliseconds - t0) * (o1 - o0) / (t1 - t0);
-        }
-
-        private long byteOffsetToTime(long offset) {
-            if (this.tableTimesMs != null && this.tableOffsets != null) {
-                int low = 0;
-                int high = this.tableOffsets.length - 1;
-                while (low <= high) {
-                    int mid = (low + high) >>> 1;
-                    if (this.tableOffsets[mid] <= offset) {
-                        low = mid + 1;
-                    } else {
-                        high = mid - 1;
-                    }
-                }
-                int index = Math.max(0, Math.min(high, this.tableOffsets.length - 1));
-                return this.tableTimesMs[index];
-            }
-            long relativeBytes = Math.max(0L, offset - this.firstFrameOffset);
-            if (this.xingToc != null && this.audioBytes > 0L) {
-                return Math.min(this.durationMs, relativeBytes * this.durationMs / this.audioBytes);
-            }
-            return Math.min(this.durationMs, relativeBytes * 8000L / this.frame.bitrate);
-        }
-
-        @Override
-        public AudioFormat getDirectAudioFormat() {
-            return null;
-        }
-
-        @Override
-        public long getDirectAudioDataEndOffset() {
-            return -1L;
+            Mp3Point point = this.points.get(Math.max(0, high));
+            long actualMs = point.samples * 1000L / this.sampleRate;
+            return SeekPoint.at(actualMs, point.byteOffset).withRequestedTime(target);
         }
 
         @Override
@@ -819,36 +821,28 @@ public class LiveSeekIndexer implements LiveSeekIndex.Resolver {
 
         @Override
         public InputStream openSeekInputStream(ProgressiveMediaDataSource source, SeekPoint seekPoint) throws IOException {
-            long offset = findFrameBoundary(source, seekPoint.getByteOffset());
-            return source.openStream(offset);
+            return SeekMap.super.openSeekInputStream(source, seekPoint);
         }
 
-        private long findFrameBoundary(ProgressiveMediaDataSource source, long approximateOffset) throws IOException {
-            long start = Math.max(this.firstFrameOffset, approximateOffset);
-            if (start <= this.firstFrameOffset) {
-                return this.firstFrameOffset;
-            }
-            long searchStart = Math.max(this.firstFrameOffset, start - FRAME_SYNC_SCAN_BYTES);
-            int length = (int) Math.min(FRAME_SYNC_SCAN_BYTES * 2L,
-                    Math.max(0L, source.length() - searchStart));
-            if (length < 4) {
-                return this.firstFrameOffset;
-            }
-            byte[] bytes = source.readAt(searchStart, length);
-            long best = this.firstFrameOffset;
-            for (int i = 0; i + 4 <= bytes.length; i++) {
-                Mp3Frame candidate = parseMp3(bytes, i);
-                if (candidate == null) {
-                    continue;
-                }
-                long absolute = searchStart + i;
-                if (absolute <= approximateOffset) {
-                    best = absolute;
-                } else {
-                    return best;
-                }
-            }
-            return best;
+        private record Mp3Point(long samples, long byteOffset) {
+        }
+    }
+
+    private record Mp3HeaderSeekMap(long durationMilliseconds) {
+        private long getDurationMilliseconds() {
+            return this.durationMilliseconds;
+        }
+
+        private static Mp3HeaderSeekMap vbr(long durationMs) {
+            return new Mp3HeaderSeekMap(durationMs);
+        }
+
+        private static Mp3HeaderSeekMap info(long durationMs) {
+            return new Mp3HeaderSeekMap(durationMs);
+        }
+
+        private static Mp3HeaderSeekMap vbri(long durationMs) {
+            return new Mp3HeaderSeekMap(durationMs);
         }
     }
 
@@ -869,7 +863,7 @@ public class LiveSeekIndexer implements LiveSeekIndex.Resolver {
             this.durationMs = durationMs;
         }
 
-        private static Mp4SeekMap parse(byte[] ftypBytes, byte[] moovBytes, long moovStart, long sourceLength) throws IOException {
+        private static Mp4SeekMap parse(byte[] ftypBytes, byte[] moovBytes, long moovStart, long sourceLength) {
             BoxNode moov = parseBoxTree(moovBytes, moovStart, 0, moovBytes.length, null);
             AudioTrack track = findAudioTrack(moovBytes, moov);
             if (track == null || track.timescale <= 0L || track.sampleSizes.isEmpty()
@@ -902,16 +896,6 @@ public class LiveSeekIndexer implements LiveSeekIndex.Resolver {
         }
 
         @Override
-        public AudioFormat getDirectAudioFormat() {
-            return null;
-        }
-
-        @Override
-        public long getDirectAudioDataEndOffset() {
-            return -1L;
-        }
-
-        @Override
         public String getFormatName() {
             return "mp4-aac";
         }
@@ -933,11 +917,11 @@ public class LiveSeekIndexer implements LiveSeekIndex.Resolver {
             return new PrefixInputStream(prefix.toByteArray(), source.openStream(dataOffset));
         }
 
-        private byte[] buildTrimmedMoov(int sampleIndex, long mediaDataStart) throws IOException {
+        private byte[] buildTrimmedMoov(int sampleIndex, long mediaDataStart) {
             return rebuildBox(this.moovTree, this.track.buildReplacements(sampleIndex, mediaDataStart));
         }
 
-        private byte[] rebuildBox(BoxNode box, Map<String, byte[]> replacements) throws IOException {
+        private byte[] rebuildBox(BoxNode box, Map<String, byte[]> replacements) {
             byte[] replacement = replacements.get(box.path());
             if (replacement != null) {
                 return replacement;
@@ -966,17 +950,20 @@ public class LiveSeekIndexer implements LiveSeekIndex.Resolver {
 
     private static BoxNode parseBoxTree(byte[] bytes, long absoluteStart, int start, int end, BoxNode parent) {
         Box header = readBoxHeader(bytes, start, absoluteStart + start, absoluteStart + end);
-        BoxNode node = new BoxNode(header.start, header.size, header.headerSize, header.type, parent);
-        if (node.isContainer()) {
-            int pos = start + header.headerSize;
-            int boxEnd = start + (int) header.size;
-            while (pos + 8 <= boxEnd) {
-                Box childHeader = readBoxHeader(bytes, pos, absoluteStart + pos, absoluteStart + boxEnd);
-                if (childHeader == null) {
-                    break;
+        BoxNode node = null;
+        if (header != null) {
+            node = new BoxNode(header.start, header.size, header.headerSize, header.type, parent);
+            if (node.isContainer()) {
+                int pos = start + header.headerSize;
+                int boxEnd = start + (int) header.size;
+                while (pos + 8 <= boxEnd) {
+                    Box childHeader = readBoxHeader(bytes, pos, absoluteStart + pos, absoluteStart + boxEnd);
+                    if (childHeader == null) {
+                        break;
+                    }
+                    node.children.add(parseBoxTree(bytes, absoluteStart, pos, pos + (int) childHeader.size, node));
+                    pos += (int) childHeader.size;
                 }
-                node.children.add(parseBoxTree(bytes, absoluteStart, pos, pos + (int) childHeader.size, node));
-                pos += (int) childHeader.size;
             }
         }
         return node;
@@ -1265,7 +1252,7 @@ public class LiveSeekIndexer implements LiveSeekIndex.Resolver {
             replacements.put(pathFor("stsc"), buildStsc(sampleIndex));
             replacements.put(pathFor("stco"), buildStco(sampleIndex, mediaDataStart));
             replacements.put(pathFor("co64"), buildCo64(sampleIndex, mediaDataStart));
-            replacements.values().removeIf(v -> v == null);
+            replacements.values().removeIf(Objects::isNull);
             return replacements;
         }
 

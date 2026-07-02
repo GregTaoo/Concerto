@@ -10,7 +10,7 @@ import java.util.Comparator;
 import java.util.List;
 
 public class LiveSeekIndex implements SeekMap {
-    interface Resolver {
+    public interface Resolver {
         SeekPoint resolve(ProgressiveMediaDataSource source, long timeMilliseconds) throws IOException;
     }
 
@@ -21,7 +21,6 @@ public class LiveSeekIndex implements SeekMap {
     private SeekMap delegate;
     private Resolver resolver;
     private AudioFormat directAudioFormat;
-    private long directAudioDataEndOffset = -1L;
     private long wavDataStart = -1L;
     private long wavDataSize = -1L;
     private long wavByteRate = -1L;
@@ -66,7 +65,6 @@ public class LiveSeekIndex implements SeekMap {
         this.wavByteRate = byteRate;
         this.wavBlockAlign = blockAlign;
         this.directAudioFormat = format;
-        this.directAudioDataEndOffset = dataStart + dataSize;
         this.durationMilliseconds = byteRate > 0L ? dataSize * 1000L / byteRate : -1L;
         this.points.clear();
         this.points.add(SeekPoint.at(0L, dataStart));
@@ -139,16 +137,6 @@ public class LiveSeekIndex implements SeekMap {
             return resolved.withRequestedTime(timeMilliseconds);
         }
         return known;
-    }
-
-    @Override
-    public javax.sound.sampled.AudioFormat getDirectAudioFormat() {
-        return this.directAudioFormat;
-    }
-
-    @Override
-    public long getDirectAudioDataEndOffset() {
-        return this.directAudioDataEndOffset;
     }
 
     @Override

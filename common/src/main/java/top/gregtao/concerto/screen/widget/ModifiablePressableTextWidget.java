@@ -22,7 +22,7 @@ public class ModifiablePressableTextWidget extends PlainTextButton {
 
     @Override
     public void renderWidget(GuiGraphics context, int mouseX, int mouseY, float deltaTicks) {
-        Component text = this.isHoveredOrFocused() ? this.hoverText : this.text;
+        Component text = this.isHovered() ? this.hoverText : this.text;
         context.drawString(this.textRenderer, text, this.getX(), this.getY(), 16777215 | Mth.ceil(this.alpha * 255.0F) << 24);
     }
 

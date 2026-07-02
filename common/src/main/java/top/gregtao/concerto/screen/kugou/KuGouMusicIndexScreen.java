@@ -62,7 +62,7 @@ public class KuGouMusicIndexScreen extends ConcertoScreen {
                             } else {
                                 tip = Component.translatable("concerto.screen.kugou.vip.update_failed");
                             }
-                            displayAlert(tip);
+                            Minecraft.getInstance().submit(() -> displayAlert(tip));
                         }
                     }),
                     font
@@ -122,7 +122,7 @@ public class KuGouMusicIndexScreen extends ConcertoScreen {
                 bottom -= 1;
             }
 
-            matrices.drawString(this.font, versionStatus, x, bottom - fontHeight, isVersionSame ? 5635925 : 16733525, true);
+            matrices.drawString(this.font, versionStatus, x, bottom - fontHeight, isVersionSame ? 0xff55ff55 : 0xffff5555, true);
             matrices.drawString(this.font, apiVersion, x, bottom - fontHeight * 2 - 1, 0xffffffff, true);
             matrices.drawString(this.font, currentVersion, x, bottom - fontHeight * 3 - 2, 0xffffffff, true);
         }

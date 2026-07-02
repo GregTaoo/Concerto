@@ -412,13 +412,10 @@ public class MusicRoom {
                     if (music instanceof DynamicPath dp) {
                         String rawSm = buildResolvedMediaPayload(music, dp);
                         if (rawSm != null) {
-                            long startTime = MusicPlayer.INSTANCE.started
-                                    ? MusicPlayer.INSTANCE.getInterpolatedCurrentTimeMilliseconds()
-                                    : 0L;
                             o.set(s -> {
                                 MusicRoomState rs = (MusicRoomState) s;
                                 rs.resolvedMedia = rawSm;
-                                rs.resolvedStartTime = startTime;
+                                rs.resolvedStartTime = 0L;
                                 return rs;
                             }, List.of(MusicRoomState.RESOLVED_MEDIA, MusicRoomState.RESOLVED_START_TIME));
                             return;

@@ -79,6 +79,15 @@ public class ConcertoOptions {
                 () -> this.config.options.playerVolumeFollowsMaster
         ));
 
+        // Applied when the next track opens its audio output
+        this.updaters.add(new SingleBooleanOption(
+                "openalBackend",
+                Component.translatable("concerto.options.openalBackend.tooltip"),
+                value -> this.config.options.playbackBackend =
+                        value ? ClientConfig.PlaybackBackend.OPENAL : ClientConfig.PlaybackBackend.JAVASOUND,
+                () -> this.config.options.playbackBackend == ClientConfig.PlaybackBackend.OPENAL
+        ));
+
         this.updaters.add(new TextOptions("lyrics", (display, align, pos) -> {
             this.config.options.displayLyrics = display;
             this.config.options.lyricsAlignment = align;
@@ -222,10 +231,16 @@ public class ConcertoOptions {
         private final Supplier<Boolean> reader;
 
         public SingleBooleanOption(String name, Consumer<Boolean> writer, Supplier<Boolean> reader) {
+            this(name, null, writer, reader);
+        }
+
+        public SingleBooleanOption(String name, Component tooltip, Consumer<Boolean> writer, Supplier<Boolean> reader) {
             this.writer = writer;
             this.reader = reader;
             this.option = OptionInstance.createBoolean(
-                    "concerto.options." + name, true,
+                    "concerto.options." + name,
+                    tooltip == null ? OptionInstance.noTooltip() : OptionInstance.cachedConstantTooltip(tooltip),
+                    true,
                     value -> this.writeOptions()
             );
         }

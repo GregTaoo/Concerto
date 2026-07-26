@@ -16,6 +16,7 @@ import java.util.concurrent.TimeUnit;
 public class ConcertoScreen extends Screen {
     private final Screen parent;
     private FocusableTextWidget message;
+    private int alertGeneration = 0;
 
     public static Component getTextWithColor(Component text, ChatFormatting color) {
         List<Component> textList = text.toFlatList(Style.EMPTY.withColor(color));
@@ -27,13 +28,19 @@ public class ConcertoScreen extends Screen {
         this.parent = parent;
     }
 
+    // Callable from any thread. Each alert supersedes the previous one; an
+    // older alert's expiry timer must not clear a newer alert early.
     public void displayAlert(Component text) {
-        this.message.setMessage(text);
-        this.initTabNavigation();
-        this.message.visible = true;
-        CompletableFuture.delayedExecutor(5, TimeUnit.SECONDS).execute(() -> {
-            this.message.setMessage(Component.empty());
-            this.message.visible = false;
+        Minecraft.getInstance().execute(() -> {
+            this.message.setMessage(text);
+            this.initTabNavigation();
+            this.message.visible = true;
+            int generation = ++this.alertGeneration;
+            CompletableFuture.delayedExecutor(5, TimeUnit.SECONDS).execute(() -> Minecraft.getInstance().execute(() -> {
+                if (generation != this.alertGeneration) return;
+                this.message.setMessage(Component.empty());
+                this.message.visible = false;
+            }));
         });
     }
 

@@ -362,6 +362,10 @@ public class MusicPlayer implements EngineListener {
     public void initMusicStatus() {
         if (this.currentMusic == null) return;
         this.currentMeta = this.currentMusic.getMeta();
+        // Always drop the previous track's lyrics first: getLyrics() returning
+        // null used to leave them in place, so a lyricless track kept scrolling
+        // the previous track's lines on the HUD
+        this.currentLyrics = this.currentSubLyrics = null;
         try {
             Pair<Lyrics, Lyrics> lyrics = this.currentMusic.getLyrics();
             if (lyrics != null) {
@@ -372,7 +376,7 @@ public class MusicPlayer implements EngineListener {
             this.currentLyrics = this.currentSubLyrics = null;
         }
         this.currentSubLyricsMapping = Lyrics.createTimestampMapping(this.currentLyrics, this.currentSubLyrics, 500);
-        this.displayTexts[2] = "";
+        this.displayTexts[0] = this.displayTexts[1] = this.displayTexts[2] = "";
     }
 
     public void updateDisplayTexts() {

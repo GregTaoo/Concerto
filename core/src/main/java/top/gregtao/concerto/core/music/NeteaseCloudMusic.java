@@ -3,6 +3,7 @@ package top.gregtao.concerto.core.music;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import top.gregtao.concerto.core.Concerto;
 import top.gregtao.concerto.core.api.*;
 import top.gregtao.concerto.core.enums.Sources;
 import top.gregtao.concerto.core.http.HttpURLInputStream;
@@ -58,6 +59,9 @@ public class NeteaseCloudMusic extends Music implements CacheableMusic, DynamicP
             this.rawPath = this.rawPath.isEmpty() ? null : this.rawPath;
             if (this.rawPath != null) {
                 this.format = FileUtil.getSuffix(URI.create(this.rawPath).getPath());
+                if (object.has("freeTrialInfo") && !object.get("freeTrialInfo").isJsonNull()) {
+                    Concerto.getCoreBridge().sendTranslatableToClientPlayer("concerto.player.trial", false);
+                }
             }
         } catch (Exception e) {
             this.rawPath = null;

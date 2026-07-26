@@ -243,6 +243,7 @@
   "concerto.options.playerVolumeFollowsMaster": "跟随主音量",
   "concerto.options.openalBackend": "使用 OpenAL 输出 (下一首生效)",
   "concerto.player.buffering": "缓冲中...",
+  "concerto.player.trial": "当前音源为试听片段，登录对应平台会员可获取完整歌曲",
   "concerto.options.display.lyrics": "主歌词",
   "concerto.options.align.lyrics": "歌词对齐",
   "concerto.options.posXPercent.lyrics": "歌词 X %",

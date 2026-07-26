@@ -252,13 +252,13 @@ public class MusicPlayerScreen extends ConcertoScreen {
     }
 
     private boolean seekProgress(double mouseX, boolean commit) {
-        MusicMetaData metaData = MusicPlayer.INSTANCE.currentMeta;
-        if (metaData == null || metaData.getDuration() == null || !PlayerPermissions.canControlPlayback()
+        long durationMs = MusicPlayer.INSTANCE.getEffectiveDurationMillis();
+        if (durationMs <= 0 || !PlayerPermissions.canControlPlayback()
                 || !MusicPlayer.INSTANCE.canSeekCurrentMusic()) {
             return false;
         }
         double progress = this.width <= 0 ? 0D : Math.max(0D, Math.min(1D, mouseX / this.width));
-        long targetMs = (long) (metaData.getDuration().asMilliseconds() * progress);
+        long targetMs = (long) (durationMs * progress);
         MusicPlayer.INSTANCE.updateDisplayTexts(targetMs);
         if (commit) {
             MusicPlayer.INSTANCE.seekToMillisecondsAsync(targetMs);
@@ -267,7 +267,7 @@ public class MusicPlayerScreen extends ConcertoScreen {
     }
 
     private void renderTopProgressBar(GuiGraphics context, MusicMetaData metaData) {
-        if (metaData == null || metaData.getDuration() == null) {
+        if (metaData == null || MusicPlayer.INSTANCE.getEffectiveDurationMillis() <= 0) {
             return;
         }
 

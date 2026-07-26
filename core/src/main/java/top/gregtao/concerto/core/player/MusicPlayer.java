@@ -50,7 +50,6 @@ public class MusicPlayer implements EngineListener {
     public MusicMetaData currentMeta = null;
     private MusicTimestamp currentTime = null;
     private String[] displayTexts = new String[]{"", "", "", ""};
-    private String timeFormat = "%s" + " ".repeat(30) + "%s";
     public volatile float progressPercentage = 0;
     private long currentTimeUpdatedAtMs = 0;
     private volatile long displayOverrideUntilMs = 0;
@@ -245,9 +244,27 @@ public class MusicPlayer implements EngineListener {
     // ---- Seeking ----
 
     public boolean canSeekCurrentMusic() {
-        if (!this.started || this.currentMeta == null || this.currentMeta.getDuration() == null) return false;
+        if (!this.started || this.getEffectiveDurationMillis() <= 0) return false;
         PlaybackSession session = this.engine.getSessionView();
         return session != null && session.isSeekable();
+    }
+
+    /**
+     * The duration actually playable, in ms (-1 if unknown). Prefers the real
+     * media duration measured by the completed seek index over the metadata
+     * claim — e.g. a 30s trial clip of a 4-minute song seeks within 30s.
+     */
+    public long getEffectiveDurationMillis() {
+        MusicTimestamp metaDuration = this.currentMeta == null ? null : this.currentMeta.getDuration();
+        long meta = metaDuration == null ? -1 : metaDuration.asMilliseconds();
+        PlaybackSession session = this.engine.getSessionView();
+        if (session != null && session.getSeekIndex() != null) {
+            long real = session.getSeekIndex().isComplete() ? session.getSeekIndex().getDurationMillis() : -1;
+            if (real > 0 && (meta <= 0 || real < meta)) {
+                return real;
+            }
+        }
+        return meta;
     }
 
     public void seekToMillisecondsAsync(long milliseconds) {
@@ -281,7 +298,6 @@ public class MusicPlayer implements EngineListener {
         this.currentMeta = null;
         this.currentTime = MusicTimestamp.of(0);
         this.displayTexts = new String[]{"", "", "", ""};
-        this.timeFormat = "%s" + " ".repeat(30) + "%s";
         this.progressPercentage = 0;
         this.currentTimeUpdatedAtMs = 0;
         this.displayOverrideUntilMs = 0;
@@ -307,19 +323,18 @@ public class MusicPlayer implements EngineListener {
     public void updateDisplayTexts() {
         if (this.currentMeta != null) {
             this.displayTexts[2] = this.currentMeta.title() + " | " + this.currentMeta.author() + " | " + this.currentMeta.getSource();
-            MusicTimestamp timestamp = this.currentMeta.getDuration();
-            this.timeFormat = "%s" + (timestamp == null ? "" : " ".repeat(30) + timestamp.toShortString());
             ConcertoEvents.ON_MUSIC_INFO_UPDATE.emit();
         } else this.displayTexts[2] = "";
     }
 
     public void updateDisplayTexts(long millisecond) {
         if (this.currentMeta == null) return;
-        MusicTimestamp duration = this.currentMeta.getDuration();
-        this.progressPercentage = duration == null ? 0 : ((float) millisecond / duration.asMilliseconds());
+        long duration = this.getEffectiveDurationMillis();
+        this.progressPercentage = duration <= 0 ? 0 : ((float) millisecond / duration);
         this.currentTime = MusicTimestamp.ofMilliseconds(millisecond);
         this.currentTimeUpdatedAtMs = System.currentTimeMillis();
-        this.displayTexts[3] = this.timeFormat.formatted(this.currentTime.toShortString());
+        this.displayTexts[3] = duration <= 0 ? this.currentTime.toShortString()
+                : this.currentTime.toShortString() + " ".repeat(30) + MusicTimestamp.ofMilliseconds(duration).toShortString();
 
         if (this.currentLyrics != null) this.displayTexts[0] = this.currentLyrics.stayOrNext(millisecond);
         else if (millisecond < 5000)
@@ -342,8 +357,8 @@ public class MusicPlayer implements EngineListener {
         if (this.engine.getState() == PlaybackState.PLAYING && !MusicPlayerHandler.INSTANCE.isPaused()) {
             currentMs += Math.max(0L, System.currentTimeMillis() - this.currentTimeUpdatedAtMs);
         }
-        MusicTimestamp duration = this.currentMeta == null ? null : this.currentMeta.getDuration();
-        return duration == null ? currentMs : Math.min(currentMs, duration.asMilliseconds());
+        long duration = this.getEffectiveDurationMillis();
+        return duration <= 0 ? currentMs : Math.min(currentMs, duration);
     }
 
     // ---- Engine callbacks (engine thread) ----

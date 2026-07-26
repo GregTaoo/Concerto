@@ -70,21 +70,21 @@ public class ConcertoIndexScreen extends ConcertoScreen {
                         Component.translatable("concerto.screen.local_playlists"), this, PresetPlaylistsConfig.LOCAL_PLAYLISTS.getRadios()))
         ).pos(this.width / 2 + 5, 110).size(115, 20).build());
 
-        this.addRenderableWidget(Button.builder(Component.translatable("concerto.report_bugs"),
-                button -> Util.getPlatform().openUri("https://github.com/GregTaoo/Concerto/issues")
-        ).pos(this.width / 2 + 5, 140).size(115, 20).build());
+        Button roomsButton = Button.builder(Component.translatable("concerto.screen.rooms"),
+                button -> Minecraft.getInstance().setScreen(new MusicRoomsScreen(this))
+        ).pos(this.width / 2 + 5, 140).size(115, 20).build();
+        this.addRenderableWidget(roomsButton);
+        if (player == null || !ConcertoClient.isServerAvailable()) {
+            roomsButton.active = false;
+        }
 
         this.addRenderableWidget(Button.builder(Component.translatable("concerto.screen.options"),
                 button -> Minecraft.getInstance().setScreen(new ConcertoOptionsScreen(this))
         ).pos(this.width / 2 - 120, 170).size(115, 20).build());
 
-        Button roomsButton = Button.builder(Component.translatable("concerto.screen.rooms"),
-                button -> Minecraft.getInstance().setScreen(new MusicRoomsScreen(this))
-        ).pos(this.width / 2 + 5, 170).size(115, 20).build();
-        this.addRenderableWidget(roomsButton);
-        if (player == null || !ConcertoClient.isServerAvailable()) {
-            roomsButton.active = false;
-        }
+        this.addRenderableWidget(Button.builder(Component.translatable("concerto.report_bugs"),
+                button -> Util.getPlatform().openUri("https://github.com/GregTaoo/Concerto/issues")
+        ).pos(this.width / 2 + 5, 170).size(115, 20).build());
 
         if (this.minecraft != null) {
             switch (MusicRoom.clientGetState()) {

@@ -78,6 +78,14 @@ public class ConcertoIndexScreen extends ConcertoScreen {
                 button -> Minecraft.getInstance().setScreen(new ConcertoOptionsScreen(this))
         ).pos(this.width / 2 - 120, 170).size(115, 20).build());
 
+        Button roomsButton = Button.builder(Component.translatable("concerto.screen.rooms"),
+                button -> Minecraft.getInstance().setScreen(new MusicRoomsScreen(this))
+        ).pos(this.width / 2 + 5, 170).size(115, 20).build();
+        this.addRenderableWidget(roomsButton);
+        if (player == null || !ConcertoClient.isServerAvailable()) {
+            roomsButton.active = false;
+        }
+
         if (this.minecraft != null) {
             switch (MusicRoom.clientGetState()) {
                 case MUSIC_ROOM -> {

@@ -1,6 +1,9 @@
 package top.gregtao.concerto.core.room;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import top.gregtao.concerto.core.Concerto;
 import top.gregtao.concerto.core.api.DynamicPath;
 import top.gregtao.concerto.core.api.MusicJsonParsers;
@@ -20,6 +23,7 @@ import top.gregtao.concerto.core.util.JsonUtil;
 
 import java.lang.reflect.Field;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class MusicRoom {
 
@@ -29,12 +33,18 @@ public class MusicRoom {
         public String errorMessage = "";
         public String owner = "";
         public Map<String, Integer> members = new HashMap<>();
+        public String roomName = "";
+        public boolean visible = true;
+        public boolean joinable = true;
 
         public static final Field RESOLVED_MEDIA;
         public static final Field RESOLVED_START_TIME;
         public static final Field ERROR_MESSAGE;
         public static final Field OWNER;
         public static final Field MEMBERS;
+        public static final Field ROOM_NAME;
+        public static final Field VISIBLE;
+        public static final Field JOINABLE;
 
         static {
             try {
@@ -43,6 +53,9 @@ public class MusicRoom {
                 ERROR_MESSAGE = MusicRoomState.class.getField("errorMessage");
                 OWNER = MusicRoomState.class.getField("owner");
                 MEMBERS = MusicRoomState.class.getField("members");
+                ROOM_NAME = MusicRoomState.class.getField("roomName");
+                VISIBLE = MusicRoomState.class.getField("visible");
+                JOINABLE = MusicRoomState.class.getField("joinable");
             } catch (NoSuchFieldException e) {
                 throw new RuntimeException(e);
             }
@@ -64,6 +77,9 @@ public class MusicRoom {
             c.errorMessage = this.errorMessage;
             c.owner = this.owner;
             c.members = new HashMap<>(this.members);
+            c.roomName = this.roomName;
+            c.visible = this.visible;
+            c.joinable = this.joinable;
             return c;
         }
     }
@@ -75,9 +91,16 @@ public class MusicRoom {
         QUIT,
         SYNC,
         SET_OP,
+        LIST,
     }
 
-    public static final Map<UUID, MusicRoom> ROOMS = new HashMap<>();
+    /** A visible room's public summary, as served by {@link Command#LIST}. */
+    public record RoomSummary(UUID uuid, String name, String owner, int memberCount, boolean joinable) {}
+
+    public static final int MAX_ROOM_NAME_LENGTH = 32;
+
+    // Concurrent: mutated from netty threads and the agent scheduler, iterated by LIST
+    public static final Map<UUID, MusicRoom> ROOMS = new ConcurrentHashMap<>();
     public static MusicRoom CLIENT_ROOM;
 
     public final UUID uuid;
@@ -88,19 +111,32 @@ public class MusicRoom {
     public final ClientNetworkBridge clientBridge;
 
     // Server constructor
-    public MusicRoom(String creator, UUID uuid, ServerNetworkBridge bridge) {
+    public MusicRoom(String creator, UUID uuid, String roomName, ServerNetworkBridge bridge) {
         this.uuid = uuid;
         this.serverBridge = bridge;
         this.clientBridge = null;
         MusicRoomState state = new MusicRoomState();
         state.owner = creator;
         state.members.put(creator, 3);
+        state.roomName = sanitizeRoomName(roomName, creator);
         this.serverState = SyncRecord.createServerRecord(state, this::serverBroadcastSyncPackage);
     }
 
     // Server constructor
-    public MusicRoom(String creator, ServerNetworkBridge bridge) {
-        this(creator, UUID.randomUUID(), bridge);
+    public MusicRoom(String creator, UUID uuid, ServerNetworkBridge bridge) {
+        this(creator, uuid, "", bridge);
+    }
+
+    // Server constructor
+    public MusicRoom(String creator, String roomName, ServerNetworkBridge bridge) {
+        this(creator, UUID.randomUUID(), roomName, bridge);
+    }
+
+    private static String sanitizeRoomName(String requested, String owner) {
+        String name = requested == null ? "" : requested.trim();
+        if (name.isEmpty()) name = owner;
+        if (name.length() > MAX_ROOM_NAME_LENGTH) name = name.substring(0, MAX_ROOM_NAME_LENGTH);
+        return name;
     }
 
     // Client constructor
@@ -129,7 +165,8 @@ public class MusicRoom {
     public void serverOnJoin(String name) {
         this.serverState.set(state -> {
             MusicRoomState s = (MusicRoomState) state;
-            s.members.put(name, 1);
+            // putIfAbsent: an op re-joining must not be demoted back to member
+            s.members.putIfAbsent(name, 1);
             return s;
         }, List.of(MusicRoomState.MEMBERS));
     }
@@ -171,6 +208,32 @@ public class MusicRoom {
         }, List.of(MusicRoomState.MEMBERS));
     }
 
+    /**
+     * Server-side disconnect cleanup, shared by the vanilla mixin and Paper.
+     * When the owner leaves, the room dies and every remaining member is told
+     * (they used to keep a dead CLIENT_ROOM forever); a plain member is just
+     * removed from each room they were in.
+     */
+    public static void serverOnPlayerDisconnect(String name, ServerNetworkBridge bridge) {
+        List<UUID> ownedRooms = new ArrayList<>();
+        ROOMS.forEach((uuid, room) -> {
+            if (room.serverGetOwner().equals(name)) {
+                ownedRooms.add(uuid);
+            } else if (room.serverGetMembers().containsKey(name)) {
+                room.serverOnQuit(name);
+            }
+        });
+        for (UUID uuid : ownedRooms) {
+            MusicRoom room = ROOMS.remove(uuid);
+            if (room == null) continue;
+            room.serverGetMembers().keySet().forEach(member -> {
+                if (member.equals(name)) return;
+                bridge.sendMessage(member, "concerto.room.remove", uuid.toString());
+                bridge.sendRoomCommand(member, Command.REMOVE, "");
+            });
+        }
+    }
+
     public Map<String, Integer> serverGetMembers() {
         return ((MusicRoomState) this.serverState.get()).members;
     }
@@ -189,7 +252,8 @@ public class MusicRoom {
                         bridge.sendMessage(sender, "concerto.room.permission_denied");
                         break;
                     }
-                    MusicRoom room = new MusicRoom(sender, bridge);
+                    // payload = requested room name (may be empty -> owner's name)
+                    MusicRoom room = new MusicRoom(sender, payload, bridge);
                     ROOMS.put(room.uuid, room);
                     bridge.sendRoomCommand(sender, Command.JOIN, room.uuid.toString());
                     bridge.sendRoomCommand(sender, Command.SYNC, room.serverState.buildFull().toString());
@@ -199,6 +263,11 @@ public class MusicRoom {
                     UUID uuid = UUID.fromString(uuidString);
                     MusicRoom room = ROOMS.get(uuid);
                     if (room != null) {
+                        MusicRoomState state = (MusicRoomState) room.serverState.get();
+                        if (!state.joinable && !state.members.containsKey(sender)) {
+                            bridge.sendMessage(sender, "concerto.room.join.denied");
+                            break;
+                        }
                         room.serverOnJoin(sender);
                         bridge.sendRoomCommand(sender, Command.JOIN, room.uuid.toString());
                         bridge.sendRoomCommand(sender, Command.SYNC, room.serverState.buildFull().toString());
@@ -210,6 +279,22 @@ public class MusicRoom {
                     } else {
                         bridge.sendMessage(sender, "concerto.room.join.fail");
                     }
+                }
+                case LIST -> {
+                    JsonArray array = new JsonArray();
+                    ROOMS.forEach((roomUuid, room) -> {
+                        if (ServerMusicAgent.isServerAgent(roomUuid)) return;
+                        MusicRoomState state = (MusicRoomState) room.serverState.get();
+                        if (!state.visible) return;
+                        JsonObject entry = new JsonObject();
+                        entry.addProperty("uuid", roomUuid.toString());
+                        entry.addProperty("name", state.roomName);
+                        entry.addProperty("owner", state.owner);
+                        entry.addProperty("members", state.members.size());
+                        entry.addProperty("joinable", state.joinable);
+                        array.add(entry);
+                    });
+                    bridge.sendRoomCommand(sender, Command.LIST, array.toString());
                 }
                 case REMOVE -> {
                     UUID uuid = UUID.fromString(uuidString);
@@ -303,8 +388,50 @@ public class MusicRoom {
         return ((MusicRoomState) this.clientState.get()).owner;
     }
 
+    // ---- Client-side room list cache (filled by Command.LIST replies) ----
+    public static volatile List<RoomSummary> clientRoomList = List.of();
+    public static volatile Runnable clientRoomListListener = null;
+
     public static void clientCreate(ClientNetworkBridge bridge) {
-        if (CLIENT_ROOM == null) bridge.sendRoomCommand(null, Command.CREATE, "");
+        clientCreate("", bridge);
+    }
+
+    public static void clientCreate(String roomName, ClientNetworkBridge bridge) {
+        if (CLIENT_ROOM == null) bridge.sendRoomCommand(null, Command.CREATE, roomName == null ? "" : roomName);
+    }
+
+    public static void clientRequestList(ClientNetworkBridge bridge) {
+        bridge.sendRoomCommand(null, Command.LIST, "");
+    }
+
+    /**
+     * Updates the room's public info (any member with permission >= 2, via the
+     * regular SYNC channel — the server needs no extra command for this).
+     */
+    public static void clientSetRoomInfo(String roomName, boolean visible, boolean joinable) {
+        MusicRoom room = CLIENT_ROOM;
+        if (room == null || room.permission < 2) return;
+        room.clientState.set(s -> {
+            MusicRoomState rs = (MusicRoomState) s;
+            if (roomName != null && !roomName.isBlank()) {
+                rs.roomName = roomName.trim().length() > MAX_ROOM_NAME_LENGTH
+                        ? roomName.trim().substring(0, MAX_ROOM_NAME_LENGTH) : roomName.trim();
+            }
+            rs.visible = visible;
+            rs.joinable = joinable;
+            return rs;
+        }, List.of(MusicRoomState.ROOM_NAME, MusicRoomState.VISIBLE, MusicRoomState.JOINABLE));
+    }
+
+    public static String clientGetRoomName() {
+        MusicRoom room = CLIENT_ROOM;
+        if (room == null) return "";
+        return ((MusicRoomState) room.clientState.get()).roomName;
+    }
+
+    public static MusicRoomState clientGetRoomState() {
+        MusicRoom room = CLIENT_ROOM;
+        return room == null ? null : (MusicRoomState) room.clientState.get();
     }
 
     public static void clientJoin(String uuid, ClientNetworkBridge bridge) {
@@ -365,6 +492,21 @@ public class MusicRoom {
                             CLIENT_ROOM = null;
                         }
                     }
+                }
+                case LIST -> {
+                    List<RoomSummary> rooms = new ArrayList<>();
+                    for (JsonElement element : JsonParser.parseString(payload).getAsJsonArray()) {
+                        JsonObject entry = element.getAsJsonObject();
+                        rooms.add(new RoomSummary(
+                                UUID.fromString(entry.get("uuid").getAsString()),
+                                entry.get("name").getAsString(),
+                                entry.get("owner").getAsString(),
+                                entry.get("members").getAsInt(),
+                                entry.get("joinable").getAsBoolean()));
+                    }
+                    clientRoomList = List.copyOf(rooms);
+                    Runnable listener = clientRoomListListener;
+                    if (listener != null) listener.run();
                 }
             }
         } catch (Exception e) {

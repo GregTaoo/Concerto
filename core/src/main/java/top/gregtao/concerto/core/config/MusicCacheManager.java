@@ -29,13 +29,6 @@ public class MusicCacheManager extends CacheManager {
         return this.exists(filename) ? super.getChild(filename) : null;
     }
 
-    /** Copies an already-downloaded media file into the cache. */
-    public void addMusicFile(CacheableMusic music, java.nio.file.Path file) throws IOException {
-        JsonObject json = MusicJsonParsers.to(music.getMusic(), false);
-        if (json == null) return;
-        this.addFile(HashUtil.md5(json.toString()) + "." + music.getSuffix(), java.nio.file.Files.newInputStream(file));
-    }
-
     public void addMusic(CacheableMusic music) throws MusicSourceNotFoundException, IOException, UnsupportedAudioFileException {
         JsonObject json = MusicJsonParsers.to(music.getMusic(), false);
         if (json == null) return;

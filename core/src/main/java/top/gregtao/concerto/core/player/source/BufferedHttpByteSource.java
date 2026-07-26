@@ -301,13 +301,20 @@ public class BufferedHttpByteSource implements AudioByteSource {
         }
     }
 
-    /** The fully downloaded media file, or null if the download has not finished. */
-    public Path getCompleteFile() {
-        this.lock.lock();
-        try {
-            return this.complete && !this.closed ? this.tempFile : null;
-        } finally {
-            this.lock.unlock();
+    /**
+     * Best-effort sweep of the spool directory (startup and track changes).
+     * Files still open by a live source are locked on Windows and survive.
+     */
+    public static void cleanTempDirectory() {
+        try (var files = Files.list(TEMP_DIR)) {
+            files.forEach(file -> {
+                try {
+                    Files.deleteIfExists(file);
+                } catch (IOException ignored) {
+                }
+            });
+        } catch (IOException ignored) {
+            // directory does not exist yet
         }
     }
 

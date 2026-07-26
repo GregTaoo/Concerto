@@ -3,7 +3,6 @@ package top.gregtao.concerto.core.player;
 import top.gregtao.concerto.core.Concerto;
 import top.gregtao.concerto.core.api.CacheableMusic;
 import top.gregtao.concerto.core.config.ClientConfig;
-import top.gregtao.concerto.core.config.MusicCacheManager;
 import top.gregtao.concerto.core.event.ConcertoEvents;
 import top.gregtao.concerto.core.music.Music;
 import top.gregtao.concerto.core.music.MusicTimestamp;
@@ -26,7 +25,6 @@ import top.gregtao.concerto.core.util.Pair;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Path;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicLong;
@@ -83,6 +81,7 @@ public class MusicPlayer implements EngineListener {
         fileHandler.setFormatter(new SimpleFormatter());
         PLAYER_LOGGER.addHandler(fileHandler);
         PLAYER_LOGGER.setLevel(Level.ALL);
+        BufferedHttpByteSource.cleanTempDirectory(); // drop spool files orphaned by a crash
         resetInstance();
     }
 
@@ -132,6 +131,8 @@ public class MusicPlayer implements EngineListener {
         this.prepareExecutor.execute(() -> {
             try {
                 if (generation != this.requestGeneration.get()) return; // superseded before it started
+                // Sweep leftover spool files; files still open (Windows locks them) survive
+                BufferedHttpByteSource.cleanTempDirectory();
                 PlaybackSession session = this.createSession(music, generation);
                 if (session == null) return;
                 if (generation != this.requestGeneration.get()) {
@@ -354,7 +355,6 @@ public class MusicPlayer implements EngineListener {
 
     @Override
     public void onTrackEnded(PlaybackSession session) {
-        this.cacheCompletedDownload(session);
         boolean stale = session.getGeneration() != this.requestGeneration.get();
         boolean wasTemp = this.isPlayingTemp;
         this.isPlayingTemp = false;
@@ -366,18 +366,6 @@ public class MusicPlayer implements EngineListener {
                 MusicPlayerHandler.INSTANCE.playNext(1);
             }
         });
-    }
-
-    private void cacheCompletedDownload(PlaybackSession session) {
-        if (!(session.getByteSource() instanceof BufferedHttpByteSource httpSource)) return;
-        if (!(session.getMusic() instanceof CacheableMusic cacheableMusic)) return;
-        Path complete = httpSource.getCompleteFile();
-        if (complete == null || MusicCacheManager.INSTANCE.getChild(cacheableMusic) != null) return;
-        try {
-            MusicCacheManager.INSTANCE.addMusicFile(cacheableMusic, complete);
-        } catch (IOException e) {
-            Concerto.getLogger().warn("Could not cache downloaded music: {}", e.getMessage());
-        }
     }
 
     @Override

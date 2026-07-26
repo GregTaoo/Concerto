@@ -23,4 +23,14 @@ public interface EngineListener {
 
     /** Decoded PCM about to be written to the sink (for visualisation taps). */
     void onPcm(byte[] data, int offset, int length);
+
+    /**
+     * A freshly created sink failed to open. Return a replacement sink to retry
+     * the same session with (e.g. an OpenAL sink when JavaSound has no line),
+     * or {@code null} to let the failure propagate. The failed sink is closed
+     * by the engine before the replacement is opened.
+     */
+    default AudioSink onSinkOpenFailed(AudioSink failedSink, Exception failure) {
+        return null;
+    }
 }

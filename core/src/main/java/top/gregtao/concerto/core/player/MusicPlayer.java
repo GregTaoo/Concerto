@@ -23,13 +23,16 @@ import top.gregtao.concerto.core.util.ConcertoRunner;
 import top.gregtao.concerto.core.util.FileUtil;
 import top.gregtao.concerto.core.util.Pair;
 
+import javax.sound.sampled.LineUnavailableException;
 import java.io.File;
 import java.io.IOException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.FileHandler;
+import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
@@ -118,6 +121,48 @@ public class MusicPlayer implements EngineListener {
         this.requestGeneration.incrementAndGet();
         this.prepareExecutor.shutdownNow();
         this.engine.close();
+    }
+
+    private static final AtomicBoolean GLOBAL_SHUTDOWN = new AtomicBoolean(false);
+
+    /**
+     * Game-quit hook. Minecraft's quit path releases resources via
+     * {@code Minecraft.close()} without necessarily reaching {@code System.exit},
+     * so everything Concerto holds must be dropped here: the playback engine
+     * (OpenAL device / JavaSound line, session, spool file), the shared runner
+     * pool and the player log file handle.
+     *
+     * <p>Idempotent, and never throws — it runs inside the game's shutdown path.
+     * {@link #resetInstance()} keeps using the private per-instance
+     * {@link #shutdown()} and is unaffected.
+     */
+    public static void shutdownAll() {
+        if (!GLOBAL_SHUTDOWN.compareAndSet(false, true)) return;
+        try {
+            if (INSTANCE != null) INSTANCE.shutdown();
+        } catch (Throwable t) {
+            safeLogShutdownError("player engine", t);
+        }
+        try {
+            ConcertoRunner.shutdown();
+        } catch (Throwable t) {
+            safeLogShutdownError("runner pool", t);
+        }
+        try {
+            for (Handler handler : PLAYER_LOGGER.getHandlers()) {
+                handler.close(); // releases Concerto/player.log (and its .lck)
+            }
+        } catch (Throwable t) {
+            safeLogShutdownError("log handler", t);
+        }
+    }
+
+    private static void safeLogShutdownError(String what, Throwable t) {
+        try {
+            Concerto.getLogger().warn("Error while shutting down Concerto {}", what, t);
+        } catch (Throwable ignored) {
+            // never let the quit hook throw
+        }
     }
 
     // ---- Play requests ----
@@ -425,6 +470,37 @@ public class MusicPlayer implements EngineListener {
     @Override
     public void onTrackStarted(PlaybackSession session) {
         ConcertoEvents.ON_PLAYER_START.emit();
+    }
+
+    /**
+     * JavaSound is simply absent or broken on some platforms (Android/FCL, or
+     * ALSA grabbing a nonexistent device): when opening the JavaSound line
+     * fails, retry the same play request on the OpenAL sink. The fallback
+     * becomes the session's pinned backend so a mid-track sink rebuild stays on
+     * OpenAL; the config file is deliberately left untouched, and the next
+     * track starts again from the configured backend.
+     */
+    @Override
+    public AudioSink onSinkOpenFailed(AudioSink failedSink, Exception failure) {
+        if (!(failedSink instanceof JavaSoundSink) || !isNoLineFailure(failure)) return null;
+        Concerto.getLogger().warn(
+                "JavaSound could not open an audio line ({}); retrying this track with the OpenAL backend", failure.toString());
+        this.sessionBackend = ClientConfig.PlaybackBackend.OPENAL;
+        return new OpenALSink();
+    }
+
+    /**
+     * {@link LineUnavailableException} is the documented "no line" failure;
+     * {@link IllegalArgumentException} is what {@code AudioSystem.getLine}
+     * throws when no installed mixer supports the line at all (the headless /
+     * Android case).
+     */
+    private static boolean isNoLineFailure(Throwable failure) {
+        for (Throwable t = failure; t != null; t = t.getCause()) {
+            if (t instanceof LineUnavailableException || t instanceof IllegalArgumentException) return true;
+            if (t == t.getCause()) break;
+        }
+        return false;
     }
 
     @Override

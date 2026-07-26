@@ -344,7 +344,22 @@ public class PlaybackEngine implements Closeable {
             this.sink = this.sinkFactory.get();
         }
         if (!this.sink.isOpen()) {
-            this.sink.open(format);
+            try {
+                this.sink.open(format);
+            } catch (Exception openFailure) {
+                // Sink-level failure (e.g. JavaSound has no output line on this
+                // platform): give the listener one chance to swap in a fallback
+                // sink and continue the same session. Anything else propagates
+                // into the generic failure handling.
+                AudioSink fallback = this.listener.onSinkOpenFailed(this.sink, openFailure);
+                if (fallback == null) throw openFailure;
+                try {
+                    this.sink.close();
+                } catch (Exception ignored) {
+                }
+                this.sink = fallback;
+                this.sink.open(format);
+            }
             this.sinkFormat = format;
             this.sink.setGain(this.gain);
             if (this.paused) this.sink.pause();

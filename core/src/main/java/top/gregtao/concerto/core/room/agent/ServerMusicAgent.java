@@ -47,7 +47,8 @@ public class ServerMusicAgent {
     private final ServerNetworkBridge serverBridge;
 
     private final Map<String, Long> addMusicTimeRecord = new ConcurrentHashMap<>();
-    private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(2);
+    private final ScheduledExecutorService scheduler =
+            Executors.newScheduledThreadPool(2, ConcertoRunner.daemonThreadFactory("Concerto-Agent-Scheduler"));
     private final Lock voteLock = new ReentrantLock();
     private volatile boolean isVoting = false;
     private final Set<String> yesVoters = ConcurrentHashMap.newKeySet();
@@ -350,6 +351,17 @@ public class ServerMusicAgent {
             s.resolvedStartTime = 0L;
             s.paused = true;
         }, List.of(MusicRoomState.MUSIC_LIST, MusicRoomState.CURRENT_INDEX, MusicRoomState.RESOLVED_MEDIA, MusicRoomState.RESOLVED_START_TIME, MusicRoomState.PAUSED));
+    }
+
+    /**
+     * Permanent teardown, for server shutdown / plugin disable: clears state
+     * like {@link #reset()} and then stops the scheduler threads. A fresh agent
+     * (with a fresh scheduler) is created per server start, so without this the
+     * old scheduler leaked two threads per integrated-server session.
+     */
+    public void dispose() {
+        this.reset();
+        this.scheduler.shutdownNow();
     }
 
     public Map<String, Integer> getMembers() {

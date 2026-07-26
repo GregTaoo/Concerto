@@ -27,7 +27,6 @@ import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiConsumer;
 import java.util.function.Supplier;
@@ -401,14 +400,20 @@ public class MusicPlayerHandler {
 
     public static <T extends LazyLoadable> void loadInThreadPool(List<T> objects) {
         if (objects.isEmpty()) return;
-        ExecutorService service = Executors.newFixedThreadPool(Math.min(objects.size(), 32));
+        ExecutorService service = Executors.newFixedThreadPool(Math.min(objects.size(), 32),
+                ConcertoRunner.daemonThreadFactory("Concerto-Lazy-Loader"));
         objects.forEach(obj -> {
             if (!obj.isLoaded()) service.submit(() -> obj.load());
         });
         service.shutdown();
+        boolean finished = false;
         try {
-            service.awaitTermination(10, TimeUnit.SECONDS);
-        } catch (InterruptedException ignored) {
+            finished = service.awaitTermination(10, TimeUnit.SECONDS);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+        if (!finished) {
+            service.shutdownNow(); // don't leave stuck loads running (and their threads alive) forever
         }
     }
 
@@ -433,7 +438,8 @@ public class MusicPlayerHandler {
                     return;
                 }
             }
-            ExecutorService service = Executors.newFixedThreadPool(16);
+            ExecutorService service = Executors.newFixedThreadPool(16,
+                    ConcertoRunner.daemonThreadFactory("Concerto-Downloader"));
             musics.forEach(music -> {
                 if (music instanceof CacheableMusic cacheableMusic) {
                     service.submit(() -> {
@@ -484,14 +490,21 @@ public class MusicPlayerHandler {
                 }
             });
             service.shutdown();
+            boolean finished = false;
             try {
-                if (!service.awaitTermination(Integer.MAX_VALUE, TimeUnit.SECONDS)) {
-                    throw new TimeoutException();
-                }
-            } catch (InterruptedException | TimeoutException e) {
-                throw new RuntimeException(e);
+                // Bounded: an unbounded await on a hung download used to pin this
+                // worker (and the whole batch) forever
+                finished = service.awaitTermination(15, TimeUnit.MINUTES);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
             }
-            if (onComplete != null) onComplete.accept(succeeded.get(), failed.get());
+            if (!finished) {
+                service.shutdownNow();
+                Concerto.getLogger().warn("Download batch did not finish within 15 minutes, aborted the remaining downloads");
+            }
+            // Keep the callback contract: it always fires, with never-started
+            // downloads counted as failures
+            if (onComplete != null) onComplete.accept(succeeded.get(), musics.size() - succeeded.get());
         });
     }
 }

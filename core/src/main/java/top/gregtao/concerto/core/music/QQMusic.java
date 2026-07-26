@@ -176,6 +176,11 @@ public class QQMusic extends Music implements CacheableMusic, DynamicPath {
         MP3_128("M500", "mp3"),
         OGG_96("O400", "ogg"),
 
+        // m4a 现在可以本地解码了；放在最后作为兜底，仅当上面的等级全部失败时才会尝试
+        ACC_192("C600", "m4a"),
+        ACC_96("C400", "m4a"),
+        ACC_48("C200", "m4a"),
+
         // 不知道是否支持的格式
         // ATMOS_2("Q000", "flac"),
         // ATMOS_51("Q001", "flac"),
@@ -183,9 +188,6 @@ public class QQMusic extends Music implements CacheableMusic, DynamicPath {
         // 不支持的格式
         // MASTER("AI00", "flac"),
         // OGG_640("O801", "ogg"),
-        // ACC_192("C600", "m4a"),
-        // ACC_48("C200", "m4a"),
-        // ACC_96("C400", "m4a"),
 
         // 会 404 的格式
         // OGG_320("O800", "ogg"),

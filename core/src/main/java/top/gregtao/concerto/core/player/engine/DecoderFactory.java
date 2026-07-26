@@ -1,5 +1,6 @@
 package top.gregtao.concerto.core.player.engine;
 
+import top.gregtao.concerto.core.player.seek.ContainerFormat;
 import top.gregtao.concerto.core.player.source.AudioByteSource;
 import top.gregtao.concerto.core.player.source.ByteSourceInputStream;
 
@@ -44,7 +45,7 @@ public final class DecoderFactory {
     }
 
     public static DecodedStream open(AudioByteSource source, long byteOffset, byte[] prefixBytes,
-                                     top.gregtao.concerto.core.player.seek.ContainerFormat format, Logger logger)
+                                     ContainerFormat format, Logger logger)
             throws IOException, UnsupportedAudioFileException {
         ByteSourceInputStream raw = new ByteSourceInputStream(source, byteOffset);
         InputStream input = (byteOffset > 0 && prefixBytes != null)
@@ -54,8 +55,25 @@ public final class DecoderFactory {
         // FLAC bypasses the SPI entirely: the SPI-returned stream is length-capped
         // by totalSamples * frameSize, which truncates larger files mid-track, and
         // its probe cannot handle the prefixed mid-stream form at all.
-        if (format == top.gregtao.concerto.core.player.seek.ContainerFormat.FLAC) {
+        if (format == ContainerFormat.FLAC) {
             return openFlac(source, byteOffset, prefixBytes, input, raw, logger);
+        }
+
+        // Opus and AAC also bypass the SPI: no SPI provider is shipped for them,
+        // the dedicated pull decoders emit 16-bit little-endian PCM directly.
+        if (format == ContainerFormat.OGG_OPUS) {
+            OpusDecoderStream opus = new OpusDecoderStream(input, byteOffset == 0);
+            return wrapPcmStream(opus, 48000, opus.getChannels(), raw);
+        }
+        if (format == ContainerFormat.AAC_ADTS) {
+            AacAdtsDecoderStream aac = new AacAdtsDecoderStream(input);
+            return wrapPcmStream(aac, aac.getSampleRate(), aac.getChannels(), raw);
+        }
+        if (format == ContainerFormat.M4A) {
+            // M4A is never opened mid-stream (no index builder); the decoder reads
+            // the source directly through a seekable view so trailing-moov works.
+            Mp4AacDecoderStream m4a = new Mp4AacDecoderStream(source);
+            return wrapPcmStream(m4a, m4a.getSampleRate(), m4a.getChannels(), raw);
         }
 
         // The SPI probe needs mark/reset support
@@ -78,6 +96,16 @@ public final class DecoderFactory {
         );
 
         AudioInputStream pcm = AudioSystem.getAudioInputStream(targetFormat, encoded);
+        return new DecodedStream(pcm, targetFormat, raw);
+    }
+
+    /** Wraps a decoder emitting 16-bit little-endian PCM into a {@link DecodedStream}. */
+    private static DecodedStream wrapPcmStream(InputStream pcmSource, int sampleRate, int channels,
+                                               ByteSourceInputStream raw) {
+        AudioFormat targetFormat = new AudioFormat(
+                AudioFormat.Encoding.PCM_SIGNED,
+                sampleRate, 16, channels, 2 * channels, sampleRate, false);
+        AudioInputStream pcm = new AudioInputStream(pcmSource, targetFormat, AudioSystem.NOT_SPECIFIED);
         return new DecodedStream(pcm, targetFormat, raw);
     }
 

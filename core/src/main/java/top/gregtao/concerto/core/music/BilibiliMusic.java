@@ -75,8 +75,10 @@ public class BilibiliMusic extends Music implements CacheableMusic {
             this.setMusicMeta(new UnknownMusicMeta(Sources.BILIBILI.getName()));
         }
         try {
-            MusicCacheManager.INSTANCE.addMusic(this, "m4s");
-        } catch (UnsupportedAudioFileException | IOException | InterruptedException e) {
+            // Plain cache write: the m4s (fMP4/AAC) audio is decoded natively now,
+            // no transcode step needed.
+            MusicCacheManager.INSTANCE.addMusic(this);
+        } catch (UnsupportedAudioFileException | IOException e) {
             throw new RuntimeException(e);
         }
         super.load();
@@ -89,7 +91,7 @@ public class BilibiliMusic extends Music implements CacheableMusic {
 
     @Override
     public String getSuffix() {
-        return "mp3";
+        return "m4s";
     }
 
     @Override

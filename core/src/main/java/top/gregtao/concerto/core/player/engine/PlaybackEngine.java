@@ -328,7 +328,8 @@ public class PlaybackEngine implements Closeable {
             return false;
         }
         this.buffering = false;
-        this.decoded = DecoderFactory.open(source, this.pendingOpenOffset, this.pendingOpenPrefix, this.logger);
+        this.decoded = DecoderFactory.open(source, this.pendingOpenOffset, this.pendingOpenPrefix,
+                this.session.getFormat(), this.logger);
         AudioFormat format = this.decoded.pcmFormat;
         this.discardBytesRemaining = millisToBytes(this.pendingDiscardMillis, format);
         this.pendingDiscardMillis = 0;

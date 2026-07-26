@@ -35,9 +35,18 @@ public class FlacDecoderStream extends InputStream {
                 decoder.decode();
                 logger.info(() -> "Decoding FLAC complete.");
             } catch (IOException e) {
-                logger.warning(() -> "Error during decoding FLAC: " + e.getMessage());
+                logger.warning(() -> "Error during decoding FLAC: " + e);
             } finally {
-                this.close();
+                // Close only the write end: the reader must still drain the PCM
+                // buffered in the pipe before it sees EOF.
+                try {
+                    this.pipedOutputStream.close();
+                } catch (IOException ignored) {
+                }
+                try {
+                    this.stream.close();
+                } catch (IOException ignored) {
+                }
             }
         }, "Concerto-FLAC-Decoder");
         this.decoderThread.setDaemon(true);

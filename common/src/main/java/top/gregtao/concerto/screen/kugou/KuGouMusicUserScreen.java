@@ -83,7 +83,7 @@ public class KuGouMusicUserScreen extends PageScreen {
                                 })
                                 .orElse("failed");
 
-                        displayAlert(Component.translatable("concerto.screen.daily_vip." + text));
+                        Minecraft.getInstance().submit(() -> displayAlert(Component.translatable("concerto.screen.daily_vip." + text)));
                     })).pos(this.width / 2 - 10, this.height - 30).size(70, 20).build()
             );
         }

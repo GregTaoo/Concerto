@@ -70,14 +70,15 @@ public class ClientConfig extends ConfigFile {
 
         public double playerVolume = 1.0;
         public boolean playerVolumeFollowsMaster = true;
+        public PlaybackBackend playbackBackend = PlaybackBackend.JAVASOUND;
 
         public boolean displayLyrics = true;
-        public String lyricsPosition = "0.5,1-70";
+        public String lyricsPosition = "0.5,1-100";
         public TextAlignment lyricsAlignment = TextAlignment.CENTER;
         public String lyricsColor = "#ff00aaaa";
 
         public boolean displaySubLyrics = true;
-        public String subLyricsPosition = "0.5,1-60";
+        public String subLyricsPosition = "0.5,1-89";
         public TextAlignment subLyricsAlignment = TextAlignment.CENTER;
         public String subLyricsColor = "#ffffaa00";
 
@@ -107,6 +108,11 @@ public class ClientConfig extends ConfigFile {
 
         // 是否自动领取酷狗每日VIP
         public boolean autoGetKuGouDailyVIP = false;
+    }
+
+    public enum PlaybackBackend {
+        JAVASOUND,
+        OPENAL
     }
 
     public static class PositionXYSupplier {

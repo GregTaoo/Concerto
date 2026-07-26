@@ -28,6 +28,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.BiConsumer;
 import java.util.function.Supplier;
 import java.util.regex.Pattern;
 
@@ -60,31 +62,30 @@ public class MusicPlayerHandler {
         return this.forcePaused;
     }
 
+    // The synced state is authoritative and the engine's pause command is
+    // idempotent, so no gating on the engine's momentary state: a pause that
+    // arrives while a track is still loading must not be dropped.
     private void forcePause() {
         this.forcePaused = true;
         this.setPaused(true);
-        if (MusicPlayer.INSTANCE.isPlaying()) {
-            MusicPlayer.INSTANCE.internalPause();
-        }
+        MusicPlayer.INSTANCE.internalPause();
     }
 
     private void forceResume() {
         this.forcePaused = false;
         this.setPaused(false);
-        if (MusicPlayer.INSTANCE.started) {
-            MusicPlayer.INSTANCE.internalResume();
-        }
+        MusicPlayer.INSTANCE.internalResume();
     }
 
+    // Explicit user intent always lands on the synced state. The old version
+    // had a dead branch: resuming while not force-paused (the cold-start
+    // default, state.paused == true) was a complete no-op, so the very first
+    // "play" click did nothing while the button still flipped to "pause".
     public void tryForcePause(boolean paused) {
-        boolean isLocal = MusicRoom.clientGetState() == MusicRoom.ClientState.LOCAL;
-        if (this.isForcePaused() && !paused) {
-            this.forceResume();
-        } else if (paused) {
+        if (paused) {
             this.forcePause();
-        }
-        if (!isLocal) {
-            this.setPaused(paused);
+        } else {
+            this.forceResume();
         }
     }
 
@@ -130,12 +131,12 @@ public class MusicPlayerHandler {
 
         record.addListener(MusicPlayerState.PAUSED, (o, state, oldVal, newVal) -> {
             if (INSTANCE != null && INSTANCE.forcePaused) {
-                if (!state.paused) return;
+                if (!state.paused) return; // a local force-pause overrides remote resumes
             }
 
-            if (state.paused && MusicPlayer.INSTANCE.isPlaying()) {
+            if (state.paused) {
                 MusicPlayer.INSTANCE.internalPause();
-            } else if (!state.paused && MusicPlayer.INSTANCE.isPaused()) {
+            } else {
                 MusicPlayer.INSTANCE.internalResume();
             }
         });
@@ -256,6 +257,10 @@ public class MusicPlayerHandler {
             return;
         }
 
+        // Skipping means "I want to hear the next track": a lingering local
+        // force-pause would silently re-pause it right after it loads while
+        // the UI claims it's playing
+        this.forcePaused = false;
         this.getState().set((state) -> {
             state.currentIndex = this.getNextUuid(state, forward);
             state.paused = false;
@@ -369,6 +374,7 @@ public class MusicPlayerHandler {
     }
 
     public void setCurrentIndex(UUID uuid) {
+        if (uuid != null) this.forcePaused = false; // picking a track implies "play it"
         this.getState().set((state) -> {
             state.currentIndex = uuid == null ? null : (state.musicList.contains(uuid) ? uuid : state.musicList.firstUuid());
             state.paused = false;
@@ -407,7 +413,13 @@ public class MusicPlayerHandler {
     }
 
     public static void downloadMusics(List<Music> musics) {
+        downloadMusics(musics, null);
+    }
+
+    /** onComplete receives (succeeded, failed) counts once every download finished. */
+    public static void downloadMusics(List<Music> musics, BiConsumer<Integer, Integer> onComplete) {
         ConcertoRunner.run(() -> {
+            AtomicInteger succeeded = new AtomicInteger(), failed = new AtomicInteger();
             File folder = new File("Concerto/Downloads");
             if (!folder.exists() || !folder.isDirectory()) {
                 if (folder.mkdirs()) {
@@ -417,6 +429,7 @@ public class MusicPlayerHandler {
                         throw new RuntimeException(e);
                     }
                 } else {
+                    if (onComplete != null) onComplete.accept(0, musics.size());
                     return;
                 }
             }
@@ -459,11 +472,14 @@ public class MusicPlayerHandler {
                                 }
                                 Concerto.getLogger().info("Downloaded LRC: {}", filename);
                             }
-                        } catch (IOException e) {
+                            succeeded.incrementAndGet();
+                        } catch (Exception e) {
+                            failed.incrementAndGet();
                             Concerto.getLogger().error("{} - {}", e, file.getAbsolutePath());
                         }
                     });
                 } else {
+                    failed.incrementAndGet();
                     Concerto.getLogger().info("Detected non-cacheable music");
                 }
             });
@@ -475,6 +491,7 @@ public class MusicPlayerHandler {
             } catch (InterruptedException | TimeoutException e) {
                 throw new RuntimeException(e);
             }
+            if (onComplete != null) onComplete.accept(succeeded.get(), failed.get());
         });
     }
 }

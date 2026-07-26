@@ -28,7 +28,7 @@ public class KuGouMusicUserScreen extends PageScreen {
         return new MetadataListWidget<>(this.width, this.height - 55, 20, 18) {
             @Override
             public void onDoubleClicked(ConcertoListWidget<T>.Entry entry) {
-                Minecraft.getInstance().setScreen(new PlaylistPreviewScreen((Playlist) entry.item, KuGouMusicUserScreen.this));
+                Minecraft.getInstance().gui.setScreen(new PlaylistPreviewScreen((Playlist) entry.item, KuGouMusicUserScreen.this));
             }
         };
     }
@@ -54,7 +54,7 @@ public class KuGouMusicUserScreen extends PageScreen {
     protected void init() {
         super.init();
         if (!this.loggedIn()) {
-            Minecraft.getInstance().setScreen(new KuGouMusicLoginScreen(null));
+            Minecraft.getInstance().gui.setScreen(new KuGouMusicLoginScreen(null));
         }
         this.playlistList = this.initWidget();
 
@@ -92,7 +92,7 @@ public class KuGouMusicUserScreen extends PageScreen {
         this.addRenderableWidget(Button.builder(Component.translatable("concerto.screen.play"), button -> {
             ConcertoListWidget<KuGouMusicPlaylist>.Entry entry = this.playlistList.getSelected();
             if (entry != null) {
-                Minecraft.getInstance().setScreen(new PlaylistPreviewScreen(entry.item, this));
+                Minecraft.getInstance().gui.setScreen(new PlaylistPreviewScreen(entry.item, this));
             }
         }).pos(this.width / 2 + 65, this.height - 30).size(50, 20).build());
 
@@ -100,7 +100,7 @@ public class KuGouMusicUserScreen extends PageScreen {
             if (this.loggedIn()) {
                 KuGouMusicApiClient.LOCAL_USER.logout();
             }
-            Minecraft.getInstance().setScreen(new KuGouMusicLoginScreen(this));
+            Minecraft.getInstance().gui.setScreen(new KuGouMusicLoginScreen(this));
         }).pos(this.width / 2 + 120, this.height - 30).size(50, 20).build());
     }
 

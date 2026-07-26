@@ -27,13 +27,13 @@ public class QQMusicLoginScreens extends ConcertoScreen {
     protected void init() {
         super.init();
         this.addRenderableWidget(Button.builder(Component.translatable("concerto.screen.login.type.qrcode.wechat"),
-                button -> Minecraft.getInstance().setScreen(this.weChatQRLogin())
+                button -> Minecraft.getInstance().gui.setScreen(this.weChatQRLogin())
         ).size(150, 20).pos(this.width / 2 - 75, 40).build());
         this.addRenderableWidget(Button.builder(Component.translatable("concerto.screen.login.type.qrcode.qq"),
-                button -> Minecraft.getInstance().setScreen(this.qqQRLogin())
+                button -> Minecraft.getInstance().gui.setScreen(this.qqQRLogin())
         ).size(150, 20).pos(this.width / 2 - 75, 70).build());
         this.addRenderableWidget(Button.builder(Component.translatable("concerto.screen.login.type.cookie"),
-                button -> Minecraft.getInstance().setScreen(this.cookieLogin())
+                button -> Minecraft.getInstance().gui.setScreen(this.cookieLogin())
         ).size(150, 20).pos(this.width / 2 - 75, 100).build());
     }
 

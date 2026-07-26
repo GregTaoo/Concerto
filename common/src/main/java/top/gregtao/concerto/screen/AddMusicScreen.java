@@ -71,11 +71,11 @@ public class AddMusicScreen extends ApplyDraggedFileScreen {
                 })));
         this.addLabel(Component.translatable("concerto.screen.add.netease_cloud.playlist"), this.width / 2, 120, methodSafeWrapper(str -> {
             NeteaseCloudPlaylist playlist = new NeteaseCloudPlaylist(str, false);
-            playlist.load(() -> Minecraft.getInstance().setScreen(new PlaylistPreviewScreen(playlist, this)));
+            playlist.load(() -> Minecraft.getInstance().gui.setScreen(new PlaylistPreviewScreen(playlist, this)));
         }));
         this.addLabel(Component.translatable("concerto.screen.add.netease_cloud.album"), this.width / 2, 145, methodSafeWrapper(str -> {
             NeteaseCloudPlaylist playlist = new NeteaseCloudPlaylist(str, false);
-            playlist.load(() -> Minecraft.getInstance().setScreen(new PlaylistPreviewScreen(playlist, this)));
+            playlist.load(() -> Minecraft.getInstance().gui.setScreen(new PlaylistPreviewScreen(playlist, this)));
         }));
         this.addLabel(Component.translatable("concerto.screen.add.qq"), this.width / 2, 170,
                 methodSafeWrapper(str -> MusicPlayerHandler.INSTANCE.addMusicHereAsync(new QQMusic(str), true, () -> {

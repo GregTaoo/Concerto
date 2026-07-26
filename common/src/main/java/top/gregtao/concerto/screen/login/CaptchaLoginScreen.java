@@ -75,7 +75,7 @@ public class CaptchaLoginScreen extends ConcertoScreen {
             if (player != null) {
                 player.sendSystemMessage(Component.translatable("concerto.screen.login.success"));
             }
-            Minecraft.getInstance().setScreen(null);
+            Minecraft.getInstance().gui.setScreen(null);
         }
         if (this.captchaTimer > 0 && --this.captchaTimer == 0) {
             this.captchaButton.active = true;

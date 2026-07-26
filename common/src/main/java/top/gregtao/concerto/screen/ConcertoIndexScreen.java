@@ -27,11 +27,11 @@ public class ConcertoIndexScreen extends ConcertoScreen {
     protected void init() {
         super.init();
         this.addRenderableWidget(Button.builder(Component.translatable("concerto.screen.general_list"),
-                button -> Minecraft.getInstance().setScreen(new GeneralPlaylistScreen(this))
+                button -> Minecraft.getInstance().gui.setScreen(new GeneralPlaylistScreen(this))
         ).pos(this.width / 2 - 120, 20).size(115, 20).build());
 
         Button widget = Button.builder(Component.translatable("concerto.screen.audition"),
-                button -> Minecraft.getInstance().setScreen(new MusicAuditionScreen(this))
+                button -> Minecraft.getInstance().gui.setScreen(new MusicAuditionScreen(this))
         ).pos(this.width / 2 + 5, 20).size(115, 20).build();
         this.addRenderableWidget(widget);
         LocalPlayer player = Minecraft.getInstance().player;
@@ -40,23 +40,23 @@ public class ConcertoIndexScreen extends ConcertoScreen {
         }
 
         this.addRenderableWidget(Button.builder(Component.translatable("concerto.screen.confirmation"),
-                button -> Minecraft.getInstance().setScreen(new MusicConfirmationScreen(this))
+                button -> Minecraft.getInstance().gui.setScreen(new MusicConfirmationScreen(this))
         ).pos(this.width / 2 + 5, 50).size(115, 20).build());
 
         this.addRenderableWidget(Button.builder(Component.translatable("concerto.screen.index.163"),
-                button -> Minecraft.getInstance().setScreen(new NeteaseCloudIndexScreen(this))
+                button -> Minecraft.getInstance().gui.setScreen(new NeteaseCloudIndexScreen(this))
         ).pos(this.width / 2 - 120, 50).size(115, 20).build());
 
         this.addRenderableWidget(Button.builder(Component.translatable("concerto.screen.index.qq"),
-                button -> Minecraft.getInstance().setScreen(new QQMusicIndexScreen(this))
+                button -> Minecraft.getInstance().gui.setScreen(new QQMusicIndexScreen(this))
         ).pos(this.width / 2 - 120, 80).size(115, 20).build());
 
         this.addRenderableWidget(Button.builder(Component.translatable("concerto.screen.index.kugou"),
-                button -> Minecraft.getInstance().setScreen(new KuGouMusicIndexScreen(this))
+                button -> Minecraft.getInstance().gui.setScreen(new KuGouMusicIndexScreen(this))
         ).pos(this.width / 2 - 120, 110).size(115, 20).build());
 
         Button widget1 = Button.builder(Component.translatable("concerto.screen.preset_radios"),
-                button -> Minecraft.getInstance().setScreen(new PresetRadiosScreen(this))
+                button -> Minecraft.getInstance().gui.setScreen(new PresetRadiosScreen(this))
         ).pos(this.width / 2 + 5, 80).size(115, 20).build();
         this.addRenderableWidget(widget1);
         if (player == null || !ConcertoClient.isServerAvailable()) {
@@ -64,11 +64,11 @@ public class ConcertoIndexScreen extends ConcertoScreen {
         }
 
         this.addRenderableWidget(Button.builder(Component.translatable("concerto.screen.add"),
-                        button -> Minecraft.getInstance().setScreen(new AddMusicScreen(this)))
+                        button -> Minecraft.getInstance().gui.setScreen(new AddMusicScreen(this)))
                 .pos(this.width / 2 - 120, 140).size(115, 20).build());
 
         this.addRenderableWidget(Button.builder(Component.translatable("concerto.screen.local_playlists"),
-                button -> Minecraft.getInstance().setScreen(new PlaylistListScreen(
+                button -> Minecraft.getInstance().gui.setScreen(new PlaylistListScreen(
                         Component.translatable("concerto.screen.local_playlists"), this, PresetPlaylistsConfig.LOCAL_PLAYLISTS.getRadios()))
         ).pos(this.width / 2 + 5, 110).size(115, 20).build());
 
@@ -77,7 +77,7 @@ public class ConcertoIndexScreen extends ConcertoScreen {
         ).pos(this.width / 2 + 5, 140).size(115, 20).build());
 
         this.addRenderableWidget(Button.builder(Component.translatable("concerto.screen.options"),
-                button -> Minecraft.getInstance().setScreen(new ConcertoOptionsScreen(this))
+                button -> Minecraft.getInstance().gui.setScreen(new ConcertoOptionsScreen(this))
         ).pos(this.width / 2 - 120, 170).size(115, 20).build());
 
         if (this.minecraft != null) {

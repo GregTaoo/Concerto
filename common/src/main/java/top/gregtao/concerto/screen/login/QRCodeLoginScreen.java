@@ -60,7 +60,7 @@ public class QRCodeLoginScreen extends ConcertoScreen {
                     if (player != null) {
                         player.sendSystemMessage(Component.translatable("concerto.screen.login.qrcode.success"));
                     }
-                    Minecraft.getInstance().setScreen(null);
+                    Minecraft.getInstance().gui.setScreen(null);
                 }
                 case WAITING -> {
                     if (!this.updaterLock) {

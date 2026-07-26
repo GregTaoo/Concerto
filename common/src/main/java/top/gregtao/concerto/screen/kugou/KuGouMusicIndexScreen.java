@@ -32,10 +32,10 @@ public class KuGouMusicIndexScreen extends ConcertoScreen {
     protected void init() {
         super.init();
         this.addRenderableWidget(Button.builder(Component.translatable("concerto.screen.user"),
-                button -> Minecraft.getInstance().setScreen(new KuGouMusicUserScreen(this))
+                button -> Minecraft.getInstance().gui.setScreen(new KuGouMusicUserScreen(this))
         ).size(100, 20).pos(this.width / 2 - 50, 40).build());
         this.addRenderableWidget(Button.builder(Component.translatable("concerto.screen.search"),
-                button -> Minecraft.getInstance().setScreen(new KuGouMusicSearchScreen(this))
+                button -> Minecraft.getInstance().gui.setScreen(new KuGouMusicSearchScreen(this))
         ).size(100, 20).pos(this.width / 2 - 50, 65).build());
 
         URL avatarUrl;

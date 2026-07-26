@@ -55,7 +55,7 @@ public class QQMusicSearchScreen extends PageScreen {
                             break;
                         }
                         case PLAYLIST, ALBUM: {
-                            Minecraft.getInstance().setScreen(new PlaylistPreviewScreen((Playlist) entry.item, QQMusicSearchScreen.this));
+                            Minecraft.getInstance().gui.setScreen(new PlaylistPreviewScreen((Playlist) entry.item, QQMusicSearchScreen.this));
                             break;
                         }
                     }
@@ -137,7 +137,7 @@ public class QQMusicSearchScreen extends PageScreen {
         this.infoButton = Button.builder(Component.translatable("concerto.screen.info"), button -> {
             ConcertoListWidget<Music>.Entry entry = this.musicList.getSelected();
             if (entry != null) {
-                Minecraft.getInstance().setScreen(new MusicInfoScreen(entry.item, this));
+                Minecraft.getInstance().gui.setScreen(new MusicInfoScreen(entry.item, this));
             }
         }).pos(this.width / 2 + 120, this.height - 30).size(50, 20).build();
         this.addRenderableWidget(this.infoButton);
@@ -163,13 +163,13 @@ public class QQMusicSearchScreen extends PageScreen {
                 case PLAYLIST: {
                     ConcertoListWidget<QQMusicPlaylist>.Entry entry = this.playlistList.getSelected();
                     if (entry != null) {
-                        Minecraft.getInstance().setScreen(new PlaylistPreviewScreen(entry.item, this));
+                        Minecraft.getInstance().gui.setScreen(new PlaylistPreviewScreen(entry.item, this));
                     }
                 }
                 case ALBUM: {
                     ConcertoListWidget<QQMusicPlaylist>.Entry entry = this.albumList.getSelected();
                     if (entry != null) {
-                        Minecraft.getInstance().setScreen(new PlaylistPreviewScreen(entry.item, this));
+                        Minecraft.getInstance().gui.setScreen(new PlaylistPreviewScreen(entry.item, this));
                     }
                 }
             }

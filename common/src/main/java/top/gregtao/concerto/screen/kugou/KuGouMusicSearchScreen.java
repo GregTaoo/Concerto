@@ -56,7 +56,7 @@ public class KuGouMusicSearchScreen extends PageScreen {
                             break;
                         }
                         case PLAYLIST, ALBUM: {
-                            Minecraft.getInstance().setScreen(new PlaylistPreviewScreen((Playlist) entry.item, KuGouMusicSearchScreen.this));
+                            Minecraft.getInstance().gui.setScreen(new PlaylistPreviewScreen((Playlist) entry.item, KuGouMusicSearchScreen.this));
                             break;
                         }
                     }
@@ -139,7 +139,7 @@ public class KuGouMusicSearchScreen extends PageScreen {
         this.infoButton = Button.builder(Component.translatable("concerto.screen.info"), button -> {
             ConcertoListWidget<Music>.Entry entry = this.musicList.getSelected();
             if (entry != null) {
-                Minecraft.getInstance().setScreen(new MusicInfoScreen(entry.item, this));
+                Minecraft.getInstance().gui.setScreen(new MusicInfoScreen(entry.item, this));
             }
         }).pos(this.width / 2 + 120, this.height - 30).size(50, 20).build();
         this.addRenderableWidget(this.infoButton);
@@ -166,13 +166,13 @@ public class KuGouMusicSearchScreen extends PageScreen {
                 case PLAYLIST: {
                     ConcertoListWidget<KuGouMusicPlaylist>.Entry entry = this.playlistList.getSelected();
                     if (entry != null) {
-                        Minecraft.getInstance().setScreen(new PlaylistPreviewScreen(entry.item, this));
+                        Minecraft.getInstance().gui.setScreen(new PlaylistPreviewScreen(entry.item, this));
                     }
                 }
                 case ALBUM: {
                     ConcertoListWidget<KuGouMusicPlaylist>.Entry entry = this.albumList.getSelected();
                     if (entry != null) {
-                        Minecraft.getInstance().setScreen(new PlaylistPreviewScreen(entry.item, this));
+                        Minecraft.getInstance().gui.setScreen(new PlaylistPreviewScreen(entry.item, this));
                     }
                 }
             }

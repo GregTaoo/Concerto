@@ -26,10 +26,10 @@ public class QQMusicIndexScreen extends ConcertoScreen {
     protected void init() {
         super.init();
         this.addRenderableWidget(Button.builder(Component.translatable("concerto.screen.user"),
-                button -> Minecraft.getInstance().setScreen(this.loggedIn() ? new QQMusicUserScreen(this) : new QQMusicLoginScreens(this))
+                button -> Minecraft.getInstance().gui.setScreen(this.loggedIn() ? new QQMusicUserScreen(this) : new QQMusicLoginScreens(this))
         ).size(100, 20).pos(this.width / 2 - 50, 40).build());
         this.addRenderableWidget(Button.builder(Component.translatable("concerto.screen.search"),
-                button -> Minecraft.getInstance().setScreen(new QQMusicSearchScreen(this))
+                button -> Minecraft.getInstance().gui.setScreen(new QQMusicSearchScreen(this))
         ).size(100, 20).pos(this.width / 2 - 50, 65).build());
 
         URL avatarUrl;

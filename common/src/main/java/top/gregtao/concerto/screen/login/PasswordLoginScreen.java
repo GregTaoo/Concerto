@@ -74,7 +74,7 @@ public class PasswordLoginScreen extends ConcertoScreen {
             if (player != null) {
                 player.sendSystemMessage(Component.translatable("concerto.screen.login.success"));
             }
-            Minecraft.getInstance().setScreen(null);
+            Minecraft.getInstance().gui.setScreen(null);
         }
     }
 }

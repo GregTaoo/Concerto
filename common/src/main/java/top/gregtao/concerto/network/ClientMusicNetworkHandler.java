@@ -214,7 +214,7 @@ public class ClientMusicNetworkHandler {
         ConcertoRunner.run(() -> ConcertoClient.presetRadios = PresetPlaylistsConfig.fromJson(payload.string).stream().filter(playlist ->
                 playlist.getList().stream().allMatch(MusicDataPacket::isMusicSafe)).toList(), () -> {
             Minecraft client = Minecraft.getInstance();
-            if (client.screen instanceof PresetRadiosScreen screen) {
+            if (client.gui.screen() instanceof PresetRadiosScreen screen) {
                 screen.reset();
             }
         });

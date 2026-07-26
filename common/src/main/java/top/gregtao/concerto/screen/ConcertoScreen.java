@@ -48,7 +48,7 @@ public class ConcertoScreen extends Screen {
             this.addRenderableWidget(
                     new PlainTextButton(this.width - 5 - width, this.height - 5 - this.font.lineHeight, width,
                             this.font.lineHeight,
-                            text, button -> Minecraft.getInstance().setScreen(new AcknowledgmentScreen(this)),
+                            text, button -> Minecraft.getInstance().gui.setScreen(new AcknowledgmentScreen(this)),
                             this.font)
             );
         }
@@ -74,7 +74,7 @@ public class ConcertoScreen extends Screen {
     @Override
     public void onClose() {
         super.onClose();
-        Minecraft.getInstance().setScreen(this.parent);
+        Minecraft.getInstance().gui.setScreen(this.parent);
     }
 
     @Override

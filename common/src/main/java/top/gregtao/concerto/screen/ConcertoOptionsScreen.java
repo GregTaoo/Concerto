@@ -44,9 +44,9 @@ public class ConcertoOptionsScreen extends ConcertoScreen {
         directionalLayoutWidget.addChild(Button.builder(
                 Component.translatable("concerto.reset"), button -> {
                     if (this.minecraft != null) {
-                        this.minecraft.setScreen(new ConfirmScreen(confirmed -> {
+                        this.minecraft.gui.setScreen(new ConfirmScreen(confirmed -> {
                             if (confirmed) ConcertoOptions.INSTANCE.resetOptions();
-                            this.minecraft.setScreen(new ConcertoOptionsScreen(this.getParent()));
+                            this.minecraft.gui.setScreen(new ConcertoOptionsScreen(this.getParent()));
                         }, this.title, Component.translatable("concerto.reset_confirm")));
                     }
                 }).build());

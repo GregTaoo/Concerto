@@ -27,7 +27,7 @@ public abstract class ApplyDraggedFileScreen extends ConcertoScreen {
     @Override
     public void onFilesDrop(List<Path> paths) {
         String message = paths.stream().map(Path::getFileName).map(Path::toString).collect(Collectors.joining(", "));
-        this.minecraft.setScreen(new ConfirmScreen(confirmed -> {
+        this.minecraft.gui.setScreen(new ConfirmScreen(confirmed -> {
             if (confirmed) {
                 MusicPlayerHandler.INSTANCE.addMusicAsync(() -> {
                     ArrayList<Music> list = new ArrayList<>();
@@ -57,7 +57,7 @@ public abstract class ApplyDraggedFileScreen extends ConcertoScreen {
                     }
                 });
             }
-            this.minecraft.setScreen(this);
+            this.minecraft.gui.setScreen(this);
         }, Component.translatable("concerto.drag_confirm"), Component.literal(message)));
     }
 }

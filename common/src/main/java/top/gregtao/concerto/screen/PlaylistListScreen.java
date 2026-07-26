@@ -25,7 +25,7 @@ public class PlaylistListScreen extends ConcertoScreen {
         this.playlistList = new MetadataListWidget<>(this.width, this.height - 55, 20, 18) {
             @Override
             public void onDoubleClicked(ConcertoListWidget<Playlist>.Entry entry) {
-                Minecraft.getInstance().setScreen(new PlaylistPreviewScreen(entry.item, PlaylistListScreen.this));
+                Minecraft.getInstance().gui.setScreen(new PlaylistPreviewScreen(entry.item, PlaylistListScreen.this));
             }
         };
         this.playlistList.reset(this.playlists, null, "");
@@ -36,7 +36,7 @@ public class PlaylistListScreen extends ConcertoScreen {
         this.addRenderableWidget(Button.builder(Component.translatable("concerto.screen.play"), button -> {
             ConcertoListWidget<Playlist>.Entry entry = this.playlistList.getSelected();
             if (entry != null) {
-                Minecraft.getInstance().setScreen(new PlaylistPreviewScreen(entry.item, this));
+                Minecraft.getInstance().gui.setScreen(new PlaylistPreviewScreen(entry.item, this));
             }
         }).pos(20, this.height - 30).size(60, 20).build());
     }

@@ -25,7 +25,7 @@ public class NeteaseCloudUserScreen extends PageScreen {
         return new MetadataListWidget<>(this.width, this.height - 55, 20, 18) {
             @Override
             public void onDoubleClicked(ConcertoListWidget<T>.Entry entry) {
-                Minecraft.getInstance().setScreen(new PlaylistPreviewScreen((Playlist) entry.item, NeteaseCloudUserScreen.this));
+                Minecraft.getInstance().gui.setScreen(new PlaylistPreviewScreen((Playlist) entry.item, NeteaseCloudUserScreen.this));
             }
         };
     }
@@ -51,7 +51,7 @@ public class NeteaseCloudUserScreen extends PageScreen {
     protected void init() {
         super.init();
         if (!this.loggedIn()) {
-            Minecraft.getInstance().setScreen(new NeteaseCloudLoginScreens(null));
+            Minecraft.getInstance().gui.setScreen(new NeteaseCloudLoginScreens(null));
         }
         this.playlistList = this.initWidget();
 
@@ -63,14 +63,14 @@ public class NeteaseCloudUserScreen extends PageScreen {
                 button -> CompletableFuture.supplyAsync(
                         () -> NeteaseCloudApiClient.INSTANCE.getDailyRecommendation()
                 ).thenAccept(playlist -> Minecraft.getInstance().executeBlocking(
-                        () -> Minecraft.getInstance().setScreen(new PlaylistPreviewScreen(playlist, this)))
+                        () -> Minecraft.getInstance().gui.setScreen(new PlaylistPreviewScreen(playlist, this)))
                 )).pos(this.width / 2 + 10, this.height - 30).size(50, 20).build()
         );
 
         this.addRenderableWidget(Button.builder(Component.translatable("concerto.screen.play"), button -> {
             ConcertoListWidget<NeteaseCloudPlaylist>.Entry entry = this.playlistList.getSelected();
             if (entry != null) {
-                Minecraft.getInstance().setScreen(new PlaylistPreviewScreen(entry.item, this));
+                Minecraft.getInstance().gui.setScreen(new PlaylistPreviewScreen(entry.item, this));
             }
         }).pos(this.width / 2 + 65, this.height - 30).size(50, 20).build());
 
@@ -78,7 +78,7 @@ public class NeteaseCloudUserScreen extends PageScreen {
             if (this.loggedIn()) {
                 NeteaseCloudApiClient.LOCAL_USER.logout();
             }
-            Minecraft.getInstance().setScreen(new NeteaseCloudLoginScreens(this));
+            Minecraft.getInstance().gui.setScreen(new NeteaseCloudLoginScreens(this));
         }).pos(this.width / 2 + 120, this.height - 30).size(50, 20).build());
     }
 

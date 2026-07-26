@@ -94,13 +94,13 @@ public class GeneralPlaylistScreen extends ApplyDraggedFileScreen {
         this.addRenderableWidget(Button.builder(Component.translatable("concerto.screen.info"), button -> {
             ConcertoListWidget<GeneralPlaylistWidget.Entry>.Entry entry = this.widget.getSelected();
             if (entry != null) {
-                Minecraft.getInstance().setScreen(new MusicInfoScreen(entry.item.music(), this));
+                Minecraft.getInstance().gui.setScreen(new MusicInfoScreen(entry.item.music(), this));
             }
         }).pos(this.width / 2 + 75, this.height - 30).size(50, 20).build());
 
         this.clearButton = Button.builder(Component.translatable("concerto.screen.clear"), button -> {
             MusicPlayerHandler.INSTANCE.clear();
-            Minecraft.getInstance().setScreen(null);
+            Minecraft.getInstance().gui.setScreen(null);
         }).pos(this.width / 2 + 125, this.height - 30).size(50, 20).build();
         this.addRenderableWidget(this.clearButton);
 

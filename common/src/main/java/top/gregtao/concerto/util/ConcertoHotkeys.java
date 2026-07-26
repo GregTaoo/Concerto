@@ -45,9 +45,9 @@ public class ConcertoHotkeys {
         ));
         bridge.registerEndOfTickListener(client -> {
             if (GENERAL_PLAYLIST.consumeClick()) {
-                client.setScreen(new MusicPlayerScreen(null));
+                client.gui.setScreen(new MusicPlayerScreen(null));
             } else if (INDEX_SCREEN.consumeClick()) {
-                client.setScreen(new ConcertoIndexScreen(null));
+                client.gui.setScreen(new ConcertoIndexScreen(null));
             } else if (NEXT_MUSIC.consumeClick()) {
                 MusicPlayerHandler.INSTANCE.playNextAsync(1);
             } else if (PAUSE_RESUME.consumeClick()) {

@@ -120,7 +120,7 @@ public class InGameHudRenderer {
             ClientConfig config = ClientConfig.INSTANCE;
             ClientConfig.ClientConfigOptions options = config.options;
 
-            if (!(options.hideWhenChat && client.screen instanceof ChatScreen)) {
+            if (!(options.hideWhenChat && client.gui.screen() instanceof ChatScreen)) {
                 int scaledWidth = client.getWindow().getGuiScaledWidth(), scaledHeight = client.getWindow().getGuiScaledHeight();
                 String[] texts = MusicPlayerHandler.INSTANCE.getDisplayTexts();
 

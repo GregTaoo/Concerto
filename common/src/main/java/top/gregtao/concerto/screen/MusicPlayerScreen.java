@@ -51,7 +51,7 @@ public class MusicPlayerScreen extends ConcertoScreen {
 
         Button playlistButton = Button.builder(
                 Component.translatable("concerto.screen.general_list"),
-                button -> this.minecraft.setScreen(new GeneralPlaylistScreen(this))
+                button -> this.minecraft.gui.setScreen(new GeneralPlaylistScreen(this))
         ).pos(x, y).size(80, 20).build();
         this.addRenderableWidget(playlistButton);
         x += 82;

@@ -77,15 +77,15 @@ public class MusicPlayerHandler {
         MusicPlayer.INSTANCE.internalResume();
     }
 
+    // Explicit user intent always lands on the synced state. The old version
+    // had a dead branch: resuming while not force-paused (the cold-start
+    // default, state.paused == true) was a complete no-op, so the very first
+    // "play" click did nothing while the button still flipped to "pause".
     public void tryForcePause(boolean paused) {
-        boolean isLocal = MusicRoom.clientGetState() == MusicRoom.ClientState.LOCAL;
-        if (this.isForcePaused() && !paused) {
-            this.forceResume();
-        } else if (paused) {
+        if (paused) {
             this.forcePause();
-        }
-        if (!isLocal) {
-            this.setPaused(paused);
+        } else {
+            this.forceResume();
         }
     }
 
@@ -257,6 +257,10 @@ public class MusicPlayerHandler {
             return;
         }
 
+        // Skipping means "I want to hear the next track": a lingering local
+        // force-pause would silently re-pause it right after it loads while
+        // the UI claims it's playing
+        this.forcePaused = false;
         this.getState().set((state) -> {
             state.currentIndex = this.getNextUuid(state, forward);
             state.paused = false;
@@ -370,6 +374,7 @@ public class MusicPlayerHandler {
     }
 
     public void setCurrentIndex(UUID uuid) {
+        if (uuid != null) this.forcePaused = false; // picking a track implies "play it"
         this.getState().set((state) -> {
             state.currentIndex = uuid == null ? null : (state.musicList.contains(uuid) ? uuid : state.musicList.firstUuid());
             state.paused = false;

@@ -189,6 +189,9 @@ public class PlaybackEngine implements Closeable {
             }
         } else if (command instanceof SetPausedCmd setPaused) {
             this.paused = setPaused.paused();
+            // A paused engine isn't buffering; a stale flag would otherwise
+            // stick until the next pump() and misreport BUFFERING on resume
+            this.buffering = false;
             if (this.sink != null && this.sink.isOpen()) {
                 if (this.paused) this.sink.pause();
                 else this.sink.resume();
@@ -361,6 +364,9 @@ public class PlaybackEngine implements Closeable {
         this.updateSnapshot();
         this.closeDecoded();
         this.trackEnded = true;
+        // Stop advertising the finished session: the UI would otherwise keep
+        // reading its buffered fraction and duration while the state is IDLE
+        this.sessionView = null;
         this.listener.onTrackEnded(this.session);
     }
 

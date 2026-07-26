@@ -67,6 +67,11 @@ public class MusicPlayer implements EngineListener {
     private final AtomicLong requestGeneration = new AtomicLong();
     private static final int MAX_CONSECUTIVE_FAILURES = 3;
     private final AtomicInteger consecutiveFailures = new AtomicInteger();
+    private final AtomicInteger preparingCount = new AtomicInteger();
+    // The backend is pinned per play request so a mid-track sink rebuild (PCM
+    // format change) can't silently switch backends; the option label promises
+    // "takes effect next track"
+    private volatile ClientConfig.PlaybackBackend sessionBackend = null;
 
     public final AudioSpectrum audioSpectrum = new AudioSpectrum();
 
@@ -95,15 +100,18 @@ public class MusicPlayer implements EngineListener {
     }
 
     public MusicPlayer(Logger logger) {
-        this.engine = new PlaybackEngine(this, MusicPlayer::createSink, logger);
+        this.engine = new PlaybackEngine(this, this::createSink, logger);
     }
 
-    private static AudioSink createSink() {
-        if (ClientConfig.INSTANCE != null
-                && ClientConfig.INSTANCE.options.playbackBackend == ClientConfig.PlaybackBackend.OPENAL) {
-            return new OpenALSink();
-        }
-        return new JavaSoundSink();
+    private AudioSink createSink() {
+        ClientConfig.PlaybackBackend backend = this.sessionBackend;
+        if (backend == null) backend = configuredBackend();
+        return backend == ClientConfig.PlaybackBackend.OPENAL ? new OpenALSink() : new JavaSoundSink();
+    }
+
+    private static ClientConfig.PlaybackBackend configuredBackend() {
+        return ClientConfig.INSTANCE == null ? ClientConfig.PlaybackBackend.JAVASOUND
+                : ClientConfig.INSTANCE.options.playbackBackend;
     }
 
     private void shutdown() {
@@ -130,43 +138,54 @@ public class MusicPlayer implements EngineListener {
 
     private void requestPlay(Music music, boolean temp, Runnable callback) {
         long generation = this.requestGeneration.incrementAndGet();
-        this.prepareExecutor.execute(() -> {
-            try {
-                if (generation != this.requestGeneration.get()) return; // superseded before it started
-                // Sweep leftover spool files; files still open (Windows locks them) survive
-                BufferedHttpByteSource.cleanTempDirectory();
-                PlaybackSession session = this.createSession(music, generation);
-                if (session == null) {
-                    this.autoSkipAfterFailure(temp, generation);
-                    return;
-                }
-                if (generation != this.requestGeneration.get()) {
-                    session.close();
-                    return;
-                }
-                this.currentMusic = music;
-                this.isPlayingTemp = temp;
-                this.started = true;
-                this.displayOverrideUntilMs = 0;
-                this.initMusicStatus();
-                this.updateDisplayTexts();
-                this.updateDisplayTexts(session.getStartMillis());
-                this.engine.load(session);
-                // Re-check the synced pause state after posting the load: it covers
-                // both a local force-pause and a room whose state is paused, and a
-                // pause that raced in during preparation.
-                if (MusicPlayerHandler.INSTANCE.isPaused()) {
-                    this.engine.setPaused(true);
-                }
-                Concerto.getLogger().info("Start playing music {} - {}", music.getMeta().title(), music.getMeta().author());
-                ConcertoEvents.ON_NEW_MUSIC_STARTED.emit(music);
-            } catch (Exception e) {
-                this.handlePlaybackFailure(music, e);
+        this.preparingCount.incrementAndGet();
+        boolean submitted = false;
+        try {
+            this.prepareExecutor.execute(() -> this.prepareAndLoad(music, temp, callback, generation));
+            submitted = true;
+        } finally {
+            if (!submitted) this.preparingCount.decrementAndGet();
+        }
+    }
+
+    private void prepareAndLoad(Music music, boolean temp, Runnable callback, long generation) {
+        try {
+            if (generation != this.requestGeneration.get()) return; // superseded before it started
+            // Sweep leftover spool files; files still open (Windows locks them) survive
+            BufferedHttpByteSource.cleanTempDirectory();
+            PlaybackSession session = this.createSession(music, generation);
+            if (session == null) {
                 this.autoSkipAfterFailure(temp, generation);
-            } finally {
-                if (callback != null) callback.run();
+                return;
             }
-        });
+            if (generation != this.requestGeneration.get()) {
+                session.close();
+                return;
+            }
+            this.currentMusic = music;
+            this.isPlayingTemp = temp;
+            this.started = true;
+            this.displayOverrideUntilMs = 0;
+            this.initMusicStatus();
+            this.updateDisplayTexts();
+            this.updateDisplayTexts(session.getStartMillis());
+            this.sessionBackend = configuredBackend();
+            this.engine.load(session);
+            // Re-check the synced pause state after posting the load: it covers
+            // both a local force-pause and a room whose state is paused, and a
+            // pause that raced in during preparation.
+            if (MusicPlayerHandler.INSTANCE.isPaused()) {
+                this.engine.setPaused(true);
+            }
+            Concerto.getLogger().info("Start playing music {} - {}", music.getMeta().title(), music.getMeta().author());
+            ConcertoEvents.ON_NEW_MUSIC_STARTED.emit(music);
+        } catch (Exception e) {
+            this.handlePlaybackFailure(music, e);
+            this.autoSkipAfterFailure(temp, generation);
+        } finally {
+            this.preparingCount.decrementAndGet();
+            if (callback != null) callback.run();
+        }
     }
 
     private PlaybackSession createSession(Music music, long generation) {
@@ -260,6 +279,15 @@ public class MusicPlayer implements EngineListener {
 
     public boolean isSeeking() {
         return this.engine.getState() == PlaybackState.BUFFERING;
+    }
+
+    /**
+     * True while a play request is being prepared (network resolve, source
+     * open) and the engine hasn't received the new session yet. UIs show a
+     * loading indication instead of "nothing is playing" during this window.
+     */
+    public boolean isPreparing() {
+        return this.preparingCount.get() > 0;
     }
 
     /** Vanilla background music is suppressed whenever Concerto is audible. */
@@ -401,6 +429,7 @@ public class MusicPlayer implements EngineListener {
         boolean wasTemp = this.isPlayingTemp;
         this.isPlayingTemp = false;
         if (stale) return; // a newer play request is already on its way
+        this.progressPercentage = 0; // don't show the finished track's ~100% during the gap
         ConcertoRunner.run(() -> {
             if (MusicPlayerHandler.INSTANCE.isEmpty()) {
                 this.stop();

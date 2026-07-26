@@ -145,6 +145,12 @@ public class GeneralPlaylistScreen extends ApplyDraggedFileScreen {
     }
 
     @Override
+    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        this.volumeControl.collapseIfClickedOutside(mouseX, mouseY);
+        return super.mouseClicked(mouseX, mouseY, button);
+    }
+
+    @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
         if (super.keyPressed(keyCode, scanCode, modifiers)) {
             return true;

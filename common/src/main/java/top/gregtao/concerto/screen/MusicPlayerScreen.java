@@ -233,6 +233,7 @@ public class MusicPlayerScreen extends ConcertoScreen {
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        this.volumeControl.collapseIfClickedOutside(mouseX, mouseY);
         if (button == 0 && this.isOverProgressBar(mouseX, mouseY) && this.seekProgress(mouseX, false)) {
             this.seekingProgress = true;
             return true;

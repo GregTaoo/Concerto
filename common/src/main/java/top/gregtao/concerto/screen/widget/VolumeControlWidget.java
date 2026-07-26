@@ -7,10 +7,12 @@ import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.network.chat.Component;
 
 /**
- * The "♪" button with its pop-up volume slider, including click-outside
- * dismissal. Add via {@code addWidget} for event handling and call
- * {@link #render} at the end of the screen's render pass so the pop-up draws on
- * top of screen content.
+ * The "♪" button with its pop-up volume slider. Add via {@code addWidget} for
+ * event handling and call {@link #render} at the end of the screen's render
+ * pass so the pop-up draws on top of screen content. The screen must also call
+ * {@link #collapseIfClickedOutside} from its {@code mouseClicked} override:
+ * click dispatch only reaches the child under the cursor, so the widget never
+ * sees outside clicks itself.
  */
 public class VolumeControlWidget extends AbstractWidget {
 
@@ -46,15 +48,15 @@ public class VolumeControlWidget extends AbstractWidget {
         if (this.slider.visible && this.slider.mouseClicked(mouseX, mouseY, mouseButton)) {
             return true;
         }
-        if (this.button.mouseClicked(mouseX, mouseY, mouseButton)) {
-            return true;
-        }
-        if (this.expanded) {
-            // Dismiss but let the click through: swallowing it forced a second
-            // click on whatever button the user actually aimed at
+        return this.button.mouseClicked(mouseX, mouseY, mouseButton);
+    }
+
+    // Dismiss but let the click through: swallowing it would force a second
+    // click on whatever button the user actually aimed at
+    public void collapseIfClickedOutside(double mouseX, double mouseY) {
+        if (this.expanded && !this.isMouseOver(mouseX, mouseY)) {
             this.setExpanded(false);
         }
-        return false;
     }
 
     @Override

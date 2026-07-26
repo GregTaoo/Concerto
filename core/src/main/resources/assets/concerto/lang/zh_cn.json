@@ -241,6 +241,8 @@
   "concerto.options.handshakeRequired": "需要服务端握手",
   "concerto.options.playerVolume": "Concerto 音量",
   "concerto.options.playerVolumeFollowsMaster": "跟随主音量",
+  "concerto.options.openalBackend": "使用 OpenAL 输出 (下一首生效)",
+  "concerto.player.buffering": "缓冲中...",
   "concerto.options.display.lyrics": "主歌词",
   "concerto.options.align.lyrics": "歌词对齐",
   "concerto.options.posXPercent.lyrics": "歌词 X %",

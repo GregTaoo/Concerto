@@ -79,6 +79,14 @@ public class ConcertoOptions {
                 () -> this.config.options.playerVolumeFollowsMaster
         ));
 
+        // Applied when the next track opens its audio output
+        this.updaters.add(new SingleBooleanOption(
+                "openalBackend",
+                value -> this.config.options.playbackBackend =
+                        value ? ClientConfig.PlaybackBackend.OPENAL : ClientConfig.PlaybackBackend.JAVASOUND,
+                () -> this.config.options.playbackBackend == ClientConfig.PlaybackBackend.OPENAL
+        ));
+
         this.updaters.add(new TextOptions("lyrics", (display, align, pos) -> {
             this.config.options.displayLyrics = display;
             this.config.options.lyricsAlignment = align;

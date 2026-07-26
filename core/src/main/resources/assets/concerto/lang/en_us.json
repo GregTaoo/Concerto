@@ -243,6 +243,8 @@
   "concerto.options.handshakeRequired": "Handshake required",
   "concerto.options.playerVolume": "Concerto Volume",
   "concerto.options.playerVolumeFollowsMaster": "Follow master volume",
+  "concerto.options.openalBackend": "OpenAL output (takes effect next track)",
+  "concerto.player.buffering": "Buffering...",
   "concerto.options.display.lyrics": "Show Lyrics",
   "concerto.options.align.lyrics": "Lyrics Align",
   "concerto.options.posXPercent.lyrics": "Lyrics X %",

@@ -2,8 +2,8 @@ package top.gregtao.concerto.screen;
 
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.layouts.GridLayout;
 import net.minecraft.client.gui.layouts.HeaderAndFooterLayout;
-import net.minecraft.client.gui.layouts.LinearLayout;
 import net.minecraft.client.gui.screens.ConfirmScreen;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.CommonComponents;
@@ -34,7 +34,10 @@ public class ConcertoOptionsScreen extends ConcertoScreen {
     }
 
     protected void initBody() {
-        this.body = this.layout.addToContents(new ConcertoOptionListWidget(this.minecraft, this.width, this));
+        // 1.20.1 selection lists are not LayoutElements, so the list can't live
+        // inside the HeaderAndFooterLayout; it positions itself from the same
+        // header/footer bounds instead (see repositionElements)
+        this.body = this.addRenderableWidget(new ConcertoOptionListWidget(this.minecraft, this.width, this));
         this.addOptions();
     }
 
@@ -43,7 +46,8 @@ public class ConcertoOptionsScreen extends ConcertoScreen {
     }
 
     protected void initFooter() {
-        LinearLayout directionalLayoutWidget = this.layout.addToFooter(LinearLayout.horizontal().spacing(8));
+        GridLayout grid = this.layout.addToFooter(new GridLayout().columnSpacing(8));
+        GridLayout.RowHelper directionalLayoutWidget = grid.createRowHelper(2);
         directionalLayoutWidget.addChild(Button.builder(
                 Component.translatable("concerto.reset"), button -> {
                     if (this.minecraft != null) {
@@ -60,7 +64,8 @@ public class ConcertoOptionsScreen extends ConcertoScreen {
     protected void repositionElements() {
         this.layout.arrangeElements();
         if (this.body != null) {
-            this.body.updateSize(this.width, this.layout);
+            this.body.updateSize(this.width, this.height,
+                    this.layout.getHeaderHeight(), this.height - this.layout.getFooterHeight());
         }
     }
 

@@ -14,7 +14,8 @@ public class ConcertoListWidget<T> extends ObjectSelectionList<ConcertoListWidge
     private int color = 0xffffffff;
 
     public ConcertoListWidget(int width, int height, int top, int itemHeight) {
-        super(Minecraft.getInstance(), width, height, top, itemHeight);
+        // 1.20.1 selection lists take y0/y1 bounds instead of a top + height pair
+        super(Minecraft.getInstance(), width, height, top, top + height, itemHeight);
     }
 
     public ConcertoListWidget(int width, int height, int top, int itemHeight, int color) {

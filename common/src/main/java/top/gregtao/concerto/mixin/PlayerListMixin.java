@@ -2,7 +2,6 @@ package top.gregtao.concerto.mixin;
 
 import net.minecraft.network.Connection;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.server.network.CommonListenerCookie;
 import net.minecraft.server.players.PlayerList;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -19,8 +18,8 @@ import java.util.concurrent.TimeUnit;
 @Mixin(PlayerList.class)
 public class PlayerListMixin {
 
-    @Inject(at = @At("TAIL"), method = "placeNewPlayer(Lnet/minecraft/network/Connection;Lnet/minecraft/server/level/ServerPlayer;Lnet/minecraft/server/network/CommonListenerCookie;)V")
-    public void onPlayerConnectInject(Connection connection, ServerPlayer player, CommonListenerCookie clientData, CallbackInfo ci) {
+    @Inject(at = @At("TAIL"), method = "placeNewPlayer(Lnet/minecraft/network/Connection;Lnet/minecraft/server/level/ServerPlayer;)V")
+    public void onPlayerConnectInject(Connection connection, ServerPlayer player, CallbackInfo ci) {
         Executor delayedExecutor = CompletableFuture.delayedExecutor(3, TimeUnit.SECONDS);
         CompletableFuture.runAsync(() -> ServerMusicNetworkHandler.playerJoinHandshake(player), delayedExecutor);
     }

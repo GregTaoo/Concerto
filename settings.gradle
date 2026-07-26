@@ -11,8 +11,8 @@ pluginManagement {
 
 include("core")
 include("common")
-include("paper")
 include("fabric")
-include("neoforge")
+// no NeoForge for 1.20.1 (NeoForge starts at 1.20.2); the paper plugin needs
+// Paper's brigadier/lifecycle API which only exists from 1.20.6 on
 
 rootProject.name = "concerto"

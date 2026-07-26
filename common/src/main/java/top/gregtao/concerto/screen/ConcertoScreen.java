@@ -3,7 +3,7 @@ package top.gregtao.concerto.screen;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.components.FocusableTextWidget;
+import net.minecraft.client.gui.components.MultiLineTextWidget;
 import net.minecraft.client.gui.components.PlainTextButton;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
@@ -15,7 +15,7 @@ import java.util.concurrent.TimeUnit;
 
 public class ConcertoScreen extends Screen {
     private final Screen parent;
-    private FocusableTextWidget message;
+    private MultiLineTextWidget message;
     private int alertGeneration = 0;
 
     public static Component getTextWithColor(Component text, ChatFormatting color) {
@@ -59,15 +59,15 @@ public class ConcertoScreen extends Screen {
             );
         }
 
-        this.message = this.addWidget(new FocusableTextWidget(
-                this.width, Component.empty(), this.font, 12));
+        this.message = this.addWidget(new MultiLineTextWidget(
+                Component.empty(), this.font).setCentered(true));
         this.message.visible = false;
         this.initTabNavigation();
     }
 
     protected void initTabNavigation() {
         if (this.message != null) {
-            this.message.containWithin(this.width);
+            this.message.setMaxWidth(this.width - 24);
             this.message.setPosition(this.width / 2 - this.message.getWidth() / 2,
                     this.height / 2 - this.font.lineHeight / 2);
         }
@@ -87,6 +87,12 @@ public class ConcertoScreen extends Screen {
     public void render(GuiGraphics matrices, int mouseX, int mouseY, float delta) {
         super.render(matrices, mouseX, mouseY, delta);
         matrices.drawCenteredString(this.font, this.title, this.width / 2, 5, 0xffffffff);
+        if (this.message.visible) {
+            // FocusableTextWidget is 1.20.3+; reproduce its backdrop panel by hand
+            matrices.fill(this.message.getX() - 12, this.message.getY() - 12,
+                    this.message.getX() + this.message.getWidth() + 12,
+                    this.message.getY() + this.message.getHeight() + 12, 0xA0000000);
+        }
         this.message.render(matrices, mouseX, mouseY, delta);
     }
 }

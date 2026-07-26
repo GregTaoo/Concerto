@@ -1,5 +1,6 @@
 package top.gregtao.concerto.fabric;
 
+import io.netty.buffer.Unpooled;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
@@ -9,9 +10,7 @@ import net.fabricmc.fabric.api.resource.ResourceManagerHelper;
 import net.fabricmc.fabric.api.resource.SimpleSynchronousResourceReloadListener;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
-import net.minecraft.network.RegistryFriendlyByteBuf;
-import net.minecraft.network.codec.StreamCodec;
-import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
+import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.PackType;
 import net.minecraft.server.packs.resources.ResourceManager;
@@ -55,18 +54,25 @@ public class FabricClient implements ClientModInitializer {
         }
 
         @Override
-        public void registerClientPayloadReceiver(CustomPacketPayload.Type<ConcertoPayload> type, StreamCodec<RegistryFriendlyByteBuf, ConcertoPayload> codec, Consumer<ConcertoPayload> handler) {
-            ClientPlayNetworking.registerGlobalReceiver(type, (payload, context) -> handler.accept(payload));
+        public void registerClientPayloadReceiver(ResourceLocation id, Consumer<ConcertoPayload> handler) {
+            // 1.20.1 receivers run on the netty thread: decode before the buf is
+            // released, then hop to the client thread like the 1.20.5+ payload API
+            ClientPlayNetworking.registerGlobalReceiver(id, (client, listener, buf, sender) -> {
+                ConcertoPayload payload = ConcertoPayload.decode(buf);
+                client.execute(() -> handler.accept(payload));
+            });
         }
 
         @Override
         public void sendPayload(ConcertoPayload payload) {
             Minecraft client = Minecraft.getInstance();
-            if (client.getConnection() == null || !ClientPlayNetworking.canSend(payload.type())) {
+            if (client.getConnection() == null || !ClientPlayNetworking.canSend(ConcertoPayload.ID)) {
                 return;
             }
+            FriendlyByteBuf buf = new FriendlyByteBuf(Unpooled.buffer());
+            payload.encode(buf);
             try {
-                ClientPlayNetworking.send(payload);
+                ClientPlayNetworking.send(ConcertoPayload.ID, buf);
             } catch (IllegalStateException ignored) {
                 // The client can disconnect between the connection check and the send call.
             }

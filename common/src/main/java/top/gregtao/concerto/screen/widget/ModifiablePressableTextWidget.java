@@ -30,6 +30,7 @@ public class ModifiablePressableTextWidget extends PlainTextButton {
         this.text = text;
         this.hoverText = ComponentUtils.mergeStyles(text.copy(), Style.EMPTY.withUnderlined(true));
         this.setWidth(this.textRenderer.width(text));
-        this.setHeight(this.textRenderer.lineHeight);
+        // AbstractWidget has no setHeight in 1.20.1; the field is protected
+        this.height = this.textRenderer.lineHeight;
     }
 }

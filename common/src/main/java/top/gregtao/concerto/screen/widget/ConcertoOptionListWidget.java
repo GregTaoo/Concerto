@@ -24,7 +24,9 @@ public class ConcertoOptionListWidget extends ContainerObjectSelectionList<Conce
     private final ConcertoOptionsScreen optionsScreen;
 
     public ConcertoOptionListWidget(Minecraft client, int width, ConcertoOptionsScreen optionsScreen) {
-        super(client, width, optionsScreen.layout.getContentHeight(), optionsScreen.layout.getHeaderHeight(), 25);
+        super(client, width, optionsScreen.height,
+                optionsScreen.layout.getHeaderHeight(),
+                optionsScreen.height - optionsScreen.layout.getFooterHeight(), 25);
         this.centerListVertically = false;
         this.optionsScreen = optionsScreen;
     }
@@ -70,15 +72,9 @@ public class ConcertoOptionListWidget extends ContainerObjectSelectionList<Conce
     }
 
     public void applyAllPendingValues() {
-        for (WidgetEntry widgetEntry : this.children()) {
-            if (widgetEntry instanceof OptionWidgetEntry optionWidgetEntry) {
-                for (AbstractWidget clickableWidget : optionWidgetEntry.optionWidgets.values()) {
-                    if (clickableWidget instanceof OptionInstance.OptionInstanceSliderButton<?> optionSliderWidgetImpl) {
-                        optionSliderWidgetImpl.applyUnsavedValue();
-                    }
-                }
-            }
-        }
+        // 1.20.1 option sliders write straight into the OptionInstance while
+        // dragging (the deferred applyUnsavedValue machinery is 1.20.2+),
+        // so there is nothing pending to flush here
     }
 
     public Optional<GuiEventListener> getHoveredWidget(double mouseX, double mouseY) {
@@ -108,10 +104,10 @@ public class ConcertoOptionListWidget extends ContainerObjectSelectionList<Conce
         public static OptionWidgetEntry create(
                 Options gameOptions, OptionInstance<?> firstOption, @Nullable OptionInstance<?> secondOption, ConcertoOptionsScreen optionsScreen
         ) {
-            AbstractWidget clickableWidget = firstOption.createButton(gameOptions);
+            AbstractWidget clickableWidget = firstOption.createButton(gameOptions, 0, 0, 150);
             return secondOption == null
                     ? new OptionWidgetEntry(ImmutableMap.of(firstOption, clickableWidget), optionsScreen)
-                    : new OptionWidgetEntry(ImmutableMap.of(firstOption, clickableWidget, secondOption, secondOption.createButton(gameOptions)), optionsScreen);
+                    : new OptionWidgetEntry(ImmutableMap.of(firstOption, clickableWidget, secondOption, secondOption.createButton(gameOptions, 0, 0, 150)), optionsScreen);
         }
     }
 

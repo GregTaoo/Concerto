@@ -29,7 +29,7 @@ import java.util.*;
 public class ClientMusicNetworkHandler {
 
     public static void register(MinecraftClientBridge bridge) {
-        bridge.registerClientPayloadReceiver(ConcertoPayload.ID, ConcertoPayload.CODEC, ClientMusicNetworkHandler::generalReceiver);
+        bridge.registerClientPayloadReceiver(ConcertoPayload.ID, ClientMusicNetworkHandler::generalReceiver);
     }
 
     public static final Map<UUID, MusicDataPacket> WAIT_CONFIRMATION = new HashMap<>();

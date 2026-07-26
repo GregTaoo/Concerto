@@ -15,14 +15,17 @@ dependencies {
     my(project(path: ":core", configuration: "shadow")) { transitive = false }
 }
 
+// Bukkit only accepts patch-level api-version strings from 1.20.5 onward
+def bukkitApiVersion = rootProject.minecraft_version.tokenize(".")[0..1].join(".")
+
 processResources {
     inputs.property "version", project.version
-    inputs.property "apiVersion", rootProject.minecraft_version
+    inputs.property "apiVersion", bukkitApiVersion
 
     filesMatching("plugin.yml") {
         expand(
                 version: project.version,
-                apiVersion: rootProject.minecraft_version
+                apiVersion: bukkitApiVersion
         )
     }
 }

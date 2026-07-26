@@ -1,6 +1,7 @@
 package top.gregtao.concerto.screen.widget;
 
 import net.minecraft.client.gui.Font;
+import net.minecraft.util.Mth;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
@@ -30,7 +31,7 @@ public class VolumeSliderWidget extends AbstractWidget {
         context.fill(trackX - 1, top - 1, trackX + TRACK_WIDTH + 1, bottom + 1, 0x99555555);
         context.fill(trackX, top, trackX + TRACK_WIDTH, bottom, 0x77999999);
 
-        double volume = Math.clamp(ClientConfig.INSTANCE.options.playerVolume, 0.0, 1.0);
+        double volume = Mth.clamp(ClientConfig.INSTANCE.options.playerVolume, 0.0, 1.0);
         int handleY = bottom - HANDLE_HEIGHT - (int) Math.round(volume * (this.height - HANDLE_HEIGHT));
         context.fill(left, handleY, left + this.width, handleY + HANDLE_HEIGHT, 0xFFFFFFFF);
 
@@ -70,7 +71,7 @@ public class VolumeSliderWidget extends AbstractWidget {
     private void updateVolume(double mouseY) {
         double range = this.height - HANDLE_HEIGHT;
         double value = 1.0 - ((mouseY - this.getY() - HANDLE_HEIGHT / 2.0) / range);
-        ClientConfig.INSTANCE.options.playerVolume = Math.clamp(value, 0.0, 1.0);
+        ClientConfig.INSTANCE.options.playerVolume = Mth.clamp(value, 0.0, 1.0);
         ConcertoClient.syncPlayerVolume();
     }
 

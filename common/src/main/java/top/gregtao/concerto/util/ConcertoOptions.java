@@ -2,6 +2,7 @@ package top.gregtao.concerto.util;
 
 import net.minecraft.client.OptionInstance;
 import net.minecraft.network.chat.Component;
+import net.minecraft.util.Mth;
 import org.apache.logging.log4j.util.TriConsumer;
 import top.gregtao.concerto.ConcertoClient;
 import top.gregtao.concerto.core.config.ClientConfig;
@@ -209,7 +210,7 @@ public class ConcertoOptions {
     }
 
     private static String getPositionString(double percent, int delta) {
-        return String.format("%.2f%+d", Math.clamp(percent, 0, 1), delta);
+        return String.format("%.2f%+d", Mth.clamp(percent, 0.0, 1.0), delta);
     }
 
     private static String getPositionXYString(double xPercent, int xDelta, double yPercent, int yDelta) {
@@ -283,13 +284,13 @@ public class ConcertoOptions {
 
         @Override
         public void readOptions() {
-            this.option.set(Math.clamp(this.reader.get(), 0.0, 1.0));
+            this.option.set(Mth.clamp(this.reader.get(), 0.0, 1.0));
         }
 
         @Override
         public void writeOptions() {
             if (!ConcertoOptions.this.canUpdate) return;
-            this.writer.accept(Math.clamp(this.option.get(), 0.0, 1.0));
+            this.writer.accept(Mth.clamp(this.option.get(), 0.0, 1.0));
         }
 
         @Override

@@ -1,15 +1,16 @@
 package top.gregtao.concerto.paper.command;
 
-import com.mojang.brigadier.arguments.IntegerArgumentType;
-import com.mojang.brigadier.tree.LiteralCommandNode;
-import io.papermc.paper.command.brigadier.CommandSourceStack;
-import io.papermc.paper.command.brigadier.Commands;
-import io.papermc.paper.command.brigadier.argument.ArgumentTypes;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickEvent;
+import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextColor;
 import org.bukkit.Bukkit;
+import org.bukkit.command.Command;
+import org.bukkit.command.CommandExecutor;
+import org.bukkit.command.CommandSender;
+import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
+import org.jetbrains.annotations.NotNull;
 import top.gregtao.concerto.core.config.CacheManager;
 import top.gregtao.concerto.core.http.kugou.KuGouMusicApiClient;
 import top.gregtao.concerto.core.http.netease.NeteaseCloudApiClient;
@@ -21,106 +22,176 @@ import top.gregtao.concerto.paper.network.MusicDataPacket;
 import top.gregtao.concerto.paper.network.ServerMusicNetworkHandler;
 import top.gregtao.concerto.paper.util.ComponentUtil;
 
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
 
-public class ConcertoServerCommand {
+// Paper's brigadier command API only exists from 1.20.6 on, so this version
+// registers the same command tree through the classic Bukkit executor instead
+public class ConcertoServerCommand implements CommandExecutor, TabCompleter {
 
-    public static LiteralCommandNode<CommandSourceStack> build() {
-        return Commands.literal("concerto-server").then(
-                Commands.literal("audit").requires(source -> source.getExecutor() != null && source.getExecutor().isOp()).then(
-                        Commands.argument("uuid", ArgumentTypes.uuid()).executes(context -> {
-                            UUID uuid = context.getArgument("uuid", UUID.class);
-                            ServerMusicNetworkHandler.passAudition(context.getSource().getSender(), uuid);
-                            return 0;
-                        })
-                ).then(
-                        Commands.literal("reject").then(
-                                Commands.argument("uuid", ArgumentTypes.uuid()).executes(context -> {
-                                    UUID uuid = context.getArgument("uuid", UUID.class);
-                                    ServerMusicNetworkHandler.rejectAudition(context.getSource().getSender(), uuid);
-                                    return 0;
-                                })
-                        ).then(Commands.literal("all").executes(context -> {
-                            ServerMusicNetworkHandler.rejectAll(context.getSource().getSender());
-                            return 0;
-                        }))
-                ).then(
-                        Commands.literal("list").then(
-                                Commands.argument("page", IntegerArgumentType.integer(1)).executes(context -> {
-                                    ConcertoRunner.run(() -> {
-                                        int page = IntegerArgumentType.getInteger(context, "page");
-                                        Map<UUID, MusicDataPacket> map = ServerMusicNetworkHandler.WAIT_AUDITION;
-                                        Iterator<Map.Entry<UUID, MusicDataPacket>> iterator = map.entrySet().iterator();
-                                        page = Math.min(page, (int) Math.ceil(map.size() / 10f));
-                                        context.getSource().getSender().sendMessage(ComponentUtil.PAGE_SPLIT);
-                                        for (int i = 1; i < 10 * (page - 1); ++i) {
-                                            if (iterator.hasNext()) iterator.next();
-                                        }
-                                        for (int i = 10 * (page - 1); i < Math.min(10 * page, map.size()) && iterator.hasNext(); ++i) {
-                                            Map.Entry<UUID, MusicDataPacket> entry = iterator.next();
-                                            MusicDataPacket packet = entry.getValue();
-                                            context.getSource().getSender().sendMessage(Component.text((i + 1) + ". ").append(chatMessageBuilder(
-                                                    entry.getKey(), packet.from, packet.music.getMeta().title()
-                                            )));
-                                        }
-                                        context.getSource().getSender().sendMessage(ComponentUtil.PAGE_SPLIT);
-                                    });
-                                    return 0;
-                                })
-                        )
-                )
-        ).then(
-                Commands.literal("reload").requires(source -> source.getExecutor() != null && source.getExecutor().isOp())
-                        .executes(context -> {
-                            ConcertoPaperPlugin.reload();
-                            return 0;
-                        })
-        ).then(
-                Commands.literal("reload-cookie").requires(source -> source.getExecutor() != null && source.getExecutor().isOp())
-                        .executes(context -> {
-                            NeteaseCloudApiClient.INSTANCE.readCookie();
-                            QQMusicApiClient.INSTANCE.readCookie();
-                            KuGouMusicApiClient.INSTANCE.readCookie();
-                            return 0;
-                        })
-        ).then(
-                Commands.literal("clean-cache").requires(source -> source.getExecutor() != null && source.getExecutor().isOp())
-                        .executes(context -> {
-                            CacheManager.cleanAllCache();
-                            return 0;
-                        })
-        ).then(
-                Commands.literal("fetch-radios")
-                        .requires(source -> true).executes(context -> {
-                            Player player = Bukkit.getPlayer(context.getSource().getSender().getName());
-                            ServerMusicNetworkHandler.sendS2CPresetRadiosPacket(player);
-                            return 0;
-                        })
-        ).then(
-                Commands.literal("agent").requires(source -> source.getExecutor() != null && source.getExecutor().isOp()).then(
-                        Commands.literal("reset").executes(context -> {
-                            ServerMusicAgent.INSTANCE.reset();
-                            return 0;
-                        })
-                ).then(
-                        Commands.literal("cut").executes(context -> {
-                            ServerMusicAgent.INSTANCE.schedulePlayNext(0, false);
-                            return 0;
-                        })
-                ).then(
-                        Commands.literal("stop").executes(context -> {
-                            ServerMusicAgent.INSTANCE.stop();
-                            return 0;
-                        })
-                ).then(
-                        Commands.literal("start").executes(context -> {
-                            ServerMusicAgent.INSTANCE.start();
-                            return 0;
-                        })
-                )
-        ).build();
+    // Mirrors the brigadier requires(): the executor had to be an op entity,
+    // which the console never was
+    private static boolean isOpPlayer(CommandSender sender) {
+        return sender instanceof Player player && player.isOp();
+    }
+
+    private static boolean noPermission(CommandSender sender) {
+        sender.sendMessage(Component.text("You do not have permission to use this command.", NamedTextColor.RED));
+        return true;
+    }
+
+    @Override
+    public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, String[] args) {
+        if (args.length == 0) return false;
+        switch (args[0].toLowerCase(Locale.ROOT)) {
+            case "audit" -> {
+                if (!isOpPlayer(sender)) return noPermission(sender);
+                return this.audit(sender, args);
+            }
+            case "reload" -> {
+                if (!isOpPlayer(sender)) return noPermission(sender);
+                ConcertoPaperPlugin.reload();
+                return true;
+            }
+            case "reload-cookie" -> {
+                if (!isOpPlayer(sender)) return noPermission(sender);
+                NeteaseCloudApiClient.INSTANCE.readCookie();
+                QQMusicApiClient.INSTANCE.readCookie();
+                KuGouMusicApiClient.INSTANCE.readCookie();
+                return true;
+            }
+            case "clean-cache" -> {
+                if (!isOpPlayer(sender)) return noPermission(sender);
+                CacheManager.cleanAllCache();
+                return true;
+            }
+            case "fetch-radios" -> {
+                Player player = Bukkit.getPlayer(sender.getName());
+                ServerMusicNetworkHandler.sendS2CPresetRadiosPacket(player);
+                return true;
+            }
+            case "agent" -> {
+                if (!isOpPlayer(sender)) return noPermission(sender);
+                if (args.length < 2) return false;
+                switch (args[1].toLowerCase(Locale.ROOT)) {
+                    case "reset" -> ServerMusicAgent.INSTANCE.reset();
+                    case "cut" -> ServerMusicAgent.INSTANCE.schedulePlayNext(0, false);
+                    case "stop" -> ServerMusicAgent.INSTANCE.stop();
+                    case "start" -> ServerMusicAgent.INSTANCE.start();
+                    default -> {
+                        return false;
+                    }
+                }
+                return true;
+            }
+            default -> {
+                return false;
+            }
+        }
+    }
+
+    private boolean audit(CommandSender sender, String[] args) {
+        if (args.length < 2) return false;
+        switch (args[1].toLowerCase(Locale.ROOT)) {
+            case "reject" -> {
+                if (args.length < 3) return false;
+                if (args[2].equalsIgnoreCase("all")) {
+                    ServerMusicNetworkHandler.rejectAll(sender);
+                    return true;
+                }
+                UUID uuid = parseUuid(sender, args[2]);
+                if (uuid == null) return true;
+                ServerMusicNetworkHandler.rejectAudition(sender, uuid);
+                return true;
+            }
+            case "list" -> {
+                if (args.length < 3) return false;
+                int parsedPage;
+                try {
+                    parsedPage = Math.max(1, Integer.parseInt(args[2]));
+                } catch (NumberFormatException e) {
+                    return false;
+                }
+                int requestedPage = parsedPage;
+                ConcertoRunner.run(() -> {
+                    Map<UUID, MusicDataPacket> map = ServerMusicNetworkHandler.WAIT_AUDITION;
+                    Iterator<Map.Entry<UUID, MusicDataPacket>> iterator = map.entrySet().iterator();
+                    int page = Math.min(requestedPage, (int) Math.ceil(map.size() / 10f));
+                    sender.sendMessage(ComponentUtil.PAGE_SPLIT);
+                    for (int i = 1; i < 10 * (page - 1); ++i) {
+                        if (iterator.hasNext()) iterator.next();
+                    }
+                    for (int i = 10 * (page - 1); i < Math.min(10 * page, map.size()) && iterator.hasNext(); ++i) {
+                        Map.Entry<UUID, MusicDataPacket> entry = iterator.next();
+                        MusicDataPacket packet = entry.getValue();
+                        sender.sendMessage(Component.text((i + 1) + ". ").append(chatMessageBuilder(
+                                entry.getKey(), packet.from, packet.music.getMeta().title()
+                        )));
+                    }
+                    sender.sendMessage(ComponentUtil.PAGE_SPLIT);
+                });
+                return true;
+            }
+            default -> {
+                UUID uuid = parseUuid(sender, args[1]);
+                if (uuid == null) return true;
+                ServerMusicNetworkHandler.passAudition(sender, uuid);
+                return true;
+            }
+        }
+    }
+
+    private static UUID parseUuid(CommandSender sender, String raw) {
+        try {
+            return UUID.fromString(raw);
+        } catch (IllegalArgumentException e) {
+            sender.sendMessage(Component.text("Invalid UUID: " + raw, NamedTextColor.RED));
+            return null;
+        }
+    }
+
+    @Override
+    public List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, String[] args) {
+        boolean op = isOpPlayer(sender);
+        if (args.length == 1) {
+            List<String> roots = new ArrayList<>();
+            roots.add("fetch-radios");
+            if (op) roots.addAll(List.of("audit", "reload", "reload-cookie", "clean-cache", "agent"));
+            return filterPrefix(roots, args[0]);
+        }
+        if (!op) return List.of();
+        if (args[0].equalsIgnoreCase("agent") && args.length == 2) {
+            return filterPrefix(List.of("reset", "cut", "stop", "start"), args[1]);
+        }
+        if (args[0].equalsIgnoreCase("audit")) {
+            if (args.length == 2) {
+                List<String> options = new ArrayList<>(List.of("reject", "list"));
+                options.addAll(pendingUuids());
+                return filterPrefix(options, args[1]);
+            }
+            if (args.length == 3 && args[1].equalsIgnoreCase("reject")) {
+                List<String> options = new ArrayList<>(List.of("all"));
+                options.addAll(pendingUuids());
+                return filterPrefix(options, args[2]);
+            }
+            if (args.length == 3 && args[1].equalsIgnoreCase("list")) {
+                return filterPrefix(List.of("1"), args[2]);
+            }
+        }
+        return List.of();
+    }
+
+    private static List<String> pendingUuids() {
+        return ServerMusicNetworkHandler.WAIT_AUDITION.keySet().stream().map(UUID::toString).toList();
+    }
+
+    private static List<String> filterPrefix(List<String> options, String prefix) {
+        String lower = prefix.toLowerCase(Locale.ROOT);
+        return options.stream().filter(s -> s.toLowerCase(Locale.ROOT).startsWith(lower)).toList();
     }
 
     public static Component chatMessageBuilder(UUID uuid, String name, String title) {

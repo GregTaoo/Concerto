@@ -90,7 +90,8 @@ tasks.register("buildAll", Copy) {
     into(libOut)
 
     def tasksToCollect = [
-            ["fabric",   "remapJar", "Concerto-mc${mcVersion}-fabric-${modVersion}.jar"]
+            ["fabric",   "remapJar", "Concerto-mc${mcVersion}-fabric-${modVersion}.jar"],
+            ["paper",    "shadowJar", "Concerto-mc${mcVersion}-paper-${modVersion}.jar"]
     ]
 
     tasksToCollect.each { entry ->

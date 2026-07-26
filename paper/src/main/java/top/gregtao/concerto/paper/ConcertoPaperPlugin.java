@@ -1,7 +1,7 @@
 package top.gregtao.concerto.paper;
 
-import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import org.bukkit.Bukkit;
+import org.bukkit.command.PluginCommand;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -45,8 +45,14 @@ public class ConcertoPaperPlugin extends JavaPlugin implements Listener, PluginM
         Bukkit.getPluginManager().registerEvents(this, this);
         INSTANCE = this;
         Concerto.registerCoreBridge(CORE_BRIDGE, LOGGER_FACTORY);
-        this.getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS,
-                commands -> commands.registrar().register(ConcertoServerCommand.build()));
+        // Paper's brigadier lifecycle registrar is 1.20.6+; register the classic
+        // Bukkit executor declared in plugin.yml instead
+        PluginCommand serverCommand = this.getCommand("concerto-server");
+        if (serverCommand != null) {
+            ConcertoServerCommand executor = new ConcertoServerCommand();
+            serverCommand.setExecutor(executor);
+            serverCommand.setTabCompleter(executor);
+        }
         Messenger messenger = getServer().getMessenger();
         messenger.registerOutgoingPluginChannel(this, ConcertoPayload.ID);
         messenger.registerIncomingPluginChannel(this, ConcertoPayload.ID, this);

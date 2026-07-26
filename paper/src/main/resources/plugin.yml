@@ -9,6 +9,11 @@ api-version: '${apiVersion}'
 channels:
   - concerto:main
 
+commands:
+  concerto-server:
+    description: Concerto server management
+    usage: /<command> <audit|reload|reload-cookie|clean-cache|fetch-radios|agent> ...
+
 permissions:
   concerto.room.create:
     description: Allow player to create music rooms

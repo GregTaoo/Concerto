@@ -239,6 +239,7 @@
   "concerto.options.playerVolumeFollowsMaster": "Follow master volume",
   "concerto.options.openalBackend": "OpenAL output (takes effect next track)",
   "concerto.player.buffering": "Buffering...",
+  "concerto.player.preparing": "Loading track...",
   "concerto.player.trial": "This source is a trial clip; log in with a platform membership for the full track",
   "concerto.options.display.lyrics": "Show Lyrics",
   "concerto.options.align.lyrics": "Lyrics Align",

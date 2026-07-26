@@ -36,8 +36,12 @@ public class MusicPlayerScreen extends ConcertoScreen {
     private VolumeControlWidget volumeControl;
 
     private float rotationAngle = 0f;
-    private int scrollOffset = 0;
+    private float scrollOffset = 0f;
     private boolean seekingProgress = false;
+    // Drag preview target; -1 when not dragging. Rendering-only: the real
+    // display state (lyrics cursor, progress) is untouched until commit, so
+    // the bar doesn't fight the engine's position updates while dragging.
+    private long dragPreviewMillis = -1;
 
     public MusicPlayerScreen(Screen parent) {
         super(Component.empty(), parent);
@@ -63,12 +67,8 @@ public class MusicPlayerScreen extends ConcertoScreen {
         x += 82;
 
         this.playPauseButton = Button.builder(
-                Component.translatable(MusicPlayerHandler.INSTANCE.getState().get().paused ? "concerto.screen.play" : "concerto.screen.pause"),
-                button -> {
-                    boolean paused = MusicPlayerHandler.INSTANCE.isPaused();
-                    MusicPlayerHandler.INSTANCE.tryForcePause(!paused);
-                    button.setMessage(Component.translatable(!paused ? "concerto.screen.play" : "concerto.screen.pause"));
-                }
+                Component.translatable(MusicPlayerHandler.INSTANCE.isPaused() ? "concerto.screen.play" : "concerto.screen.pause"),
+                button -> MusicPlayerHandler.INSTANCE.tryForcePause(!MusicPlayerHandler.INSTANCE.isPaused())
         ).pos(x, y).size(80, 20).build();
         x += 82;
 
@@ -95,27 +95,37 @@ public class MusicPlayerScreen extends ConcertoScreen {
         this.updateButtonStates();
     }
 
+    // Called every frame: hotkey pauses, room-driven pauses and permission
+    // changes must reach an already-open screen (init-only refresh went stale)
     private void updateButtonStates() {
         this.playPauseButton.active = PlayerPermissions.canControlPlayback();
         this.nextButton.active = PlayerPermissions.canChangeMusicIndex();
         this.orderButton.active = PlayerPermissions.canChangeOrderType();
 
-        boolean isPaused = MusicPlayerHandler.INSTANCE.getState().get().paused;
+        boolean isPaused = MusicPlayerHandler.INSTANCE.isPaused();
         this.playPauseButton.setMessage(Component.translatable(isPaused ? "concerto.screen.play" : "concerto.screen.pause"));
     }
 
     @Override
     public void render(GuiGraphics context, int mouseX, int mouseY, float delta) {
         super.render(context, mouseX, mouseY, delta);
+        this.updateButtonStates();
 
         MusicMetaData metaData = MusicPlayer.INSTANCE.currentMeta;
-        if ((!MusicPlayer.INSTANCE.started && !MusicPlayer.INSTANCE.isSeeking() && !MusicPlayer.INSTANCE.isOpened()) || metaData == null) {
-            context.drawCenteredString(this.font, Component.translatable("concerto.not_playing"), this.width / 2, this.height / 2, 0xAAAAAAFF);
+        boolean hasTrack = (MusicPlayer.INSTANCE.started || MusicPlayer.INSTANCE.isOpened()) && metaData != null;
+        if (!hasTrack) {
+            Component text = MusicPlayer.INSTANCE.isPreparing()
+                    ? Component.translatable("concerto.player.preparing")
+                    : Component.translatable("concerto.not_playing");
+            context.drawCenteredString(this.font, text, this.width / 2, this.height / 2, 0xAAAAAAFF);
             this.volumeControl.render(context, mouseX, mouseY, delta);
             return;
         }
 
-        if (!MusicPlayerHandler.INSTANCE.getState().get().paused) {
+        // The disc only spins while audio is actually advancing — not while
+        // paused (incl. force-pause) or stalled in a buffer wait
+        if (MusicPlayer.INSTANCE.isPlaying() && !MusicPlayer.INSTANCE.isSeeking()
+                && !MusicPlayerHandler.INSTANCE.isPaused()) {
             this.rotationAngle += delta * 0.3f;
             if (this.rotationAngle >= 360f) this.rotationAngle -= 360f;
         }
@@ -153,7 +163,8 @@ public class MusicPlayerScreen extends ConcertoScreen {
             context.drawString(this.font, author, centerX - this.font.width(author) / 2, authorY, 0xFFAAAAAA, false);
         }
 
-        renderTopProgressBar(context, metaData);
+        renderTopProgressBar(context, mouseX, mouseY);
+        renderStatusHint(context);
 
         Lyrics currentLyrics = MusicPlayer.INSTANCE.currentLyrics;
         Lyrics currentSubLyrics = MusicPlayer.INSTANCE.currentSubLyrics;
@@ -170,7 +181,7 @@ public class MusicPlayerScreen extends ConcertoScreen {
             int endY = this.height - 40;
 
             int targetScrollOffset = (activeIndex * lineHeight) - ((endY - startY) / 2) + (lineHeight / 2);
-            this.scrollOffset += (int) ((targetScrollOffset - this.scrollOffset) * 0.15f);
+            this.scrollOffset += (targetScrollOffset - this.scrollOffset) * 0.15f;
 
             context.enableScissor(rightHalfX, startY, this.width - 20, endY);
             for (int i = 0; i < lyrics.size(); i++) {
@@ -185,7 +196,7 @@ public class MusicPlayerScreen extends ConcertoScreen {
                     }
                 }
 
-                int y = startY + (i * lineHeight) - this.scrollOffset;
+                int y = startY + (i * lineHeight) - (int) this.scrollOffset;
 
                 if (y > startY - lineHeight && y < endY + lineHeight) {
                     boolean isActive = (i == activeIndex);
@@ -255,24 +266,37 @@ public class MusicPlayerScreen extends ConcertoScreen {
         long durationMs = MusicPlayer.INSTANCE.getEffectiveDurationMillis();
         if (durationMs <= 0 || !PlayerPermissions.canControlPlayback()
                 || !MusicPlayer.INSTANCE.canSeekCurrentMusic()) {
+            this.dragPreviewMillis = -1;
             return false;
         }
         double progress = this.width <= 0 ? 0D : Math.max(0D, Math.min(1D, mouseX / this.width));
         long targetMs = (long) (durationMs * progress);
-        MusicPlayer.INSTANCE.updateDisplayTexts(targetMs);
         if (commit) {
+            this.dragPreviewMillis = -1;
             MusicPlayer.INSTANCE.seekToMillisecondsAsync(targetMs);
+        } else {
+            this.dragPreviewMillis = targetMs;
         }
         return true;
     }
 
-    private void renderTopProgressBar(GuiGraphics context, MusicMetaData metaData) {
-        if (metaData == null || MusicPlayer.INSTANCE.getEffectiveDurationMillis() <= 0) {
-            return;
-        }
+    private void renderTopProgressBar(GuiGraphics context, int mouseX, int mouseY) {
+        long durationMs = MusicPlayer.INSTANCE.getEffectiveDurationMillis();
 
-        int barHeight = 2;
-        double progress = MusicPlayer.INSTANCE.progressPercentage;
+        // Time readout is useful even without a bar (unknown duration)
+        long shownMs = this.dragPreviewMillis >= 0
+                ? this.dragPreviewMillis : MusicPlayer.INSTANCE.getInterpolatedCurrentTimeMilliseconds();
+        String timeText = MusicTimestamp.ofMilliseconds(shownMs).toShortString()
+                + (durationMs > 0 ? " / " + MusicTimestamp.ofMilliseconds(durationMs).toShortString() : "");
+        context.drawString(this.font, timeText, 6, 8, 0xFFAAAAAA, false);
+
+        if (durationMs <= 0) return;
+
+        boolean hovered = this.seekingProgress || this.isOverProgressBar(mouseX, mouseY);
+        int barHeight = hovered ? 4 : 2;
+        double progress = this.dragPreviewMillis >= 0
+                ? (double) this.dragPreviewMillis / durationMs
+                : MusicPlayer.INSTANCE.progressPercentage;
         progress = Math.max(0.0D, Math.min(1.0D, progress));
 
         int bgColor = (int) ClientConfig.INSTANCE.timeProgressBgColor.getNumber();
@@ -286,9 +310,27 @@ public class MusicPlayerScreen extends ConcertoScreen {
         }
         context.fill(0, 0, (int) Math.round(this.width * progress), barHeight, progressColor);
 
-        if (MusicPlayer.INSTANCE.isSeeking()) {
-            context.drawCenteredString(this.font, Component.translatable("concerto.player.buffering"),
-                    this.width / 2, 32, 0xFFAAAAAA);
+        if (hovered) {
+            long targetMs = this.seekingProgress && this.dragPreviewMillis >= 0
+                    ? this.dragPreviewMillis
+                    : (long) (durationMs * Math.max(0D, Math.min(1D, (double) mouseX / this.width)));
+            int thumbX = (int) Math.round(this.width * (this.seekingProgress ? progress : (double) targetMs / durationMs));
+            context.fill(thumbX - 1, 0, thumbX + 1, barHeight + 3, 0xFFFFFFFF);
+            String target = MusicTimestamp.ofMilliseconds(targetMs).toShortString();
+            int textX = Math.max(2, Math.min(this.width - this.font.width(target) - 2, thumbX - this.font.width(target) / 2));
+            context.drawString(this.font, target, textX, barHeight + 5, 0xFFFFFFFF, false);
+        }
+    }
+
+    private void renderStatusHint(GuiGraphics context) {
+        Component hint = null;
+        if (MusicPlayer.INSTANCE.isPreparing()) {
+            hint = Component.translatable("concerto.player.preparing");
+        } else if (MusicPlayer.INSTANCE.isSeeking()) {
+            hint = Component.translatable("concerto.player.buffering");
+        }
+        if (hint != null) {
+            context.drawCenteredString(this.font, hint, this.width / 2, 32, 0xFFAAAAAA);
         }
     }
 

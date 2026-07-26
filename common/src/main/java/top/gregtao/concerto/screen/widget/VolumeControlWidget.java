@@ -50,8 +50,9 @@ public class VolumeControlWidget extends AbstractWidget {
             return true;
         }
         if (this.expanded) {
+            // Dismiss but let the click through: swallowing it forced a second
+            // click on whatever button the user actually aimed at
             this.setExpanded(false);
-            return true; // swallow the outside click that dismissed the pop-up
         }
         return false;
     }

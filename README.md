@@ -10,6 +10,7 @@
     <img src="https://img.shields.io/badge/Loaders-Fabric%20%7C%20NeoForge%20%7C%20Paper-8a2be2" alt="Fabric | NeoForge | Paper">
     <a href="LICENSE"><img src="https://img.shields.io/badge/License-GPL--3.0-blue" alt="License"></a>
   </p>
+  <p>English | <a href="README_zh.md">简体中文</a></p>
 </div>
 
 > Play local files, direct URLs, and streaming platforms — NetEase Cloud Music, QQ Music, KuGou Music — without leaving the game. Listen together with other players in synchronized music rooms, or let the whole server queue songs KTV-style.

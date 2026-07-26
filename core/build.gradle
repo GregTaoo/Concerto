@@ -14,6 +14,9 @@ dependencies {
     implementation 'com.google.code.gson:gson:2.11.0'
     implementation "org.jetbrains:annotations:24.1.0"
 
+    // Provided by Minecraft's own LWJGL at runtime; only the client instantiates OpenALSink
+    compileOnly 'org.lwjgl:lwjgl-openal:3.3.3'
+
     my('com.googlecode.soundlibs:mp3spi:1.9.5.4')
 
     my('com.github.GregTaoo:JustFLAC:1.0.0')

@@ -1,6 +1,9 @@
 package top.gregtao.concerto.core.player;
 
 import top.gregtao.concerto.core.Concerto;
+import top.gregtao.concerto.core.api.CacheableMusic;
+import top.gregtao.concerto.core.config.ClientConfig;
+import top.gregtao.concerto.core.config.MusicCacheManager;
 import top.gregtao.concerto.core.event.ConcertoEvents;
 import top.gregtao.concerto.core.music.Music;
 import top.gregtao.concerto.core.music.MusicTimestamp;
@@ -8,56 +11,62 @@ import top.gregtao.concerto.core.music.PathFileMusic;
 import top.gregtao.concerto.core.music.SharedMusic;
 import top.gregtao.concerto.core.music.lyrics.Lyrics;
 import top.gregtao.concerto.core.music.meta.music.MusicMetaData;
-import top.gregtao.concerto.core.player.seek.ProgressiveDataSource;
-import top.gregtao.concerto.core.player.seek.ProgressiveMediaDataSource;
+import top.gregtao.concerto.core.player.engine.AudioSink;
+import top.gregtao.concerto.core.player.engine.EngineListener;
+import top.gregtao.concerto.core.player.engine.JavaSoundSink;
+import top.gregtao.concerto.core.player.engine.OpenALSink;
+import top.gregtao.concerto.core.player.engine.PlaybackEngine;
+import top.gregtao.concerto.core.player.engine.PlaybackSession;
+import top.gregtao.concerto.core.player.engine.PlaybackState;
+import top.gregtao.concerto.core.player.source.BufferedHttpByteSource;
 import top.gregtao.concerto.core.room.MusicRoom;
-import top.gregtao.concerto.core.player.streamplayer.enums.Status;
-import top.gregtao.concerto.core.player.streamplayer.stream.StreamPlayer;
-import top.gregtao.concerto.core.player.streamplayer.stream.StreamPlayerEvent;
-import top.gregtao.concerto.core.player.streamplayer.stream.StreamPlayerException;
-import top.gregtao.concerto.core.player.streamplayer.stream.StreamPlayerListener;
-import top.gregtao.concerto.core.api.CacheableMusic;
-import top.gregtao.concerto.core.util.Pair;
+import top.gregtao.concerto.core.util.ConcertoRunner;
 import top.gregtao.concerto.core.util.FileUtil;
+import top.gregtao.concerto.core.util.Pair;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
-import java.util.Map;
+import java.nio.file.Path;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.FileHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
 
-public class MusicPlayer extends StreamPlayer implements StreamPlayerListener {
+/**
+ * Application-level music player: owns the {@link PlaybackEngine}, the current
+ * track's metadata/lyrics/display state, and the bridge to playlist handling and
+ * room synchronisation. All playback work happens inside the engine; this class
+ * only posts commands and reacts to engine callbacks.
+ */
+public class MusicPlayer implements EngineListener {
 
     public static MusicPlayer INSTANCE;
     public static final Logger PLAYER_LOGGER;
 
     public Music currentMusic = null;
-    public InputStream currentSource = null;
-    private ProgressiveMediaDataSource currentMediaSource = null;
     public Lyrics currentLyrics = null, currentSubLyrics = null;
     public int[] currentSubLyricsMapping = new int[0];
     public MusicMetaData currentMeta = null;
     private MusicTimestamp currentTime = null;
     private String[] displayTexts = new String[]{"", "", "", ""};
     private String timeFormat = "%s" + " ".repeat(30) + "%s";
-    public float progressPercentage = 0;
-    private long startTime = 0;
+    public volatile float progressPercentage = 0;
     private long currentTimeUpdatedAtMs = 0;
-    private volatile boolean seekDisplayLocked = false;
+    private volatile long displayOverrideUntilMs = 0;
 
-    public boolean started = false;
-    public final AtomicBoolean playNextLock = new AtomicBoolean(false);
-    public boolean isPlayingTemp = false;
-    private final ExecutorService playbackExecutor = Executors.newSingleThreadExecutor();
-    private final AtomicBoolean playbackWorkerScheduled = new AtomicBoolean(false);
-    private final AtomicLong playbackGeneration = new AtomicLong();
+    public volatile boolean started = false;
+    public volatile boolean isPlayingTemp = false;
+
+    private final PlaybackEngine engine;
+    private final ExecutorService prepareExecutor = Executors.newSingleThreadExecutor(runnable -> {
+        Thread thread = new Thread(runnable, "Concerto-Loader");
+        thread.setDaemon(true);
+        return thread;
+    });
+    private final AtomicLong requestGeneration = new AtomicLong();
 
     public final AudioSpectrum audioSpectrum = new AudioSpectrum();
 
@@ -78,161 +87,194 @@ public class MusicPlayer extends StreamPlayer implements StreamPlayerListener {
     }
 
     public static void resetInstance() {
-        try {
-            if (INSTANCE != null && INSTANCE.currentSource != null)
-                INSTANCE.currentSource.close();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+        if (INSTANCE != null) {
+            INSTANCE.shutdown();
         }
         INSTANCE = new MusicPlayer(PLAYER_LOGGER);
     }
 
     public MusicPlayer(Logger logger) {
-        super(logger);
-        this.addStreamPlayerListener(this);
+        this.engine = new PlaybackEngine(this, MusicPlayer::createSink, logger);
     }
+
+    private static AudioSink createSink() {
+        if (ClientConfig.INSTANCE != null
+                && ClientConfig.INSTANCE.options.playbackBackend == ClientConfig.PlaybackBackend.OPENAL) {
+            return new OpenALSink();
+        }
+        return new JavaSoundSink();
+    }
+
+    private void shutdown() {
+        this.requestGeneration.incrementAndGet();
+        this.prepareExecutor.shutdownNow();
+        this.engine.close();
+    }
+
+    // ---- Play requests ----
 
     public synchronized void internalPlayMusic(Music music) {
         if (music == null) return;
-        this.enqueuePlaybackRequest(music, false, null);
+        this.requestPlay(music, false, null);
     }
 
     public void playTempMusic(Music music, Runnable callback) {
         if (music == null) return;
-        this.enqueuePlaybackRequest(music, true, callback);
+        this.requestPlay(music, true, callback);
     }
 
     public void playTempMusic(Music music) {
         this.playTempMusic(music, null);
     }
 
-    private void tryCloseStream(InputStream source) {
-        if (source == null) return;
-        try {
-            source.close();
-        } catch (IOException ignored) {
-        }
-    }
-
-    private void handlePlaybackFailure(Exception e) {
-        this.closeMediaSourceQuietly(this.currentMediaSource);
-        this.currentMediaSource = null;
-        this.resetInfo();
-        Concerto.getLogger().error("Internal player error: " + e);
-        Concerto.getCoreBridge().sendTranslatableToClientPlayer("concerto.player.error", false, e.getMessage());
-    }
-
-    private void enqueuePlaybackRequest(Music music, boolean temp, Runnable callback) {
-        this.playNextLock.set(true);
-        this.playbackGeneration.incrementAndGet();
-        this.abortMediaSourceReads(this.currentMediaSource);
-        if (this.playbackWorkerScheduled.compareAndSet(false, true)) {
-            this.playbackExecutor.execute(() -> this.drainPlaybackRequests(music, temp, callback));
-        }
-    }
-
-    private void drainPlaybackRequests(Music music, boolean temp, Runnable callback) {
-        try {
+    private void requestPlay(Music music, boolean temp, Runnable callback) {
+        long generation = this.requestGeneration.incrementAndGet();
+        this.prepareExecutor.execute(() -> {
             try {
-                this.playManagedMusic(music, temp);
+                if (generation != this.requestGeneration.get()) return; // superseded before it started
+                PlaybackSession session = this.createSession(music, generation);
+                if (session == null) return;
+                if (generation != this.requestGeneration.get()) {
+                    session.close();
+                    return;
+                }
+                this.currentMusic = music;
+                this.isPlayingTemp = temp;
+                this.started = true;
+                this.displayOverrideUntilMs = 0;
+                this.initMusicStatus();
+                this.updateDisplayTexts();
+                this.updateDisplayTexts(session.getStartMillis());
+                this.engine.load(session);
+                // Re-check the synced pause state after posting the load: it covers
+                // both a local force-pause and a room whose state is paused, and a
+                // pause that raced in during preparation.
+                if (MusicPlayerHandler.INSTANCE.isPaused()) {
+                    this.engine.setPaused(true);
+                }
+                Concerto.getLogger().info("Start playing music {} - {}", music.getMeta().title(), music.getMeta().author());
+                ConcertoEvents.ON_NEW_MUSIC_STARTED.emit(music);
             } catch (Exception e) {
-                this.handlePlaybackFailure(e);
+                this.handlePlaybackFailure(music, e);
+            } finally {
+                if (callback != null) callback.run();
             }
-            if (callback != null) {
-                callback.run();
-            }
-        } finally {
-            this.playbackWorkerScheduled.set(false);
-        }
+        });
     }
 
-    private void playManagedMusic(Music music, boolean temp) {
-        this.playNextLock.set(true);
-        ProgressiveMediaDataSource mediaSource = null;
-        try {
-            this.stop();
-            mediaSource = music.createProgressiveMediaDataSource();
-            if (mediaSource == null) {
-                this.resetInfo();
-                Concerto.getLogger().error("Unable to play music: {} - {}", music.getMeta().title(), music.getMeta().author());
-                Concerto.getCoreBridge().sendTranslatableToClientPlayer(
-                        "concerto.player.unable", false, music.getMeta().title(), music.getMeta().author(), music.getMeta().getSource());
-                return;
-            }
-
-            this.currentMusic = music;
-            long sharedStartTime = music instanceof SharedMusic sharedMusic ? sharedMusic.getStartTime() : 0L;
-            this.initMusicStatus(sharedStartTime);
-            this.updateDisplayTexts();
-            this.updateDisplayTexts(0);
-
-            ProgressiveDataSource progressiveSource = new ProgressiveDataSource(mediaSource, this.inferSuffix(music, mediaSource));
-            if (sharedStartTime > 0L) {
-                progressiveSource.seekToMilliseconds(sharedStartTime);
-            }
-            this.open(progressiveSource);
-
-            this.currentSource = null;
-            this.currentMediaSource = mediaSource;
-            this.play();
-            if (MusicPlayerHandler.INSTANCE.isForcePaused()) {
-                this.pause();
-            }
-            this.started = true;
-            this.isPlayingTemp = temp;
-
-            Concerto.getLogger().info("Start playing music {} - {}", music.getMeta().title(), music.getMeta().author());
-            ConcertoEvents.ON_NEW_MUSIC_STARTED.emit(music);
-        } catch (Exception e) {
-            this.handlePlaybackFailure(e);
-            this.closeMediaSourceQuietly(mediaSource);
-        } finally {
-            this.playNextLock.set(false);
+    private PlaybackSession createSession(Music music, long generation) {
+        long startMillis = music instanceof SharedMusic sharedMusic ? Math.max(0, sharedMusic.getStartTime()) : 0;
+        var byteSource = music.createByteSource();
+        if (byteSource == null) {
+            this.resetInfo();
+            Concerto.getLogger().error("Unable to play music: {} - {}", music.getMeta().title(), music.getMeta().author());
+            Concerto.getCoreBridge().sendTranslatableToClientPlayer(
+                    "concerto.player.unable", false, music.getMeta().title(), music.getMeta().author(), music.getMeta().getSource());
+            return null;
         }
+        return new PlaybackSession(music, byteSource, inferSuffix(music), generation, startMillis);
     }
 
-    private String inferSuffix(Music music, ProgressiveMediaDataSource mediaSource) {
+    private static String inferSuffix(Music music) {
         if (music instanceof CacheableMusic cacheableMusic) {
             return cacheableMusic.getSuffix();
         }
         if (music instanceof PathFileMusic pathFileMusic) {
             return FileUtil.getSuffix(pathFileMusic.getRawPath());
         }
-        String suffix = mediaSource.getSuggestedSuffix();
-        return suffix == null ? "" : suffix;
+        return "";
     }
 
-    private void closeMediaSourceQuietly(ProgressiveMediaDataSource source) {
-        if (source == null) return;
-        try {
-            source.close();
-        } catch (IOException ignored) {
-        }
+    private void handlePlaybackFailure(Music music, Exception e) {
+        this.resetInfo();
+        Concerto.getLogger().error("Internal player error: " + e);
+        Concerto.getCoreBridge().sendTranslatableToClientPlayer("concerto.player.error", false, e.getMessage());
     }
 
-    private void abortMediaSourceReads(ProgressiveMediaDataSource source) {
-        if (source != null) {
-            source.abortReads();
-        }
-    }
+    // ---- Playback controls ----
 
     public boolean internalPause() {
         ConcertoEvents.ON_PLAYER_PAUSE.emit();
-        return super.pause();
+        this.engine.setPaused(true);
+        return true;
     }
 
     public boolean internalResume() {
         ConcertoEvents.ON_PLAYER_RESUME.emit();
-        return super.resume();
+        this.engine.setPaused(false);
+        return true;
     }
+
+    public void stop() {
+        this.requestGeneration.incrementAndGet();
+        this.engine.stop();
+        this.resetInfo();
+    }
+
+    public void setGain(double gain) {
+        float clamped = (float) Math.max(0.0, Math.min(1.0, gain));
+        this.engine.setGain(clamped);
+    }
+
+    // ---- State queries (old StreamPlayer-compatible surface) ----
+
+    public boolean isPlaying() {
+        PlaybackState state = this.engine.getState();
+        return state == PlaybackState.PLAYING || state == PlaybackState.BUFFERING;
+    }
+
+    public boolean isPaused() {
+        return this.engine.getState() == PlaybackState.PAUSED;
+    }
+
+    public boolean isOpened() {
+        return this.engine.getState() != PlaybackState.IDLE;
+    }
+
+    public boolean isSeeking() {
+        return this.engine.getState() == PlaybackState.BUFFERING;
+    }
+
+    /** Vanilla background music is suppressed whenever Concerto is audible. */
+    public boolean shouldBlockVanillaMusic() {
+        PlaybackState state = this.engine.getState();
+        return state == PlaybackState.PLAYING || state == PlaybackState.BUFFERING;
+    }
+
+    // ---- Seeking ----
+
+    public boolean canSeekCurrentMusic() {
+        if (!this.started || this.currentMeta == null || this.currentMeta.getDuration() == null) return false;
+        PlaybackSession session = this.engine.getSessionView();
+        return session != null && session.isSeekable();
+    }
+
+    public void seekToMillisecondsAsync(long milliseconds) {
+        this.seekToMillisecondsAsync(milliseconds, true);
+    }
+
+    public void seekToMillisecondsAsync(long milliseconds, boolean publishRoomSync) {
+        // Freeze display updates on the drag target until the engine confirms the jump
+        this.displayOverrideUntilMs = System.currentTimeMillis() + 2000;
+        this.updateDisplayTexts(milliseconds);
+        this.engine.seek(milliseconds, publishRoomSync);
+    }
+
+    /** Fraction (0..1) of the media already buffered locally; for the seek bar. */
+    public float getBufferedPercentage() {
+        PlaybackSession session = this.engine.getSessionView();
+        if (session == null) return 0;
+        long length = session.getByteSource().length();
+        if (length <= 0) return session.getByteSource().isComplete() ? 1 : 0;
+        return Math.min(1f, (float) ((double) session.getByteSource().availableTo() / length));
+    }
+
+    // ---- Display state ----
 
     public void resetInfo() {
         this.started = false;
         this.isPlayingTemp = false;
         this.currentMusic = null;
-        this.currentSource = null;
-        this.currentMediaSource = null;
-
         this.currentLyrics = this.currentSubLyrics = null;
         this.currentSubLyricsMapping = new int[0];
         this.currentMeta = null;
@@ -240,9 +282,8 @@ public class MusicPlayer extends StreamPlayer implements StreamPlayerListener {
         this.displayTexts = new String[]{"", "", "", ""};
         this.timeFormat = "%s" + " ".repeat(30) + "%s";
         this.progressPercentage = 0;
-        this.startTime = 0;
         this.currentTimeUpdatedAtMs = 0;
-        this.seekDisplayLocked = false;
+        this.displayOverrideUntilMs = 0;
         ConcertoEvents.ON_MUSIC_INFO_RESET.emit();
     }
 
@@ -262,11 +303,6 @@ public class MusicPlayer extends StreamPlayer implements StreamPlayerListener {
         this.displayTexts[2] = "";
     }
 
-    public void initMusicStatus(long startTime) {
-        this.initMusicStatus();
-        this.startTime = startTime;
-    }
-
     public void updateDisplayTexts() {
         if (this.currentMeta != null) {
             this.displayTexts[2] = this.currentMeta.title() + " | " + this.currentMeta.author() + " | " + this.currentMeta.getSource();
@@ -277,7 +313,6 @@ public class MusicPlayer extends StreamPlayer implements StreamPlayerListener {
     }
 
     public void updateDisplayTexts(long millisecond) {
-        millisecond += this.startTime;
         if (this.currentMeta == null) return;
         MusicTimestamp duration = this.currentMeta.getDuration();
         this.progressPercentage = duration == null ? 0 : ((float) millisecond / duration.asMilliseconds());
@@ -302,91 +337,78 @@ public class MusicPlayer extends StreamPlayer implements StreamPlayerListener {
         if (this.currentTime == null) {
             return 0L;
         }
-
         long currentMs = this.currentTime.asMilliseconds();
-        if (this.isPlaying() && !MusicPlayerHandler.INSTANCE.isPaused()) {
+        if (this.engine.getState() == PlaybackState.PLAYING && !MusicPlayerHandler.INSTANCE.isPaused()) {
             currentMs += Math.max(0L, System.currentTimeMillis() - this.currentTimeUpdatedAtMs);
         }
-
         MusicTimestamp duration = this.currentMeta == null ? null : this.currentMeta.getDuration();
         return duration == null ? currentMs : Math.min(currentMs, duration.asMilliseconds());
     }
 
-    public boolean canSeekCurrentMusic() {
-        return this.started && this.currentMeta != null && this.currentMeta.getDuration() != null && this.isSeekable();
+    // ---- Engine callbacks (engine thread) ----
+
+    @Override
+    public void onTrackStarted(PlaybackSession session) {
+        ConcertoEvents.ON_PLAYER_START.emit();
     }
 
-    public void seekToMillisecondsAsync(long milliseconds) {
-        this.seekToMillisecondsAsync(milliseconds, true);
-    }
-
-    public void seekToMillisecondsAsync(long milliseconds, boolean publishRoomSync) {
-        long generation = this.playbackGeneration.incrementAndGet();
-        this.seekDisplayLocked = true;
-        this.playbackExecutor.execute(() -> {
-            try {
-                if (generation != this.playbackGeneration.get()) {
-                    return;
-                }
-                long actualMilliseconds = this.seekToMilliseconds(milliseconds);
-                if (generation != this.playbackGeneration.get()) {
-                    return;
-                }
-                this.updateDisplayTexts(actualMilliseconds);
-                if (publishRoomSync) {
-                    MusicRoom.clientPublishCurrentSeek(actualMilliseconds);
-                }
-            } catch (Exception e) {
-                if (generation == this.playbackGeneration.get()) {
-                    Concerto.getLogger().error("Seek failed: " + e);
-                    Concerto.getCoreBridge().sendTranslatableToClientPlayer("concerto.player.error", false, e.getMessage());
-                }
-            } finally {
-                if (generation == this.playbackGeneration.get()) {
-                    this.seekDisplayLocked = false;
-                }
+    @Override
+    public void onTrackEnded(PlaybackSession session) {
+        this.cacheCompletedDownload(session);
+        boolean stale = session.getGeneration() != this.requestGeneration.get();
+        boolean wasTemp = this.isPlayingTemp;
+        this.isPlayingTemp = false;
+        if (stale) return; // a newer play request is already on its way
+        ConcertoRunner.run(() -> {
+            if (MusicPlayerHandler.INSTANCE.isEmpty()) {
+                this.stop();
+            } else if (!wasTemp) {
+                MusicPlayerHandler.INSTANCE.playNext(1);
             }
         });
     }
 
-    @Override
-    public void statusUpdated(StreamPlayerEvent event) {
-        Status status = event.getPlayerStatus();
-        if (status == Status.EOM) {
-            if (MusicPlayerHandler.INSTANCE.isEmpty()) {
-                this.stop();
-            } else if (!this.playNextLock.get() && !this.isPlayingTemp) {
-                MusicPlayerHandler.INSTANCE.playNext(1);
-            }
-            this.isPlayingTemp = false;
+    private void cacheCompletedDownload(PlaybackSession session) {
+        if (!(session.getByteSource() instanceof BufferedHttpByteSource httpSource)) return;
+        if (!(session.getMusic() instanceof CacheableMusic cacheableMusic)) return;
+        Path complete = httpSource.getCompleteFile();
+        if (complete == null || MusicCacheManager.INSTANCE.getChild(cacheableMusic) != null) return;
+        try {
+            MusicCacheManager.INSTANCE.addMusicFile(cacheableMusic, complete);
+        } catch (IOException e) {
+            Concerto.getLogger().warn("Could not cache downloaded music: {}", e.getMessage());
         }
     }
 
     @Override
-    public void opened(Object dataSource, Map<String, Object> properties) {
+    public void onPlaybackError(PlaybackSession session, Exception exception) {
+        if (session.getGeneration() != this.requestGeneration.get()) return;
+        this.handlePlaybackFailure(session.getMusic(), exception);
     }
 
     @Override
-    public void progress(int nEncodedBytes, long microsecondPosition, byte[] pcmData, Map<String, Object> properties) {
-        if (!this.seekDisplayLocked) {
-            this.updateDisplayTexts(microsecondPosition / 1000);
+    public void onPositionUpdate(long positionMillis) {
+        if (System.currentTimeMillis() >= this.displayOverrideUntilMs) {
+            this.updateDisplayTexts(positionMillis);
         }
-        this.audioSpectrum.onAudioFrame(pcmData);
     }
 
     @Override
-    public void play() throws StreamPlayerException {
-        super.play();
-        ConcertoEvents.ON_PLAYER_START.emit();
+    public void onSeekApplied(PlaybackSession session, long positionMillis, boolean publishRoomSync) {
+        this.displayOverrideUntilMs = 0;
+        if (this.currentLyrics != null) this.currentLyrics.startFrom(positionMillis);
+        if (this.currentSubLyrics != null) this.currentSubLyrics.startFrom(positionMillis);
+        this.updateDisplayTexts(positionMillis);
+        ConcertoEvents.ON_PLAYER_SEEK.emit(positionMillis);
+        if (publishRoomSync) {
+            MusicRoom.clientPublishCurrentSeek(positionMillis);
+        }
     }
 
-    public void stop() {
-        ProgressiveMediaDataSource mediaSource = this.currentMediaSource;
-        this.resetInfo();
-        super.stop();
-        this.tryCloseStream(this.currentSource);
-        this.closeMediaSourceQuietly(mediaSource);
-        this.currentSource = null;
-        this.currentMediaSource = null;
+    @Override
+    public void onPcm(byte[] data, int offset, int length) {
+        if (offset == 0) {
+            this.audioSpectrum.onAudioFrame(data);
+        }
     }
 }

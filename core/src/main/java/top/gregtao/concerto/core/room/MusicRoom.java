@@ -463,9 +463,11 @@ public class MusicRoom {
         });
 
         record.addListener(MusicRoomState.PAUSED, (o, state, oldVal, newVal) -> {
-            if (state.paused && MusicPlayer.INSTANCE.isPlaying()) {
+            // The room state is authoritative; the engine pause is idempotent,
+            // so apply it even while a track is still loading.
+            if (state.paused) {
                 MusicPlayer.INSTANCE.internalPause();
-            } else if (!state.paused && MusicPlayer.INSTANCE.isPaused()) {
+            } else {
                 MusicPlayer.INSTANCE.internalResume();
             }
         });

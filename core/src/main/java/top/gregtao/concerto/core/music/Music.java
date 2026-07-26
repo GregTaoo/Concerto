@@ -4,12 +4,16 @@ import top.gregtao.concerto.core.api.*;
 import top.gregtao.concerto.core.config.MusicCacheManager;
 import top.gregtao.concerto.core.music.lyrics.Lyrics;
 import top.gregtao.concerto.core.music.meta.music.MusicMetaData;
-import top.gregtao.concerto.core.player.seek.ProgressiveMediaDataSource;
+import top.gregtao.concerto.core.Concerto;
+import top.gregtao.concerto.core.player.source.AudioByteSource;
+import top.gregtao.concerto.core.player.source.BufferedHttpByteSource;
+import top.gregtao.concerto.core.player.source.FileByteSource;
 import top.gregtao.concerto.core.util.FileUtil;
 import top.gregtao.concerto.core.util.Pair;
 
 import java.io.*;
 import java.net.URI;
+import java.util.function.Supplier;
 
 public abstract class Music implements JsonParsable<Music>, LazyLoadable, WithMetaData {
 
@@ -33,51 +37,47 @@ public abstract class Music implements JsonParsable<Music>, LazyLoadable, WithMe
         }
     }
 
-    public ProgressiveMediaDataSource createProgressiveMediaDataSource() throws MusicSourceNotFoundException {
-        if (this instanceof CacheableMusic cacheable) {
-            File child = MusicCacheManager.INSTANCE.getChild(cacheable);
-            if (child != null) {
-                try {
-                    return ProgressiveMediaDataSource.forFile(child);
-                } catch (IOException e) {
-                    throw new MusicSourceNotFoundException(e);
+    /**
+     * Creates the random-access byte source the playback engine consumes, or
+     * null when the media cannot be reached.
+     */
+    public AudioByteSource createByteSource() {
+        try {
+            if (this instanceof CacheableMusic cacheable) {
+                File child = MusicCacheManager.INSTANCE.getChild(cacheable);
+                if (child != null) {
+                    return new FileByteSource(child);
                 }
             }
-        }
-        if (this instanceof LocalFileMusic localFileMusic) {
-            try {
-                return ProgressiveMediaDataSource.forFile(new File(localFileMusic.getRawPath()));
-            } catch (IOException e) {
-                throw new MusicSourceNotFoundException(e);
+            if (this instanceof LocalFileMusic localFileMusic) {
+                return new FileByteSource(new File(localFileMusic.getRawPath()));
             }
-        }
-        if (this instanceof DynamicPath dynamicPath) {
-            String rawPath = dynamicPath.getLastRawPath();
-            if (rawPath == null) {
-                rawPath = dynamicPath.updateRawPath();
+            if (this instanceof DynamicPath dynamicPath) {
+                String rawPath = dynamicPath.getLastRawPath();
+                if (rawPath == null) {
+                    rawPath = dynamicPath.updateRawPath();
+                }
+                return createUrlByteSource(rawPath, dynamicPath::updateRawPath);
             }
-            return createUrlDataSource(rawPath, dynamicPath::updateRawPath);
-        }
-        if (this instanceof BilibiliMusic bilibiliMusic) {
-            return createUrlDataSource(bilibiliMusic.getRawPath(), null);
-        }
-        if (this instanceof PathFileMusic pathFileMusic) {
-            String rawPath = pathFileMusic.getRawPath();
-            if (rawPath != null && rawPath.startsWith("http")) {
-                return createUrlDataSource(rawPath, null);
+            if (this instanceof BilibiliMusic bilibiliMusic) {
+                return createUrlByteSource(bilibiliMusic.getRawPath(), null);
             }
+            if (this instanceof PathFileMusic pathFileMusic) {
+                String rawPath = pathFileMusic.getRawPath();
+                if (rawPath != null && rawPath.startsWith("http")) {
+                    return createUrlByteSource(rawPath, null);
+                }
+            }
+            return createUrlByteSource(this.getLink(), null);
+        } catch (Exception e) {
+            Concerto.getLogger().error("Cannot open music source: {}", e.getMessage());
+            return null;
         }
-        return createUrlDataSource(this.getLink(), null);
     }
 
-    private static ProgressiveMediaDataSource createUrlDataSource(String rawPath, java.util.function.Supplier<String> supplier)
-            throws MusicSourceNotFoundException {
-        try {
-            URI.create(rawPath);
-            return ProgressiveMediaDataSource.forUrl(rawPath, supplier);
-        } catch (Exception e) {
-            throw new MusicSourceNotFoundException(e);
-        }
+    private static AudioByteSource createUrlByteSource(String rawPath, Supplier<String> urlRefresher) throws IOException {
+        URI.create(rawPath);
+        return new BufferedHttpByteSource(rawPath, urlRefresher);
     }
 
     public Pair<Lyrics, Lyrics> getLyrics() throws IOException {

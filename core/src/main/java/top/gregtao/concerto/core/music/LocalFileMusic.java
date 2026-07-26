@@ -18,8 +18,6 @@ import top.gregtao.concerto.core.music.lyrics.DefaultFormatLyrics;
 import top.gregtao.concerto.core.music.lyrics.Lyrics;
 import top.gregtao.concerto.core.music.meta.music.BasicMusicMetaData;
 import top.gregtao.concerto.core.music.meta.music.TimelessMusicMetaData;
-import top.gregtao.concerto.core.player.streamplayer.enums.AudioType;
-import top.gregtao.concerto.core.player.streamplayer.tools.TimeTool;
 import top.gregtao.concerto.core.util.*;
 
 import java.io.ByteArrayInputStream;
@@ -93,7 +91,7 @@ public class LocalFileMusic extends PathFileMusic {
         } catch (Exception e) {
             author = title = coverImg = null;
         }
-        long duration = TimeTool.durationInMilliseconds(new File(this.getRawPath()).getAbsolutePath(), AudioType.FILE);
+        long duration = AudioDurationUtil.durationInMilliseconds(new File(this.getRawPath()));
         if (duration <= 0) {
             this.setMusicMeta(new TimelessMusicMetaData(
                     author == null || author.isEmpty() ? Concerto.getCoreBridge().getTranslatable("concerto.unknown") : author,
@@ -105,7 +103,7 @@ public class LocalFileMusic extends PathFileMusic {
                     author == null || author.isEmpty() ? Concerto.getCoreBridge().getTranslatable("concerto.unknown") : author,
                     title == null || title.isEmpty() ? this.getRawPath() : title,
                     Sources.LOCAL_FILE.getName(),
-                    TimeTool.durationInMilliseconds(new File(this.getRawPath()).getAbsolutePath(), AudioType.FILE),
+                    AudioDurationUtil.durationInMilliseconds(new File(this.getRawPath())),
                     coverImg == null ? "" : coverImg
             ));
         }

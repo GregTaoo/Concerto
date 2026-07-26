@@ -157,9 +157,11 @@ public class MusicRoom {
         } else if (targetPerm == 2) {
             newPerm = 1;
             this.serverBridge.sendMessage(name, "concerto.room.de_op", target);
+            this.serverBridge.sendMessage(target, "concerto.room.de_op.notify");
         } else {
             newPerm = 2;
             this.serverBridge.sendMessage(name, "concerto.room.op", target);
+            this.serverBridge.sendMessage(target, "concerto.room.op.notify");
         }
 
         this.serverState.set(state -> {
@@ -205,6 +207,8 @@ public class MusicRoom {
                         } else {
                             bridge.sendMessage(sender, "concerto.room.join", uuid.toString());
                         }
+                    } else {
+                        bridge.sendMessage(sender, "concerto.room.join.fail");
                     }
                 }
                 case REMOVE -> {
@@ -220,7 +224,8 @@ public class MusicRoom {
                             bridge.sendRoomCommand(member, Command.REMOVE, "");
                         });
                         ROOMS.remove(uuid);
-                        bridge.sendMessage(sender, "concerto.room.remove", uuid.toString());
+                    } else {
+                        bridge.sendMessage(sender, "concerto.room.remove.fail");
                     }
                 }
                 case QUIT -> {
@@ -234,6 +239,8 @@ public class MusicRoom {
                         } else {
                             bridge.sendMessage(sender, "concerto.room.quit", uuid.toString());
                         }
+                    } else {
+                        bridge.sendMessage(sender, "concerto.room.quit.fail");
                     }
                 }
                 case SET_OP -> {

@@ -27,6 +27,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.FileHandler;
 import java.util.logging.Level;
@@ -64,6 +65,8 @@ public class MusicPlayer implements EngineListener {
         return thread;
     });
     private final AtomicLong requestGeneration = new AtomicLong();
+    private static final int MAX_CONSECUTIVE_FAILURES = 3;
+    private final AtomicInteger consecutiveFailures = new AtomicInteger();
 
     public final AudioSpectrum audioSpectrum = new AudioSpectrum();
 
@@ -133,7 +136,10 @@ public class MusicPlayer implements EngineListener {
                 // Sweep leftover spool files; files still open (Windows locks them) survive
                 BufferedHttpByteSource.cleanTempDirectory();
                 PlaybackSession session = this.createSession(music, generation);
-                if (session == null) return;
+                if (session == null) {
+                    this.autoSkipAfterFailure(temp, generation);
+                    return;
+                }
                 if (generation != this.requestGeneration.get()) {
                     session.close();
                     return;
@@ -156,6 +162,7 @@ public class MusicPlayer implements EngineListener {
                 ConcertoEvents.ON_NEW_MUSIC_STARTED.emit(music);
             } catch (Exception e) {
                 this.handlePlaybackFailure(music, e);
+                this.autoSkipAfterFailure(temp, generation);
             } finally {
                 if (callback != null) callback.run();
             }
@@ -189,6 +196,26 @@ public class MusicPlayer implements EngineListener {
         this.resetInfo();
         Concerto.getLogger().error("Internal player error: " + e);
         Concerto.getCoreBridge().sendTranslatableToClientPlayer("concerto.player.error", false, e.getMessage());
+    }
+
+    /**
+     * The "unable to play" message promises an automatic skip; deliver it, but
+     * cap consecutive failures so a fully broken playlist doesn't loop forever.
+     * Room members without playback control never skip — the room decides.
+     */
+    private void autoSkipAfterFailure(boolean temp, long generation) {
+        if (temp || generation != this.requestGeneration.get()) return;
+        if (MusicPlayerHandler.INSTANCE.isEmpty()) return;
+        if (MusicRoom.clientGetState() != MusicRoom.ClientState.LOCAL
+                && (MusicRoom.CLIENT_ROOM == null || MusicRoom.CLIENT_ROOM.permission < 2)) {
+            return;
+        }
+        if (this.consecutiveFailures.incrementAndGet() >= MAX_CONSECUTIVE_FAILURES) {
+            this.consecutiveFailures.set(0);
+            Concerto.getCoreBridge().sendTranslatableToClientPlayer("concerto.player.skip_aborted", false);
+            return;
+        }
+        MusicPlayerHandler.INSTANCE.playNextAsync(1);
     }
 
     // ---- Playback controls ----
@@ -386,11 +413,15 @@ public class MusicPlayer implements EngineListener {
     @Override
     public void onPlaybackError(PlaybackSession session, Exception exception) {
         if (session.getGeneration() != this.requestGeneration.get()) return;
+        boolean wasTemp = this.isPlayingTemp;
         this.handlePlaybackFailure(session.getMusic(), exception);
+        this.autoSkipAfterFailure(wasTemp, session.getGeneration());
     }
 
     @Override
     public void onPositionUpdate(long positionMillis) {
+        // Audio is actually flowing, so the failure streak is over
+        if (this.consecutiveFailures.get() != 0) this.consecutiveFailures.set(0);
         if (System.currentTimeMillis() >= this.displayOverrideUntilMs) {
             this.updateDisplayTexts(positionMillis);
         }

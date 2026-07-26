@@ -25,6 +25,7 @@ public class NeteaseCloudMusic extends Music implements CacheableMusic, DynamicP
     private final String id;
     private final Level level;
     private String rawPath, rawLyrics, rawSubLyrics, format;
+    private volatile boolean trialNotified = false;
 
     public NeteaseCloudMusic(String id, Level level) {
         this.id = id;
@@ -59,8 +60,9 @@ public class NeteaseCloudMusic extends Music implements CacheableMusic, DynamicP
             this.rawPath = this.rawPath.isEmpty() ? null : this.rawPath;
             if (this.rawPath != null) {
                 this.format = FileUtil.getSuffix(URI.create(this.rawPath).getPath());
-                if (object.has("freeTrialInfo") && !object.get("freeTrialInfo").isJsonNull()) {
-                    Concerto.getCoreBridge().sendTranslatableToClientPlayer("concerto.player.trial", false);
+                if (object.has("freeTrialInfo") && !object.get("freeTrialInfo").isJsonNull() && !this.trialNotified) {
+                    this.trialNotified = true;
+                    Concerto.getCoreBridge().sendTranslatableToClientPlayer("concerto.player.trial", true);
                 }
             }
         } catch (Exception e) {
@@ -83,7 +85,7 @@ public class NeteaseCloudMusic extends Music implements CacheableMusic, DynamicP
 
     @Override
     public String getLastSuffix() {
-        if (this.format == null) return this.getRawPath();
+        if (this.format == null) this.getRawPath();
         return this.format;
     }
 

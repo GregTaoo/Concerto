@@ -28,6 +28,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.BiConsumer;
 import java.util.function.Supplier;
 import java.util.regex.Pattern;
 
@@ -406,7 +408,13 @@ public class MusicPlayerHandler {
     }
 
     public static void downloadMusics(List<Music> musics) {
+        downloadMusics(musics, null);
+    }
+
+    /** onComplete receives (succeeded, failed) counts once every download finished. */
+    public static void downloadMusics(List<Music> musics, BiConsumer<Integer, Integer> onComplete) {
         ConcertoRunner.run(() -> {
+            AtomicInteger succeeded = new AtomicInteger(), failed = new AtomicInteger();
             File folder = new File("Concerto/Downloads");
             if (!folder.exists() || !folder.isDirectory()) {
                 if (folder.mkdirs()) {
@@ -416,6 +424,7 @@ public class MusicPlayerHandler {
                         throw new RuntimeException(e);
                     }
                 } else {
+                    if (onComplete != null) onComplete.accept(0, musics.size());
                     return;
                 }
             }
@@ -458,11 +467,14 @@ public class MusicPlayerHandler {
                                 }
                                 Concerto.getLogger().info("Downloaded LRC: {}", filename);
                             }
-                        } catch (IOException e) {
+                            succeeded.incrementAndGet();
+                        } catch (Exception e) {
+                            failed.incrementAndGet();
                             Concerto.getLogger().error("{} - {}", e, file.getAbsolutePath());
                         }
                     });
                 } else {
+                    failed.incrementAndGet();
                     Concerto.getLogger().info("Detected non-cacheable music");
                 }
             });
@@ -474,6 +486,7 @@ public class MusicPlayerHandler {
             } catch (InterruptedException | TimeoutException e) {
                 throw new RuntimeException(e);
             }
+            if (onComplete != null) onComplete.accept(succeeded.get(), failed.get());
         });
     }
 }

@@ -119,7 +119,9 @@ jobs:
            1.17.1) GV_ARRAY='["1.17.x"]' ;;
            1.18.2) GV_ARRAY='["1.18.x"]' ;;
            1.19.4) GV_ARRAY='["1.19.x"]' ;;
-           1.20.1) GV_ARRAY='["1.20.1","1.20.2","1.20.3"]' ;;
+           # 多模块的 mc1.20.1 构建的 PlayerList mixin 依赖 1.20.1 的
+           # placeNewPlayer 签名（1.20.2 加入了 CommonListenerCookie），不能再声明 1.20.2/1.20.3
+           1.20.1) GV_ARRAY='["1.20.1"]' ;;
            1.20.4) GV_ARRAY='["1.20.4","1.20.5"]' ;;
            1.20.6) GV_ARRAY='["1.20.6"]' ;;
            1.21.1) GV_ARRAY='["1.21.1","1.21.2","1.21.3"]' ;;
@@ -129,22 +131,27 @@ jobs:
            1.21.10) GV_ARRAY='["1.21.10"]' ;;
            1.21.11) GV_ARRAY='["1.21.11"]' ;;
            26.1.2) GV_ARRAY='["26.1.x"]' ;;
+           26.2) GV_ARRAY='["26.2.x"]' ;;
            *) GV_ARRAY='[]' ;;
           esac
           
           # 判断 Loader 类型并写入专属的 GITHUB_OUTPUT
+          # *_name 仍是版本号（保持既有命名连续性），*_display 是 Modrinth 上的展示标题
           if echo "$FNAME" | grep -iq "fabric"; then
            echo "fabric_file=$FILE" >> $GITHUB_OUTPUT
            echo "fabric_gv=$GV_ARRAY" >> $GITHUB_OUTPUT
            echo "fabric_name=fabric-${SHORTER_VERSION}-mc${MC_VER}" >> $GITHUB_OUTPUT
+           echo "fabric_display=Concerto ${SHORTER_VERSION} for Fabric ${MC_VER}" >> $GITHUB_OUTPUT
           elif echo "$FNAME" | grep -iq "neoforge"; then
            echo "neoforge_file=$FILE" >> $GITHUB_OUTPUT
            echo "neoforge_gv=$GV_ARRAY" >> $GITHUB_OUTPUT
            echo "neoforge_name=neoforge-${SHORTER_VERSION}-mc${MC_VER}" >> $GITHUB_OUTPUT
+           echo "neoforge_display=Concerto ${SHORTER_VERSION} for NeoForge ${MC_VER}" >> $GITHUB_OUTPUT
           elif echo "$FNAME" | grep -iq "paper"; then
            echo "paper_file=$FILE" >> $GITHUB_OUTPUT
            echo "paper_gv=$GV_ARRAY" >> $GITHUB_OUTPUT
            echo "paper_name=paper-${SHORTER_VERSION}-mc${MC_VER}" >> $GITHUB_OUTPUT
+           echo "paper_display=Concerto ${SHORTER_VERSION} for Paper ${MC_VER}" >> $GITHUB_OUTPUT
           fi
           done
 
@@ -155,7 +162,7 @@ jobs:
         with:
           token: ${{ secrets.MODRINTH_TOKEN }}
           project: A0VZd1kW
-          name: ${{ steps.build-run.outputs.fabric_name }}
+          name: ${{ steps.build-run.outputs.fabric_display }}
           version: ${{ steps.build-run.outputs.fabric_name }}
           changelog: ${{ github.event.release.body }}
           loaders: '["fabric"]'
@@ -169,7 +176,7 @@ jobs:
         with:
           token: ${{ secrets.MODRINTH_TOKEN }}
           project: A0VZd1kW
-          name: ${{ steps.build-run.outputs.neoforge_name }}
+          name: ${{ steps.build-run.outputs.neoforge_display }}
           version: ${{ steps.build-run.outputs.neoforge_name }}
           changelog: ${{ github.event.release.body }}
           loaders: '["neoforge"]'
@@ -183,7 +190,7 @@ jobs:
         with:
           token: ${{ secrets.MODRINTH_TOKEN }}
           project: A0VZd1kW
-          name: ${{ steps.build-run.outputs.paper_name }}
+          name: ${{ steps.build-run.outputs.paper_display }}
           version: ${{ steps.build-run.outputs.paper_name }}
           changelog: ${{ github.event.release.body }}
           loaders: '["paper"]'
@@ -197,11 +204,11 @@ jobs:
           echo "- **Base Version**: ${{ steps.build-run.outputs.shorter_version }}" >> $GITHUB_STEP_SUMMARY
           
           if [ -n "${{ steps.build-run.outputs.fabric_file }}" ]; then
-            echo "- **Fabric**: Uploaded ${{ steps.build-run.outputs.fabric_name }}" >> $GITHUB_STEP_SUMMARY
+            echo "- **Fabric**: Uploaded ${{ steps.build-run.outputs.fabric_display }} (${{ steps.build-run.outputs.fabric_name }})" >> $GITHUB_STEP_SUMMARY
           fi
           if [ -n "${{ steps.build-run.outputs.neoforge_file }}" ]; then
-            echo "- **NeoForge**: Uploaded ${{ steps.build-run.outputs.neoforge_name }}" >> $GITHUB_STEP_SUMMARY
+            echo "- **NeoForge**: Uploaded ${{ steps.build-run.outputs.neoforge_display }} (${{ steps.build-run.outputs.neoforge_name }})" >> $GITHUB_STEP_SUMMARY
           fi
           if [ -n "${{ steps.build-run.outputs.paper_file }}" ]; then
-            echo "- **Paper**: Uploaded ${{ steps.build-run.outputs.paper_name }}" >> $GITHUB_STEP_SUMMARY
+            echo "- **Paper**: Uploaded ${{ steps.build-run.outputs.paper_display }} (${{ steps.build-run.outputs.paper_name }})" >> $GITHUB_STEP_SUMMARY
           fi

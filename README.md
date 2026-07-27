@@ -5,7 +5,7 @@
   <p>
     <a href="https://modrinth.com/mod/A0VZd1kW"><img src="https://img.shields.io/modrinth/dt/A0VZd1kW?logo=modrinth&label=Modrinth" alt="Modrinth Downloads"></a>
     <a href="https://github.com/GregTaoo/Concerto/releases"><img src="https://img.shields.io/github/v/release/GregTaoo/Concerto?logo=github&label=Release" alt="GitHub Release"></a>
-    <img src="https://img.shields.io/badge/Minecraft-1.21.6%20--%201.21.9-62b47a?logo=minecraft" alt="Minecraft 1.21.6 - 1.21.9">
+    <img src="https://img.shields.io/badge/Minecraft-1.20.1%20%7C%201.20.6%20%7C%201.21.1%20%7C%201.21.6%20%7C%201.21.11%20%7C%2026.1.2%20%7C%2026.2-62b47a?logo=minecraft" alt="Minecraft 1.20.1, 1.20.6, 1.21.1, 1.21.6, 1.21.11, 26.1.2, and 26.2">
     <img src="https://img.shields.io/badge/Java-21+-f89820?logo=openjdk&logoColor=white" alt="Java 21+">
     <img src="https://img.shields.io/badge/Loaders-Fabric%20%7C%20NeoForge%20%7C%20Paper-8a2be2" alt="Fabric | NeoForge | Paper">
     <a href="LICENSE"><img src="https://img.shields.io/badge/License-GPL--3.0-blue" alt="License"></a>
@@ -13,19 +13,17 @@
   <p>English | <a href="README_zh.md">简体中文</a></p>
 </div>
 
-> Play local files, direct URLs, and streaming platforms — NetEase Cloud Music, QQ Music, KuGou Music — without leaving the game. Listen together with other players in synchronized music rooms, or let the whole server queue songs KTV-style.
-
-> **This README documents the `dev` branch (Minecraft 1.21.6 – 1.21.9, mod version 2.1.0).** Builds for other Minecraft versions live on their own `mc*` branches and may differ in detail.
+> Play local files, direct URLs, and music services – NetEase Cloud Music, QQ Music, and KuGou Music – without leaving the game. Listen together in shared music rooms, or let the whole server take turns choosing songs.
 
 ---
 
 ## ✨ Features
 
 - **Many sources, one player** — NetEase Cloud Music, QQ Music, KuGou Music, local audio files (drag & drop), and direct HTTP links.
-- **Rebuilt playback engine** — precise seeking by dragging the progress bar, progressive streaming with resume, and a choice of two audio backends (JavaSound or OpenAL). Supported formats: MP3, OGG, FLAC, WAV.
+- **Smooth playback** – drag the progress bar to move through a track, keep listening while streams load, and choose an audio output option if the default does not suit your setup. Supported formats include MP3, OGG/Opus, FLAC, WAV, M4A/AAC, and AIFF.
 - **Music rooms (listen together)** — members of a room share playback in real time: the same track, the same position, the same pauses. Rooms can be named, listed publicly, and joined from a browser screen or by UUID.
 - **Server-wide queue (KTV mode)** — players queue songs for the whole server, vote to skip, and the server falls back to preset radios when the queue is empty.
-- **VIP sharing & preset playlists** — a server owner can deploy platform cookies so every player streams through the server's account, and can ship curated playlists to all clients.
+- **Shared access & preset playlists** – server owners can configure their own supported music-service accounts for the server and share curated playlists with everyone.
 - **Cross-platform** — Fabric and NeoForge on the client; a dedicated Paper plugin lets modded clients use every server feature on plugin servers.
 
 ---
@@ -38,9 +36,9 @@
 | **NeoForge client** | `Concerto-mc<version>-neoforge-<mod version>.jar` |
 | **Paper server** | `Concerto-mc<version>-paper-<mod version>.jar` into `plugins/` |
 
-All runtime data (configs, cookies, caches, playlists) lives in the `Concerto/` folder next to the game or server directory.
+Concerto stores its settings, playlists, downloads, and sign-in data in the `Concerto/` folder next to the game or server directory.
 
-The mod is fully usable in singleplayer / on vanilla servers; server-side features (music rooms, sharing, the server queue) additionally require Concerto on the server (Fabric, NeoForge, or Paper).
+You can use Concerto as a local player in singleplayer and on servers that do not have it installed. Shared rooms, sharing, and the server-wide queue need Concerto on the server too (Fabric, NeoForge, or Paper).
 
 ---
 
@@ -60,7 +58,7 @@ All hotkeys can be rebound in **Options → Controls**.
 ## 🖱️ Screens & Controls
 
 ### Index screen (`I`)
-The hub for everything: playlist, platform browsers (NetEase / QQ / KuGou), search, adding music by URL or path, local playlists, preset radios, music rooms, audition queue, and options.
+Your starting point for playlists, music services (NetEase / QQ / KuGou), search, local files, links, music rooms, and settings.
 
 ### Playlist screen (`U`)
 - **Drag & drop** audio files or whole folders from your file manager to import them.
@@ -78,15 +76,17 @@ The hub for everything: playlist, platform browsers (NetEase / QQ / KuGou), sear
 - **Management view** (when you are in a room): member list, rename, toggle *visible* / *joinable*, grant co-op permission, and dissolve or leave the room.
 
 ### Options screen
-In-game options cover playback volume (with "follow master volume"), the **OpenAL output** toggle (takes effect from the next track), HUD element visibility, scrolling text speed, NetEase audio quality, and more. Everything maps 1:1 to `client_config.json` (see below).
+Use the in-game options to adjust volume, whether it follows Minecraft's main volume, audio output, HUD visibility, scrolling-text speed, NetEase audio quality, and more. Audio output changes take effect from the next track.
 
 ---
 
 ## 📜 Commands
 
-### Client player control — `/concerto` (alias `/music`)
+### Client player control – `/concerto` (alias `/music`)
 
 The `/music` alias can be disabled with the `registerMusicCommand` client config option.
+
+Most everyday actions are available from the screens above. Commands are optional shortcuts for players and server owners who prefer them.
 
 | Command | Description |
 | --- | --- |
@@ -156,27 +156,27 @@ All subcommands require permission level 2 (OP) except `fetch-radios`, which eve
 3. Whatever the controlling members play, seek, or pause is mirrored to every member in real time. Use `/musicroom op` to decide who may control playback.
 
 ### Run a server-wide queue (KTV mode)
-1. Keep `serverMusicAgent` enabled in `server_config.json`; players are invited on join when `agentInviteWhenJoin` is on.
+1. In the server's Concerto settings, leave the server-wide queue enabled. You can also choose whether players receive an invitation when they join.
 2. Players enter with `/musicroom agent join` and queue their current track with `/musicroom agent add` (rate-limited by `musicAgentAddTimeLimit`).
 3. Anyone in the queue can start a skip vote: `/musicroom agent vote`, then others confirm with `/musicroom agent vote true` (or `false`).
 4. When the queue is empty the server plays its preset radios, if configured.
 
-### Share your VIP account with the server
-1. Log into the platform on your own client (QR code or cookie paste in the platform's login screen).
-2. Copy the resulting `.cookie` files from your client's `Concerto/` folder into the server's `Concerto/` folder.
-3. Enable `musicAgentUseShared` so queued tracks are resolved through the server's account, then `/concerto-server reload-cookie`.
+### Share a music-service account with the server
+1. Sign in to the music service on your own client.
+2. Copy the `.cookie` files created in your client's `Concerto/` folder to the server's `Concerto/` folder. Treat these files like passwords.
+3. In the server's Concerto settings, enable shared account access for the queue, then run `/concerto-server reload-cookie`.
 
 ### Ship preset playlists
 Put exported playlist JSON files (see `/concerto export-as-playlist`) on the server under `Concerto/preset_radios/`; the special file `music_agent.json` is what KTV mode falls back to. Clients receive the radios automatically, or on demand via `/concerto-server fetch-radios`.
 
 ### Cache & downloads
-Playback itself never writes to the music cache — caching is always explicit: `/concerto save` for the current track, `download-current` / `download-all` for permanent copies with lyrics. Cache size is bounded by `maxCacheSize`.
+Concerto only saves music when you ask it to: use `/concerto save` for the current track, or `download-current` / `download-all` for permanent copies with lyrics. The cache size can be adjusted in the settings.
 
 ---
 
 ## ⚙️ Configuration
 
-Config files are JSON, live in `Concerto/`, and are rewritten from the parsed values on every start — edit them while the game is closed, or use the in-game options screen.
+You do not need to edit files for normal use: the in-game options screen covers the common choices. The reference below is for players and server owners who want more control. Settings files are in `Concerto/`; edit them only while the game is closed.
 
 ### `client_config.json`
 
@@ -229,8 +229,8 @@ Each HUD element has a `display*` switch, a position, an alignment (`LEFT` / `CE
 
 ## ❓ FAQ
 
-**How do I set up cookies on a server?**
-Log in on your own client first, then copy the `.cookie` files from the client's `Concerto/` folder to the server's. Run `/concerto-server reload-cookie` afterwards. Keep these files private — they are full account credentials.
+**How do I set up a music-service account on a server?**
+Sign in on your own client first, then copy the `.cookie` files from the client's `Concerto/` folder to the server's. Run `/concerto-server reload-cookie` afterwards. Keep these files private: they grant access to your account.
 
 **NetEase keeps erroring after a QR-code login.**
 NetEase's risk control flags logins from new devices/locations aggressively. Skip QR/password login and paste the complete cookie of an existing, working browser session instead.
@@ -238,14 +238,14 @@ NetEase's risk control flags logins from new devices/locations aggressively. Ski
 **QQ Music stops resolving after a few days.**
 QQ Music cookies expire quickly by design. Refresh the cookie files on the server and run `/concerto-server reload-cookie`.
 
-**Which audio backend should I pick?**
-`JAVASOUND` is the safe default. `OPENAL` routes audio through the game's own sound engine (LWJGL OpenAL) — try it if JavaSound stutters or picks the wrong output device. The switch applies from the next track.
+**Which audio output option should I pick?**
+`JAVASOUND` is the recommended default. Try `OPENAL` if playback stutters or uses the wrong device. The change applies from the next track.
 
-**Seeking is slow on some tracks.**
-Streams without an embedded seek table (most FLAC streams, some radio sources) have to decode from the beginning of the file to reach the target position. Nearby backward seeks and all forward seeks within the buffer are fast.
+**Moving through a track is slow sometimes.**
+Some streamed files and radio sources cannot jump directly to every position, so Concerto may need a moment to catch up. Moving within recently played audio is usually faster.
 
-**Why won't my M4A/AAC files play?**
-M4A/AAC has no decoder in the current engine and is intentionally unsupported. Convert to MP3, OGG, FLAC, or WAV.
+**Which local audio files can I play?**
+Concerto supports MP3, OGG/Opus, FLAC, WAV, M4A/AAC, and AIFF. Support for unusual encodings inside those containers can vary, so converting a problematic file to MP3 or WAV is still a useful fallback.
 
 **The player is stuck / silent after an error.**
 `/concerto restart` resets the player core without touching your playlist. If screens render wrongly or covers are black, `/concerto clean-cache`, and as a last resort delete `Concerto/cache` while the game is closed.

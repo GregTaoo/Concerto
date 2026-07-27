@@ -246,6 +246,7 @@ public class PlaybackEngine implements Closeable {
                 }
             });
         }
+        this.updateDownloadWindow(0, 0);
         if (this.session.getStartMillis() > 0) {
             if (this.session.isSeekable()) {
                 this.pendingSeekMillis = this.session.getStartMillis();
@@ -268,6 +269,9 @@ public class PlaybackEngine implements Closeable {
         long duration = index.getDurationMillis();
         if (duration > 0) target = Math.min(target, duration);
         if (target > index.getCoveredToMillis() && !index.isComplete()) {
+            // Use the duration-derived byte estimate to let the indexer reach a
+            // requested seek without resuming an unrestricted full download.
+            this.session.getByteSource().setPlaybackWindow(0, target, duration);
             this.buffering = true;
             Thread.sleep(WAIT_SLICE_MILLIS); // wait for the indexer/download to advance
             return;
@@ -299,6 +303,7 @@ public class PlaybackEngine implements Closeable {
         }
         AudioByteSource source = this.session.getByteSource();
         long rawPosition = this.decoded.rawStream.position();
+        this.updateDownloadWindow(rawPosition, this.snapshot.positionMillis());
         if (!source.awaitAvailable(rawPosition, PUMP_CHUNK * 2, WAIT_SLICE_MILLIS)) {
             this.buffering = true;
             return;
@@ -325,6 +330,7 @@ public class PlaybackEngine implements Closeable {
 
     private boolean openPendingDecode() throws Exception {
         AudioByteSource source = this.session.getByteSource();
+        this.updateDownloadWindow(this.pendingOpenOffset, this.clockBaseMillis);
         // Enough headroom for the SPI probe to sniff the container without blocking long
         if (!source.awaitAvailable(this.pendingOpenOffset, 64 * 1024, WAIT_SLICE_MILLIS)) {
             this.buffering = true;
@@ -370,6 +376,13 @@ public class PlaybackEngine implements Closeable {
     private static long millisToBytes(long millis, AudioFormat format) {
         long frames = (long) (millis * format.getSampleRate() / 1000.0);
         return frames * format.getFrameSize();
+    }
+
+    private void updateDownloadWindow(long bytePosition, long positionMillis) {
+        if (this.session == null) return;
+        SeekIndex index = this.session.getSeekIndex();
+        long durationMillis = index == null ? -1 : index.getDurationMillis();
+        this.session.getByteSource().setPlaybackWindow(bytePosition, positionMillis, durationMillis);
     }
 
     private void finishTrack() {

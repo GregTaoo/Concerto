@@ -30,6 +30,8 @@ public class BufferedHttpByteSource implements AudioByteSource {
 
     private static final int DOWNLOAD_CHUNK = 64 * 1024;
     private static final int MAX_RETRIES = 10;
+    private static final long INITIAL_BUFFER_BYTES = 1024 * 1024;
+    private static final long LOOKAHEAD_MILLIS = 60_000;
     private static final Path TEMP_DIR = Path.of("Concerto", "temp");
 
     private final Supplier<String> urlRefresher;
@@ -42,6 +44,7 @@ public class BufferedHttpByteSource implements AudioByteSource {
 
     private URL url;
     private long downloadedTo = 0;
+    private long downloadTarget = INITIAL_BUFFER_BYTES;
     private long totalLength = -1;
     private boolean complete = false;
     private boolean closed = false;
@@ -94,7 +97,9 @@ public class BufferedHttpByteSource implements AudioByteSource {
                         skipFully(in, discard);
                         byte[] buffer = new byte[DOWNLOAD_CHUNK];
                         int read;
-                        while ((read = in.read(buffer)) != -1) {
+                        while (this.awaitDownloadPermission()) {
+                            read = in.read(buffer);
+                            if (read == -1) break;
                             long writeAt;
                             this.lock.lock();
                             try {
@@ -167,6 +172,28 @@ public class BufferedHttpByteSource implements AudioByteSource {
             connection.setRequestProperty("Range", "bytes=" + from + "-");
         }
         return connection;
+    }
+
+    /**
+     * Keeps the background transfer bounded by the playback window. The seek
+     * indexer is another reader of this source, so it must not be allowed to
+     * turn an incremental scan into an eager full-file download.
+     */
+    private boolean awaitDownloadPermission() {
+        this.lock.lock();
+        try {
+            while (!this.closed && !this.complete && this.downloadedTo >= this.downloadTarget) {
+                try {
+                    this.progress.await();
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    return false;
+                }
+            }
+            return !this.closed && !this.complete;
+        } finally {
+            this.lock.unlock();
+        }
     }
 
     private void updateTotalLength(HttpURLConnection connection, int code, long resumeFrom) {
@@ -296,6 +323,27 @@ public class BufferedHttpByteSource implements AudioByteSource {
                 if (remaining <= 0) return false;
                 this.progress.awaitNanos(remaining);
             }
+        } finally {
+            this.lock.unlock();
+        }
+    }
+
+    @Override
+    public void setPlaybackWindow(long bytePosition, long positionMillis, long durationMillis) {
+        this.lock.lock();
+        try {
+            long estimatedPosition = Math.max(0, bytePosition);
+            long lookaheadBytes = INITIAL_BUFFER_BYTES;
+            if (this.totalLength > 0 && durationMillis > 0) {
+                estimatedPosition = Math.max(estimatedPosition,
+                        this.totalLength * Math.max(0, positionMillis) / durationMillis);
+                lookaheadBytes = Math.max(DOWNLOAD_CHUNK,
+                        this.totalLength * LOOKAHEAD_MILLIS / durationMillis);
+            }
+            long target = estimatedPosition + lookaheadBytes;
+            if (this.totalLength >= 0) target = Math.min(target, this.totalLength);
+            this.downloadTarget = target;
+            this.progress.signalAll();
         } finally {
             this.lock.unlock();
         }

@@ -38,4 +38,11 @@ public interface AudioByteSource extends Closeable {
      * @return true if a read at {@code position} would not block
      */
     boolean awaitAvailable(long position, int count, long timeoutMillis) throws InterruptedException;
+
+    /**
+     * Updates the playback window that a streaming source should keep available.
+     * Local sources already have every byte and therefore do not need to act on it.
+     */
+    default void setPlaybackWindow(long bytePosition, long positionMillis, long durationMillis) {
+    }
 }

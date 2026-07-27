@@ -8,6 +8,7 @@ import net.minecraft.client.gui.components.CycleButton;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
+import top.gregtao.concerto.core.Concerto;
 import top.gregtao.concerto.core.room.MusicRoom;
 import top.gregtao.concerto.core.util.Pair;
 import top.gregtao.concerto.network.room.MusicRoomManager;
@@ -281,8 +282,12 @@ public class MusicRoomsScreen extends ConcertoScreen {
                                     : state.roomName);
             context.drawCenteredString(this.font, header, this.width / 2, 20, 0xFFFFFFFF);
             if (this.builtState == MusicRoom.ClientState.MUSIC_ROOM && MusicRoom.CLIENT_ROOM != null) {
+                String uuid = MusicRoom.CLIENT_ROOM.uuid.toString();
+                boolean hoveringUuid = this.isHoveringRoomUuid(mouseX, mouseY, uuid);
                 context.drawCenteredString(this.font,
-                        Component.literal(MusicRoom.CLIENT_ROOM.uuid.toString()).withStyle(ChatFormatting.DARK_GRAY),
+                        Component.literal(uuid).withStyle(style -> style
+                                .withColor(ChatFormatting.DARK_GRAY)
+                                .withUnderlined(hoveringUuid)),
                         this.width / 2, 32, 0xFF888888);
             }
 
@@ -299,6 +304,25 @@ public class MusicRoomsScreen extends ConcertoScreen {
                         entry != null && entry.item.getSecond() == 2 ? "concerto.room.op.unset" : "concerto.room.op.set"));
             }
         }
+    }
+
+    @Override
+    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        if (button == 0 && this.builtState == MusicRoom.ClientState.MUSIC_ROOM && MusicRoom.CLIENT_ROOM != null) {
+            String uuid = MusicRoom.CLIENT_ROOM.uuid.toString();
+            if (this.isHoveringRoomUuid(mouseX, mouseY, uuid)) {
+                Concerto.getCoreBridge().setClientClipboard(uuid);
+                Concerto.getCoreBridge().sendTranslatableToClientPlayer("concerto.room.uuid_copied", false);
+                return true;
+            }
+        }
+        return super.mouseClicked(mouseX, mouseY, button);
+    }
+
+    private boolean isHoveringRoomUuid(double mouseX, double mouseY, String uuid) {
+        int textWidth = this.font.width(uuid);
+        int x = this.width / 2 - textWidth / 2;
+        return mouseX >= x && mouseX < x + textWidth && mouseY >= 32 && mouseY < 32 + this.font.lineHeight;
     }
 
     @Override

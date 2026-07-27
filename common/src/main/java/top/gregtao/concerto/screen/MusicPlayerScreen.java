@@ -30,6 +30,14 @@ import java.util.ArrayList;
 
 public class MusicPlayerScreen extends ConcertoScreen {
 
+    private static final int MODE_BUTTON_W = 88;
+    private static final int PLAYLIST_BUTTON_W = 80;
+    private static final int ORDER_BUTTON_W = 80;
+    private static final int ICON_BUTTON_W = 20;
+    private static final int BUTTON_GAP = 8;
+    private static final int VOLUME_BUTTON_W = 20;
+
+    private CycleButton<PlayerView> playerViewButton;
     private Button playPauseButton;
     private Button nextButton;
     private CycleButton<OrderType> orderButton;
@@ -37,6 +45,7 @@ public class MusicPlayerScreen extends ConcertoScreen {
 
     private float rotationAngle = 0f;
     private float scrollOffset = 0f;
+    private PlayerView playerView = PlayerView.COVER;
     private boolean seekingProgress = false;
     // Drag preview target; -1 when not dragging. Rendering-only: the real
     // display state (lyrics cursor, progress) is untouched until commit, so
@@ -52,40 +61,52 @@ public class MusicPlayerScreen extends ConcertoScreen {
         super.init();
 
         int y = this.height - 30;
-        int totalWidth = 4 * 80 + 20 + 4 * 2;
+        int totalWidth = MODE_BUTTON_W + PLAYLIST_BUTTON_W + 2 * ICON_BUTTON_W + ORDER_BUTTON_W
+                + VOLUME_BUTTON_W + 5 * BUTTON_GAP;
         int x = (this.width - totalWidth) / 2;
 
+        this.playerViewButton = CycleButton.<PlayerView>builder(view -> Component.translatable(
+                        view == PlayerView.COVER ? "concerto.screen.player_view.cover" : "concerto.screen.player_view.lyrics"))
+                .withValues(PlayerView.values())
+                .withInitialValue(this.playerView)
+                .create(x, y, MODE_BUTTON_W, 20, Component.empty(), (button, view) -> {
+                    this.playerView = view;
+                    this.scrollOffset = 0;
+                });
+        this.addRenderableWidget(this.playerViewButton);
+        x += MODE_BUTTON_W + BUTTON_GAP;
+
         Button playlistButton = Button.builder(
-                Component.translatable("concerto.screen.general_list"),
+                Component.translatable("concerto.playlist"),
                 button -> {
                     if (this.minecraft != null) {
                         this.minecraft.setScreen(new GeneralPlaylistScreen(this));
                     }
                 }
-        ).pos(x, y).size(80, 20).build();
+        ).pos(x, y).size(PLAYLIST_BUTTON_W, 20).build();
         this.addRenderableWidget(playlistButton);
-        x += 82;
+        x += PLAYLIST_BUTTON_W + BUTTON_GAP;
 
         this.playPauseButton = Button.builder(
-                Component.translatable(MusicPlayerHandler.INSTANCE.isPaused() ? "concerto.screen.play" : "concerto.screen.pause"),
+                this.playPauseLabel(),
                 button -> MusicPlayerHandler.INSTANCE.tryForcePause(!MusicPlayerHandler.INSTANCE.isPaused())
-        ).pos(x, y).size(80, 20).build();
-        x += 82;
+        ).pos(x, y).size(ICON_BUTTON_W, 20).build();
+        x += ICON_BUTTON_W + BUTTON_GAP;
 
         this.nextButton = Button.builder(
-                Component.translatable("concerto.screen.next"),
+                Component.literal("⏭"),
                 button -> MusicPlayerHandler.INSTANCE.playNextAsync(1)
-        ).pos(x, y).size(80, 20).build();
-        x += 82;
+        ).pos(x, y).size(ICON_BUTTON_W, 20).build();
+        x += ICON_BUTTON_W + BUTTON_GAP;
 
         this.orderButton = CycleButton.builder((OrderType val) -> Component.literal(val.getName()))
                 .withValues(OrderType.values())
                 .withInitialValue(MusicPlayerHandler.INSTANCE.getOrderType())
-                .create(x, y, 80, 20, Component.translatable("concerto.screen.order"),
+                .create(x, y, ORDER_BUTTON_W, 20, Component.translatable("concerto.screen.order"),
                         (widget, orderType) -> MusicPlayerHandler.INSTANCE.setOrderType(orderType));
-        x += 82;
+        x += ORDER_BUTTON_W + BUTTON_GAP;
 
-        this.volumeControl = new VolumeControlWidget(this.font, x, y, 20, 20);
+        this.volumeControl = new VolumeControlWidget(this.font, x, y, VOLUME_BUTTON_W, 20);
         this.addWidget(this.volumeControl);
 
         this.addRenderableWidget(this.playPauseButton);
@@ -103,7 +124,11 @@ public class MusicPlayerScreen extends ConcertoScreen {
         this.orderButton.active = PlayerPermissions.canChangeOrderType();
 
         boolean isPaused = MusicPlayerHandler.INSTANCE.isPaused();
-        this.playPauseButton.setMessage(Component.translatable(isPaused ? "concerto.screen.play" : "concerto.screen.pause"));
+        this.playPauseButton.setMessage(this.playPauseLabel());
+    }
+
+    private Component playPauseLabel() {
+        return Component.literal(MusicPlayerHandler.INSTANCE.isPaused() ? "▶" : "⏸");
     }
 
     @Override
@@ -130,27 +155,30 @@ public class MusicPlayerScreen extends ConcertoScreen {
             if (this.rotationAngle >= 360f) this.rotationAngle -= 360f;
         }
 
-        int leftWidth = this.width / 2;
-        int imgSize = Math.max(96, Math.min(120, leftWidth - 60));
-        int imgX = (leftWidth - imgSize) / 2;
-        int imgY = (this.height - imgSize) / 2 - 8;
+        boolean lyricsOnly = this.playerView == PlayerView.LYRICS;
+        if (!lyricsOnly) {
+            int leftWidth = this.width / 2;
+            int imgSize = Math.max(96, Math.min(120, leftWidth - 60));
+            int imgX = (leftWidth - imgSize) / 2;
+            int imgY = (this.height - imgSize) / 2 - 8;
 
-        Matrix3x2fStack matrices = context.pose();
-        matrices.pushMatrix();
+            Matrix3x2fStack matrices = context.pose();
+            matrices.pushMatrix();
 
-        InGameHudRenderer.COVER_IMAGE.setX(imgX);
-        InGameHudRenderer.COVER_IMAGE.setY(imgY);
-        InGameHudRenderer.COVER_IMAGE.setSize(imgSize, imgSize);
+            InGameHudRenderer.COVER_IMAGE.setX(imgX);
+            InGameHudRenderer.COVER_IMAGE.setY(imgY);
+            InGameHudRenderer.COVER_IMAGE.setSize(imgSize, imgSize);
 
-        matrices.translate(imgX + imgSize / 2f, imgY + imgSize / 2f);
-        matrices.rotate(this.rotationAngle * (float) Math.PI / 180f); // 旋转
-        matrices.translate(-(imgX + imgSize / 2f), -(imgY + imgSize / 2f));
+            matrices.translate(imgX + imgSize / 2f, imgY + imgSize / 2f);
+            matrices.rotate(this.rotationAngle * (float) Math.PI / 180f); // 旋转
+            matrices.translate(-(imgX + imgSize / 2f), -(imgY + imgSize / 2f));
 
-        InGameHudRenderer.COVER_IMAGE.render(context, mouseX, mouseY, delta);
+            InGameHudRenderer.COVER_IMAGE.render(context, mouseX, mouseY, delta);
 
-        matrices.popMatrix();
+            matrices.popMatrix();
+        }
 
-        int rightHalfX = this.width / 2; // lyrics start at mid-screen for >= 1/2 width
+        int rightHalfX = lyricsOnly ? 20 : this.width / 2;
         int lyricsWidth = this.width - rightHalfX - 20;
 
         String title = metaData.title();
@@ -227,7 +255,7 @@ public class MusicPlayerScreen extends ConcertoScreen {
             int placeholderY = this.height / 2;
             context.drawCenteredString(this.font, Component.translatable("concerto.no_subtitle"), rightHalfX + lyricsWidth / 2, placeholderY, 0xFFAAAAAA);
         }
-        renderSpectrum(context);
+        if (!lyricsOnly) renderSpectrum(context);
         this.volumeControl.render(context, mouseX, mouseY, delta);
     }
 
@@ -319,7 +347,9 @@ public class MusicPlayerScreen extends ConcertoScreen {
             context.fill(thumbX - 1, 0, thumbX + 1, barHeight + 3, 0xFFFFFFFF);
             String target = MusicTimestamp.ofMilliseconds(targetMs).toShortString();
             int textX = Math.max(2, Math.min(this.width - this.font.width(target) - 2, thumbX - this.font.width(target) / 2));
-            context.drawString(this.font, target, textX, barHeight + 5, 0xFFFFFFFF, false);
+            context.fill(textX - 2, barHeight + 3, textX + this.font.width(target) + 2,
+                    barHeight + this.font.lineHeight + 7, 0xC0101010);
+            context.drawString(this.font, target, textX, barHeight + 5, 0xFF55FFFF, false);
         }
     }
 
@@ -336,6 +366,11 @@ public class MusicPlayerScreen extends ConcertoScreen {
     }
 
     private static final int SPECTRUM_BAR_COUNT = 64;
+
+    private enum PlayerView {
+        COVER,
+        LYRICS
+    }
 
     private void renderSpectrum(GuiGraphics g) {
         MusicPlayer.INSTANCE.audioSpectrum.update();

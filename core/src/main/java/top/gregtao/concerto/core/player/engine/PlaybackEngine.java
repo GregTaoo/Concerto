@@ -369,6 +369,7 @@ public class PlaybackEngine implements Closeable {
             this.sinkFormat = format;
             this.sink.setGain(this.gain);
             if (this.paused) this.sink.pause();
+            this.listener.onAudioOutputOpened(this.session, this.sink, format);
         }
         return true;
     }

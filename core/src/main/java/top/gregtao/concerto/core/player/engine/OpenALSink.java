@@ -40,6 +40,7 @@ public class OpenALSink implements AudioSink {
     private long playedFramesBase = 0;
     private float gain = 1f;
     private boolean paused = false;
+    private String outputDescription = "default OpenAL device";
 
     @Override
     public void open(AudioFormat format) throws Exception {
@@ -48,6 +49,8 @@ public class OpenALSink implements AudioSink {
         }
         this.device = ALC10.alcOpenDevice((ByteBuffer) null);
         if (this.device == 0) throw new LineUnavailableException("Cannot open an OpenAL device");
+        String deviceName = ALC10.alcGetString(this.device, ALC10.ALC_DEVICE_SPECIFIER);
+        if (deviceName != null && !deviceName.isBlank()) this.outputDescription = deviceName;
         ALCCapabilities deviceCaps = ALC.createCapabilities(this.device);
         if (!deviceCaps.ALC_EXT_thread_local_context) {
             ALC10.alcCloseDevice(this.device);
@@ -78,6 +81,11 @@ public class OpenALSink implements AudioSink {
     @Override
     public boolean isOpen() {
         return this.context != 0;
+    }
+
+    @Override
+    public String getOutputDescription() {
+        return this.outputDescription;
     }
 
     @Override

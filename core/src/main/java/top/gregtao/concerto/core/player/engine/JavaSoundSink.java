@@ -15,12 +15,14 @@ public class JavaSoundSink implements AudioSink {
     private long frameAnchor = 0;
     private float gain = 1f;
     private boolean paused = false;
+    private String outputDescription = "default JavaSound mixer";
 
     @Override
     public void open(AudioFormat format) throws LineUnavailableException {
         DataLine.Info info = new DataLine.Info(SourceDataLine.class, format, AudioSystem.NOT_SPECIFIED);
         this.line = (SourceDataLine) AudioSystem.getLine(info);
         this.line.open(format);
+        this.outputDescription = this.line.getClass().getName() + " (" + this.line.getLineInfo() + ")";
         this.gainControl = this.line.isControlSupported(FloatControl.Type.MASTER_GAIN)
                 ? (FloatControl) this.line.getControl(FloatControl.Type.MASTER_GAIN)
                 : null;
@@ -33,6 +35,11 @@ public class JavaSoundSink implements AudioSink {
     @Override
     public boolean isOpen() {
         return this.line != null && this.line.isOpen();
+    }
+
+    @Override
+    public String getOutputDescription() {
+        return this.outputDescription;
     }
 
     @Override

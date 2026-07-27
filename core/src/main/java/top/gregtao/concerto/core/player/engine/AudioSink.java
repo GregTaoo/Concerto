@@ -17,6 +17,11 @@ public interface AudioSink extends Closeable {
 
     boolean isOpen();
 
+    /** Human-readable description of the output selected by this sink. */
+    default String getOutputDescription() {
+        return "unknown output";
+    }
+
     /** Blocks until all bytes are accepted (backpressure paces the decode loop). */
     void write(byte[] data, int offset, int length);
 

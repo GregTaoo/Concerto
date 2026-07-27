@@ -1,5 +1,7 @@
 package top.gregtao.concerto.core.player.engine;
 
+import javax.sound.sampled.AudioFormat;
+
 /**
  * Callbacks from the playback engine. All methods are invoked on the engine
  * thread and must return quickly.
@@ -8,6 +10,10 @@ public interface EngineListener {
 
     /** A new session finished loading and is about to produce audio. */
     void onTrackStarted(PlaybackSession session);
+
+    /** The PCM format is decoded and the output sink has opened successfully. */
+    default void onAudioOutputOpened(PlaybackSession session, AudioSink sink, AudioFormat format) {
+    }
 
     /** The track played to its end and the sink has drained. */
     void onTrackEnded(PlaybackSession session);

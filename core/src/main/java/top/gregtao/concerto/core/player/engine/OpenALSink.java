@@ -6,7 +6,10 @@ import org.lwjgl.openal.AL11;
 import org.lwjgl.openal.ALC;
 import org.lwjgl.openal.ALC10;
 import org.lwjgl.openal.ALCCapabilities;
+import org.lwjgl.openal.EXTFloat32;
 import org.lwjgl.openal.EXTThreadLocalContext;
+import org.lwjgl.openal.SOFTDirectChannels;
+import org.lwjgl.openal.SOFTSourceResampler;
 
 import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.LineUnavailableException;
@@ -33,6 +36,8 @@ public class OpenALSink implements AudioSink {
     private int alFormat;
     private int sampleRate;
     private int frameSize;
+    private boolean convertFloatTo16;
+    private byte[] conversionBuffer = new byte[0];
 
     private final ArrayDeque<Integer> freeBuffers = new ArrayDeque<>();
     private final ArrayDeque<int[]> queued = new ArrayDeque<>(); // [bufferId, frameCount]
@@ -44,9 +49,13 @@ public class OpenALSink implements AudioSink {
 
     @Override
     public void open(AudioFormat format) throws Exception {
-        if (format.getSampleSizeInBits() != 16 || format.getChannels() < 1 || format.getChannels() > 2) {
-            throw new LineUnavailableException("OpenAL sink only supports 16-bit mono/stereo PCM, got " + format);
+        boolean signed16 = AudioFormat.Encoding.PCM_SIGNED.equals(format.getEncoding())
+                && format.getSampleSizeInBits() == 16 && !format.isBigEndian();
+        boolean float32 = PcmSampleConverter.isFloat32(format);
+        if ((!signed16 && !float32) || format.getChannels() < 1 || format.getChannels() > 2) {
+            throw new LineUnavailableException("OpenAL sink only supports little-endian 16-bit or float32 PCM, got " + format);
         }
+        this.sampleRate = Math.round(format.getSampleRate());
         this.device = ALC10.alcOpenDevice((ByteBuffer) null);
         if (this.device == 0) throw new LineUnavailableException("Cannot open an OpenAL device");
         String deviceName = ALC10.alcGetString(this.device, ALC10.ALC_DEVICE_SPECIFIER);
@@ -57,17 +66,40 @@ public class OpenALSink implements AudioSink {
             this.device = 0;
             throw new LineUnavailableException("OpenAL device lacks ALC_EXT_thread_local_context");
         }
-        this.context = ALC10.alcCreateContext(this.device, (int[]) null);
+        this.context = ALC10.alcCreateContext(this.device,
+                new int[]{ALC10.ALC_FREQUENCY, this.sampleRate, 0});
+        if (this.context == 0) {
+            this.context = ALC10.alcCreateContext(this.device, (int[]) null);
+        }
         if (this.context == 0 || !EXTThreadLocalContext.alcSetThreadContext(this.context)) {
             this.destroyContext();
             throw new LineUnavailableException("Cannot create/bind an OpenAL context");
         }
-        AL.createCapabilities(deviceCaps);
+        var capabilities = AL.createCapabilities(deviceCaps);
 
-        this.alFormat = format.getChannels() == 1 ? AL10.AL_FORMAT_MONO16 : AL10.AL_FORMAT_STEREO16;
-        this.sampleRate = Math.round(format.getSampleRate());
+        this.convertFloatTo16 = float32 && !capabilities.AL_EXT_FLOAT32;
+        if (float32 && !this.convertFloatTo16) {
+            this.alFormat = format.getChannels() == 1
+                    ? EXTFloat32.AL_FORMAT_MONO_FLOAT32 : EXTFloat32.AL_FORMAT_STEREO_FLOAT32;
+        } else {
+            this.alFormat = format.getChannels() == 1 ? AL10.AL_FORMAT_MONO16 : AL10.AL_FORMAT_STEREO16;
+        }
         this.frameSize = format.getFrameSize();
         this.source = AL10.alGenSources();
+        if (format.getChannels() == 2 && capabilities.AL_SOFT_direct_channels) {
+            AL10.alSourcei(this.source, SOFTDirectChannels.AL_DIRECT_CHANNELS_SOFT, AL10.AL_TRUE);
+        }
+        String resampler = "default";
+        if (capabilities.AL_SOFT_source_resampler) {
+            int count = AL10.alGetInteger(SOFTSourceResampler.AL_NUM_RESAMPLERS_SOFT);
+            if (count > 0) {
+                int best = count - 1;
+                AL10.alSourcei(this.source, SOFTSourceResampler.AL_SOURCE_RESAMPLER_SOFT, best);
+                String selected = SOFTSourceResampler.alGetStringiSOFT(
+                        SOFTSourceResampler.AL_RESAMPLER_NAME_SOFT, best);
+                if (selected != null) resampler = selected;
+            }
+        }
         AL10.alSourcef(this.source, AL10.AL_GAIN, this.gain);
         this.scratch = ByteBuffer.allocateDirect(BUFFER_BYTES).order(ByteOrder.nativeOrder());
         this.freeBuffers.clear();
@@ -76,6 +108,9 @@ public class OpenALSink implements AudioSink {
         for (int i = 0; i < BUFFER_COUNT; i++) {
             this.freeBuffers.add(AL10.alGenBuffers());
         }
+        int mixerRate = ALC10.alcGetInteger(this.device, ALC10.ALC_FREQUENCY);
+        this.outputDescription += ", mixer=" + mixerRate + " Hz, resampler=" + resampler
+                + (this.convertFloatTo16 ? ", float32->16-bit fallback" : "");
     }
 
     @Override
@@ -105,7 +140,15 @@ public class OpenALSink implements AudioSink {
             }
             int chunk = Math.min(length - written, BUFFER_BYTES);
             this.scratch.clear();
-            this.scratch.put(data, offset + written, chunk);
+            if (this.convertFloatTo16) {
+                int required = chunk / Float.BYTES * Short.BYTES;
+                if (this.conversionBuffer.length < required) this.conversionBuffer = new byte[required];
+                int converted = PcmSampleConverter.float32ToSignedPcm(
+                        data, offset + written, chunk, this.conversionBuffer, 16);
+                this.scratch.put(this.conversionBuffer, 0, converted);
+            } else {
+                this.scratch.put(data, offset + written, chunk);
+            }
             this.scratch.flip();
             AL10.alBufferData(buffer, this.alFormat, this.scratch, this.sampleRate);
             AL10.alSourceQueueBuffers(this.source, buffer);
@@ -206,6 +249,7 @@ public class OpenALSink implements AudioSink {
             }
         }
         this.destroyContext();
+        this.convertFloatTo16 = false;
     }
 
     private void destroyContext() {

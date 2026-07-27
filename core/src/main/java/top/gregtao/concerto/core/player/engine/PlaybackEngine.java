@@ -317,7 +317,7 @@ public class PlaybackEngine implements Closeable {
             if (drop >= read) return;
             offset = drop;
         }
-        this.listener.onPcm(this.pumpBuffer, offset, read - offset);
+        this.listener.onPcm(this.pumpBuffer, offset, read - offset, this.decoded.pcmFormat);
         this.sink.write(this.pumpBuffer, offset, read - offset);
         this.updateSnapshot();
         this.listener.onPositionUpdate(this.snapshot.positionMillis());

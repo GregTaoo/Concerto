@@ -28,7 +28,7 @@ public interface EngineListener {
     void onSeekApplied(PlaybackSession session, long positionMillis, boolean publishRoomSync);
 
     /** Decoded PCM about to be written to the sink (for visualisation taps). */
-    void onPcm(byte[] data, int offset, int length);
+    void onPcm(byte[] data, int offset, int length, AudioFormat format);
 
     /**
      * A freshly created sink failed to open. Return a replacement sink to retry

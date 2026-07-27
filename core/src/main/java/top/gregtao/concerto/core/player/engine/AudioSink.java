@@ -11,7 +11,7 @@ import java.io.Closeable;
  */
 public interface AudioSink extends Closeable {
 
-    /** PCM_SIGNED, 16-bit little-endian, 1-2 channels. */
+    /** Little-endian PCM_SIGNED 16-bit or PCM_FLOAT 32-bit, 1-2 channels. */
     void open(AudioFormat format) throws Exception;
 
     boolean isOpen();

@@ -570,9 +570,7 @@ public class MusicPlayer implements EngineListener {
     }
 
     @Override
-    public void onPcm(byte[] data, int offset, int length) {
-        if (offset == 0) {
-            this.audioSpectrum.onAudioFrame(data);
-        }
+    public void onPcm(byte[] data, int offset, int length, AudioFormat format) {
+        this.audioSpectrum.onAudioFrame(data, offset, length, format);
     }
 }

@@ -16,7 +16,7 @@ import java.io.SequenceInputStream;
 import java.util.logging.Logger;
 
 /**
- * Opens a decoded 16-bit PCM stream over an {@link AudioByteSource}, optionally
+ * Opens a decoded PCM stream over an {@link AudioByteSource}, optionally
  * starting mid-media at a container-safe byte offset (with the format's header
  * bytes prepended so the SPI decoder accepts the stream).
  */
@@ -121,9 +121,11 @@ public final class DecoderFactory {
         }
         int[] info = parseFlacStreamInfo(header);
         int sampleRate = info[0], channels = info[1], bitsPerSample = info[2];
+        boolean highResolution = bitsPerSample > 16;
         AudioFormat targetFormat = new AudioFormat(
-                AudioFormat.Encoding.PCM_SIGNED,
-                sampleRate, 16, channels, 2 * channels, sampleRate, false);
+                highResolution ? AudioFormat.Encoding.PCM_FLOAT : AudioFormat.Encoding.PCM_SIGNED,
+                sampleRate, highResolution ? 32 : 16, channels,
+                (highResolution ? 4 : 2) * channels, sampleRate, false);
         AudioInputStream pcm = new AudioInputStream(
                 new FlacDecoderStream(input, targetFormat, bitsPerSample, logger),
                 targetFormat, AudioSystem.NOT_SPECIFIED);

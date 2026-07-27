@@ -78,6 +78,12 @@ public class BufferedHttpByteSource implements AudioByteSource {
                 try {
                     connection = this.openConnection(resumeFrom);
                     int code = connection.getResponseCode();
+                    Concerto.getLogger().info(
+                            "Media download connection established: mode={}, from={}, response={}, contentRange={}, "
+                                    + "contentLength={}, url={}",
+                            resumeFrom == 0 ? "initial" : "resume", resumeFrom, code,
+                            connection.getHeaderField("Content-Range"), connection.getContentLengthLong(),
+                            describeUrl(connection.getURL()));
                     if (code == HttpURLConnection.HTTP_FORBIDDEN && this.urlRefresher != null) {
                         String fresh = this.urlRefresher.get();
                         if (fresh != null) {
@@ -172,6 +178,11 @@ public class BufferedHttpByteSource implements AudioByteSource {
             connection.setRequestProperty("Range", "bytes=" + from + "-");
         }
         return connection;
+    }
+
+    private static String describeUrl(URL url) {
+        String path = url.getPath();
+        return url.getProtocol() + "://" + url.getAuthority() + (path == null ? "" : path);
     }
 
     /**

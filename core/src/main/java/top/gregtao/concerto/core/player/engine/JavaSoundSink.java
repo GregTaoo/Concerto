@@ -11,6 +11,8 @@ import javax.sound.sampled.SourceDataLine;
 public class JavaSoundSink implements AudioSink {
 
     private SourceDataLine line;
+    private byte[] conversionBuffer = new byte[0];
+    private int conversionBits = 0;
     private FloatControl gainControl;
     private long frameAnchor = 0;
     private float gain = 1f;
@@ -18,11 +20,33 @@ public class JavaSoundSink implements AudioSink {
     private String outputDescription = "default JavaSound mixer";
 
     @Override
-    public void open(AudioFormat format) throws LineUnavailableException {
-        DataLine.Info info = new DataLine.Info(SourceDataLine.class, format, AudioSystem.NOT_SPECIFIED);
-        this.line = (SourceDataLine) AudioSystem.getLine(info);
-        this.line.open(format);
-        this.outputDescription = this.line.getClass().getName() + " (" + this.line.getLineInfo() + ")";
+    public void open(AudioFormat format) throws Exception {
+        Exception firstFailure = null;
+        AudioFormat outputFormat = format;
+        try {
+            this.openLine(format);
+        } catch (LineUnavailableException | IllegalArgumentException e) {
+            firstFailure = e;
+        }
+
+        if (this.line == null && PcmSampleConverter.isFloat32(format)) {
+            for (int bits : new int[]{24, 16}) {
+                AudioFormat candidate = new AudioFormat(AudioFormat.Encoding.PCM_SIGNED,
+                        format.getSampleRate(), bits, format.getChannels(),
+                        bits / 8 * format.getChannels(), format.getSampleRate(), false);
+                try {
+                    this.openLine(candidate);
+                    this.conversionBits = bits;
+                    outputFormat = candidate;
+                    break;
+                } catch (LineUnavailableException | IllegalArgumentException ignored) {
+                }
+            }
+        }
+        if (this.line == null) throw firstFailure;
+
+        this.outputDescription = this.line.getClass().getName() + " (" + this.line.getLineInfo()
+                + ", output PCM " + outputFormat.getSampleSizeInBits() + "-bit)";
         this.gainControl = this.line.isControlSupported(FloatControl.Type.MASTER_GAIN)
                 ? (FloatControl) this.line.getControl(FloatControl.Type.MASTER_GAIN)
                 : null;
@@ -44,7 +68,15 @@ public class JavaSoundSink implements AudioSink {
 
     @Override
     public void write(byte[] data, int offset, int length) {
-        this.line.write(data, offset, length);
+        if (this.conversionBits == 0) {
+            this.line.write(data, offset, length);
+            return;
+        }
+        int required = length / Float.BYTES * (this.conversionBits / 8);
+        if (this.conversionBuffer.length < required) this.conversionBuffer = new byte[required];
+        int converted = PcmSampleConverter.float32ToSignedPcm(
+                data, offset, length, this.conversionBuffer, this.conversionBits);
+        this.line.write(this.conversionBuffer, 0, converted);
     }
 
     @Override
@@ -97,6 +129,20 @@ public class JavaSoundSink implements AudioSink {
             this.line.close();
             this.line = null;
             this.gainControl = null;
+            this.conversionBits = 0;
+        }
+    }
+
+    private void openLine(AudioFormat format) throws LineUnavailableException {
+        SourceDataLine candidate = null;
+        try {
+            DataLine.Info info = new DataLine.Info(SourceDataLine.class, format, AudioSystem.NOT_SPECIFIED);
+            candidate = (SourceDataLine) AudioSystem.getLine(info);
+            candidate.open(format);
+            this.line = candidate;
+        } catch (LineUnavailableException | IllegalArgumentException e) {
+            if (candidate != null) candidate.close();
+            throw e;
         }
     }
 }

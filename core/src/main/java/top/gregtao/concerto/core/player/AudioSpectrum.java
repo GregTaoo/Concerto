@@ -1,5 +1,7 @@
 package top.gregtao.concerto.core.player;
 
+import javax.sound.sampled.AudioFormat;
+
 public class AudioSpectrum {
 
     public static class FFT {
@@ -59,12 +61,29 @@ public class AudioSpectrum {
     private final float[] smooth = new float[BINS];
     private long lastUpdate = 0;
 
-    public void onAudioFrame(byte[] pcm) {
-        for (int i = 0; i < pcm.length - 1; i += 2) {
-            short sample = (short) ((pcm[i + 1] << 8) | (pcm[i] & 0xff));
-            ringBuffer[ringIndex] = sample / 32768f;
+    public void onAudioFrame(byte[] pcm, int offset, int length, AudioFormat format) {
+        boolean float32 = AudioFormat.Encoding.PCM_FLOAT.equals(format.getEncoding())
+                && format.getSampleSizeInBits() == 32;
+        int channels = format.getChannels();
+        int bytesPerSample = format.getSampleSizeInBits() / 8;
+        int frameSize = format.getFrameSize();
+        int end = offset + length;
+        for (int frame = offset; frame + frameSize <= end; frame += frameSize) {
+            float sample = 0;
+            for (int channel = 0; channel < channels; channel++) {
+                int i = frame + channel * bytesPerSample;
+                if (float32) {
+                    int bits = (pcm[i] & 0xFF) | ((pcm[i + 1] & 0xFF) << 8)
+                            | ((pcm[i + 2] & 0xFF) << 16) | ((pcm[i + 3] & 0xFF) << 24);
+                    sample += Float.intBitsToFloat(bits);
+                } else {
+                    short value = (short) ((pcm[i + 1] << 8) | (pcm[i] & 0xFF));
+                    sample += value / 32768f;
+                }
+            }
+            ringBuffer[ringIndex] = sample / channels;
             ringIndex = (ringIndex + 1) % FFT_SIZE;
-            newSamples++; // 增加采样计数
+            newSamples++;
         }
     }
 

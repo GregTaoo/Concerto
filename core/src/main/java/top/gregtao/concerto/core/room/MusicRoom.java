@@ -617,10 +617,6 @@ public class MusicRoom {
             if (MusicPlayerHandler.INSTANCE != null && MusicPlayerHandler.INSTANCE.isForcePaused() && !state.paused) {
                 return;
             }
-            if (!Objects.equals(oldVal, newVal)) {
-                Concerto.getCoreBridge().sendTranslatableToClientPlayer(
-                        state.paused ? "concerto.room.paused" : "concerto.room.resumed", true);
-            }
             // The room state is authoritative; the engine pause is idempotent,
             // so apply it even while a track is still loading.
             if (state.paused) {
@@ -645,8 +641,6 @@ public class MusicRoom {
                 if (resolved instanceof SharedMusic sharedMusic) {
                     sharedMusic.startTime = state.resolvedStartTime;
                 }
-                Concerto.getCoreBridge().sendTranslatableToClientPlayer(
-                        "concerto.room.now_playing", true, resolved.getMeta().title());
                 MusicPlayer.INSTANCE.resetInfo();
                 MusicPlayer.INSTANCE.internalPlayMusic(resolved);
             } catch (Exception e) {

@@ -73,12 +73,12 @@ public class ClientConfig extends ConfigFile {
         public PlaybackBackend playbackBackend = PlaybackBackend.JAVASOUND;
 
         public boolean displayLyrics = true;
-        public String lyricsPosition = "0.5,1-100";
+        public String lyricsPosition = "0.5,1-70";
         public TextAlignment lyricsAlignment = TextAlignment.CENTER;
         public String lyricsColor = "#ff00aaaa";
 
         public boolean displaySubLyrics = true;
-        public String subLyricsPosition = "0.5,1-89";
+        public String subLyricsPosition = "0.5,1-60";
         public TextAlignment subLyricsAlignment = TextAlignment.CENTER;
         public String subLyricsColor = "#ffffaa00";
 

@@ -62,7 +62,7 @@ public class NeteaseCloudMusic extends Music implements CacheableMusic, DynamicP
                 this.format = FileUtil.getSuffix(URI.create(this.rawPath).getPath());
                 if (object.has("freeTrialInfo") && !object.get("freeTrialInfo").isJsonNull() && !this.trialNotified) {
                     this.trialNotified = true;
-                    Concerto.getCoreBridge().sendTranslatableToClientPlayer("concerto.player.trial", true);
+                    Concerto.getCoreBridge().sendTranslatableToClientPlayer("concerto.player.trial", false);
                 }
             }
         } catch (Exception e) {

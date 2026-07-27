@@ -13,11 +13,11 @@ import javax.sound.sampled.LineUnavailableException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.ArrayDeque;
+import java.util.Objects;
 
 /**
  * {@link AudioSink} backed by a private OpenAL device and context, streaming
  * through a fixed pool of reusable AL buffers.
- *
  * The context is bound with ALC_EXT_thread_local_context so Minecraft's own
  * sound engine context is never disturbed. All calls happen on the engine
  * thread, which stays the same for the sink's whole lifetime.
@@ -152,7 +152,7 @@ public class OpenALSink implements AudioSink {
         // Anything still queued after a stop is stale too
         while (!this.queued.isEmpty()) {
             AL10.alSourceUnqueueBuffers(this.source);
-            this.freeBuffers.add(this.queued.poll()[0]);
+            this.freeBuffers.add(Objects.requireNonNull(this.queued.poll())[0]);
         }
         this.playedFramesBase = 0;
     }
@@ -196,7 +196,7 @@ public class OpenALSink implements AudioSink {
                 this.reclaimProcessed();
                 while (!this.queued.isEmpty()) {
                     AL10.alSourceUnqueueBuffers(this.source);
-                    this.freeBuffers.add(this.queued.poll()[0]);
+                    this.freeBuffers.add(Objects.requireNonNull(this.queued.poll())[0]);
                 }
                 AL10.alDeleteSources(this.source);
                 this.source = 0;

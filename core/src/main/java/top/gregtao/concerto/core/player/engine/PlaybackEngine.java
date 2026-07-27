@@ -22,7 +22,6 @@ import java.util.logging.Logger;
  * playback state (session, decoder, sink, clock); the public API only posts
  * commands into a queue and reads volatile snapshots, so there is no shared
  * mutable state and no cross-thread teardown.
- *
  * Seeking never tears the engine thread down: the decode chain is reopened at a
  * {@link SeekIndex} point, the residual up to the exact target is decoded and
  * discarded, the sink is flushed, and the clock base is reset.
@@ -34,10 +33,6 @@ public class PlaybackEngine implements Closeable {
 
     /** Playback position published by the engine thread after every chunk. */
     public record PositionSnapshot(long positionMillis, long atNanos, boolean advancing) {
-        public long interpolate() {
-            if (!this.advancing) return this.positionMillis;
-            return this.positionMillis + (System.nanoTime() - this.atNanos) / 1_000_000L;
-        }
     }
 
     private interface Command {}
@@ -179,7 +174,7 @@ public class PlaybackEngine implements Closeable {
         return this.session != null && !this.trackEnded && (this.pendingSeekMillis >= 0 || !this.paused);
     }
 
-    private void handle(Command command) throws Exception {
+    private void handle(Command command) {
         if (command instanceof LoadCmd load) {
             this.handleLoad(load.session());
         } else if (command instanceof SeekCmd seek) {

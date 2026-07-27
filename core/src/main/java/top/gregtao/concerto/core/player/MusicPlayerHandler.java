@@ -20,7 +20,6 @@ import top.gregtao.concerto.core.util.ConcertoRunner;
 
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Objects;

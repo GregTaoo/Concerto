@@ -6,7 +6,6 @@ import java.io.Closeable;
 /**
  * A PCM output device. All methods are called from the engine thread only, so
  * implementations need no internal synchronization.
- *
  * Position contract: {@link #playedFrames()} counts frames actually rendered
  * since {@link #open} or the last {@link #flush()}, whichever came later.
  */

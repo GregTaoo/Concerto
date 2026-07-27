@@ -132,7 +132,6 @@ public class MusicPlayerScreen extends ConcertoScreen {
                 && !MusicPlayerHandler.INSTANCE.isEmpty();
         this.orderButton.active = PlayerPermissions.canChangeOrderType();
 
-        boolean isPaused = MusicPlayerHandler.INSTANCE.isPaused();
         this.playPauseButton.setMessage(this.playPauseLabel());
     }
 
@@ -344,7 +343,7 @@ public class MusicPlayerScreen extends ConcertoScreen {
         float buffered = MusicPlayer.INSTANCE.getBufferedPercentage();
         if (buffered > 0) {
             int bufferedColor = (progressColor & 0x00FFFFFF) | 0x66000000;
-            context.fill(0, 0, (int) Math.round(this.width * buffered), barHeight, bufferedColor);
+            context.fill(0, 0, Math.round(this.width * buffered), barHeight, bufferedColor);
         }
         context.fill(0, 0, (int) Math.round(this.width * progress), barHeight, progressColor);
 

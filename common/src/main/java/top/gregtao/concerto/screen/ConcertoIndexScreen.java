@@ -24,8 +24,8 @@ public class ConcertoIndexScreen extends ConcertoScreen {
     @Override
     protected void init() {
         super.init();
-        this.addRenderableWidget(Button.builder(Component.translatable("concerto.screen.general_list"),
-                button -> Minecraft.getInstance().setScreen(new GeneralPlaylistScreen(this))
+        this.addRenderableWidget(Button.builder(Component.translatable("concerto.screen.main_list"),
+                button -> Minecraft.getInstance().setScreen(new MainPlaylistScreen(this))
         ).pos(this.width / 2 - 120, 20).size(115, 20).build());
 
         Button widget = Button.builder(Component.translatable("concerto.screen.audition"),

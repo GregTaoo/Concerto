@@ -13,11 +13,11 @@ public class ConcertoHotkeys {
 
     public static String CATEGORY = "concerto.hotkey";
 
-    public static KeyMapping GENERAL_PLAYLIST, INDEX_SCREEN, NEXT_MUSIC, PAUSE_RESUME;
+    public static KeyMapping MAIN_PLAYLIST, INDEX_SCREEN, NEXT_MUSIC, PAUSE_RESUME;
 
     public static void register(MinecraftClientBridge bridge) {
-        GENERAL_PLAYLIST = bridge.registerKeyMapping(new KeyMapping(
-                "concerto.hotkey.general_music_list",
+        MAIN_PLAYLIST = bridge.registerKeyMapping(new KeyMapping(
+                "concerto.hotkey.main_music_list",
                 InputConstants.Type.KEYSYM,
                 GLFW.GLFW_KEY_U,
                 CATEGORY
@@ -41,7 +41,7 @@ public class ConcertoHotkeys {
                 CATEGORY
         ));
         bridge.registerEndOfTickListener(client -> {
-            if (GENERAL_PLAYLIST.consumeClick()) {
+            if (MAIN_PLAYLIST.consumeClick()) {
                 client.setScreen(new MusicPlayerScreen(null));
             } else if (INDEX_SCREEN.consumeClick()) {
                 client.setScreen(new ConcertoIndexScreen(null));

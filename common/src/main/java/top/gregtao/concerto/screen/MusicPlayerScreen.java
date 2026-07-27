@@ -30,9 +30,9 @@ import java.util.ArrayList;
 
 public class MusicPlayerScreen extends ConcertoScreen {
 
-    private static final int MODE_BUTTON_W = 88;
-    private static final int PLAYLIST_BUTTON_W = 84;
-    private static final int ORDER_BUTTON_W = 84;
+    private static final int MODE_BUTTON_W = 80;
+    private static final int PLAYLIST_BUTTON_W = 96;
+    private static final int ORDER_BUTTON_W = 80;
     private static final int ICON_BUTTON_W = 20;
     private static final int BUTTON_GAP = 2;
 
@@ -64,28 +64,6 @@ public class MusicPlayerScreen extends ConcertoScreen {
         int totalWidth = MODE_BUTTON_W + PLAYLIST_BUTTON_W + 4 * ICON_BUTTON_W + ORDER_BUTTON_W + 6 * BUTTON_GAP;
         int x = (this.width - totalWidth) / 2;
 
-        this.playerViewButton = CycleButton.<PlayerView>builder(view -> Component.translatable(
-                        view == PlayerView.COVER ? "concerto.screen.player_view.cover" : "concerto.screen.player_view.lyrics"))
-                .withValues(PlayerView.values())
-                .withInitialValue(this.playerView)
-                .create(x, y, MODE_BUTTON_W, 20, Component.translatable("concerto.screen.player_view"), (button, view) -> {
-                    this.playerView = view;
-                    this.scrollOffset = 0;
-                });
-        this.addRenderableWidget(this.playerViewButton);
-        x += MODE_BUTTON_W + BUTTON_GAP;
-
-        Button playlistButton = Button.builder(
-                Component.translatable("concerto.playlist"),
-                button -> {
-                    if (this.minecraft != null) {
-                        this.minecraft.setScreen(new GeneralPlaylistScreen(this));
-                    }
-                }
-        ).pos(x, y).size(PLAYLIST_BUTTON_W, 20).build();
-        this.addRenderableWidget(playlistButton);
-        x += PLAYLIST_BUTTON_W + BUTTON_GAP;
-
         this.previousButton = Button.builder(
                 Component.literal("⏮"),
                 button -> MusicPlayerHandler.INSTANCE.playPreviousAsync()
@@ -103,6 +81,28 @@ public class MusicPlayerScreen extends ConcertoScreen {
                 button -> MusicPlayerHandler.INSTANCE.playNextAsync(1)
         ).pos(x, y).size(ICON_BUTTON_W, 20).build();
         x += ICON_BUTTON_W + BUTTON_GAP;
+
+        this.playerViewButton = CycleButton.<PlayerView>builder(view -> Component.translatable(
+                        view == PlayerView.COVER ? "concerto.screen.player_view.cover" : "concerto.screen.player_view.lyrics"))
+                .withValues(PlayerView.values())
+                .withInitialValue(this.playerView)
+                .create(x, y, MODE_BUTTON_W, 20, Component.translatable("concerto.screen.player_view"), (button, view) -> {
+                    this.playerView = view;
+                    this.scrollOffset = 0;
+                });
+        this.addRenderableWidget(this.playerViewButton);
+        x += MODE_BUTTON_W + BUTTON_GAP;
+
+        Button playlistButton = Button.builder(
+                Component.translatable("concerto.screen.main_list"),
+                button -> {
+                    if (this.minecraft != null) {
+                        this.minecraft.setScreen(new MainPlaylistScreen(this));
+                    }
+                }
+        ).pos(x, y).size(PLAYLIST_BUTTON_W, 20).build();
+        this.addRenderableWidget(playlistButton);
+        x += PLAYLIST_BUTTON_W + BUTTON_GAP;
 
         this.orderButton = CycleButton.builder((OrderType val) -> Component.literal(val.getName()))
                 .withValues(OrderType.values())
@@ -128,7 +128,8 @@ public class MusicPlayerScreen extends ConcertoScreen {
         this.playPauseButton.active = PlayerPermissions.canControlPlayback();
         this.previousButton.active = PlayerPermissions.canChangeMusicIndex()
                 && MusicPlayerHandler.INSTANCE.canPlayPrevious();
-        this.nextButton.active = PlayerPermissions.canChangeMusicIndex();
+        this.nextButton.active = PlayerPermissions.canChangeMusicIndex()
+                && !MusicPlayerHandler.INSTANCE.isEmpty();
         this.orderButton.active = PlayerPermissions.canChangeOrderType();
 
         boolean isPaused = MusicPlayerHandler.INSTANCE.isPaused();

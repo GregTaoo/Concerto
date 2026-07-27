@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicReference;
 
-public class GeneralPlaylistWidget extends MetadataListWidget<GeneralPlaylistWidget.Entry> {
+public class MainPlaylistWidget extends MetadataListWidget<MainPlaylistWidget.Entry> {
 
     public record Entry(UUID index, Music music) implements WithMetaData {
 
@@ -26,7 +26,7 @@ public class GeneralPlaylistWidget extends MetadataListWidget<GeneralPlaylistWid
         }
     }
 
-    public GeneralPlaylistWidget(int width, int height, int top, int itemHeight) {
+    public MainPlaylistWidget(int width, int height, int top, int itemHeight) {
         super(width, height, top, itemHeight);
         this.reset();
     }

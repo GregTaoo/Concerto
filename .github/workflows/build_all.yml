@@ -139,16 +139,19 @@ jobs:
           # *_name 仍是版本号（保持既有命名连续性），*_display 是 Modrinth 上的展示标题
           if echo "$FNAME" | grep -iq "fabric"; then
            echo "fabric_file=$FILE" >> $GITHUB_OUTPUT
+           echo "fabric_mc=$MC_VER" >> $GITHUB_OUTPUT
            echo "fabric_gv=$GV_ARRAY" >> $GITHUB_OUTPUT
            echo "fabric_name=fabric-${SHORTER_VERSION}-mc${MC_VER}" >> $GITHUB_OUTPUT
            echo "fabric_display=Concerto ${SHORTER_VERSION} for Fabric ${MC_VER}" >> $GITHUB_OUTPUT
           elif echo "$FNAME" | grep -iq "neoforge"; then
            echo "neoforge_file=$FILE" >> $GITHUB_OUTPUT
+           echo "neoforge_mc=$MC_VER" >> $GITHUB_OUTPUT
            echo "neoforge_gv=$GV_ARRAY" >> $GITHUB_OUTPUT
            echo "neoforge_name=neoforge-${SHORTER_VERSION}-mc${MC_VER}" >> $GITHUB_OUTPUT
            echo "neoforge_display=Concerto ${SHORTER_VERSION} for NeoForge ${MC_VER}" >> $GITHUB_OUTPUT
           elif echo "$FNAME" | grep -iq "paper"; then
            echo "paper_file=$FILE" >> $GITHUB_OUTPUT
+           echo "paper_mc=$MC_VER" >> $GITHUB_OUTPUT
            echo "paper_gv=$GV_ARRAY" >> $GITHUB_OUTPUT
            echo "paper_name=paper-${SHORTER_VERSION}-mc${MC_VER}" >> $GITHUB_OUTPUT
            echo "paper_display=Concerto ${SHORTER_VERSION} for Paper ${MC_VER}" >> $GITHUB_OUTPUT
@@ -196,6 +199,71 @@ jobs:
           loaders: '["paper"]'
           game-versions: ${{ steps.build-run.outputs.paper_gv }}
           files: ${{ steps.build-run.outputs.paper_file }}
+
+      - name: Check Fabric on CurseForge
+        id: curseforge-fabric
+        if: steps.build-run.outputs.fabric_file != ''
+        env:
+          CURSEFORGE_API_TOKEN: ${{ secrets.CURSEFORGE_API_TOKEN }}
+        run: bash ./.github/scripts/curseforge-idempotency.sh "${{ steps.build-run.outputs.fabric_file }}" 1086212
+
+      - name: Publish Fabric to CurseForge
+        if: steps.curseforge-fabric.outputs.should_upload == 'true'
+        uses: itsmeow/curseforge-upload@v3
+        with:
+          token: ${{ secrets.CURSEFORGE_API_TOKEN }}
+          project_id: 1086212
+          game_endpoint: minecraft
+          file_path: ${{ steps.build-run.outputs.fabric_file }}
+          display_name: ${{ steps.build-run.outputs.fabric_display }}
+          changelog: ${{ github.event.release.body }}
+          changelog_type: markdown
+          release_type: release
+          game_versions: Minecraft:${{ steps.build-run.outputs.fabric_mc }},Fabric
+
+      - name: Check NeoForge on CurseForge
+        id: curseforge-neoforge
+        if: steps.build-run.outputs.neoforge_file != ''
+        env:
+          CURSEFORGE_API_TOKEN: ${{ secrets.CURSEFORGE_API_TOKEN }}
+        run: bash ./.github/scripts/curseforge-idempotency.sh "${{ steps.build-run.outputs.neoforge_file }}" 1086212
+
+      - name: Publish NeoForge to CurseForge
+        if: steps.curseforge-neoforge.outputs.should_upload == 'true'
+        uses: itsmeow/curseforge-upload@v3
+        with:
+          token: ${{ secrets.CURSEFORGE_API_TOKEN }}
+          project_id: 1086212
+          game_endpoint: minecraft
+          file_path: ${{ steps.build-run.outputs.neoforge_file }}
+          display_name: ${{ steps.build-run.outputs.neoforge_display }}
+          changelog: ${{ github.event.release.body }}
+          changelog_type: markdown
+          release_type: release
+          game_versions: Minecraft:${{ steps.build-run.outputs.neoforge_mc }},NeoForge
+
+      # Paper uses CurseForge's Bukkit endpoint. It needs a separate Bukkit/Paper
+      # project, so it stays disabled until that project ID is configured.
+      - name: Check Paper on CurseForge
+        id: curseforge-paper
+        if: steps.build-run.outputs.paper_file != '' && vars.CURSEFORGE_PAPER_PROJECT_ID != ''
+        env:
+          CURSEFORGE_API_TOKEN: ${{ secrets.CURSEFORGE_API_TOKEN }}
+        run: bash ./.github/scripts/curseforge-idempotency.sh "${{ steps.build-run.outputs.paper_file }}" "${{ vars.CURSEFORGE_PAPER_PROJECT_ID }}"
+
+      - name: Publish Paper to CurseForge
+        if: steps.curseforge-paper.outputs.should_upload == 'true'
+        uses: itsmeow/curseforge-upload@v3
+        with:
+          token: ${{ secrets.CURSEFORGE_API_TOKEN }}
+          project_id: ${{ vars.CURSEFORGE_PAPER_PROJECT_ID }}
+          game_endpoint: bukkit
+          file_path: ${{ steps.build-run.outputs.paper_file }}
+          display_name: ${{ steps.build-run.outputs.paper_display }}
+          changelog: ${{ github.event.release.body }}
+          changelog_type: markdown
+          release_type: release
+          game_versions: Bukkit:${{ steps.build-run.outputs.paper_mc }}
 
       # --- 总结报告 ---
       - name: Summary

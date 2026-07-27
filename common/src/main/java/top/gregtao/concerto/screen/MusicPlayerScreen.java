@@ -30,12 +30,11 @@ import java.util.ArrayList;
 
 public class MusicPlayerScreen extends ConcertoScreen {
 
-    private static final int MODE_BUTTON_W = 76;
-    private static final int PLAYLIST_BUTTON_W = 72;
-    private static final int ORDER_BUTTON_W = 72;
+    private static final int MODE_BUTTON_W = 88;
+    private static final int PLAYLIST_BUTTON_W = 84;
+    private static final int ORDER_BUTTON_W = 84;
     private static final int ICON_BUTTON_W = 20;
-    private static final int BUTTON_GAP = 8;
-    private static final int VOLUME_BUTTON_W = 20;
+    private static final int BUTTON_GAP = 2;
 
     private CycleButton<PlayerView> playerViewButton;
     private Button previousButton;
@@ -62,15 +61,14 @@ public class MusicPlayerScreen extends ConcertoScreen {
         super.init();
 
         int y = this.height - 30;
-        int totalWidth = MODE_BUTTON_W + PLAYLIST_BUTTON_W + 3 * ICON_BUTTON_W + ORDER_BUTTON_W
-                + VOLUME_BUTTON_W + 6 * BUTTON_GAP;
+        int totalWidth = MODE_BUTTON_W + PLAYLIST_BUTTON_W + 4 * ICON_BUTTON_W + ORDER_BUTTON_W + 6 * BUTTON_GAP;
         int x = (this.width - totalWidth) / 2;
 
         this.playerViewButton = CycleButton.<PlayerView>builder(view -> Component.translatable(
                         view == PlayerView.COVER ? "concerto.screen.player_view.cover" : "concerto.screen.player_view.lyrics"))
                 .withValues(PlayerView.values())
                 .withInitialValue(this.playerView)
-                .create(x, y, MODE_BUTTON_W, 20, Component.empty(), (button, view) -> {
+                .create(x, y, MODE_BUTTON_W, 20, Component.translatable("concerto.screen.player_view"), (button, view) -> {
                     this.playerView = view;
                     this.scrollOffset = 0;
                 });
@@ -113,7 +111,7 @@ public class MusicPlayerScreen extends ConcertoScreen {
                         (widget, orderType) -> MusicPlayerHandler.INSTANCE.setOrderType(orderType));
         x += ORDER_BUTTON_W + BUTTON_GAP;
 
-        this.volumeControl = new VolumeControlWidget(this.font, x, y, VOLUME_BUTTON_W, 20);
+        this.volumeControl = new VolumeControlWidget(this.font, x, y, ICON_BUTTON_W, 20);
         this.addWidget(this.volumeControl);
 
         this.addRenderableWidget(this.previousButton);

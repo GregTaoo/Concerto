@@ -79,6 +79,13 @@ public class ConcertoOptions {
                 () -> this.config.options.playerVolumeFollowsMaster
         ));
 
+        this.updaters.add(new SingleIntOption(
+                "playbackHistorySize",
+                value -> this.config.options.playbackHistorySize = value,
+                () -> this.config.options.playbackHistorySize,
+                25, 100
+        ));
+
         // Applied when the next track opens its audio output
         this.updaters.add(new SingleBooleanOption(
                 "openalBackend",
@@ -290,6 +297,46 @@ public class ConcertoOptions {
         public void writeOptions() {
             if (!ConcertoOptions.this.canUpdate) return;
             this.writer.accept(Math.clamp(this.option.get(), 0.0, 1.0));
+        }
+
+        @Override
+        public Stream<OptionInstance<?>> streamOptions() {
+            return Stream.of(this.option);
+        }
+    }
+
+    private class SingleIntOption implements OptionsUpdater {
+        public final OptionInstance<Integer> option;
+
+        private final Consumer<Integer> writer;
+        private final Supplier<Integer> reader;
+        private final int min;
+        private final int max;
+
+        public SingleIntOption(String name, Consumer<Integer> writer, Supplier<Integer> reader, int min, int max) {
+            this.writer = writer;
+            this.reader = reader;
+            this.min = min;
+            this.max = max;
+            this.option = new OptionInstance<>(
+                    "concerto.options." + name,
+                    OptionInstance.noTooltip(),
+                    (prefix, value) -> Component.translatable("options.generic_value", prefix, value),
+                    new OptionInstance.IntRange(min, max),
+                    min,
+                    value -> this.writeOptions()
+            );
+        }
+
+        @Override
+        public void readOptions() {
+            this.option.set(Math.clamp(this.reader.get(), this.min, this.max));
+        }
+
+        @Override
+        public void writeOptions() {
+            if (!ConcertoOptions.this.canUpdate) return;
+            this.writer.accept(Math.clamp(this.option.get(), this.min, this.max));
         }
 
         @Override

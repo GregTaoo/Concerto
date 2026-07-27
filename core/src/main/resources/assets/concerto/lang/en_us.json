@@ -257,6 +257,7 @@
   "concerto.options.handshakeRequired": "Handshake required",
   "concerto.options.playerVolume": "Concerto Volume",
   "concerto.options.playerVolumeFollowsMaster": "Follow master volume",
+  "concerto.options.playbackHistorySize": "Previous track history",
   "concerto.options.openalBackend": "OpenAL output",
   "concerto.options.openalBackend.tooltip": "Takes effect from the next track",
   "concerto.player.buffering": "Buffering...",

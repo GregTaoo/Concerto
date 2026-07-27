@@ -70,6 +70,7 @@ public class ClientConfig extends ConfigFile {
 
         public double playerVolume = 1.0;
         public boolean playerVolumeFollowsMaster = true;
+        public int playbackHistorySize = 25;
         public PlaybackBackend playbackBackend = PlaybackBackend.JAVASOUND;
 
         public boolean displayLyrics = true;

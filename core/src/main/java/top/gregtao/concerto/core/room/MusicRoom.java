@@ -72,6 +72,7 @@ public class MusicRoom {
             c.currentIndex = this.currentIndex;
             c.orderType = this.orderType;
             c.paused = this.paused;
+            c.playbackHistory = new ArrayList<>(this.playbackHistory);
             c.resolvedMedia = this.resolvedMedia;
             c.resolvedStartTime = this.resolvedStartTime;
             c.errorMessage = this.errorMessage;
@@ -544,9 +545,9 @@ public class MusicRoom {
             if (!Objects.equals(target, current)) {
                 UUID finalTarget = target;
                 o.set((s) -> {
-                    s.currentIndex = finalTarget;
+                    s.setCurrentIndex(finalTarget, 25);
                     return s;
-                }, List.of(MusicPlayerState.CURRENT_INDEX));
+                }, List.of(MusicPlayerState.CURRENT_INDEX, MusicPlayerState.PLAYBACK_HISTORY));
             }
         });
 

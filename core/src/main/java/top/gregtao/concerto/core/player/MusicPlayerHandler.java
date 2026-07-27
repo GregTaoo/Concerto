@@ -9,6 +9,7 @@ import top.gregtao.concerto.core.Concerto;
 import top.gregtao.concerto.core.api.CacheableMusic;
 import top.gregtao.concerto.core.api.LazyLoadable;
 import top.gregtao.concerto.core.api.MusicJsonParsers;
+import top.gregtao.concerto.core.config.ClientConfig;
 import top.gregtao.concerto.core.enums.OrderType;
 import top.gregtao.concerto.core.event.ConcertoEvents;
 import top.gregtao.concerto.core.music.Music;
@@ -41,15 +42,20 @@ public class MusicPlayerHandler {
 
     public MusicPlayerHandler() {
         this.localRecord = SyncRecord.createLocalRecord(new MusicPlayerState());
-        registerSyncRecordListeners(this.localRecord);
+        this.registerSyncRecordListeners(this.localRecord);
     }
 
     public MusicPlayerHandler(ConcertoPlayerList musics, UUID currentIndex, OrderType orderType) {
+        this(musics, currentIndex, orderType, List.of());
+    }
+
+    public MusicPlayerHandler(ConcertoPlayerList musics, UUID currentIndex, OrderType orderType,
+                              List<UUID> playbackHistory) {
         loadInThreadPool(musics.snapshotMusics());
 
-        MusicPlayerState state = new MusicPlayerState(musics, currentIndex, orderType, true);
+        MusicPlayerState state = new MusicPlayerState(musics, currentIndex, orderType, true, playbackHistory);
         this.localRecord = SyncRecord.createLocalRecord(state);
-        registerSyncRecordListeners(this.localRecord);
+        this.registerSyncRecordListeners(this.localRecord);
     }
 
     public SyncRecord<MusicPlayerState> getState() {
@@ -88,7 +94,7 @@ public class MusicPlayerHandler {
         }
     }
 
-    public static void registerSyncRecordListeners(SyncRecord<MusicPlayerState> record) {
+    private void registerSyncRecordListeners(SyncRecord<MusicPlayerState> record) {
         record.addListener(MusicPlayerState.MUSIC_LIST, (o, state, oldVal, newVal) -> {
             UUID current = state.currentIndex;
             ConcertoPlayerList list = state.musicList;
@@ -103,9 +109,9 @@ public class MusicPlayerHandler {
             if (!Objects.equals(next, current)) {
                 UUID finalNext = next;
                 o.set((s) -> {
-                    s.currentIndex = finalNext;
+                    s.setCurrentIndex(finalNext, this.historyLimit());
                     return s;
-                }, List.of(MusicPlayerState.CURRENT_INDEX));
+                }, List.of(MusicPlayerState.CURRENT_INDEX, MusicPlayerState.PLAYBACK_HISTORY));
             }
 
             ConcertoEvents.ON_MUSIC_LIST_UPDATE.emit();
@@ -147,7 +153,8 @@ public class MusicPlayerHandler {
     public void clear() {
         this.getState().set(
                 (state) -> new MusicPlayerState(),
-                List.of(MusicPlayerState.MUSIC_LIST, MusicPlayerState.PAUSED, MusicPlayerState.ORDER_TYPE, MusicPlayerState.CURRENT_INDEX)
+                List.of(MusicPlayerState.MUSIC_LIST, MusicPlayerState.PAUSED, MusicPlayerState.ORDER_TYPE,
+                        MusicPlayerState.CURRENT_INDEX, MusicPlayerState.PLAYBACK_HISTORY)
         );
         this.writeConfig();
     }
@@ -169,10 +176,9 @@ public class MusicPlayerHandler {
         this.getState().set((state) -> {
             if (!music.isLoaded()) music.load();
             UUID added = state.musicList.addLast(music);
-            if (skip)
-                state.currentIndex = added;
+            if (skip) state.setCurrentIndex(added, this.historyLimit());
             return state;
-        }, skip ? List.of(MusicPlayerState.MUSIC_LIST, MusicPlayerState.CURRENT_INDEX) : List.of(MusicPlayerState.MUSIC_LIST));
+        }, skip ? List.of(MusicPlayerState.MUSIC_LIST, MusicPlayerState.CURRENT_INDEX, MusicPlayerState.PLAYBACK_HISTORY) : List.of(MusicPlayerState.MUSIC_LIST));
         this.writeConfig();
 
         return true;
@@ -190,10 +196,9 @@ public class MusicPlayerHandler {
         this.getState().set((state) -> {
             loadInThreadPool(musics);
             List<UUID> ids = state.musicList.addAllLast(musics);
-            if (skip && !ids.isEmpty())
-                state.currentIndex = ids.get(0);
+            if (skip && !ids.isEmpty()) state.setCurrentIndex(ids.get(0), this.historyLimit());
             return state;
-        }, skip ? List.of(MusicPlayerState.MUSIC_LIST, MusicPlayerState.CURRENT_INDEX) : List.of(MusicPlayerState.MUSIC_LIST));
+        }, skip ? List.of(MusicPlayerState.MUSIC_LIST, MusicPlayerState.CURRENT_INDEX, MusicPlayerState.PLAYBACK_HISTORY) : List.of(MusicPlayerState.MUSIC_LIST));
         this.writeConfig();
 
         return true;
@@ -226,10 +231,10 @@ public class MusicPlayerHandler {
                 inserted = ids.isEmpty() ? state.musicList.addLast(music) : ids.get(0);
             }
             if (skip || state.currentIndex == null) {
-                state.currentIndex = inserted;
+                state.setCurrentIndex(inserted, this.historyLimit());
             }
             return state;
-        }, skip ? List.of(MusicPlayerState.MUSIC_LIST, MusicPlayerState.CURRENT_INDEX) : List.of(MusicPlayerState.MUSIC_LIST));
+        }, skip ? List.of(MusicPlayerState.MUSIC_LIST, MusicPlayerState.CURRENT_INDEX, MusicPlayerState.PLAYBACK_HISTORY) : List.of(MusicPlayerState.MUSIC_LIST));
         this.writeConfig();
     }
 
@@ -261,16 +266,40 @@ public class MusicPlayerHandler {
         // the UI claims it's playing
         this.forcePaused = false;
         this.getState().set((state) -> {
-            state.currentIndex = this.getNextUuid(state, forward);
+            state.setCurrentIndex(this.getNextUuid(state, forward), this.historyLimit());
             state.paused = false;
             return state;
-        }, List.of(MusicPlayerState.CURRENT_INDEX, MusicPlayerState.PAUSED));
+        }, List.of(MusicPlayerState.CURRENT_INDEX, MusicPlayerState.PAUSED, MusicPlayerState.PLAYBACK_HISTORY));
 
         this.writeConfig();
     }
 
     public void playNextAsync(int forward) {
         ConcertoRunner.run(() -> this.playNext(forward));
+    }
+
+    public boolean canPlayPrevious() {
+        return MusicRoom.clientGetState() != MusicRoom.ClientState.MUSIC_AGENT
+                && this.getState().get().getPreviousIndex(this.historyLimit()) != null;
+    }
+
+    public void playPrevious() {
+        if (MusicRoom.clientGetState() == MusicRoom.ClientState.MUSIC_AGENT) return;
+
+        UUID previous = this.getState().get().getPreviousIndex(this.historyLimit());
+        if (previous == null) return;
+
+        this.forcePaused = false;
+        this.getState().set((s) -> {
+            s.setCurrentIndex(previous, this.historyLimit());
+            s.paused = false;
+            return s;
+        }, List.of(MusicPlayerState.CURRENT_INDEX, MusicPlayerState.PAUSED, MusicPlayerState.PLAYBACK_HISTORY));
+        this.writeConfig();
+    }
+
+    public void playPreviousAsync() {
+        ConcertoRunner.run(this::playPrevious);
     }
 
     public void remove(UUID uuid) {
@@ -282,13 +311,14 @@ public class MusicPlayerHandler {
                     if (Objects.equals(s.currentIndex, uuid)) {
                         replacement = pickReplacementAfterRemove(s, uuid);
                     }
+                    s.removeFromPlaybackHistory(uuid);
                     s.musicList.remove(uuid);
-                    s.currentIndex = replacement;
+                    s.setCurrentIndex(replacement, this.historyLimit());
                     return s;
                 }, (s) ->
                         Objects.equals(s.currentIndex, uuid) ?
-                                List.of(MusicPlayerState.CURRENT_INDEX, MusicPlayerState.MUSIC_LIST) :
-                                List.of(MusicPlayerState.MUSIC_LIST)
+                                List.of(MusicPlayerState.CURRENT_INDEX, MusicPlayerState.MUSIC_LIST, MusicPlayerState.PLAYBACK_HISTORY) :
+                                List.of(MusicPlayerState.MUSIC_LIST, MusicPlayerState.PLAYBACK_HISTORY)
         );
     }
 
@@ -317,6 +347,11 @@ public class MusicPlayerHandler {
             case NORMAL -> advanceCircular(state.musicList, cur, true, Math.abs(forward));
             case REVERSED -> advanceCircular(state.musicList, cur, false, Math.abs(forward));
         };
+    }
+
+    private int historyLimit() {
+        return this.getState() == this.localRecord
+                ? Math.max(25, ClientConfig.INSTANCE.options.playbackHistorySize) : 25;
     }
 
     private UUID advanceCircular(ConcertoPlayerList list, UUID start, boolean nextDir, int steps) {
@@ -375,10 +410,11 @@ public class MusicPlayerHandler {
     public void setCurrentIndex(UUID uuid) {
         if (uuid != null) this.forcePaused = false; // picking a track implies "play it"
         this.getState().set((state) -> {
-            state.currentIndex = uuid == null ? null : (state.musicList.contains(uuid) ? uuid : state.musicList.firstUuid());
+            state.setCurrentIndex(uuid == null ? null : (state.musicList.contains(uuid) ? uuid : state.musicList.firstUuid()),
+                    this.historyLimit());
             state.paused = false;
             return state;
-        }, List.of(MusicPlayerState.CURRENT_INDEX, MusicPlayerState.PAUSED));
+        }, List.of(MusicPlayerState.CURRENT_INDEX, MusicPlayerState.PAUSED, MusicPlayerState.PLAYBACK_HISTORY));
     }
 
     public static void reloadConfig(Runnable callback) {

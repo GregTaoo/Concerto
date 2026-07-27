@@ -257,6 +257,7 @@
   "concerto.options.handshakeRequired": "需要服务端握手",
   "concerto.options.playerVolume": "Concerto 音量",
   "concerto.options.playerVolumeFollowsMaster": "跟随主音量",
+  "concerto.options.playbackHistorySize": "上一首历史记录",
   "concerto.options.openalBackend": "OpenAL 输出",
   "concerto.options.openalBackend.tooltip": "下一首开始生效",
   "concerto.player.buffering": "缓冲中...",

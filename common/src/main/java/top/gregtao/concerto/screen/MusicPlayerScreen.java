@@ -30,14 +30,15 @@ import java.util.ArrayList;
 
 public class MusicPlayerScreen extends ConcertoScreen {
 
-    private static final int MODE_BUTTON_W = 88;
-    private static final int PLAYLIST_BUTTON_W = 80;
-    private static final int ORDER_BUTTON_W = 80;
+    private static final int MODE_BUTTON_W = 76;
+    private static final int PLAYLIST_BUTTON_W = 72;
+    private static final int ORDER_BUTTON_W = 72;
     private static final int ICON_BUTTON_W = 20;
     private static final int BUTTON_GAP = 8;
     private static final int VOLUME_BUTTON_W = 20;
 
     private CycleButton<PlayerView> playerViewButton;
+    private Button previousButton;
     private Button playPauseButton;
     private Button nextButton;
     private CycleButton<OrderType> orderButton;
@@ -61,8 +62,8 @@ public class MusicPlayerScreen extends ConcertoScreen {
         super.init();
 
         int y = this.height - 30;
-        int totalWidth = MODE_BUTTON_W + PLAYLIST_BUTTON_W + 2 * ICON_BUTTON_W + ORDER_BUTTON_W
-                + VOLUME_BUTTON_W + 5 * BUTTON_GAP;
+        int totalWidth = MODE_BUTTON_W + PLAYLIST_BUTTON_W + 3 * ICON_BUTTON_W + ORDER_BUTTON_W
+                + VOLUME_BUTTON_W + 6 * BUTTON_GAP;
         int x = (this.width - totalWidth) / 2;
 
         this.playerViewButton = CycleButton.<PlayerView>builder(view -> Component.translatable(
@@ -87,6 +88,12 @@ public class MusicPlayerScreen extends ConcertoScreen {
         this.addRenderableWidget(playlistButton);
         x += PLAYLIST_BUTTON_W + BUTTON_GAP;
 
+        this.previousButton = Button.builder(
+                Component.literal("⏮"),
+                button -> MusicPlayerHandler.INSTANCE.playPreviousAsync()
+        ).pos(x, y).size(ICON_BUTTON_W, 20).build();
+        x += ICON_BUTTON_W + BUTTON_GAP;
+
         this.playPauseButton = Button.builder(
                 this.playPauseLabel(),
                 button -> MusicPlayerHandler.INSTANCE.tryForcePause(!MusicPlayerHandler.INSTANCE.isPaused())
@@ -109,6 +116,7 @@ public class MusicPlayerScreen extends ConcertoScreen {
         this.volumeControl = new VolumeControlWidget(this.font, x, y, VOLUME_BUTTON_W, 20);
         this.addWidget(this.volumeControl);
 
+        this.addRenderableWidget(this.previousButton);
         this.addRenderableWidget(this.playPauseButton);
         this.addRenderableWidget(this.nextButton);
         this.addRenderableWidget(this.orderButton);
@@ -120,6 +128,8 @@ public class MusicPlayerScreen extends ConcertoScreen {
     // changes must reach an already-open screen (init-only refresh went stale)
     private void updateButtonStates() {
         this.playPauseButton.active = PlayerPermissions.canControlPlayback();
+        this.previousButton.active = PlayerPermissions.canChangeMusicIndex()
+                && MusicPlayerHandler.INSTANCE.canPlayPrevious();
         this.nextButton.active = PlayerPermissions.canChangeMusicIndex();
         this.orderButton.active = PlayerPermissions.canChangeOrderType();
 

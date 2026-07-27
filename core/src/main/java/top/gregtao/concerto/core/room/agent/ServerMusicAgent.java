@@ -206,7 +206,7 @@ public class ServerMusicAgent {
             }
 
             if (nextUid != null) {
-                s.currentIndex = nextUid;
+                s.setCurrentIndex(nextUid, 25);
                 if (!this.currentlyFreeTime.get()) {
                     while (list.firstUuid() != null && !list.firstUuid().equals(nextUid)) {
                         list.removeFirst();
@@ -216,15 +216,16 @@ public class ServerMusicAgent {
                 list.clear();
                 if (!this.freeTimePlaylist.isEmpty()) {
                     this.freeTimePlaylist.forEach(list::addLast);
-                    s.currentIndex = list.firstUuid();
+                    s.setCurrentIndex(list.firstUuid(), 25);
                     this.currentlyFreeTime.set(true);
                 } else {
-                    s.currentIndex = null;
+                    s.setCurrentIndex(null, 25);
                     s.paused = true;
                     this.currentlyFreeTime.set(false);
                 }
             }
-        }, List.of(MusicRoomState.MUSIC_LIST, MusicRoomState.CURRENT_INDEX, MusicRoomState.PAUSED));
+        }, List.of(MusicRoomState.MUSIC_LIST, MusicRoomState.CURRENT_INDEX, MusicRoomState.PAUSED,
+                MusicPlayerState.PLAYBACK_HISTORY));
     }
 
     private void resolveAndPlayCurrentMusic() {
@@ -307,14 +308,14 @@ public class ServerMusicAgent {
             this.updateState(state -> {
                 if (this.currentlyFreeTime.get()) {
                     state.musicList.clear();
-                    state.currentIndex = null;
+                    state.setCurrentIndex(null, 25);
                     this.currentlyFreeTime.set(false);
                 }
                 UUID addedUuid = state.musicList.addLast(music);
                 if (state.currentIndex == null) {
-                    state.currentIndex = addedUuid;
+                    state.setCurrentIndex(addedUuid, 25);
                 }
-            }, List.of(MusicRoomState.MUSIC_LIST, MusicRoomState.CURRENT_INDEX));
+            }, List.of(MusicRoomState.MUSIC_LIST, MusicRoomState.CURRENT_INDEX, MusicPlayerState.PLAYBACK_HISTORY));
 
             this.addMusicTimeRecord.put(playerName, System.currentTimeMillis());
             this.broadcast("concerto.agent.add", playerName, music.getMeta().title(), music.getMeta().author());
@@ -346,11 +347,13 @@ public class ServerMusicAgent {
 
         this.updateState(s -> {
             s.musicList.clear();
-            s.currentIndex = null;
+            s.setCurrentIndex(null, 25);
+            s.clearPlaybackHistory();
             s.resolvedMedia = null;
             s.resolvedStartTime = 0L;
             s.paused = true;
-        }, List.of(MusicRoomState.MUSIC_LIST, MusicRoomState.CURRENT_INDEX, MusicRoomState.RESOLVED_MEDIA, MusicRoomState.RESOLVED_START_TIME, MusicRoomState.PAUSED));
+        }, List.of(MusicRoomState.MUSIC_LIST, MusicRoomState.CURRENT_INDEX, MusicRoomState.RESOLVED_MEDIA,
+                MusicRoomState.RESOLVED_START_TIME, MusicRoomState.PAUSED, MusicPlayerState.PLAYBACK_HISTORY));
     }
 
     /**

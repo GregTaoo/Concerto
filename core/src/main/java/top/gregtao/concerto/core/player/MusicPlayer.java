@@ -23,6 +23,7 @@ import top.gregtao.concerto.core.util.ConcertoRunner;
 import top.gregtao.concerto.core.util.FileUtil;
 import top.gregtao.concerto.core.util.Pair;
 
+import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.LineUnavailableException;
 import java.io.File;
 import java.io.IOException;
@@ -75,6 +76,7 @@ public class MusicPlayer implements EngineListener {
     // format change) can't silently switch backends; the option label promises
     // "takes effect next track"
     private volatile ClientConfig.PlaybackBackend sessionBackend = null;
+    private volatile float effectiveGain = 1f;
 
     public final AudioSpectrum audioSpectrum = new AudioSpectrum();
 
@@ -226,7 +228,6 @@ public class MusicPlayer implements EngineListener {
             if (MusicPlayerHandler.INSTANCE.isPaused()) {
                 this.engine.setPaused(true);
             }
-            Concerto.getLogger().info("Start playing music {} - {}", music.getMeta().title(), music.getMeta().author());
             ConcertoEvents.ON_NEW_MUSIC_STARTED.emit(music);
         } catch (Exception e) {
             this.handlePlaybackFailure(music, e);
@@ -308,6 +309,7 @@ public class MusicPlayer implements EngineListener {
 
     public void setGain(double gain) {
         float clamped = (float) Math.max(0.0, Math.min(1.0, gain));
+        this.effectiveGain = clamped;
         this.engine.setGain(clamped);
     }
 
@@ -472,6 +474,23 @@ public class MusicPlayer implements EngineListener {
     @Override
     public void onTrackStarted(PlaybackSession session) {
         ConcertoEvents.ON_PLAYER_START.emit();
+    }
+
+    @Override
+    public void onAudioOutputOpened(PlaybackSession session, AudioSink sink, AudioFormat format) {
+        MusicMetaData meta = session.getMusic().getMeta();
+        ClientConfig.ClientConfigOptions options = ClientConfig.INSTANCE.options;
+        ClientConfig.PlaybackBackend activeBackend = sink instanceof OpenALSink
+                ? ClientConfig.PlaybackBackend.OPENAL : ClientConfig.PlaybackBackend.JAVASOUND;
+        Concerto.getLogger().info(
+                "Start playing music {} - {} | source={} | container={} | suffix={} | backend={} (configured={}) | "
+                        + "output={} | pcm={} {}-bit {} channel(s), {} Hz, frameSize={}, {} endian | "
+                        + "volume=config={}, followsMaster={}, effective={}",
+                meta.title(), meta.author(), meta.getSource(), session.getFormat(), session.getSuffixHint(),
+                activeBackend, options.playbackBackend, sink.getOutputDescription(), format.getEncoding(),
+                format.getSampleSizeInBits(), format.getChannels(), format.getSampleRate(), format.getFrameSize(),
+                format.isBigEndian() ? "big" : "little", options.playerVolume,
+                options.playerVolumeFollowsMaster, this.effectiveGain);
     }
 
     /**

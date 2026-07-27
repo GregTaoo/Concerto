@@ -285,13 +285,11 @@ public class MusicPlayerHandler {
 
     public void playPrevious() {
         if (MusicRoom.clientGetState() == MusicRoom.ClientState.MUSIC_AGENT) return;
-
-        UUID previous = this.getState().get().getPreviousIndex(this.historyLimit());
-        if (previous == null) return;
+        if (this.getState().get().getPreviousIndex(this.historyLimit()) == null) return;
 
         this.forcePaused = false;
         this.getState().set((s) -> {
-            s.setCurrentIndex(previous, this.historyLimit());
+            if (s.popPreviousIndex(this.historyLimit()) == null) return s;
             s.paused = false;
             return s;
         }, List.of(MusicPlayerState.CURRENT_INDEX, MusicPlayerState.PAUSED, MusicPlayerState.PLAYBACK_HISTORY));

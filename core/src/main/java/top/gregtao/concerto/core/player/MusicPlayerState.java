@@ -8,6 +8,7 @@ import top.gregtao.concerto.core.music.SharedMusic;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 public class MusicPlayerState implements Copyable<MusicPlayerState> {
@@ -54,15 +55,12 @@ public class MusicPlayerState implements Copyable<MusicPlayerState> {
     }
 
     public void setCurrentIndex(UUID target, int historyLimit) {
-        if (!this.isHistoryMusic(this.currentIndex) || this.currentIndex.equals(target)) {
+        if (Objects.equals(this.currentIndex, target)) {
             this.currentIndex = target;
             this.trimPlaybackHistory(historyLimit);
             return;
         }
-        if (!this.playbackHistory.isEmpty()
-                && this.playbackHistory.get(this.playbackHistory.size() - 1).equals(target)) {
-            this.playbackHistory.remove(this.playbackHistory.size() - 1);
-        } else {
+        if (this.isHistoryMusic(this.currentIndex)) {
             this.playbackHistory.add(this.currentIndex);
         }
         this.currentIndex = target;
@@ -70,8 +68,21 @@ public class MusicPlayerState implements Copyable<MusicPlayerState> {
     }
 
     public UUID getPreviousIndex(int historyLimit) {
+        if (historyLimit <= 0) return null;
+        for (int i = this.playbackHistory.size() - 1; i >= 0; i--) {
+            UUID uuid = this.playbackHistory.get(i);
+            if (this.isHistoryMusic(uuid)) return uuid;
+        }
+        return null;
+    }
+
+    public UUID popPreviousIndex(int historyLimit) {
         this.trimPlaybackHistory(historyLimit);
-        return this.playbackHistory.isEmpty() ? null : this.playbackHistory.get(this.playbackHistory.size() - 1);
+        if (this.playbackHistory.isEmpty()) return null;
+
+        UUID previous = this.playbackHistory.remove(this.playbackHistory.size() - 1);
+        this.currentIndex = previous;
+        return previous;
     }
 
     public void removeFromPlaybackHistory(UUID uuid) {

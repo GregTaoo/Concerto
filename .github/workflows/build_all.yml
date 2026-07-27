@@ -159,8 +159,15 @@ jobs:
           done
 
       # --- 分开上传: Fabric ---
-      - name: Publish Fabric to Modrinth
+      - name: Check Fabric on Modrinth
+        id: modrinth-fabric
         if: steps.build-run.outputs.fabric_file != ''
+        env:
+          MODRINTH_TOKEN: ${{ secrets.MODRINTH_TOKEN }}
+        run: bash ./.github/scripts/modrinth-idempotency.sh "${{ steps.build-run.outputs.fabric_file }}" A0VZd1kW
+
+      - name: Publish Fabric to Modrinth
+        if: steps.modrinth-fabric.outputs.should_upload == 'true'
         uses: cloudnode-pro/modrinth-publish@v2
         with:
           token: ${{ secrets.MODRINTH_TOKEN }}
@@ -173,8 +180,15 @@ jobs:
           files: ${{ steps.build-run.outputs.fabric_file }}
 
       # --- 分开上传: NeoForge ---
-      - name: Publish NeoForge to Modrinth
+      - name: Check NeoForge on Modrinth
+        id: modrinth-neoforge
         if: steps.build-run.outputs.neoforge_file != ''
+        env:
+          MODRINTH_TOKEN: ${{ secrets.MODRINTH_TOKEN }}
+        run: bash ./.github/scripts/modrinth-idempotency.sh "${{ steps.build-run.outputs.neoforge_file }}" A0VZd1kW
+
+      - name: Publish NeoForge to Modrinth
+        if: steps.modrinth-neoforge.outputs.should_upload == 'true'
         uses: cloudnode-pro/modrinth-publish@v2
         with:
           token: ${{ secrets.MODRINTH_TOKEN }}
@@ -187,8 +201,15 @@ jobs:
           files: ${{ steps.build-run.outputs.neoforge_file }}
 
       # --- 分开上传: Paper ---
-      - name: Publish Paper to Modrinth
+      - name: Check Paper on Modrinth
+        id: modrinth-paper
         if: steps.build-run.outputs.paper_file != ''
+        env:
+          MODRINTH_TOKEN: ${{ secrets.MODRINTH_TOKEN }}
+        run: bash ./.github/scripts/modrinth-idempotency.sh "${{ steps.build-run.outputs.paper_file }}" A0VZd1kW
+
+      - name: Publish Paper to Modrinth
+        if: steps.modrinth-paper.outputs.should_upload == 'true'
         uses: cloudnode-pro/modrinth-publish@v2
         with:
           token: ${{ secrets.MODRINTH_TOKEN }}
@@ -272,11 +293,11 @@ jobs:
           echo "- **Base Version**: ${{ steps.build-run.outputs.shorter_version }}" >> $GITHUB_STEP_SUMMARY
           
           if [ -n "${{ steps.build-run.outputs.fabric_file }}" ]; then
-            echo "- **Fabric**: Uploaded ${{ steps.build-run.outputs.fabric_display }} (${{ steps.build-run.outputs.fabric_name }})" >> $GITHUB_STEP_SUMMARY
+            echo "- **Fabric**: Processed ${{ steps.build-run.outputs.fabric_display }} (${{ steps.build-run.outputs.fabric_name }}; published or already present)" >> $GITHUB_STEP_SUMMARY
           fi
           if [ -n "${{ steps.build-run.outputs.neoforge_file }}" ]; then
-            echo "- **NeoForge**: Uploaded ${{ steps.build-run.outputs.neoforge_display }} (${{ steps.build-run.outputs.neoforge_name }})" >> $GITHUB_STEP_SUMMARY
+            echo "- **NeoForge**: Processed ${{ steps.build-run.outputs.neoforge_display }} (${{ steps.build-run.outputs.neoforge_name }}; published or already present)" >> $GITHUB_STEP_SUMMARY
           fi
           if [ -n "${{ steps.build-run.outputs.paper_file }}" ]; then
-            echo "- **Paper**: Uploaded ${{ steps.build-run.outputs.paper_display }} (${{ steps.build-run.outputs.paper_name }})" >> $GITHUB_STEP_SUMMARY
+            echo "- **Paper**: Processed ${{ steps.build-run.outputs.paper_display }} (${{ steps.build-run.outputs.paper_name }}; published or already present)" >> $GITHUB_STEP_SUMMARY
           fi

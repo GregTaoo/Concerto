@@ -263,21 +263,20 @@ jobs:
           release_type: release
           game_versions: Minecraft:${{ steps.build-run.outputs.neoforge_mc }},NeoForge
 
-      # Paper uses CurseForge's Bukkit endpoint. It needs a separate Bukkit/Paper
-      # project, so it stays disabled until that project ID is configured.
+      # Paper uses CurseForge's Bukkit endpoint and its dedicated plugin project.
       - name: Check Paper on CurseForge
         id: curseforge-paper
-        if: steps.build-run.outputs.paper_file != '' && vars.CURSEFORGE_PAPER_PROJECT_ID != ''
+        if: steps.build-run.outputs.paper_file != ''
         env:
           CURSEFORGE_API_TOKEN: ${{ secrets.CURSEFORGE_API_TOKEN }}
-        run: bash ./.github/scripts/curseforge-idempotency.sh "${{ steps.build-run.outputs.paper_file }}" "${{ vars.CURSEFORGE_PAPER_PROJECT_ID }}"
+        run: bash ./.github/scripts/curseforge-idempotency.sh "${{ steps.build-run.outputs.paper_file }}" 1627378
 
       - name: Publish Paper to CurseForge
         if: steps.curseforge-paper.outputs.should_upload == 'true'
         uses: itsmeow/curseforge-upload@v3
         with:
           token: ${{ secrets.CURSEFORGE_API_TOKEN }}
-          project_id: ${{ vars.CURSEFORGE_PAPER_PROJECT_ID }}
+          project_id: 1627378
           game_endpoint: bukkit
           file_path: ${{ steps.build-run.outputs.paper_file }}
           display_name: ${{ steps.build-run.outputs.paper_display }}

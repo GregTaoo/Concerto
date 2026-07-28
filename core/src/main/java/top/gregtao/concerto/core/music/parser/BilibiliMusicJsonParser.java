@@ -10,12 +10,16 @@ public class BilibiliMusicJsonParser implements JsonParser<BilibiliMusic> {
     public BilibiliMusic fromJson(JsonObject object) {
         String aid = object.has("aid") ? object.get("aid").getAsString() : null;
         String cid = object.has("cid") ? object.get("cid").getAsString() : null;
-        return new BilibiliMusic(object.get("bvid").getAsString(), aid, cid);
+        Integer page = object.has("page") ? object.get("page").getAsInt() : null;
+        return new BilibiliMusic(object.get("bvid").getAsString(), page, aid, cid);
     }
 
     @Override
     public JsonObject toJson(JsonObject object, BilibiliMusic music) {
         object.addProperty("bvid", music.getBvid());
+        if (music.getPage() != null) {
+            object.addProperty("page", music.getPage());
+        }
         if (music.getAid() != null && music.getCid() != null) {
             object.addProperty("aid", music.getAid());
             object.addProperty("cid", music.getCid());

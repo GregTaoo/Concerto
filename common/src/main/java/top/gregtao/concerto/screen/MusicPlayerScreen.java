@@ -82,16 +82,12 @@ public class MusicPlayerScreen extends ConcertoScreen {
         ).pos(x, y).size(ICON_BUTTON_W, 20).build();
         x += ICON_BUTTON_W + BUTTON_GAP;
 
-        this.playerViewButton = CycleButton.<PlayerView>builder(view -> Component.translatable(
-                        view == PlayerView.COVER ? "concerto.screen.player_view.cover" : "concerto.screen.player_view.lyrics"))
-                .withValues(PlayerView.values())
-                .withInitialValue(this.playerView)
-                .create(x, y, MODE_BUTTON_W, 20, Component.translatable("concerto.screen.player_view"), (button, view) -> {
-                    this.playerView = view;
-                    this.scrollOffset = 0;
-                });
-        this.addRenderableWidget(this.playerViewButton);
-        x += MODE_BUTTON_W + BUTTON_GAP;
+        this.orderButton = CycleButton.builder((OrderType val) -> Component.literal(val.getName()))
+                .withValues(OrderType.values())
+                .withInitialValue(MusicPlayerHandler.INSTANCE.getOrderType())
+                .create(x, y, ORDER_BUTTON_W, 20, Component.translatable("concerto.screen.order"),
+                        (widget, orderType) -> MusicPlayerHandler.INSTANCE.setOrderType(orderType));
+        x += ORDER_BUTTON_W + BUTTON_GAP;
 
         Button playlistButton = Button.builder(
                 Component.translatable("concerto.screen.main_list"),
@@ -104,12 +100,16 @@ public class MusicPlayerScreen extends ConcertoScreen {
         this.addRenderableWidget(playlistButton);
         x += PLAYLIST_BUTTON_W + BUTTON_GAP;
 
-        this.orderButton = CycleButton.builder((OrderType val) -> Component.literal(val.getName()))
-                .withValues(OrderType.values())
-                .withInitialValue(MusicPlayerHandler.INSTANCE.getOrderType())
-                .create(x, y, ORDER_BUTTON_W, 20, Component.translatable("concerto.screen.order"),
-                        (widget, orderType) -> MusicPlayerHandler.INSTANCE.setOrderType(orderType));
-        x += ORDER_BUTTON_W + BUTTON_GAP;
+        this.playerViewButton = CycleButton.<PlayerView>builder(view -> Component.translatable(
+                        view == PlayerView.COVER ? "concerto.screen.player_view.cover" : "concerto.screen.player_view.lyrics"))
+                .withValues(PlayerView.values())
+                .withInitialValue(this.playerView)
+                .create(x, y, MODE_BUTTON_W, 20, Component.translatable("concerto.screen.player_view"), (button, view) -> {
+                    this.playerView = view;
+                    this.scrollOffset = 0;
+                });
+        this.addRenderableWidget(this.playerViewButton);
+        x += MODE_BUTTON_W + BUTTON_GAP;
 
         this.volumeControl = new VolumeControlWidget(this.font, x, y, ICON_BUTTON_W, 20);
         this.addWidget(this.volumeControl);

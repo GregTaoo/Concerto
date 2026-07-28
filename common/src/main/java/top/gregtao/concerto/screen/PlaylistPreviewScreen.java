@@ -69,9 +69,9 @@ public class PlaylistPreviewScreen extends ConcertoScreen {
             }
         }).pos(215, this.height - 30).size(60, 20).build());
 
-        this.addRenderableWidget(Button.builder(Component.translatable("concerto.playlist.export"), button -> {
-            Component text = PresetPlaylistsConfig.saveToLocalPlaylists(this.playlist) ? Component.translatable("concerto.playlist.export.success") :
-                    Component.translatable("concerto.playlist.export.fail");
+        this.addRenderableWidget(Button.builder(Component.translatable("concerto.playlist.save_local"), button -> {
+            Component text = PresetPlaylistsConfig.saveToLocalPlaylists(this.playlist) ? Component.translatable("concerto.playlist.save_local.success") :
+                    Component.translatable("concerto.playlist.save_local.fail");
             this.displayAlert(text);
         }).pos(280, this.height - 30).size(60, 20).build());
 

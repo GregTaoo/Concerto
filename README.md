@@ -67,6 +67,10 @@ Your starting point for playlists, music services (NetEase / QQ / KuGou), search
 - The **volume button** pops up a slider (click anywhere else to dismiss). Volume changes apply instantly and are saved to the config.
 - The search box filters the current playlist.
 
+### Playlist previews
+- Select **Save to Local** to add the displayed playlist to **Local Playlists** immediately; it is also written as JSON under `Concerto/local_playlists/`.
+
+
 ### Player screen
 - Drag the progress bar to **seek**; a preview of the target position is shown while dragging.
 - Shows title, artist, source, cover art, and buffering state for streamed tracks.

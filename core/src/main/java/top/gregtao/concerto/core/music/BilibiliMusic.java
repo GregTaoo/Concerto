@@ -26,11 +26,24 @@ public class BilibiliMusic extends Music implements CacheableMusic, DynamicPath 
     private String rawPath;
 
     public BilibiliMusic(String bvid) {
+        this(bvid, null, null);
+    }
+
+    public BilibiliMusic(String bvid, String aid, String cid) {
         this.bvid = bvid;
+        this.aid = aid;
+        this.cid = cid;
     }
 
     public String getBvid() {
         return this.bvid;
+    }
+    public String getAid() {
+        return this.aid;
+    }
+
+    public String getCid() {
+        return this.cid;
     }
 
     @Override
@@ -60,6 +73,7 @@ public class BilibiliMusic extends Music implements CacheableMusic, DynamicPath 
 
     @Override
     public String updateRawPath() {
+        if (this.aid == null || this.cid == null) throw new NullPointerException("aid or cid is null");
         this.rawPath = BilibiliApiClient.INSTANCE.getDirectAudioUrl(this.aid, this.cid);
         return this.rawPath;
     }

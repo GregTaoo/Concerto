@@ -28,7 +28,6 @@ public class BilibiliApiClient extends HttpApiClient {
     }
 
     public String getDirectAudioUrl(String aid, String cid) {
-        this.getLogger().info("Resolving Bilibili audio stream: aid={}, cid={}", aid, cid);
         JsonObject object = this.getAudioUrl(aid, cid).getAsJsonObject("data").getAsJsonObject("dash");
         JsonArray streams = object.getAsJsonArray("audio");
         JsonObject selected = null;
@@ -50,9 +49,6 @@ public class BilibiliApiClient extends HttpApiClient {
         if (selected == null || !selected.has("baseUrl")) {
             throw new IllegalStateException("Bilibili playurl response contains no audio stream");
         }
-        this.getLogger().info("Resolved Bilibili audio stream: aid={}, cid={}, codecs={}, bandwidth={}",
-                aid, cid, selected.has("codecs") ? selected.get("codecs").getAsString() : "unknown",
-                selected.has("bandwidth") ? selected.get("bandwidth").getAsInt() : "unknown");
         return selected.get("baseUrl").getAsString();
     }
 }

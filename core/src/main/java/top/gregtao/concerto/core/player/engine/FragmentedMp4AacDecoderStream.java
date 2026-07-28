@@ -45,6 +45,7 @@ final class FragmentedMp4AacDecoderStream extends InputStream {
     private final ArrayDeque<FrameRange> frames = new ArrayDeque<>();
 
     private long scanPosition;
+    private long downloadPosition;
     private int sampleRate = -1;
     private int channels = -1;
     private byte[] pcm = new byte[0];
@@ -80,6 +81,9 @@ final class FragmentedMp4AacDecoderStream extends InputStream {
     int getChannels() {
         return this.channels;
     }
+    long getDownloadPosition() {
+        return this.downloadPosition;
+    }
 
     @Override
     public int read() throws IOException {
@@ -113,6 +117,7 @@ final class FragmentedMp4AacDecoderStream extends InputStream {
             FrameRange frame = this.frames.removeFirst();
             byte[] encoded = new byte[frame.size];
             this.readFully(frame.position, encoded, 0, encoded.length);
+            this.downloadPosition = frame.position + frame.size;
             try {
                 this.receivedFrame = false;
                 this.decoder.decodeFrame(encoded, this.receiver);

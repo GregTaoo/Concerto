@@ -322,7 +322,7 @@ public class PlaybackEngine implements Closeable {
             return; // still buffering
         }
         AudioByteSource source = this.session.getByteSource();
-        long rawPosition = this.decoded.rawStream.position();
+        long rawPosition = this.decoded.getDownloadPosition();
         this.updateDownloadWindow(rawPosition, this.snapshot.positionMillis());
         if (!source.awaitAvailable(rawPosition, PUMP_CHUNK * 2, WAIT_SLICE_MILLIS)) {
             this.buffering = true;

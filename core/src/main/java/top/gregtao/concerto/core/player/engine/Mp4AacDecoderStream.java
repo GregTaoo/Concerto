@@ -43,6 +43,7 @@ public class Mp4AacDecoderStream extends InputStream {
     private int pcmPos = 0, pcmLen = 0;
     private boolean endOfStream = false;
     private boolean receivedFrame;
+    private long downloadPosition;
 
     public Mp4AacDecoderStream(AudioByteSource source) throws IOException, UnsupportedAudioFileException {
         try {
@@ -76,6 +77,9 @@ public class Mp4AacDecoderStream extends InputStream {
 
     public int getChannels() {
         return this.channels;
+    }
+    public long getDownloadPosition() {
+        return this.downloadPosition;
     }
 
     @Override
@@ -111,6 +115,7 @@ public class Mp4AacDecoderStream extends InputStream {
             try {
                 this.receivedFrame = false;
                 this.decoder.decodeFrame(frame.getData(), this.receiver);
+                this.downloadPosition = frame.getOffset() + frame.getSize();
             } catch (AACException e) {
                 continue; // skip a corrupt frame
             }

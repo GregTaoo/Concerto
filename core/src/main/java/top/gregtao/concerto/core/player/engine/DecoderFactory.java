@@ -13,6 +13,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.SequenceInputStream;
+import java.util.function.LongSupplier;
 import java.util.logging.Logger;
 
 /**
@@ -29,11 +30,18 @@ public final class DecoderFactory {
         public final AudioInputStream pcmStream;
         public final AudioFormat pcmFormat;
         public final ByteSourceInputStream rawStream;
+        private final LongSupplier downloadPosition;
 
-        DecodedStream(AudioInputStream pcmStream, AudioFormat pcmFormat, ByteSourceInputStream rawStream) {
+        DecodedStream(AudioInputStream pcmStream, AudioFormat pcmFormat, ByteSourceInputStream rawStream,
+                      LongSupplier downloadPosition) {
             this.pcmStream = pcmStream;
             this.pcmFormat = pcmFormat;
             this.rawStream = rawStream;
+            this.downloadPosition = downloadPosition;
+        }
+
+        public long getDownloadPosition() {
+            return this.downloadPosition.getAsLong();
         }
 
         public void close() {
@@ -63,22 +71,22 @@ public final class DecoderFactory {
         // the dedicated pull decoders emit 16-bit little-endian PCM directly.
         if (format == ContainerFormat.OGG_OPUS) {
             OpusDecoderStream opus = new OpusDecoderStream(input, byteOffset == 0);
-            return wrapPcmStream(opus, 48000, opus.getChannels(), raw);
+            return wrapPcmStream(opus, 48000, opus.getChannels(), raw, raw::position);
         }
         if (format == ContainerFormat.AAC_ADTS) {
             AacAdtsDecoderStream aac = new AacAdtsDecoderStream(input);
-            return wrapPcmStream(aac, aac.getSampleRate(), aac.getChannels(), raw);
+            return wrapPcmStream(aac, aac.getSampleRate(), aac.getChannels(), raw, raw::position);
         }
         if (format == ContainerFormat.M4A) {
             // M4A is never opened mid-stream (no index builder); the decoder reads
             // the source directly through a seekable view so trailing-moov works.
             try {
                 Mp4AacDecoderStream m4a = new Mp4AacDecoderStream(source);
-                return wrapPcmStream(m4a, m4a.getSampleRate(), m4a.getChannels(), raw);
+                return wrapPcmStream(m4a, m4a.getSampleRate(), m4a.getChannels(), raw, m4a::getDownloadPosition);
             } catch (UnsupportedAudioFileException exception) {
                 if (!"MP4 AAC track contains no decodable frames".equals(exception.getMessage())) throw exception;
                 FragmentedMp4AacDecoderStream m4a = new FragmentedMp4AacDecoderStream(source);
-                return wrapPcmStream(m4a, m4a.getSampleRate(), m4a.getChannels(), raw);
+                return wrapPcmStream(m4a, m4a.getSampleRate(), m4a.getChannels(), raw, m4a::getDownloadPosition);
             }
         }
 
@@ -102,17 +110,17 @@ public final class DecoderFactory {
         );
 
         AudioInputStream pcm = AudioSystem.getAudioInputStream(targetFormat, encoded);
-        return new DecodedStream(pcm, targetFormat, raw);
+        return new DecodedStream(pcm, targetFormat, raw, raw::position);
     }
 
     /** Wraps a decoder emitting 16-bit little-endian PCM into a {@link DecodedStream}. */
     private static DecodedStream wrapPcmStream(InputStream pcmSource, int sampleRate, int channels,
-                                               ByteSourceInputStream raw) {
+                                               ByteSourceInputStream raw, LongSupplier downloadPosition) {
         AudioFormat targetFormat = new AudioFormat(
                 AudioFormat.Encoding.PCM_SIGNED,
                 sampleRate, 16, channels, 2 * channels, sampleRate, false);
         AudioInputStream pcm = new AudioInputStream(pcmSource, targetFormat, AudioSystem.NOT_SPECIFIED);
-        return new DecodedStream(pcm, targetFormat, raw);
+        return new DecodedStream(pcm, targetFormat, raw, downloadPosition);
     }
 
     private static DecodedStream openFlac(AudioByteSource source, long byteOffset, byte[] prefixBytes,
@@ -135,7 +143,7 @@ public final class DecoderFactory {
         AudioInputStream pcm = new AudioInputStream(
                 new FlacDecoderStream(input, targetFormat, bitsPerSample, logger),
                 targetFormat, AudioSystem.NOT_SPECIFIED);
-        return new DecodedStream(pcm, targetFormat, raw);
+        return new DecodedStream(pcm, targetFormat, raw, raw::position);
     }
 
     /** Reads the marker + metadata blocks up to and including STREAMINFO. */

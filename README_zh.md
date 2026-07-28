@@ -79,7 +79,7 @@ Concerto 会把设置、歌单、下载内容和登录信息保存在游戏或�
 - **管理视图**（已在房间内时）：成员列表、改名、切换*可见* / *可加入*、给成员授权、解散或退出房间。
 
 ### 选项界面
-可在游戏内选项中调整播放音量、是否跟随 Minecraft 主音量、音频输出、HUD 显隐、滚动文字速度、网易云音质等。切换音频输出会从下一首开始生效。
+可在游戏内选项中调整音频输出、HUD 显隐、滚动文字速度、网易云音质等。切换音频输出会从下一首开始生效。
 
 ---
 
@@ -190,6 +190,7 @@ Concerto 只会在你主动操作时保存音乐：`/concerto save` 保存当前
 | `playerVolume` | `1.0` | 播放器音量，`0.0` – `1.0` |
 | `playerVolumeFollowsMaster` | `true` | 音量再乘以 Minecraft 主音量 |
 | `playbackBackend` | `"JAVASOUND"` | 音频后端：`"JAVASOUND"` 或 `"OPENAL"`，切换后下一首生效 |
+| `displayPlayerScreenCoverAndSpectrum` | `true` | 在播放页面显示封面和频谱；`false` 时使用全宽歌词视图 |
 | `neteaseMusicQuality` | `"HIRES"` | 网易云音质：`"STANDARD"`、`"HIGHER"`、`"EXHIGH"`、`"LOSSLESS"`、`"HIRES"` |
 | `maxCacheSize` | `100000000` | 缓存上限（字节，音乐与图片各自计算） |
 | `handshakeRequired` | `true` | 使用服务端功能前要求完成 Concerto 握手校验 |

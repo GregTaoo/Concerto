@@ -80,7 +80,7 @@ Your starting point for playlists, music services (NetEase / QQ / KuGou), search
 - **Management view** (when you are in a room): member list, rename, toggle *visible* / *joinable*, grant co-op permission, and dissolve or leave the room.
 
 ### Options screen
-Use the in-game options to adjust volume, whether it follows Minecraft's main volume, audio output, HUD visibility, scrolling-text speed, NetEase audio quality, and more. Audio output changes take effect from the next track.
+Use the in-game options to adjust audio output, HUD visibility, scrolling-text speed, NetEase audio quality, and more. Audio output changes take effect from the next track.
 
 ---
 
@@ -191,6 +191,7 @@ You do not need to edit files for normal use: the in-game options screen covers 
 | `playerVolume` | `1.0` | Player volume, `0.0` – `1.0` |
 | `playerVolumeFollowsMaster` | `true` | Multiply by Minecraft's master volume |
 | `playbackBackend` | `"JAVASOUND"` | Audio backend: `"JAVASOUND"` or `"OPENAL"`. Changing it takes effect from the next track |
+| `displayPlayerScreenCoverAndSpectrum` | `true` | Show cover art and the spectrum on the player screen; `false` uses the full-width lyrics view |
 | `neteaseMusicQuality` | `"HIRES"` | NetEase quality: `"STANDARD"`, `"HIGHER"`, `"EXHIGH"`, `"LOSSLESS"`, `"HIRES"` |
 | `maxCacheSize` | `100000000` | Cache budget in bytes (music and images each) |
 | `handshakeRequired` | `true` | Verify the Concerto handshake before using server features |

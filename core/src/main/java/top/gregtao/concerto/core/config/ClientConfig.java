@@ -72,6 +72,7 @@ public class ClientConfig extends ConfigFile {
         public boolean playerVolumeFollowsMaster = true;
         public int playbackHistorySize = 25;
         public PlaybackBackend playbackBackend = PlaybackBackend.JAVASOUND;
+        public boolean displayPlayerScreenCoverAndSpectrum = true;
 
         public boolean displayLyrics = true;
         public String lyricsPosition = "0.5,1-70";

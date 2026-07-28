@@ -45,7 +45,8 @@ public class MusicPlayerScreen extends ConcertoScreen {
 
     private float rotationAngle = 0f;
     private float scrollOffset = 0f;
-    private PlayerView playerView = PlayerView.COVER;
+    private PlayerView playerView = ClientConfig.INSTANCE.options.displayPlayerScreenCoverAndSpectrum
+            ? PlayerView.COVER : PlayerView.LYRICS;
     private boolean seekingProgress = false;
     // Drag preview target; -1 when not dragging. Rendering-only: the real
     // display state (lyrics cursor, progress) is untouched until commit, so
@@ -106,6 +107,8 @@ public class MusicPlayerScreen extends ConcertoScreen {
                 .withInitialValue(this.playerView)
                 .create(x, y, MODE_BUTTON_W, 20, Component.translatable("concerto.screen.player_view"), (button, view) -> {
                     this.playerView = view;
+                    ClientConfig.INSTANCE.options.displayPlayerScreenCoverAndSpectrum = view == PlayerView.COVER;
+                    ClientConfig.INSTANCE.writeOptions();
                     this.scrollOffset = 0;
                 });
         this.addRenderableWidget(this.playerViewButton);

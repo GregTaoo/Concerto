@@ -302,7 +302,7 @@ public class ConcertoOptions {
             this.max = max;
             this.option = new OptionInstance<>(
                     "concerto.options." + name,
-                    OptionInstance.noTooltip(),
+                    OptionInstance.cachedConstantTooltip(Component.translatable("concerto.options." + name + ".tooltip")),
                     (prefix, value) -> Component.translatable("options.generic_value", prefix, value),
                     new OptionInstance.IntRange(min, max),
                     min,

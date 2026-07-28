@@ -3,6 +3,7 @@ package top.gregtao.concerto.core.player.engine;
 import top.gregtao.concerto.core.player.seek.ContainerFormat;
 import top.gregtao.concerto.core.player.seek.SeekIndex;
 import top.gregtao.concerto.core.player.seek.SeekIndexBuilder;
+import top.gregtao.concerto.core.player.seek.SeekMode;
 import top.gregtao.concerto.core.player.source.AudioByteSource;
 
 import javax.sound.sampled.AudioFormat;
@@ -255,6 +256,14 @@ public class PlaybackEngine implements Closeable {
     }
 
     private void tryApplyPendingSeek() throws Exception {
+        switch (this.session.getSeekMode()) {
+            case INDEXED -> this.applyIndexedSeek();
+            case RESTART_FROM_START -> this.applyRestartSeek(this.pendingSeekMillis);
+            case UNSUPPORTED -> this.pendingSeekMillis = -1;
+        }
+    }
+
+    private void applyIndexedSeek() throws Exception {
         SeekIndex index = this.session.getSeekIndex();
         if (index == null) {
             this.pendingSeekMillis = -1;
@@ -284,6 +293,22 @@ public class PlaybackEngine implements Closeable {
         this.pendingOpenOffset = point.byteOffset();
         this.pendingOpenPrefix = index.getPrefixBytes();
         this.pendingDiscardMillis = target - point.timeMillis();
+        this.completeSeek(target);
+    }
+
+    /** Reopens a decoder that requires its container initialization at byte zero. */
+    private void applyRestartSeek(long target) throws IOException {
+        this.closeDecoded();
+        if (this.sink != null && this.sink.isOpen()) {
+            this.sink.flush();
+        }
+        this.pendingOpenOffset = 0;
+        this.pendingOpenPrefix = null;
+        this.pendingDiscardMillis = target;
+        this.completeSeek(target);
+    }
+
+    private void completeSeek(long target) {
         this.clockBaseMillis = target;
         boolean publish = this.pendingSeekPublish;
         this.pendingSeekMillis = -1;

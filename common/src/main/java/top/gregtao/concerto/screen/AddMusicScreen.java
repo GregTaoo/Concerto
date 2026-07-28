@@ -87,7 +87,10 @@ public class AddMusicScreen extends ApplyDraggedFileScreen {
                 methodSafeWrapper(str -> MusicPlayerHandler.INSTANCE.addMusicHereAsync(new KuGouMusic(str, true), true, () -> {
                 }))
         );
-//        this.addLabel(Text.translatable("concerto.screen.add.bilibili"), this.width / 2, 195,
-//                str -> MusicPlayerHandler.INSTANCE.addMusicHere(new BilibiliMusic(str), true));
+        this.addLabel(
+                Component.translatable("concerto.screen.add.bilibili"), this.width / 2, 220,
+                methodSafeWrapper(str -> MusicPlayerHandler.INSTANCE.addMusicHereAsync(new BilibiliMusic(str), true, () -> {
+                }))
+        );
     }
 }

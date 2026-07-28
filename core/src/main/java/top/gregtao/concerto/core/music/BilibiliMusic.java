@@ -2,10 +2,10 @@ package top.gregtao.concerto.core.music;
 
 import com.google.gson.JsonObject;
 import top.gregtao.concerto.core.api.CacheableMusic;
+import top.gregtao.concerto.core.api.DynamicPath;
 import top.gregtao.concerto.core.api.JsonParser;
 import top.gregtao.concerto.core.api.MusicJsonParsers;
 import top.gregtao.concerto.core.api.MusicSourceNotFoundException;
-import top.gregtao.concerto.core.config.MusicCacheManager;
 import top.gregtao.concerto.core.enums.Sources;
 import top.gregtao.concerto.core.http.HttpURLInputStream;
 import top.gregtao.concerto.core.http.bilibili.BilibiliApiClient;
@@ -15,15 +15,15 @@ import top.gregtao.concerto.core.music.meta.music.UnknownMusicMeta;
 import top.gregtao.concerto.core.util.FileUtil;
 import top.gregtao.concerto.core.util.Pair;
 
-import javax.sound.sampled.UnsupportedAudioFileException;
-import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
+import java.util.Map;
 
-public class BilibiliMusic extends Music implements CacheableMusic {
+public class BilibiliMusic extends Music implements CacheableMusic, DynamicPath {
     private final String bvid;
     private String aid;
     private String cid;
+    private String rawPath;
 
     public BilibiliMusic(String bvid) {
         this.bvid = bvid;
@@ -36,7 +36,9 @@ public class BilibiliMusic extends Music implements CacheableMusic {
     @Override
     public InputStream getMusicSource() throws MusicSourceNotFoundException {
         try {
-            return FileUtil.createBuffered(new HttpURLInputStream(URI.create(this.getRawPath()).toURL()));
+            return FileUtil.createBuffered(new HttpURLInputStream(
+                    URI.create(this.getRawPath()).toURL(), 0, this::updateRawPath, BilibiliApiClient.REQUEST_HEADERS
+            ));
         } catch (Exception e) {
             throw new MusicSourceNotFoundException(e);
         }
@@ -48,7 +50,38 @@ public class BilibiliMusic extends Music implements CacheableMusic {
     }
 
     public String getRawPath() {
-        return BilibiliApiClient.INSTANCE.getDirectAudioUrl(this.aid, this.cid);
+        return this.updateRawPath();
+    }
+
+    @Override
+    public String getLastRawPath() {
+        return this.rawPath;
+    }
+
+    @Override
+    public String updateRawPath() {
+        this.rawPath = BilibiliApiClient.INSTANCE.getDirectAudioUrl(this.aid, this.cid);
+        return this.rawPath;
+    }
+
+    @Override
+    public String getLastSuffix() {
+        return "m4s";
+    }
+
+    @Override
+    public String getLastLyrics() {
+        return null;
+    }
+
+    @Override
+    public String getLastSubLyrics() {
+        return null;
+    }
+
+    @Override
+    public Map<String, String> getCustomHeaders() {
+        return BilibiliApiClient.REQUEST_HEADERS;
     }
 
     @Override
@@ -74,13 +107,6 @@ public class BilibiliMusic extends Music implements CacheableMusic {
         } catch (Exception e) {
             this.setMusicMeta(new UnknownMusicMeta(Sources.BILIBILI.getName()));
         }
-        try {
-            // Plain cache write: the m4s (fMP4/AAC) audio is decoded natively now,
-            // no transcode step needed.
-            MusicCacheManager.INSTANCE.addMusic(this);
-        } catch (UnsupportedAudioFileException | IOException e) {
-            throw new RuntimeException(e);
-        }
         super.load();
     }
 
@@ -89,10 +115,12 @@ public class BilibiliMusic extends Music implements CacheableMusic {
         return MusicJsonParsers.BILIBILI;
     }
 
+
     @Override
     public String getSuffix() {
         return "m4s";
     }
+
 
     @Override
     public Music getMusic() {

@@ -13,6 +13,7 @@ import top.gregtao.concerto.core.util.Pair;
 
 import java.io.*;
 import java.net.URI;
+import java.util.Map;
 import java.util.function.Supplier;
 
 public abstract class Music implements JsonParsable<Music>, LazyLoadable, WithMetaData {
@@ -57,27 +58,25 @@ public abstract class Music implements JsonParsable<Music>, LazyLoadable, WithMe
                 if (rawPath == null) {
                     rawPath = dynamicPath.updateRawPath();
                 }
-                return createUrlByteSource(rawPath, dynamicPath::updateRawPath);
-            }
-            if (this instanceof BilibiliMusic bilibiliMusic) {
-                return createUrlByteSource(bilibiliMusic.getRawPath(), null);
+                return createUrlByteSource(rawPath, dynamicPath::updateRawPath, dynamicPath.getCustomHeaders());
             }
             if (this instanceof PathFileMusic pathFileMusic) {
                 String rawPath = pathFileMusic.getRawPath();
                 if (rawPath != null && rawPath.startsWith("http")) {
-                    return createUrlByteSource(rawPath, null);
+                    return createUrlByteSource(rawPath, null, Map.of());
                 }
             }
-            return createUrlByteSource(this.getLink(), null);
+            return createUrlByteSource(this.getLink(), null, Map.of());
         } catch (Exception e) {
             Concerto.getLogger().error("Cannot open music source: {}", e.getMessage());
             return null;
         }
     }
 
-    private static AudioByteSource createUrlByteSource(String rawPath, Supplier<String> urlRefresher) throws IOException {
+    private static AudioByteSource createUrlByteSource(String rawPath, Supplier<String> urlRefresher,
+                                                        Map<String, String> customHeaders) throws IOException {
         URI.create(rawPath);
-        return new BufferedHttpByteSource(rawPath, urlRefresher);
+        return new BufferedHttpByteSource(rawPath, urlRefresher, customHeaders);
     }
 
     public Pair<Lyrics, Lyrics> getLyrics() throws IOException {

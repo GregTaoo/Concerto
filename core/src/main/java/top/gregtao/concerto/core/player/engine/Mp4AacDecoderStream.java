@@ -2,6 +2,7 @@ package top.gregtao.concerto.core.player.engine;
 
 import net.sourceforge.jaad.SampleBuffer;
 import net.sourceforge.jaad.aac.AACException;
+import net.sourceforge.jaad.aac.Receiver;
 import net.sourceforge.jaad.aac.Decoder;
 import net.sourceforge.jaad.mp4.MP4Container;
 import net.sourceforge.jaad.mp4.MP4InputStream;
@@ -31,12 +32,17 @@ public class Mp4AacDecoderStream extends InputStream {
     private final Track track;
     private final Decoder decoder;
     private final SampleBuffer sampleBuffer = new SampleBuffer();
+    private final Receiver receiver = (samples, sampleRate, channels) -> {
+        this.sampleBuffer.accept(samples, sampleRate, channels);
+        this.receivedFrame = true;
+    };
 
     private int sampleRate = -1;
     private int channels = -1;
     private byte[] pcm = new byte[0];
     private int pcmPos = 0, pcmLen = 0;
     private boolean endOfStream = false;
+    private boolean receivedFrame;
 
     public Mp4AacDecoderStream(AudioByteSource source) throws IOException, UnsupportedAudioFileException {
         try {
@@ -103,10 +109,12 @@ public class Mp4AacDecoderStream extends InputStream {
             Frame frame = this.track.readNextFrame();
             if (frame == null) break;
             try {
-                this.decoder.decodeFrame(frame.getData(), this.sampleBuffer);
+                this.receivedFrame = false;
+                this.decoder.decodeFrame(frame.getData(), this.receiver);
             } catch (AACException e) {
                 continue; // skip a corrupt frame
             }
+            if (!this.receivedFrame) continue;
             byte[] data = this.sampleBuffer.getData();
             if (data.length == 0) continue;
             this.sampleRate = this.sampleBuffer.getSampleRate();
@@ -136,7 +144,7 @@ public class Mp4AacDecoderStream extends InputStream {
      * the buffered part of a streaming source block until the data arrives.
      * Closing does nothing: the playback session owns the source.
      */
-    private static class ByteSourceMP4InputStream extends MP4InputStream {
+    static class ByteSourceMP4InputStream extends MP4InputStream {
         private final AudioByteSource source;
         private long position = 0;
 

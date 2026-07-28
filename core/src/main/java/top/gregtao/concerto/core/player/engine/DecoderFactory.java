@@ -72,8 +72,14 @@ public final class DecoderFactory {
         if (format == ContainerFormat.M4A) {
             // M4A is never opened mid-stream (no index builder); the decoder reads
             // the source directly through a seekable view so trailing-moov works.
-            Mp4AacDecoderStream m4a = new Mp4AacDecoderStream(source);
-            return wrapPcmStream(m4a, m4a.getSampleRate(), m4a.getChannels(), raw);
+            try {
+                Mp4AacDecoderStream m4a = new Mp4AacDecoderStream(source);
+                return wrapPcmStream(m4a, m4a.getSampleRate(), m4a.getChannels(), raw);
+            } catch (UnsupportedAudioFileException exception) {
+                if (!"MP4 AAC track contains no decodable frames".equals(exception.getMessage())) throw exception;
+                FragmentedMp4AacDecoderStream m4a = new FragmentedMp4AacDecoderStream(source);
+                return wrapPcmStream(m4a, m4a.getSampleRate(), m4a.getChannels(), raw);
+            }
         }
 
         // The SPI probe needs mark/reset support

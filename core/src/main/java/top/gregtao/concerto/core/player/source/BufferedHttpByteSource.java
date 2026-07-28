@@ -2,7 +2,6 @@ package top.gregtao.concerto.core.player.source;
 
 import top.gregtao.concerto.core.Concerto;
 
-import java.io.File;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URI;
@@ -15,6 +14,7 @@ import java.nio.file.StandardOpenOption;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.Map;
 import java.util.function.Supplier;
 
 /**
@@ -35,6 +35,8 @@ public class BufferedHttpByteSource implements AudioByteSource {
     private static final Path TEMP_DIR = Path.of("Concerto", "temp");
 
     private final Supplier<String> urlRefresher;
+    private final Map<String, String> requestHeaders;
+
     private final Path tempFile;
     private final FileChannel channel;
     private final Thread downloadThread;
@@ -51,8 +53,14 @@ public class BufferedHttpByteSource implements AudioByteSource {
     private IOException failure = null;
 
     public BufferedHttpByteSource(String url, Supplier<String> urlRefresher) throws IOException {
+        this(url, urlRefresher, Map.of());
+    }
+
+    public BufferedHttpByteSource(String url, Supplier<String> urlRefresher,
+                                  Map<String, String> requestHeaders) throws IOException {
         this.url = URI.create(url).toURL();
         this.urlRefresher = urlRefresher;
+        this.requestHeaders = Map.copyOf(requestHeaders);
         Files.createDirectories(TEMP_DIR);
         this.tempFile = Files.createTempFile(TEMP_DIR, "stream-", ".tmp");
         this.channel = FileChannel.open(this.tempFile,
@@ -169,10 +177,13 @@ public class BufferedHttpByteSource implements AudioByteSource {
     }
 
     private HttpURLConnection openConnection(long from) throws IOException {
+        Concerto.getLogger().info("Opening media download connection: mode={}, from={}, url={}",
+                from == 0 ? "initial" : "resume", from, describeUrl(this.url));
         HttpURLConnection connection = (HttpURLConnection) this.url.openConnection();
         connection.setConnectTimeout(5000);
         connection.setReadTimeout(10000);
         connection.setRequestMethod("GET");
+        this.requestHeaders.forEach(connection::setRequestProperty);
         connection.setRequestProperty("Accept-Encoding", "identity");
         if (from > 0) {
             connection.setRequestProperty("Range", "bytes=" + from + "-");

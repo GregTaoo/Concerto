@@ -16,7 +16,7 @@ public enum ContainerFormat {
     FLAC,
     WAV,
     AIFF,
-    /** MP4/M4A audio; playable through the dedicated AAC branch, but not seekable. */
+    /** MP4/M4A audio; seekable by restarting its decoder from the container header. */
     M4A,
     /** Raw AAC in an ADTS transport stream. */
     AAC_ADTS,
@@ -32,9 +32,18 @@ public enum ContainerFormat {
             case WAV: return new WavIndexBuilder();
             case AIFF: return new AiffIndexBuilder();
             case AAC_ADTS: return new AdtsIndexBuilder();
-            default: return null; // M4A: playable but unseekable (no MP4 sample-table walk yet)
+            default: return null; // M4A seeks by restarting from the container header
         }
     }
+    /** Returns the decoder reopening contract used for this container. */
+    public SeekMode getSeekMode() {
+        return switch (this) {
+            case MP3, OGG, OGG_OPUS, FLAC, WAV, AIFF, AAC_ADTS -> SeekMode.INDEXED;
+            case M4A -> SeekMode.RESTART_FROM_START;
+            case UNSUPPORTED -> SeekMode.UNSUPPORTED;
+        };
+    }
+
 
     /**
      * Sniffs the container format from the first bytes of the media, falling back

@@ -116,15 +116,18 @@ public class URLImageWidget implements Renderable, LayoutElement, AutoCloseable 
     }
 
     public String getFileName() {
-        return HashUtil.md5(this.url) + ".png";
+        String url = this.url;
+        return url == null ? null : HashUtil.md5(url) + ".png";
     }
 
     public boolean cacheExists() {
-        return CacheManager.IMAGE_CACHE_MANAGER.exists(this.getFileName());
+        String fileName = this.getFileName();
+        return fileName != null && CacheManager.IMAGE_CACHE_MANAGER.exists(fileName);
     }
 
     public File getFromCache() {
-        return CacheManager.IMAGE_CACHE_MANAGER.getChild(this.getFileName());
+        String fileName = this.getFileName();
+        return fileName == null ? null : CacheManager.IMAGE_CACHE_MANAGER.getChild(fileName);
     }
 
     public void writeCacheFile(BufferedImage image) throws IOException {
@@ -150,7 +153,10 @@ public class URLImageWidget implements Renderable, LayoutElement, AutoCloseable 
         ios.close();
         writer.dispose();
 
-        CacheManager.IMAGE_CACHE_MANAGER.addFile(this.getFileName(), new ByteArrayInputStream(outputStream.toByteArray()));
+        String fileName = this.getFileName();
+        if (fileName != null) {
+            CacheManager.IMAGE_CACHE_MANAGER.addFile(fileName, new ByteArrayInputStream(outputStream.toByteArray()));
+        }
     }
 
     public static BufferedImage readImageFromUrl(String url) throws IOException {

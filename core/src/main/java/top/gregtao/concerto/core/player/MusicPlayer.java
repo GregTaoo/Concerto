@@ -473,6 +473,7 @@ public class MusicPlayer implements EngineListener {
 
     @Override
     public void onTrackStarted(PlaybackSession session) {
+        MusicRoom.clientApplyResolvedStartTime();
         ConcertoEvents.ON_PLAYER_START.emit();
     }
 

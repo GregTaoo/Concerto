@@ -171,6 +171,7 @@ public class MusicRoomsScreen extends ConcertoScreen {
         this.addRenderableWidget(Button.builder(Component.translatable(owner ? "concerto.room.dissolve" : "concerto.screen.quit"),
                 button -> {
                     if (agent) ServerMusicAgentManager.clientQuit();
+                    else if (owner) MusicRoomManager.clientRemove();
                     else MusicRoomManager.clientQuit();
                 }).pos(x, footerY).size(quitWidth, BUTTON_H).build());
         if (owner) {

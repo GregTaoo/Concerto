@@ -1,5 +1,7 @@
 package top.gregtao.concerto.bridge;
 
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.network.chat.Component;
 import top.gregtao.concerto.ConcertoServer;
 import top.gregtao.concerto.core.bridge.CoreBridge;
@@ -9,17 +11,11 @@ import top.gregtao.concerto.core.room.MusicRoom;
 
 public class CoreBridgeImpl implements CoreBridge {
 
-    // 专用服务器上不存在 client 类;client 引用集中在 ClientAccess 内,
-    // 保证本类在专用服上可安全加载和调用
-    private static final boolean CLIENT_ENV = detectClientEnv();
+    private static volatile boolean clientAccessEnabled;
 
-    private static boolean detectClientEnv() {
-        try {
-            Class.forName("net.minecraft.client.Minecraft");
-            return true;
-        } catch (ClassNotFoundException e) {
-            return false;
-        }
+    /** Called by the platform client bootstrap after client classes are available. */
+    public static void enableClientAccess() {
+        clientAccessEnabled = true;
     }
 
     @Override
@@ -29,20 +25,20 @@ public class CoreBridgeImpl implements CoreBridge {
 
     @Override
     public void setClientClipboard(String text) {
-        if (CLIENT_ENV) ClientAccess.setClipboard(text);
+        if (clientAccessEnabled) ClientAccess.setClipboard(text);
     }
 
     @Override
     public String getClientPlayerName() {
-        return CLIENT_ENV ? ClientAccess.getPlayerName() : null;
+        return clientAccessEnabled ? ClientAccess.getPlayerName() : null;
     }
 
     @Override
     public void sendMessageToClientPlayer(String message, boolean overlay) {
-        if (CLIENT_ENV) {
+        if (clientAccessEnabled) {
             ClientAccess.sendMessage(message, overlay);
         } else {
-            ConcertoServer.LOGGER.info("[player message] {}", message);
+            ConcertoServer.LOGGER.info("[Message] {}", message);
         }
     }
 
@@ -53,17 +49,17 @@ public class CoreBridgeImpl implements CoreBridge {
 
     private static class ClientAccess {
         static void setClipboard(String text) {
-            net.minecraft.client.Minecraft.getInstance().keyboardHandler.setClipboard(text);
+            Minecraft.getInstance().keyboardHandler.setClipboard(text);
         }
 
         static String getPlayerName() {
-            net.minecraft.client.player.LocalPlayer player = net.minecraft.client.Minecraft.getInstance().player;
+            LocalPlayer player = Minecraft.getInstance().player;
             return player != null ? player.getName().getString() : null;
         }
 
         static void sendMessage(String message, boolean overlay) {
-            net.minecraft.client.Minecraft.getInstance().execute(() -> {
-                net.minecraft.client.player.LocalPlayer player = net.minecraft.client.Minecraft.getInstance().player;
+            Minecraft.getInstance().execute(() -> {
+                LocalPlayer player = Minecraft.getInstance().player;
                 if (player != null) {
                     player.displayClientMessage(Component.literal(message), overlay);
                 }

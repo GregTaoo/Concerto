@@ -14,7 +14,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
 public class ConcertoScreen extends Screen {
-    protected static final int STANDARD_CONTENT_MARGIN = 20;
+    public static final int STANDARD_CONTENT_MARGIN = 20;
     protected static final int STANDARD_ACTION_GAP = 2;
     private final Screen parent;
     private FocusableTextWidget message;

@@ -21,11 +21,10 @@ import java.util.List;
 
 /**
  * Music room hub. List rows and every control row share the standard
- * {@link ConcertoListWidget#PAGE_MARGIN} content boundary.
+ * {@link ConcertoScreen} content boundary.
  */
 public class MusicRoomsScreen extends ConcertoScreen {
 
-    private static final int ROW_GAP = 4;
     private static final int ROW_H = 24;
     private static final int BUTTON_H = 20;
 
@@ -45,13 +44,6 @@ public class MusicRoomsScreen extends ConcertoScreen {
         super(Component.translatable("concerto.screen.rooms"), parent);
     }
 
-    private int contentX() {
-        return ConcertoListWidget.PAGE_MARGIN;
-    }
-
-    private int contentWidth() {
-        return this.width - ConcertoListWidget.PAGE_MARGIN * 2;
-    }
 
     @Override
     protected void init() {
@@ -74,15 +66,15 @@ public class MusicRoomsScreen extends ConcertoScreen {
     // ---- Discovery: browse visible rooms, join, create ----
 
     private void initDiscovery() {
-        int row2 = this.height - 30;
+        int row2 = this.standardBottomActionY();
         int row1 = row2 - ROW_H;
-        int x = this.contentX();
-        int contentWidth = this.contentWidth();
-        int fieldWidth = contentWidth * 2 / 3;
-        int actionWidth = contentWidth / 3;
+        int x = this.standardContentX();
+        int contentWidth = this.standardContentWidth();
+        int fieldWidth = (contentWidth - STANDARD_ACTION_GAP) * 2 / 3;
+        int actionWidth = (contentWidth - STANDARD_ACTION_GAP * 2) / 3;
 
         this.listTop = 20;
-        this.listBottom = row1 - ROW_GAP;
+        this.listBottom = row1 - STANDARD_ACTION_GAP;
         this.roomListWidget = new ConcertoListWidget<>(this.width, this.listBottom - this.listTop, this.listTop, 18) {
             @Override
             public Component getNarration(int index, MusicRoom.RoomSummary room) {
@@ -109,7 +101,7 @@ public class MusicRoomsScreen extends ConcertoScreen {
 
         this.addRenderableWidget(Button.builder(Component.translatable("concerto.screen.create"),
                 button -> MusicRoomManager.clientCreate(this.nameBox.getValue())
-        ).pos(x + fieldWidth, row1).size(contentWidth - fieldWidth, BUTTON_H).build());
+        ).pos(x + fieldWidth + STANDARD_ACTION_GAP, row1).size(contentWidth - fieldWidth - STANDARD_ACTION_GAP, BUTTON_H).build());
 
         this.joinButton = Button.builder(Component.translatable("concerto.room.list.join"),
                 button -> {
@@ -121,11 +113,12 @@ public class MusicRoomsScreen extends ConcertoScreen {
 
         this.addRenderableWidget(Button.builder(Component.translatable("concerto.refresh"),
                 button -> MusicRoomManager.clientRequestList()
-        ).pos(x + actionWidth, row2).size(actionWidth, BUTTON_H).build());
+        ).pos(x + actionWidth + STANDARD_ACTION_GAP, row2).size(actionWidth, BUTTON_H).build());
 
         this.addRenderableWidget(Button.builder(Component.translatable("concerto.screen.agent.join"),
                 button -> ServerMusicAgentManager.clientJoin()
-        ).pos(x + actionWidth * 2, row2).size(contentWidth - actionWidth * 2, BUTTON_H).build());
+        ).pos(x + (actionWidth + STANDARD_ACTION_GAP) * 2, row2)
+                .size(this.standardContentRight() - x - (actionWidth + STANDARD_ACTION_GAP) * 2, BUTTON_H).build());
 
         // The LIST reply arrives on the network thread; refresh on the render thread
         this.listListener = () -> Minecraft.getInstance().execute(() -> {
@@ -155,16 +148,15 @@ public class MusicRoomsScreen extends ConcertoScreen {
         boolean canEdit = !agent && perm >= 2 && state != null;
 
         // Bottom-up: quit/op row always present; toggles and rename only for ops
-        int rowQuit = this.height - 30;
+        int rowQuit = this.standardBottomActionY();
         int rowToggles = rowQuit - ROW_H;
         int rowName = rowToggles - ROW_H;
-        int x = this.contentX();
-        int contentWidth = this.contentWidth();
-        int fieldWidth = contentWidth * 2 / 3;
-        int halfWidth = contentWidth / 2;
+        int x = this.standardContentX();
+        int contentWidth = this.standardContentWidth();
+        int fieldWidth = (contentWidth - STANDARD_ACTION_GAP) * 2 / 3;
+        int halfWidth = (contentWidth - STANDARD_ACTION_GAP) / 2;
 
-        this.listTop = 46;
-        this.listBottom = (canEdit ? rowName : rowQuit) - ROW_GAP;
+        this.listBottom = (canEdit ? rowName : rowQuit) - STANDARD_ACTION_GAP;
         this.memberListWidget = new ConcertoListWidget<>(this.width, this.listBottom - this.listTop, this.listTop, 18) {
             @Override
             public Component getNarration(int index, Pair<String, Integer> member) {
@@ -185,7 +177,7 @@ public class MusicRoomsScreen extends ConcertoScreen {
 
             this.addRenderableWidget(Button.builder(Component.translatable("concerto.screen.save"),
                     button -> this.pushRoomInfo(this.nameBox.getValue())
-            ).pos(x + fieldWidth, rowName).size(contentWidth - fieldWidth, BUTTON_H).build());
+            ).pos(x + fieldWidth + STANDARD_ACTION_GAP, rowName).size(contentWidth - fieldWidth - STANDARD_ACTION_GAP, BUTTON_H).build());
 
             this.visibleButton = CycleButton.onOffBuilder(state.visible).create(
                     x, rowToggles, halfWidth, BUTTON_H,
@@ -194,7 +186,7 @@ public class MusicRoomsScreen extends ConcertoScreen {
             this.addRenderableWidget(this.visibleButton);
 
             this.joinableButton = CycleButton.onOffBuilder(state.joinable).create(
-                    x + halfWidth, rowToggles, contentWidth - halfWidth, BUTTON_H,
+                    x + halfWidth + STANDARD_ACTION_GAP, rowToggles, contentWidth - halfWidth - STANDARD_ACTION_GAP, BUTTON_H,
                     Component.translatable("concerto.room.joinable"),
                     (button, value) -> this.pushRoomInfo(null));
             this.addRenderableWidget(this.joinableButton);
@@ -219,7 +211,7 @@ public class MusicRoomsScreen extends ConcertoScreen {
                         ConcertoListWidget<Pair<String, Integer>>.Entry entry = this.memberListWidget.getSelected();
                         if (entry != null) MusicRoomManager.clientSetOp(entry.item.getFirst());
                     }
-            ).pos(x + halfWidth, rowQuit).size(contentWidth - halfWidth, BUTTON_H).build();
+            ).pos(x + halfWidth + STANDARD_ACTION_GAP, rowQuit).size(contentWidth - halfWidth - STANDARD_ACTION_GAP, BUTTON_H).build();
             this.addRenderableWidget(this.opButton);
         }
     }

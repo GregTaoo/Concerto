@@ -116,7 +116,7 @@ public class QQMusicSearchScreen extends PageScreen {
     protected void init() {
         super.init();
         int actionX = this.actionBarX();
-        int actionWidth = this.actionBarWidth() / 3;
+        int actionWidth = (this.actionBarWidth() - STANDARD_ACTION_GAP * 2) / 3;
         this.musicList = this.initListsWidget();
         this.playlistList = this.initListsWidget();
         this.albumList = this.initListsWidget();
@@ -127,9 +127,9 @@ public class QQMusicSearchScreen extends PageScreen {
                 SearchType.ALBUM, this.albumList
         );
 
-        int searchX = ConcertoListWidget.PAGE_MARGIN;
-        int searchButtonX = this.width - ConcertoListWidget.PAGE_MARGIN - 52;
-        this.searchBox = new EditBox(this.font, searchX, 17, searchButtonX - searchX - 2, 20,
+        int searchX = this.standardContentX();
+        int searchButtonX = this.standardContentRight() - 52;
+        this.searchBox = new EditBox(this.font, searchX, 17, searchButtonX - searchX - STANDARD_ACTION_GAP, 20,
                 this.searchBox, Component.translatable("concerto.screen.search"));
         this.addWidget(this.searchBox);
         this.addRenderableWidget(this.searchBox);
@@ -140,7 +140,8 @@ public class QQMusicSearchScreen extends PageScreen {
             if (entry != null) {
                 Minecraft.getInstance().setScreen(new MusicInfoScreen(entry.item, this));
             }
-        }).pos(actionX + actionWidth * 2, this.bottomBarY()).size(this.actionBarWidth() - actionWidth * 2, 20).build();
+        }).pos(actionX + (actionWidth + STANDARD_ACTION_GAP) * 2, this.bottomBarY())
+                .size(this.actionBarWidth() - (actionWidth + STANDARD_ACTION_GAP) * 2, 20).build();
         this.addRenderableWidget(this.infoButton);
 
         this.updateSearchType(this.searchType);
@@ -174,7 +175,7 @@ public class QQMusicSearchScreen extends PageScreen {
                     }
                 }
             }
-        }).pos(actionX + actionWidth, this.bottomBarY()).size(actionWidth, 20).build();
+        }).pos(actionX + actionWidth + STANDARD_ACTION_GAP, this.bottomBarY()).size(actionWidth, 20).build();
         this.addRenderableWidget(this.playButton);
 
         this.addButton = Button.builder(Component.translatable("concerto.screen.add"), button -> {

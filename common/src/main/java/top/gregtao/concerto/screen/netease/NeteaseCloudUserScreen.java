@@ -50,7 +50,7 @@ public class NeteaseCloudUserScreen extends PageScreen {
     protected void init() {
         super.init();
         int actionX = this.actionBarX();
-        int actionWidth = this.actionBarWidth() / 3;
+        int actionWidth = (this.actionBarWidth() - STANDARD_ACTION_GAP * 2) / 3;
         if (!this.loggedIn()) {
             Minecraft.getInstance().setScreen(new NeteaseCloudLoginScreens(null));
         }
@@ -73,14 +73,15 @@ public class NeteaseCloudUserScreen extends PageScreen {
             if (entry != null) {
                 Minecraft.getInstance().setScreen(new PlaylistPreviewScreen(entry.item, this));
             }
-        }).pos(actionX + actionWidth, this.bottomBarY()).size(actionWidth, 20).build());
+        }).pos(actionX + actionWidth + STANDARD_ACTION_GAP, this.bottomBarY()).size(actionWidth, 20).build());
 
         this.addRenderableWidget(Button.builder(Component.translatable("concerto.screen.logout"), button -> {
             if (this.loggedIn()) {
                 NeteaseCloudApiClient.LOCAL_USER.logout();
             }
             Minecraft.getInstance().setScreen(new NeteaseCloudLoginScreens(this));
-        }).pos(actionX + actionWidth * 2, this.bottomBarY()).size(this.actionBarWidth() - actionWidth * 2, 20).build());
+        }).pos(actionX + (actionWidth + STANDARD_ACTION_GAP) * 2, this.bottomBarY())
+                .size(this.actionBarWidth() - (actionWidth + STANDARD_ACTION_GAP) * 2, 20).build());
     }
 
     @Override

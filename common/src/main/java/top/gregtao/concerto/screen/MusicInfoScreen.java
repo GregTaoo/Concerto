@@ -25,9 +25,7 @@ import java.util.List;
 
 public class MusicInfoScreen extends ConcertoScreen {
 
-    private static final int PAGE_MARGIN = 20;
     private static final int COVER_SIZE = 104;
-    private static final int PANEL_GAP = 2;
     private static final int PANEL_PADDING = 10;
     private static final int CONTENT_TOP = 22;
     private static final int CONTENT_BOTTOM = 35;
@@ -82,26 +80,26 @@ public class MusicInfoScreen extends ConcertoScreen {
     @Override
     protected void init() {
         super.init();
-        int contentWidth = this.width - PAGE_MARGIN * 2;
-        int infoPanelWidth = Math.max(COVER_SIZE + PANEL_PADDING * 2, (contentWidth - PANEL_GAP) / 3);
-        int coverX = PAGE_MARGIN + (infoPanelWidth - COVER_SIZE) / 2;
+        int contentWidth = this.standardContentWidth();
+        int infoPanelWidth = Math.max(COVER_SIZE + PANEL_PADDING * 2, (contentWidth - STANDARD_ACTION_GAP) / 3);
+        int coverX = this.standardContentX() + (infoPanelWidth - COVER_SIZE) / 2;
         this.headPicture = new URLImageWidget(COVER_SIZE, COVER_SIZE, coverX, CONTENT_TOP + PANEL_PADDING, null, false);
         ConcertoRunner.run(this::loadInfo);
         ConcertoRunner.run(this::loadLyrics);
 
-        int y = this.height - 30;
-        int actionWidth = (this.width - PAGE_MARGIN * 2) / ACTION_COUNT;
+        int y = this.standardBottomActionY();
+        int actionWidth = (this.standardContentWidth() - STANDARD_ACTION_GAP * (ACTION_COUNT - 1)) / ACTION_COUNT;
         this.playButton = Button.builder(Component.translatable("concerto.screen.play"),
                 button -> MusicPlayerHandler.INSTANCE.addMusicHereAsync(this.music, true, () -> {
-                })).pos(PAGE_MARGIN, y).size(actionWidth, 20).build();
+                })).pos(this.standardContentX(), y).size(actionWidth, 20).build();
         this.addRenderableWidget(this.playButton);
 
         this.addButton = Button.builder(Component.translatable("concerto.screen.add"),
                 button -> MusicPlayerHandler.INSTANCE.addMusicAsync(this.music, false, () -> {
-                })).pos(PAGE_MARGIN + actionWidth, y).size(actionWidth, 20).build();
+                })).pos(this.standardContentX() + actionWidth + STANDARD_ACTION_GAP, y).size(actionWidth, 20).build();
         this.addRenderableWidget(this.addButton);
         this.addRenderableWidget(Button.builder(Component.translatable("concerto.screen.request"), button ->
-                ServerMusicAgentManager.clientAddMusic(this.music)).pos(PAGE_MARGIN + actionWidth * 2, y)
+                ServerMusicAgentManager.clientAddMusic(this.music)).pos(this.standardContentX() + (actionWidth + STANDARD_ACTION_GAP) * 2, y)
                 .size(actionWidth, 20).build());
 
 
@@ -109,8 +107,8 @@ public class MusicInfoScreen extends ConcertoScreen {
             if (this.minecraft != null) {
                 this.minecraft.keyboardHandler.setClipboard(this.music.getLink());
             }
-        }).pos(PAGE_MARGIN + actionWidth * 3, y)
-                .size(this.width - PAGE_MARGIN * 2 - actionWidth * 3, 20).build());
+        }).pos(this.standardContentX() + (actionWidth + STANDARD_ACTION_GAP) * 3, y)
+                .size(this.standardContentRight() - this.standardContentX() - (actionWidth + STANDARD_ACTION_GAP) * 3, 20).build());
 
         this.updateButtonStates();
     }
@@ -168,15 +166,15 @@ public class MusicInfoScreen extends ConcertoScreen {
         super.render(graphics, mouseX, mouseY, delta);
         this.updateButtonStates();
 
-        int contentWidth = this.width - PAGE_MARGIN * 2;
-        int infoPanelWidth = Math.max(COVER_SIZE + PANEL_PADDING * 2, (contentWidth - PANEL_GAP) / 3);
+        int contentWidth = this.standardContentWidth();
+        int infoPanelWidth = Math.max(COVER_SIZE + PANEL_PADDING * 2, (contentWidth - STANDARD_ACTION_GAP) / 3);
         int panelHeight = Math.max(20, this.height - CONTENT_TOP - CONTENT_BOTTOM);
-        this.lyricPanelX = PAGE_MARGIN + infoPanelWidth + PANEL_GAP;
+        this.lyricPanelX = this.standardContentX() + infoPanelWidth + STANDARD_ACTION_GAP;
         this.lyricPanelY = CONTENT_TOP;
-        this.lyricPanelWidth = this.width - this.lyricPanelX - PAGE_MARGIN;
+        this.lyricPanelWidth = this.standardContentRight() - this.lyricPanelX;
         this.lyricPanelHeight = panelHeight;
 
-        this.renderInfoPanel(graphics, PAGE_MARGIN, CONTENT_TOP, infoPanelWidth, panelHeight);
+        this.renderInfoPanel(graphics, this.standardContentX(), CONTENT_TOP, infoPanelWidth, panelHeight);
         this.headPicture.render(graphics, mouseX, mouseY, delta);
         this.renderLyrics(graphics);
     }

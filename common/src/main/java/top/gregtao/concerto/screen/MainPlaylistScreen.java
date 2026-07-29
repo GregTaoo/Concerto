@@ -22,7 +22,6 @@ import top.gregtao.concerto.screen.widget.VolumeControlWidget;
 public class MainPlaylistScreen extends ApplyDraggedFileScreen {
     private static final int ICON_BUTTON_W = 20;
     private static final int SEARCH_BUTTON_W = 50;
-    private static final int SEARCH_GAP = 2;
 
     private MainPlaylistWidget widget;
     protected EditBox searchBox;
@@ -57,9 +56,9 @@ public class MainPlaylistScreen extends ApplyDraggedFileScreen {
         // in the area where it overlaps the list
         this.addWidget(this.widget);
 
-        int searchX = MainPlaylistWidget.PAGE_MARGIN;
-        int searchButtonX = this.width - MainPlaylistWidget.PAGE_MARGIN - SEARCH_BUTTON_W;
-        this.searchBox = new EditBox(this.font, searchX, 17, searchButtonX - searchX - SEARCH_GAP, 20,
+        int searchX = this.standardContentX();
+        int searchButtonX = this.standardContentRight() - SEARCH_BUTTON_W;
+        this.searchBox = new EditBox(this.font, searchX, 17, searchButtonX - searchX - STANDARD_ACTION_GAP, 20,
                 this.searchBox, Component.translatable("concerto.screen.search"));
         this.addWidget(this.searchBox);
         this.addRenderableWidget(this.searchBox);

@@ -47,7 +47,7 @@ public class QQMusicUserScreen extends PageScreen {
     protected void init() {
         super.init();
         int actionX = this.actionBarX();
-        int actionWidth = this.actionBarWidth() / 2;
+        int actionWidth = (this.actionBarWidth() - STANDARD_ACTION_GAP) / 2;
         if (!this.loggedIn()) {
             Minecraft.getInstance().setScreen(new QQMusicLoginScreens(null));
         }
@@ -67,7 +67,8 @@ public class QQMusicUserScreen extends PageScreen {
         this.addRenderableWidget(Button.builder(Component.translatable("concerto.screen.logout"), button -> {
             QQMusicApiClient.LOCAL_USER.logout();
             Minecraft.getInstance().setScreen(new QQMusicLoginScreens(this));
-        }).pos(actionX + actionWidth, this.bottomBarY()).size(this.actionBarWidth() - actionWidth, 20).build());
+        }).pos(actionX + actionWidth + STANDARD_ACTION_GAP, this.bottomBarY())
+                .size(this.actionBarWidth() - actionWidth - STANDARD_ACTION_GAP, 20).build());
     }
 
     @Override

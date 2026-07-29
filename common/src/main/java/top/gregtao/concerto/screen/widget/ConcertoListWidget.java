@@ -6,12 +6,12 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.ObjectSelectionList;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
+import top.gregtao.concerto.screen.ConcertoScreen;
 
 import java.util.List;
 import java.util.ListIterator;
 
 public class ConcertoListWidget<T> extends ObjectSelectionList<ConcertoListWidget<T>.Entry> {
-    public static final int PAGE_MARGIN = 20;
     private int color = 0xffffffff;
 
     public ConcertoListWidget(int width, int height, int top, int itemHeight) {
@@ -71,7 +71,7 @@ public class ConcertoListWidget<T> extends ObjectSelectionList<ConcertoListWidge
 
     @Override
     public int getRowWidth() {
-        return this.width - PAGE_MARGIN * 2;
+        return this.width - ConcertoScreen.STANDARD_CONTENT_MARGIN * 2;
     }
 
     protected boolean handleEntryClick(Entry entry, double mouseX, double mouseY, int button) {

@@ -9,7 +9,6 @@ import top.gregtao.concerto.screen.widget.ConcertoListWidget;
 
 public abstract class PageScreen extends ConcertoScreen {
     protected int page = 0, maxPage = Integer.MAX_VALUE;
-    private int bottomBarY;
     private int actionBarX;
     private Button pageLabel;
     private final int pageLabelWidth;
@@ -28,7 +27,7 @@ public abstract class PageScreen extends ConcertoScreen {
     abstract public void onPageTurned(int page);
 
     protected final int bottomBarY() {
-        return this.bottomBarY;
+        return this.standardBottomActionY();
     }
 
     protected final int actionBarX() {
@@ -36,7 +35,7 @@ public abstract class PageScreen extends ConcertoScreen {
     }
 
     protected final int actionBarWidth() {
-        return this.width - ConcertoListWidget.PAGE_MARGIN - this.actionBarX;
+        return this.standardContentRight() - this.actionBarX;
     }
 
     private void changePage(int page) {
@@ -48,26 +47,26 @@ public abstract class PageScreen extends ConcertoScreen {
     @Override
     protected void init() {
         super.init();
-        this.bottomBarY = this.height - 30;
-        int x = ConcertoListWidget.PAGE_MARGIN;
+        int y = this.standardBottomActionY();
+        int x = this.standardContentX();
         this.addRenderableWidget(Button.builder(Component.translatable("concerto.screen.previous_page"), button -> {
             if (this.page > 0) {
                 this.changePage(this.page - 1);
             }
-        }).size(20, 20).pos(x, this.bottomBarY).build());
-        x += 20;
+        }).size(20, 20).pos(x, y).build());
+        x += 20 + STANDARD_ACTION_GAP;
 
         this.pageLabel = Button.builder(Component.translatable("concerto.screen.page", this.page + 1), button -> {
-        }).size(this.pageLabelWidth, 20).pos(x, this.bottomBarY).build();
+        }).size(this.pageLabelWidth, 20).pos(x, y).build();
         this.pageLabel.active = false;
         this.addRenderableWidget(this.pageLabel);
-        x += this.pageLabelWidth;
+        x += this.pageLabelWidth + STANDARD_ACTION_GAP;
 
         this.addRenderableWidget(Button.builder(Component.translatable("concerto.screen.next_page"), button -> {
             if (this.page < this.maxPage) {
                 this.changePage(this.page + 1);
             }
-        }).size(20, 20).pos(x, this.bottomBarY).build());
-        this.actionBarX = x + 20;
+        }).size(20, 20).pos(x, y).build());
+        this.actionBarX = x + 20 + STANDARD_ACTION_GAP;
     }
 }

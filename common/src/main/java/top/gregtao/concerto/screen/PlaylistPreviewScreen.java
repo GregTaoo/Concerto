@@ -3,8 +3,10 @@ package top.gregtao.concerto.screen;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
+import org.lwjgl.glfw.GLFW;
 import top.gregtao.concerto.core.config.PresetPlaylistsConfig;
 import top.gregtao.concerto.core.music.Music;
 import top.gregtao.concerto.core.music.list.Playlist;
@@ -16,24 +18,31 @@ import top.gregtao.concerto.network.room.ServerMusicAgentManager;
 import top.gregtao.concerto.screen.widget.ConcertoListWidget;
 import top.gregtao.concerto.screen.widget.MetadataListWidget;
 
+
 public class PlaylistPreviewScreen extends ConcertoScreen {
+    private static final int SEARCH_BUTTON_WIDTH = 50;
+
     private final Playlist playlist;
     private MetadataListWidget<Music> widget;
     private Button addPlaylistButton;
     private Button playButton;
     private Button addButton;
     private Button requestButton;
+    private EditBox searchBox;
 
     public PlaylistPreviewScreen(Playlist playlist, Screen parent) {
         super(Component.literal(Component.translatable("concerto." + (playlist.isAlbum() ? "album" : "playlist")).getString() +
                 ": " + playlist.getMeta().title() + " - " + playlist.getMeta().author()), parent);
         this.playlist = playlist;
     }
+    private void toggleSearch() {
+        this.widget.reset(this.playlist.getList(), null, this.searchBox.getValue());
+    }
 
     @Override
     protected void init() {
         super.init();
-        this.widget = new MetadataListWidget<>(this.width, this.height - 55, 20, 18) {
+        this.widget = new MetadataListWidget<>(this.width, this.height - 77, 42, 18) {
             @Override
             public void onDoubleClicked(ConcertoListWidget<Music>.Entry entry) {
                 if (PlayerPermissions.canModifyMusicList()) {
@@ -42,7 +51,17 @@ public class PlaylistPreviewScreen extends ConcertoScreen {
             }
         };
         this.addWidget(this.widget);
-        ConcertoRunner.run(() -> this.widget.reset(this.playlist.getList(), null));
+
+        int searchX = this.standardContentX();
+        int searchButtonX = this.standardContentRight() - SEARCH_BUTTON_WIDTH;
+        this.searchBox = new EditBox(this.font, searchX, 17, searchButtonX - searchX - STANDARD_ACTION_GAP, 20,
+                this.searchBox, Component.translatable("concerto.screen.search"));
+        this.addWidget(this.searchBox);
+        this.addRenderableWidget(this.searchBox);
+        this.addRenderableWidget(Button.builder(Component.translatable("concerto.screen.search"), button ->
+                this.toggleSearch()).pos(searchButtonX, 17).size(SEARCH_BUTTON_WIDTH, 20).build());
+        String searchTerm = this.searchBox.getValue();
+        ConcertoRunner.run(() -> this.widget.reset(this.playlist.getList(), null, searchTerm));
 
         int y = this.standardBottomActionY();
         int x = this.standardContentX();
@@ -105,6 +124,21 @@ public class PlaylistPreviewScreen extends ConcertoScreen {
         this.addButton.active = canModifyMusicList;
         this.requestButton.active = MusicRoom.clientGetState() == MusicRoom.ClientState.MUSIC_AGENT
                 && this.widget.getSelected() != null;
+    }
+
+    @Override
+    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        if (super.keyPressed(keyCode, scanCode, modifiers)) return true;
+        if (keyCode == GLFW.GLFW_KEY_ENTER && this.searchBox.isHoveredOrFocused()) {
+            this.toggleSearch();
+            return true;
+        }
+        return this.searchBox.keyPressed(keyCode, scanCode, modifiers);
+    }
+
+    @Override
+    public boolean charTyped(char chr, int modifiers) {
+        return this.searchBox.charTyped(chr, modifiers);
     }
 
     @Override

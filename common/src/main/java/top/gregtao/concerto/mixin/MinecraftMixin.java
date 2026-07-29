@@ -7,6 +7,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import top.gregtao.concerto.ConcertoClient;
+import top.gregtao.concerto.core.player.MusicPlayer;
 import top.gregtao.concerto.core.player.MusicPlayerHandler;
 import top.gregtao.concerto.core.room.MusicRoom;
 import top.gregtao.concerto.core.util.ConcertoRunner;
@@ -35,5 +36,18 @@ public class MinecraftMixin {
                 MusicPlayerHandler.INSTANCE.setPaused(true);
             }
         });
+    }
+
+    /**
+     * Runs once on the quit path: destroy() calls close() to release the
+     * game's resources (and only exits the JVM afterwards). Release Concerto's
+     * audio device, thread pools and log file here so quitting never leaves
+     * audio playing or a pinned javaw.exe behind. shutdownAll() is idempotent
+     * and never throws.
+     */
+    @Inject(at = @At("HEAD"), method = "close()V")
+    public void closeInject(CallbackInfo ci) {
+        MusicPlayer.shutdownAll();
+        ConcertoClient.LOGGER.info("Client is closing, Concerto resources released.");
     }
 }

@@ -6,6 +6,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.plugin.messaging.Messenger;
 import org.bukkit.plugin.messaging.PluginMessageListener;
@@ -19,7 +20,10 @@ import top.gregtao.concerto.core.config.ServerConfig;
 import top.gregtao.concerto.core.http.kugou.KuGouMusicApiClient;
 import top.gregtao.concerto.core.http.netease.NeteaseCloudApiClient;
 import top.gregtao.concerto.core.http.qq.QQMusicApiClient;
+import top.gregtao.concerto.core.room.MusicRoom;
+import top.gregtao.concerto.core.room.agent.ServerMusicAgent;
 import top.gregtao.concerto.core.util.ConcertoRunner;
+import top.gregtao.concerto.paper.network.room.MusicRoomManager;
 import top.gregtao.concerto.paper.bridge.CoreBridgeImpl;
 import top.gregtao.concerto.paper.bridge.LoggerImpl;
 import top.gregtao.concerto.paper.command.ConcertoServerCommand;
@@ -53,12 +57,31 @@ public class ConcertoPaperPlugin extends JavaPlugin implements Listener, PluginM
         I18n.INSTANCE.loadFile(Locale.SIMPLIFIED_CHINESE, this.getResource("assets/concerto/lang/zh_cn.json"));
     }
 
+    @Override
+    public void onDisable() {
+        // Mirrors MinecraftServerMixin.shutdownInject on the modded side: the
+        // agent scheduler and the runner pool must not outlive the plugin
+        MusicRoom.ROOMS.clear();
+        if (ServerMusicAgent.INSTANCE != null) {
+            ServerMusicAgent.INSTANCE.dispose();
+            ServerMusicAgent.INSTANCE = null;
+        }
+        ConcertoRunner.shutdown();
+    }
+
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
         Player player = event.getPlayer();
 
         // 3s delay
         Bukkit.getScheduler().runTaskLater(INSTANCE, () -> ServerMusicNetworkHandler.playerJoinHandshake(player), 60L);
+    }
+
+    @EventHandler
+    public void onPlayerQuit(PlayerQuitEvent event) {
+        // Mirrors the vanilla PlayerListMixin cleanup: without it, rooms and
+        // members of disconnected players lingered forever on Paper
+        MusicRoom.serverOnPlayerDisconnect(event.getPlayer().getName(), MusicRoomManager.createServerBridge());
     }
 
     @Override

@@ -9,9 +9,9 @@
   ],
   "client": [
     "ChatComponentMixin",
-    "GuiGraphicsAccessor",
     "MinecraftMixin",
     "MusicManagerMixin",
+    "GuiGraphicsAccessor",
     "SoundManagerMixin"
   ],
   "server": [

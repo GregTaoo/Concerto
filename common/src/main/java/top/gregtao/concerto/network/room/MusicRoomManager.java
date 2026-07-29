@@ -93,6 +93,14 @@ public class MusicRoomManager {
         MusicRoom.clientCreate(CLIENT_BRIDGE);
     }
 
+    public static void clientCreate(String roomName) {
+        MusicRoom.clientCreate(roomName, CLIENT_BRIDGE);
+    }
+
+    public static void clientRequestList() {
+        MusicRoom.clientRequestList(CLIENT_BRIDGE);
+    }
+
     public static void clientJoin(String uuid) {
         MusicRoom.clientJoin(uuid, CLIENT_BRIDGE);
     }

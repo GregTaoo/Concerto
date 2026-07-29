@@ -1,3 +1,9 @@
+import com.github.jengelman.gradle.plugins.shadow.transformers.ServiceFileTransformer
+import com.github.jengelman.gradle.plugins.shadow.transformers.Transformer
+import com.github.jengelman.gradle.plugins.shadow.transformers.TransformerContext
+import org.gradle.api.file.FileTreeElement
+import shadow.org.apache.tools.zip.ZipOutputStream
+
 configurations {
     my.canBeResolved(true)
     implementation.extendsFrom(my)
@@ -14,6 +20,9 @@ dependencies {
     implementation 'com.google.code.gson:gson:2.11.0'
     implementation "org.jetbrains:annotations:24.1.0"
 
+    // Provided by Minecraft's own LWJGL at runtime; only the client instantiates OpenALSink
+    compileOnly 'org.lwjgl:lwjgl-openal:3.3.3'
+
     my('com.googlecode.soundlibs:mp3spi:1.9.5.4')
 
     my('com.github.GregTaoo:JustFLAC:1.0.0')
@@ -23,6 +32,57 @@ dependencies {
     my('com.googlecode.soundlibs:tritonus-all:0.3.7.2')
 
     my('net.jthink:jaudiotagger:3.0.1')
+
+    // Ogg Opus decoding (pure-Java Opus; 1.0.1 shipped broken packages, keep 1.0.2)
+    my('io.github.jaredmdobson:concentus:1.0.2')
+
+    // M4A/ADTS AAC decoding (maintained jaad fork; classes under net.sourceforge.jaad)
+    my('com.tianscar.javasound:jaad:0.9.4')
+}
+
+/**
+ * Merges META-INF/services files exactly like mergeServiceFiles(), but drops
+ * jaad's JavaSound providers from the merged output: its AudioFileReader is
+ * over-eager during the AudioSystem probe and AAC is decoded through dedicated
+ * DecoderFactory branches instead. The mp3spi/vorbis/tritonus provider lines in
+ * the same service files must survive, so the whole file cannot be excluded.
+ *
+ * Composition instead of inheritance: a build-script subclass of the Groovy
+ * ServiceFileTransformer cannot reach its private serviceEntries field.
+ */
+class JaadFilteringServiceTransformer implements Transformer {
+    private final ServiceFileTransformer delegate = new ServiceFileTransformer()
+
+    @Override
+    boolean canTransformResource(FileTreeElement element) {
+        return delegate.canTransformResource(element)
+    }
+
+    @Override
+    void transform(TransformerContext context) {
+        def lines = context.is.readLines().findAll { line ->
+            !line.trim().startsWith('net.sourceforge.jaad.')
+        }
+        def filtered = new ByteArrayInputStream(lines.join('\n').getBytes('UTF-8'))
+        delegate.transform(TransformerContext.builder()
+                .path(context.path).is(filtered)
+                .relocators(context.relocators).stats(context.stats).build())
+    }
+
+    @Override
+    boolean hasTransformedResource() {
+        return delegate.hasTransformedResource()
+    }
+
+    @Override
+    void modifyOutputStream(ZipOutputStream os, boolean preserveFileTimestamps) {
+        delegate.modifyOutputStream(os, preserveFileTimestamps)
+    }
+
+    @Override
+    String getName() {
+        return 'JaadFilteringServiceTransformer'
+    }
 }
 
 jar {
@@ -49,8 +109,11 @@ shadowJar {
     relocate 'com.jcraft.jorbis', 'top.gregtao.concerto.libs.jorbis'
     relocate 'org.kc7bfi.jflac', 'top.gregtao.concerto.libs.jflac'
     relocate 'com.github.trilarion', 'top.gregtao.concerto.libs.trilarion'
+    relocate 'io.github.jaredmdobson', 'top.gregtao.concerto.libs.concentus'
+    relocate 'net.sourceforge.jaad', 'top.gregtao.concerto.libs.jaad'
 
-    mergeServiceFiles()
+    // replaces mergeServiceFiles(): same merge, minus the jaad SPI entries
+    transform(JaadFilteringServiceTransformer)
     exclude('META-INF/MANIFEST.MF')
     exclude('META-INF/maven/')
     exclude('META-INF/LICENSE')

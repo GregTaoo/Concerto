@@ -1,154 +1,280 @@
 <div align="center">
   <img src="icon-large.png" alt="Concerto" width="256">
   <h1>Concerto</h1>
-  <p><b>Built-in Minecraft Music Player for Fabric / NeoForge / Paper</b></p>
+  <p><b>An in-game music player for Minecraft — Fabric / NeoForge client, Paper server plugin</b></p>
+  <p>
+    <a href="https://modrinth.com/mod/A0VZd1kW"><img src="https://img.shields.io/modrinth/dt/A0VZd1kW?logo=modrinth&label=Modrinth" alt="Modrinth Downloads"></a>
+    <a href="https://github.com/GregTaoo/Concerto/releases"><img src="https://img.shields.io/github/v/release/GregTaoo/Concerto?logo=github&label=Release" alt="GitHub Release"></a>
+    <img src="https://img.shields.io/badge/Minecraft-1.20.1%20%7C%201.20.6%20%7C%201.21.1%20%7C%201.21.6%20%7C%201.21.11%20%7C%2026.1.2%20%7C%2026.2-62b47a?logo=minecraft" alt="Minecraft 1.20.1, 1.20.6, 1.21.1, 1.21.6, 1.21.11, 26.1.2, and 26.2">
+    <img src="https://img.shields.io/badge/Java-21+-f89820?logo=openjdk&logoColor=white" alt="Java 21+">
+    <img src="https://img.shields.io/badge/Loaders-Fabric%20%7C%20NeoForge%20%7C%20Paper-8a2be2" alt="Fabric | NeoForge | Paper">
+    <a href="LICENSE"><img src="https://img.shields.io/badge/License-GPL--3.0-blue" alt="License"></a>
+  </p>
+  <p>English | <a href="README_zh.md">简体中文</a></p>
 </div>
 
-> Supports local music, online resources, and streaming platforms like NetEase Cloud Music, QQ Music, Kugou Music. Features a "Listen Together" function for multiplayer sessions.
+> Play local files, direct URLs, and music services – NetEase Cloud Music, QQ Music, and KuGou Music – without leaving the game. Listen together in shared music rooms, or let the whole server take turns choosing songs.
 
 ---
 
-## 🌟 Key Features
+## ✨ Features
 
-- **Multi-Platform Audio Parsing**: Supports NetEase Cloud Music, QQ Music, Kugou Music, as well as loading local files and direct online link playback.
-- **Music Room (Listen Together)**: Join the same music room with other players on the server; playback progress, track switching, and pause operations are synchronized in real-time for all members.
-- **Global On-Demand (KTV Mode)**: Servers can enable an on-demand feature where players can queue up songs. Supports initiating "skip song" votes to bypass music that doesn't align with the majority's preference.
-- **VIP Sharing & Server Presets**: Server owners can configure their personal platform support to the server, sharing VIP song access with all players. Additionally, it supports uploading preset playlists that automatically play when there are no on-demand tasks.
-- **Cross-Platform Compatibility**: Client supports Fabric and NeoForge, while the server supports a dedicated Paper plugin version, enabling cross-platform interoperability.
+- **Many sources, one player** — NetEase Cloud Music, QQ Music, KuGou Music, local audio files (drag & drop), and direct HTTP links.
+- **Smooth playback** – drag the progress bar to move through a track, keep listening while streams load, and choose an audio output option if the default does not suit your setup. Supported formats include MP3, OGG/Opus, FLAC, WAV, M4A/AAC, and AIFF.
+- **Music rooms (listen together)** — members of a room share playback in real time: the same track, the same position, the same pauses. Rooms can be named, listed publicly, and joined from a browser screen or by UUID.
+- **Server-wide queue (KTV mode)** — players queue songs for the whole server, vote to skip, and the server falls back to preset radios when the queue is empty.
+- **Shared access & preset playlists** – server owners can configure their own supported music-service accounts for the server and share curated playlists with everyone.
+- **Cross-platform** — Fabric and NeoForge on the client; a dedicated Paper plugin lets modded clients use every server feature on plugin servers.
 
 ---
 
-## 🛡️ Notes and Acknowledgements
+## 📦 Installation
 
-- ⚠️ **Security Reminder**: Please keep your `.cookie` files in the `Concerto` folder secure and do not share them with others.
-- ⚖️ **Agreement and Disclaimer**: This mod is for learning and exchange purposes only. It is strictly forbidden to use it for illegal purposes. Please read the [License](LICENSE) carefully before use. This mod is **not authorized for release on any paid or commercial platforms**. Those who violate this will bear legal responsibility. If there is any infringement, please contact us for removal.
-- 🤝 **Special Thanks**: Kugou Music related code contributed by [ming-sc](https://github.com/ming-sc). Thanks to all [supporters](supporters.md).
+| Platform | What to install |
+| --- | --- |
+| **Fabric client** | `Concerto-mc<version>-fabric-<mod version>.jar` + [Fabric API](https://modrinth.com/mod/fabric-api) |
+| **NeoForge client** | `Concerto-mc<version>-neoforge-<mod version>.jar` |
+| **Paper server** | `Concerto-mc<version>-paper-<mod version>.jar` into `plugins/` |
 
-> **Wiki Base Mod Version: `2.0.0`**
+Concerto stores its settings, playlists, downloads, and sign-in data in the `Concerto/` folder next to the game or server directory.
+
+You can use Concerto as a local player in singleplayer and on servers that do not have it installed. Shared rooms, sharing, and the server-wide queue need Concerto on the server too (Fabric, NeoForge, or Paper).
 
 ---
 
 ## ⌨️ Hotkeys
 
-| Key | Function |
+All hotkeys can be rebound in **Options → Controls**.
+
+| Default key | Action |
 | :---: | --- |
-| `U` | Open Playlist Management Interface |
-| `I` | Open Concerto Main Menu |
-| `N` | Play Next Song |
-| `P` | Pause / Resume Playback |
+| `I` | Open the Concerto index (main menu) |
+| `U` | Open the playlist screen |
+| `N` | Play the next track |
+| `P` | Pause / resume |
 
 ---
 
-## 📜 Command Reference
+## 🖱️ Screens & Controls
 
-### 1. Client-Side Commands `/concerto` (Alias: `/music`)
+### Index screen (`I`)
+Your starting point for playlists, music services (NetEase / QQ / KuGou), search, local files, links, music rooms, and settings.
+
+### Playlist screen (`U`)
+- **Drag & drop** audio files or whole folders from your file manager to import them.
+- **Double-click** an entry to play it; single click selects.
+- Bottom row: next / play / delete / order (normal, random, reversed, loop) / pause / info / clear.
+- The **volume button** pops up a slider (click anywhere else to dismiss). Volume changes apply instantly and are saved to the config.
+- The search box filters the current playlist.
+
+### Playlist previews
+- Select **Save to Local** to add the displayed playlist to **Local Playlists** immediately; it is also written as JSON under `Concerto/local_playlists/`.
+
+
+### Player screen
+- Drag the progress bar to **seek**; a preview of the target position is shown while dragging.
+- Shows title, artist, source, cover art, and buffering state for streamed tracks.
+
+### Music rooms screen
+- **Discovery view**: lists the server's public (visible) rooms with one-click join, plus fields to create a named room, join by UUID, refresh, or enter the server queue.
+- **Management view** (when you are in a room): member list, rename, toggle *visible* / *joinable*, grant co-op permission, and dissolve or leave the room.
+
+### Options screen
+Use the in-game options to adjust audio output, HUD visibility, scrolling-text speed, NetEase audio quality, and more. Audio output changes take effect from the next track.
+
+---
+
+## 📜 Commands
+
+### Client player control – `/concerto` (alias `/music`)
+
+The `/music` alias can be disabled with the `registerMusicCommand` client config option.
+
+Most everyday actions are available from the screens above. Commands are optional shortcuts for players and server owners who prefer them.
+
 | Command | Description |
 | --- | --- |
-| `pause` / `start` / `stop` | Pause, start, or stop playback |
-| `clear` | Stop playback and clear the current playlist |
-| `reload` / `restart` | Reload configuration and playlist data / Restart the player core (to fix freezes) |
-| `save` | Cache the current song (only for supported sources like NetEase Cloud Music, etc.) |
-| `like` / `dislike` | Like / Unlike the current song (NetEase Cloud Music only) |
-| `download-current` | Download the current song and its lyrics to the local `Concerto` folder |
-| `download-all` | Download all songs and lyrics in the current playback queue |
-| `export-as-playlist` | Export the current cache queue as a preset playlist in the `JSON` format required by the server |
-| `clean-cache` | Clear all cache and verification files (including cookies) in the client's `Concerto/cache` directory |
+| `/concerto pause` | Toggle pause / resume |
+| `/concerto start` | Start the player if it is not running |
+| `/concerto stop` | Stop playback |
+| `/concerto clear` | Stop playback and clear the playlist |
+| `/concerto restart` | Restart the player core (recovers from a stuck state) |
+| `/concerto reload` | Reload configs, local playlists, and restart the player |
+| `/concerto save` | Cache the current track locally (cacheable sources only) |
+| `/concerto like` / `dislike` | Like / unlike the current track (NetEase Cloud Music only) |
+| `/concerto download-current` | Download the current track and its lyrics to `Concerto/` |
+| `/concerto download-all` | Download every track in the current playlist |
+| `/concerto export-as-playlist` | Export the current playlist as a JSON preset playlist (`Concerto/local_playlists`) |
+| `/concerto clean-cache` | Wipe the client cache (music, images, verification files) |
 
-### 2. Music Room Commands `/musicroom` (Requires Concerto installed on the server)
+### Music rooms & server queue — `/musicroom` (requires Concerto on the server)
+
 | Command | Description |
 | --- | --- |
-| `create` | Create and join a dedicated music room; the corresponding UUID will be automatically copied upon success (subject to server permission restrictions) |
-| `join [UUID]` / `quit` | Join a music room with the specified UUID / Leave the current music room or the on-demand lobby |
-| `remove` / `members` | Disband the current music room / View the list of members in the current music room |
-| `op [player]` | Grant or revoke management (skip song) privileges to a specified player (creator of the room only) |
-| `agent join` / `quit` | Join or leave the server's public on-demand queue system |
-| `agent add` | Push the currently playing music to the server's public on-demand queue |
-| `agent vote [true/false]` | Initiate a collective skip song vote / Vote to approve or reject the current skip song vote |
+| `/musicroom create [name]` | Create (optionally named) and join a room; the room UUID is copied to your clipboard. Gated by the server's `musicRoomCommandPermission` |
+| `/musicroom join <uuid>` | Join a room by UUID |
+| `/musicroom quit` | Leave the current room or the server queue |
+| `/musicroom remove` | Dissolve the room you own |
+| `/musicroom members` | Show the room owner and member list |
+| `/musicroom op <player>` | Toggle a member's playback-control permission (owner only) |
+| `/musicroom agent join` / `quit` | Enter / leave the server-wide queue (KTV mode) |
+| `/musicroom agent add` | Push your currently playing track onto the server queue |
+| `/musicroom agent vote` | Start a skip vote for the current queued track |
+| `/musicroom agent vote <true\|false>` | Cast your vote in the running skip vote |
 
-### 3. P2P Music Sharing Commands `/sharemusic` (Direct network connection between clients)
+### Player-to-player sharing — `/sharemusic`
+
 | Command | Description |
 | --- | --- |
-| `to [player or @a]` | Share the currently playing content with a specific player. If the mod is not installed on the server, the command will fall back to the vanilla messaging channel to attempt delivery. Only whitelisted platform sources are supported. |
-| `accept [UUID]` / `reject` | Accept / Reject a specific music sharing invitation (followed by UUID or type `all` to reject all requests) |
-| `list [page number]` | View the list of pending music sharing invitations |
+| `/sharemusic to <player \| @a>` | Share the current track with one player, or with everyone (`@a` goes through the server audit queue when audition is enabled). Sources that expose local file paths are refused as unsafe |
+| `/sharemusic accept <uuid>` | Accept a share invitation |
+| `/sharemusic reject <uuid>` | Reject a share invitation |
+| `/sharemusic reject all` | Reject all pending invitations |
+| `/sharemusic list <page>` | List pending invitations (clickable accept / reject buttons) |
 
-### 4. Server Management Commands `/concerto-server` (Admin use only)
+### Server administration — `/concerto-server`
+
+All subcommands require permission level 2 (OP) except `fetch-radios`, which everyone may use.
+
 | Command | Description |
 | --- | --- |
-| `audit [UUID]` / `reject` | Approve or reject music broadcasting share requests for the entire server (followed by `all` to reject all pending requests) |
-| `audit list [page number]` | List the current queue of songs awaiting server administrator review for broadcast |
-| `reload` / `reload-cookie` | Reload server configuration / Reload cookie files for each platform |
-| `fetch-radios` | Synchronize preset playlists from the server to the local client (also usable by regular users) |
-| `clean-cache` | Clear server cache data and cached cookie information |
-| `agent reset` / `cut` | Completely reset the public on-demand queue / Force skip the current song for all players on the server |
-| `agent stop` / `start` | Stop the music on-demand mode / Restart the on-demand mode |
+| `/concerto-server audit <uuid>` | Approve a pending `@a` broadcast request |
+| `/concerto-server audit reject <uuid>` | Reject a pending broadcast request |
+| `/concerto-server audit reject all` | Reject every pending request |
+| `/concerto-server audit list <page>` | List the audit queue (clickable accept / reject buttons) |
+| `/concerto-server reload` | Reload the server config, preset radios, and platform cookies |
+| `/concerto-server reload-cookie` | Reload only the platform cookie files |
+| `/concerto-server clean-cache` | Wipe the server-side cache |
+| `/concerto-server fetch-radios` | Send the server's preset radios to your client |
+| `/concerto-server agent reset` | Reset the server queue completely |
+| `/concerto-server agent cut` | Force-skip the current queued track |
+| `/concerto-server agent stop` / `start` | Stop / restart KTV mode |
 
 ---
 
-## 📖 Advanced Usage Guide
+## 📖 How-to
 
-### 🎧 Immersive Group "Listen Together" Music Rooms
-- Members in the same music room will have their song skips, playback progress adjustments, and pause operations synchronized in real-time.
-- It is recommended to manage management command permissions centrally to prevent frequent conflicts over skip song control by many players.
-- By sending the UUID generated when creating a music room to other players, they can quickly join via the command.
+### Listen together in a music room
+1. `/musicroom create My Room` (or use the music rooms screen) — the UUID lands in your clipboard.
+2. Hand the UUID to friends (`/musicroom join <uuid>`), or mark the room *visible* + *joinable* so it appears in everyone's room browser.
+3. Whatever the controlling members play, seek, or pause is mirrored to every member in real time. Use `/musicroom op` to decide who may control playback.
 
-### 🎵 Queue Management Interface
-- Pressing the `U` key will bring up a detailed playback queue management panel, which supports dragging and dropping external audio files and folders from the file explorer for import.
-- The panel fully supports double-clicking for quick song switching and allows you to select a target song to initiate a "push to on-demand" request to the server.
-- Playlist configuration files generated via the export command will be stored by default in `Concerto/local_playlists`, facilitating subsequent cross-device synchronization management.
+### Run a server-wide queue (KTV mode)
+1. In the server's Concerto settings, leave the server-wide queue enabled. You can also choose whether players receive an invitation when they join.
+2. Players enter with `/musicroom agent join` and queue their current track with `/musicroom agent add` (rate-limited by `musicAgentAddTimeLimit`).
+3. Anyone in the queue can start a skip vote: `/musicroom agent vote`, then others confirm with `/musicroom agent vote true` (or `false`).
+4. When the queue is empty the server plays its preset radios, if configured.
 
-### 📡 Comprehensive On-Demand Mode and Preset Configuration
-- When the global server on-demand mode is enabled, if a player-submitted song in the queue is not to your liking, you can initiate a vote to skip it at any time via the command.
-- **Server Preset Playlists**: Server administrators can configure organized playlist files into `Concerto/preset_radios/music_agent.json` on the server. This way, when no one is requesting songs, the server can automatically play preset music.
-- **VIP Library Streaming Mechanism**: Enable `musicAgentUseShared` in the server's `server_config.json` and deploy the `.cookie` files of platforms where the administrator has VIP privileges. Then, all server members can directly request VIP songs through the server.
+### Share a music-service account with the server
+1. Sign in to the music service on your own client.
+2. Copy the `.cookie` files created in your client's `Concerto/` folder to the server's `Concerto/` folder. Treat these files like passwords.
+3. In the server's Concerto settings, enable shared account access for the queue, then run `/concerto-server reload-cookie`.
 
-### 📨 Peer-to-Peer Music Sharing Between Players
-- When there is a need to share the currently playing music with a specific player, you can use the `/sharemusic` command. Due to security mechanisms, some local music that directly reads paths may be flagged as unsafe and cannot be shared.
+### Ship preset playlists
+Put exported playlist JSON files (see `/concerto export-as-playlist`) on the server under `Concerto/preset_radios/`; the special file `music_agent.json` is what KTV mode falls back to. Clients receive the radios automatically, or on demand via `/concerto-server fetch-radios`.
 
----
-
-## ⚙️ Configuration File Parameter Explanations
-
-### Server (`server_config.json`)
-- `auditionRequired`: Whether music broadcast sharing to the entire server requires administrator approval (default `true`).
-- `serverMusicAgent`: Whether to enable the server's global song on-demand feature (default `true`).
-- `agentInviteWhenJoin`: Whether to automatically send an invitation to the on-demand lobby when a player joins the server (default `true`).
-- `musicRoomCommandPermission`: The minimum permission level required for a player to create a music room (default `2`).
-- `musicAgentAddTimeLimit`: The minimum interval time between two on-demand song submissions by a player (default `60` seconds).
-- `musicAgentUseShared`: Whether to force the server to fetch and share direct links when using global on-demand (default `true`).
-- `kuGouMusicLite`: Whether to use the lite version channel when parsing Kugou Music resources (default `false`).
-
-### Client (`client_config.json`)
-**【 Core Controls 】**
-- `confirmAfterReceived`: Whether to automatically accept music shares received from others (default enabled).
-- `joinAgentWhenInvited`: Whether to automatically join the global on-demand invitation from the server (default disabled).
-- `neteaseMusicQuality`: Global requested NetEase Cloud Music audio quality level (options: `"STANDARD"`, `"HIGHER"`, `"EXHIGH"`, `"LOSSLESS"`, default `"HIRES"`).
-- `handshakeRequired`: Whether to force a connection verification handshake when connecting to the server (default enabled).
-- `maxCacheSize`: The maximum space allowed for music and image caching (default `100MB`).
-- `hideWhenChat`: Whether to automatically hide on-screen player information when the player opens the chat box (default enabled).
-
-**【 HUD Display Layout 】**
-All on-screen notification elements (lyrics, progress, cover art, etc.) can be enabled or disabled by modifying the configuration file, e.g., `displayLyrics: true/false`.
-- **Coordinate Specification**: Use `[horizontal proportion](+/-)[pixel offset],[vertical proportion](+/-)[pixel offset]`. For example, `0.5,1-70` means center-aligned and 70 pixels from the bottom; `1-30,0+15` means 30 pixels from the right edge and 15 pixels from the top edge.
-- **Color Specification**: Text and progress bar colors use ARGB hexadecimal codes. Format: `#ffffffff` (fully opaque pure white), `#ff00aaaa` (fully opaque cyan).
+### Cache & downloads
+Concerto only saves music when you ask it to: use `/concerto save` for the current track, or `download-current` / `download-all` for permanent copies with lyrics. The cache size can be adjusted in the settings.
 
 ---
 
-## ❓ Common Troubleshooting and FAQs
+## ⚙️ Configuration
 
-#### **1. How to correctly configure the server's Cookie data?**
-Please log in locally and copy the cookie folder to the server.
+You do not need to edit files for normal use: the in-game options screen covers the common choices. The reference below is for players and server owners who want more control. Settings files are in `Concerto/`; edit them only while the game is closed.
 
-#### **2. NetEase Cloud Music fails to work properly and gives continuous errors after logging in with a QR code?**
-NetEase Cloud Music has strict security risk control policies. Frequent high-frequency requests from different devices in different locations can cause the environment to be flagged and abnormal logins to be intercepted. It is recommended that you abandon password or QR code login methods and directly copy the complete web Cookie information from your current successful login to bypass environmental detection.
+### `client_config.json`
 
-#### **3. QQ Music information updates fail or loading errors occur.**
-Due to the platform's API mechanism, QQ Music authorization has a strict lifespan. Some data may expire and become invalid after a few days. If such errors affect normal on-demand playback, the server owner should promptly update the relevant configuration files on the server and execute `/concerto-server reload-cookie` to refresh.
+**Playback & networking**
 
-#### **4. Incomplete loading interface and rendering anomalies in specific HUD components.**
-This is likely caused by corrupted display cache. First, please use the `/concerto clean-cache` command to clear the client cache. If the issue persists and the interface is still black, please completely close the game, manually navigate to `.minecraft/Concerto/cache`, delete all related files, and then restart the game to regenerate them.
+| Key | Default | Meaning |
+| --- | --- | --- |
+| `playerVolume` | `1.0` | Player volume, `0.0` – `1.0` |
+| `playerVolumeFollowsMaster` | `true` | Multiply by Minecraft's master volume |
+| `playbackBackend` | `"JAVASOUND"` | Audio backend: `"JAVASOUND"` or `"OPENAL"`. Changing it takes effect from the next track |
+| `displayPlayerScreenCoverAndSpectrum` | `true` | Show cover art and the spectrum on the player screen; `false` uses the full-width lyrics view |
+| `neteaseMusicQuality` | `"HIRES"` | NetEase quality: `"STANDARD"`, `"HIGHER"`, `"EXHIGH"`, `"LOSSLESS"`, `"HIRES"` |
+| `maxCacheSize` | `100000000` | Cache budget in bytes (music and images each) |
+| `handshakeRequired` | `true` | Verify the Concerto handshake before using server features |
+| `confirmAfterReceived` | `true` | Ask before accepting an incoming share (`false` auto-accepts) |
+| `joinAgentWhenInvited` | `false` | Auto-accept the server's KTV invitation on join |
+| `registerMusicCommand` | `true` | Register the `/music` alias |
+| `printRequestResults` | `false` | Log platform API responses (debugging) |
+| `kuGouMusicLite` | `false` | Use the KuGou "concept/lite" endpoints |
+| `autoGetKuGouDailyVIP` | `false` | Claim KuGou's daily VIP automatically |
+
+**HUD**
+
+Each HUD element has a `display*` switch, a position, an alignment (`LEFT` / `CENTER` / `RIGHT`), and ARGB colors:
+
+| Element | Keys |
+| --- | --- |
+| Lyrics | `displayLyrics`, `lyricsPosition` (default `0.5,1-100`), `lyricsAlignment`, `lyricsColor` |
+| Sub-lyrics (translation) | `displaySubLyrics`, `subLyricsPosition` (default `0.5,1-89`), `subLyricsAlignment`, `subLyricsColor` |
+| Track details | `displayMusicDetails`, `musicDetailsPosition` (default `1-30,0+5`), `musicDetailsAlignment`, `musicDetailsColor` |
+| Time & progress bar | `displayTimeProgress`, `timeProgressPosition` (default `1-30,0+15`), `timeProgressAlignment`, `timeProgressTextColor`, `timeProgressColor`, `timeProgressBgColor` |
+| Cover art | `displayCoverImg`, `coverImgPosition` (default `1-25,0`), `coverImgSize`, `coverImgInCircle`, `coverImgRotate` |
+| Misc | `textShadow`, `hideWhenChat`, `scrollingTextSpeed` |
+
+- **Position format**: `<x fraction>±<pixels>,<y fraction>±<pixels>`. `0.5,1-100` = horizontally centered, 100 px above the bottom edge; `1-30,0+15` = 30 px from the right, 15 px from the top.
+- **Color format**: `#AARRGGBB`, e.g. `#ffffffff` opaque white, `#ff00aaaa` opaque teal.
+
+### `server_config.json`
+
+| Key | Default | Meaning |
+| --- | --- | --- |
+| `auditionRequired` | `true` | `@a` broadcasts need OP approval via `/concerto-server audit` |
+| `serverMusicAgent` | `true` | Enable the server-wide queue (KTV mode) |
+| `agentInviteWhenJoin` | `true` | Invite players to the queue when they join |
+| `musicRoomCommandPermission` | `2` | Minimum permission level to create a music room |
+| `musicAgentAddTimeLimit` | `60` | Seconds a player must wait between queue submissions |
+| `musicAgentUseShared` | `true` | Resolve queued tracks through the server's own cookies |
+| `kuGouMusicLite` | `false` | Use the KuGou lite endpoints server-side (also pushed to clients) |
 
 ---
 
-## 🚀 Acknowledgements for Open Source Projects Used
-*[java-stream-player](https://github.com/goxr3plus/java-stream-player)* | *[ZXing](https://github.com/zxing/zxing)* | *[soundlibs](https://github.com/pdudits/soundlibs)* | *[JustFlac](https://github.com/drogatkin/JustFLAC)* | *[java-vorbis-support](https://github.com/Trilarion/java-vorbis-support)* | *[jaudiotagger](https://github.com/marcoc1712/jaudiotagger)* | *[Fabric API ](https://github.com/FabricMC)*
+## ❓ FAQ
+
+**How do I set up a music-service account on a server?**
+Sign in on your own client first, then copy the `.cookie` files from the client's `Concerto/` folder to the server's. Run `/concerto-server reload-cookie` afterwards. Keep these files private: they grant access to your account.
+
+**NetEase keeps erroring after a QR-code login.**
+NetEase's risk control flags logins from new devices/locations aggressively. Skip QR/password login and paste the complete cookie of an existing, working browser session instead.
+
+**QQ Music stops resolving after a few days.**
+QQ Music cookies expire quickly by design. Refresh the cookie files on the server and run `/concerto-server reload-cookie`.
+
+**Which audio output option should I pick?**
+`JAVASOUND` is the recommended default. Try `OPENAL` if playback stutters or uses the wrong device. The change applies from the next track.
+
+**Moving through a track is slow sometimes.**
+Some streamed files and radio sources cannot jump directly to every position, so Concerto may need a moment to catch up. Moving within recently played audio is usually faster.
+
+**Which local audio files can I play?**
+Concerto supports MP3, OGG/Opus, FLAC, WAV, M4A/AAC, and AIFF. Support for unusual encodings inside those containers can vary, so converting a problematic file to MP3 or WAV is still a useful fallback.
+
+**The player is stuck / silent after an error.**
+`/concerto restart` resets the player core without touching your playlist. If screens render wrongly or covers are black, `/concerto clean-cache`, and as a last resort delete `Concerto/cache` while the game is closed.
+
+**Room / sharing commands say the feature is unavailable.**
+Those features need Concerto on the server (Fabric, NeoForge, or the Paper plugin). On vanilla servers the mod still works as a purely local player.
+
+**My volume resets or ignores the slider.**
+If `playerVolumeFollowsMaster` is on, the effective volume is `playerVolume × master volume` — check Minecraft's own Music & Sounds settings too.
+
+---
+
+## 🛡️ License & Notes
+
+- ⚠️ Keep the `.cookie` files in `Concerto/` private — never share or commit them.
+- ⚖️ This project is for learning and personal use. See the [License](LICENSE) before use. **Re-publishing on paid or commercial platforms is not authorized.**
+- 🤝 KuGou Music support contributed by [ming-sc](https://github.com/ming-sc). Thanks to all [supporters](supporters.md).
+
+## 🚀 Built On
+
+[soundlibs (mp3spi / tritonus)](https://github.com/pdudits/soundlibs) ·
+[JustFLAC](https://github.com/drogatkin/JustFLAC) ·
+[java-vorbis-support](https://github.com/Trilarion/java-vorbis-support) ·
+[jaudiotagger](https://github.com/marcoc1712/jaudiotagger) ·
+[QR Code generator (Project Nayuki)](https://www.nayuki.io/page/qr-code-generator-library) ·
+[Gson](https://github.com/google/gson) ·
+[Fabric API](https://github.com/FabricMC/fabric)

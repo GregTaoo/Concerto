@@ -131,7 +131,8 @@ public class NeteaseCloudSearchScreen extends PageScreen {
 
         int searchX = this.standardContentX();
         int searchButtonX = this.standardContentRight() - 52;
-        this.searchBox = new EditBox(this.font, searchX, 17, searchButtonX - searchX - STANDARD_ACTION_GAP, 20,
+        int searchTypeX = searchButtonX - STANDARD_ACTION_GAP - 65;
+        this.searchBox = new EditBox(this.font, searchX, 17, searchTypeX - STANDARD_ACTION_GAP - searchX, 20,
                 this.searchBox, Component.translatable("concerto.screen.search"));
         this.addWidget(this.searchBox);
         this.addRenderableWidget(this.searchBox);
@@ -153,7 +154,7 @@ public class NeteaseCloudSearchScreen extends PageScreen {
 
         this.addRenderableWidget(CycleButton.builder((SearchType type) -> Component.literal(type.getName()))
                 .withValues(SearchType.values()).withInitialValue(this.searchType).create(
-                        this.width / 2 + 105, 17, 65, 20, Component.translatable("concerto.search_type"),
+                        searchTypeX, 17, 65, 20, Component.translatable("concerto.search_type"),
                         (widget, type) -> this.updateSearchType(type)));
 
         this.playButton = Button.builder(Component.translatable("concerto.screen.play"), button -> {

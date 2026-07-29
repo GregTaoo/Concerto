@@ -319,6 +319,7 @@ public class MusicPlayerHandler {
                                 List.of(MusicPlayerState.CURRENT_INDEX, MusicPlayerState.MUSIC_LIST, MusicPlayerState.PLAYBACK_HISTORY) :
                                 List.of(MusicPlayerState.MUSIC_LIST, MusicPlayerState.PLAYBACK_HISTORY)
         );
+        this.writeConfig();
     }
 
     public boolean renameMusic(UUID uuid, String title) {

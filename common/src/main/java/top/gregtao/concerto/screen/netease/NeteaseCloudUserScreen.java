@@ -49,6 +49,8 @@ public class NeteaseCloudUserScreen extends PageScreen {
     @Override
     protected void init() {
         super.init();
+        int actionX = this.actionBarX();
+        int actionWidth = this.actionBarWidth() / 3;
         if (!this.loggedIn()) {
             Minecraft.getInstance().setScreen(new NeteaseCloudLoginScreens(null));
         }
@@ -63,7 +65,7 @@ public class NeteaseCloudUserScreen extends PageScreen {
                         () -> NeteaseCloudApiClient.INSTANCE.getDailyRecommendation()
                 ).thenAccept(playlist -> Minecraft.getInstance().executeBlocking(
                         () -> Minecraft.getInstance().setScreen(new PlaylistPreviewScreen(playlist, this)))
-                )).pos(this.width / 2 + 10, this.height - 30).size(50, 20).build()
+                )).pos(actionX, this.bottomBarY()).size(actionWidth, 20).build()
         );
 
         this.addRenderableWidget(Button.builder(Component.translatable("concerto.screen.play"), button -> {
@@ -71,14 +73,14 @@ public class NeteaseCloudUserScreen extends PageScreen {
             if (entry != null) {
                 Minecraft.getInstance().setScreen(new PlaylistPreviewScreen(entry.item, this));
             }
-        }).pos(this.width / 2 + 65, this.height - 30).size(50, 20).build());
+        }).pos(actionX + actionWidth, this.bottomBarY()).size(actionWidth, 20).build());
 
         this.addRenderableWidget(Button.builder(Component.translatable("concerto.screen.logout"), button -> {
             if (this.loggedIn()) {
                 NeteaseCloudApiClient.LOCAL_USER.logout();
             }
             Minecraft.getInstance().setScreen(new NeteaseCloudLoginScreens(this));
-        }).pos(this.width / 2 + 120, this.height - 30).size(50, 20).build());
+        }).pos(actionX + actionWidth * 2, this.bottomBarY()).size(this.actionBarWidth() - actionWidth * 2, 20).build());
     }
 
     @Override

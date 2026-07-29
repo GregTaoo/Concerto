@@ -33,6 +33,9 @@ public class MusicConfirmationScreen extends ConcertoScreen {
         this.widget = new MusicWithUUIDListWidget(this.width, this.height - 55, 20, 18);
         this.refresh();
         this.addWidget(this.widget);
+        int actionX = ConcertoListWidget.PAGE_MARGIN;
+        int actionY = this.height - 30;
+        int actionWidth = (this.width - ConcertoListWidget.PAGE_MARGIN * 2) / 4;
 
         this.addRenderableWidget(Button.builder(Component.translatable("concerto.accept"), button -> {
             LocalPlayer player = Minecraft.getInstance().player;
@@ -41,7 +44,7 @@ public class MusicConfirmationScreen extends ConcertoScreen {
                 player.connection.sendCommand("sharemusic accept " + entry.item.getSecond());
                 this.widget.removeEntryFromTop(entry);
             }
-        }).pos(20, this.height - 30).size(60, 20).build());
+        }).pos(actionX, actionY).size(actionWidth, 20).build());
 
         this.addRenderableWidget(Button.builder(Component.translatable("concerto.reject"), button -> {
             LocalPlayer player = Minecraft.getInstance().player;
@@ -50,7 +53,7 @@ public class MusicConfirmationScreen extends ConcertoScreen {
                 player.connection.sendCommand("sharemusic reject " + entry.item.getSecond());
                 this.widget.removeEntryFromTop(entry);
             }
-        }).pos(85, this.height - 30).size(60, 20).build());
+        }).pos(actionX + actionWidth, actionY).size(actionWidth, 20).build());
 
         this.addRenderableWidget(Button.builder(Component.translatable("concerto.reject.all"), button -> {
             LocalPlayer player = Minecraft.getInstance().player;
@@ -58,10 +61,10 @@ public class MusicConfirmationScreen extends ConcertoScreen {
                 player.connection.sendCommand("sharemusic reject all");
                 this.widget.clear();
             }
-        }).pos(150, this.height - 30).size(60, 20).build());
+        }).pos(actionX + actionWidth * 2, actionY).size(actionWidth, 20).build());
 
         this.addRenderableWidget(Button.builder(Component.translatable("concerto.refresh"), button -> this.refresh())
-                .pos(215, this.height - 30).size(60, 20).build());
+                .pos(actionX + actionWidth * 3, actionY).size(this.width - ConcertoListWidget.PAGE_MARGIN - actionX - actionWidth * 3, 20).build());
     }
 
     @Override

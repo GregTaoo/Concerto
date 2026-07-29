@@ -13,23 +13,24 @@ import top.gregtao.concerto.core.event.ConcertoEvents;
 import top.gregtao.concerto.core.event.Event;
 import top.gregtao.concerto.core.player.MusicPlayerHandler;
 import top.gregtao.concerto.core.player.PlayerPermissions;
+import top.gregtao.concerto.core.room.MusicRoom;
+import top.gregtao.concerto.network.room.ServerMusicAgentManager;
 import top.gregtao.concerto.screen.widget.ConcertoListWidget;
 import top.gregtao.concerto.screen.widget.MainPlaylistWidget;
 import top.gregtao.concerto.screen.widget.VolumeControlWidget;
 
 public class MainPlaylistScreen extends ApplyDraggedFileScreen {
     private static final int ICON_BUTTON_W = 20;
-    private static final int TEXT_BUTTON_W = 58;
-    private static final int ORDER_BUTTON_W = 80;
-    private static final int BUTTON_GAP = 2;
+    private static final int SEARCH_BUTTON_W = 50;
+    private static final int SEARCH_GAP = 2;
 
     private MainPlaylistWidget widget;
     protected EditBox searchBox;
     private Button previousButton;
     private Button nextButton;
-    private Button deleteButton;
     private Button pauseButton;
     private Button infoButton;
+    private Button requestButton;
     private Button clearButton;
     private CycleButton<OrderType> orderButton;
     private VolumeControlWidget volumeControl;
@@ -50,73 +51,74 @@ public class MainPlaylistScreen extends ApplyDraggedFileScreen {
     @Override
     protected void init() {
         super.init();
-        this.widget = new MainPlaylistWidget(this.width, this.height - 75, 40, 18);
+        this.widget = new MainPlaylistWidget(this.width, this.height - 77, 42, 18, this::openTitleEditor);
 
         // Registered before the playlist widget so the pop-up slider gets clicks
         // in the area where it overlaps the list
         this.addWidget(this.widget);
 
-        this.searchBox = new EditBox(this.font, this.width / 2 - 185, 18, 300, 18,
+        int searchX = MainPlaylistWidget.PAGE_MARGIN;
+        int searchButtonX = this.width - MainPlaylistWidget.PAGE_MARGIN - SEARCH_BUTTON_W;
+        this.searchBox = new EditBox(this.font, searchX, 17, searchButtonX - searchX - SEARCH_GAP, 20,
                 this.searchBox, Component.translatable("concerto.screen.search"));
         this.addWidget(this.searchBox);
         this.addRenderableWidget(this.searchBox);
-
         this.addRenderableWidget(Button.builder(Component.translatable("concerto.screen.search"), button ->
-                this.toggleSearch()).pos(this.width / 2 + 125, 17).size(50, 20).build());
+                this.toggleSearch()).pos(searchButtonX, 17).size(SEARCH_BUTTON_W, 20).build());
 
-        int totalWidth = 4 * ICON_BUTTON_W + 3 * TEXT_BUTTON_W + ORDER_BUTTON_W + 7 * BUTTON_GAP;
-        int x = (this.width - totalWidth) / 2;
-        int y = this.height - 30;
+        int y = this.standardBottomActionY();
+        int x = this.standardContentX();
+        int wideButtonW = (this.standardContentWidth() - ICON_BUTTON_W * 4 - STANDARD_ACTION_GAP * 7) / 4;
 
         this.previousButton = Button.builder(Component.literal("⏮"),
                 button -> MusicPlayerHandler.INSTANCE.playPreviousAsync()).pos(x, y).size(ICON_BUTTON_W, 20).build();
         this.addRenderableWidget(this.previousButton);
-        x += ICON_BUTTON_W + BUTTON_GAP;
+        x += ICON_BUTTON_W + STANDARD_ACTION_GAP;
 
         this.pauseButton = Button.builder(this.pauseLabel(), button -> {
             boolean paused = MusicPlayerHandler.INSTANCE.isPaused();
             MusicPlayerHandler.INSTANCE.tryForcePause(!paused);
         }).pos(x, y).size(ICON_BUTTON_W, 20).build();
         this.addRenderableWidget(this.pauseButton);
-        x += ICON_BUTTON_W + BUTTON_GAP;
+        x += ICON_BUTTON_W + STANDARD_ACTION_GAP;
 
         this.nextButton = Button.builder(Component.literal("⏭"),
                 button -> MusicPlayerHandler.INSTANCE.playNextAsync(1)).pos(x, y).size(ICON_BUTTON_W, 20).build();
         this.addRenderableWidget(this.nextButton);
-        x += ICON_BUTTON_W + BUTTON_GAP;
+        x += ICON_BUTTON_W + STANDARD_ACTION_GAP;
+
+        this.requestButton = Button.builder(Component.translatable("concerto.screen.request"), button -> {
+            ConcertoListWidget<MainPlaylistWidget.Entry>.Entry entry = this.widget.getSelected();
+            if (entry != null) {
+                ServerMusicAgentManager.clientAddMusic(entry.item.music());
+            }
+        }).pos(x, y).size(wideButtonW, 20).build();
+        this.addRenderableWidget(this.requestButton);
+        x += wideButtonW + STANDARD_ACTION_GAP;
 
         this.orderButton = CycleButton.builder((OrderType orderType) -> Component.literal(orderType.getName())).withValues(OrderType.values())
                 .withInitialValue(MusicPlayerHandler.INSTANCE.getOrderType()).create(
-                        x, y, ORDER_BUTTON_W, 20, Component.translatable("concerto.screen.order"),
+                        x, y, wideButtonW, 20, Component.translatable("concerto.screen.order"),
                         (widget, orderType) -> MusicPlayerHandler.INSTANCE.setOrderType(orderType));
         this.addRenderableWidget(this.orderButton);
-        x += ORDER_BUTTON_W + BUTTON_GAP;
+        x += wideButtonW + STANDARD_ACTION_GAP;
 
         this.infoButton = Button.builder(Component.translatable("concerto.screen.info"), button -> {
             ConcertoListWidget<MainPlaylistWidget.Entry>.Entry entry = this.widget.getSelected();
             if (entry != null) {
                 Minecraft.getInstance().setScreen(new MusicInfoScreen(entry.item.music(), this));
             }
-        }).pos(x, y).size(TEXT_BUTTON_W, 20).build();
+        }).pos(x, y).size(wideButtonW, 20).build();
         this.addRenderableWidget(this.infoButton);
-        x += TEXT_BUTTON_W + BUTTON_GAP;
-
-        this.deleteButton = Button.builder(Component.translatable("concerto.screen.delete"), button -> {
-            ConcertoListWidget<MainPlaylistWidget.Entry>.Entry entry = this.widget.getSelected();
-            if (entry != null) {
-                MusicPlayerHandler.INSTANCE.removeAsync(entry.item.index(), () -> {
-                });
-            }
-        }).pos(x, y).size(TEXT_BUTTON_W, 20).build();
-        this.addRenderableWidget(this.deleteButton);
-        x += TEXT_BUTTON_W + BUTTON_GAP;
+        x += wideButtonW + STANDARD_ACTION_GAP;
+        int clearButtonW = this.standardContentRight() - x - STANDARD_ACTION_GAP - ICON_BUTTON_W;
 
         this.clearButton = Button.builder(Component.translatable("concerto.screen.clear"), button -> {
             MusicPlayerHandler.INSTANCE.clear();
             Minecraft.getInstance().setScreen(null);
-        }).pos(x, y).size(TEXT_BUTTON_W, 20).build();
+        }).pos(x, y).size(clearButtonW, 20).build();
         this.addRenderableWidget(this.clearButton);
-        x += TEXT_BUTTON_W + BUTTON_GAP;
+        x += clearButtonW + STANDARD_ACTION_GAP;
 
         this.volumeControl = new VolumeControlWidget(this.font, x, y, ICON_BUTTON_W, 20);
         this.addWidget(this.volumeControl);
@@ -135,15 +137,25 @@ public class MainPlaylistScreen extends ApplyDraggedFileScreen {
                 && MusicPlayerHandler.INSTANCE.canPlayPrevious();
         this.nextButton.active = PlayerPermissions.canChangeMusicIndex()
                 && !MusicPlayerHandler.INSTANCE.isEmpty();
-        this.deleteButton.active = PlayerPermissions.canModifyMusicList();
         this.orderButton.active = PlayerPermissions.canChangeOrderType();
         this.pauseButton.active = PlayerPermissions.canControlPlayback();
         this.clearButton.active = PlayerPermissions.canModifyMusicList();
+        this.infoButton.active = this.widget.getSelected() != null;
+        this.requestButton.active = MusicRoom.clientGetState() == MusicRoom.ClientState.MUSIC_AGENT
+                && this.widget.getSelected() != null;
         this.pauseButton.setMessage(this.pauseLabel());
     }
 
     private Component pauseLabel() {
         return Component.literal(MusicPlayerHandler.INSTANCE.isPaused() ? "▶" : "⏸");
+    }
+
+    private void openTitleEditor(MainPlaylistWidget.Entry entry) {
+        Minecraft.getInstance().setScreen(new EditMusicTitleScreen(entry.music().getMeta().title(), title -> {
+            if (MusicPlayerHandler.INSTANCE.renameMusic(entry.index(), title)) {
+                this.toggleSearch();
+            }
+        }, this));
     }
 
     @Override

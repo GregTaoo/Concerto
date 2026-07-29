@@ -30,11 +30,7 @@ import java.util.ArrayList;
 
 public class MusicPlayerScreen extends ConcertoScreen {
 
-    private static final int MODE_BUTTON_W = 80;
-    private static final int PLAYLIST_BUTTON_W = 96;
-    private static final int ORDER_BUTTON_W = 80;
     private static final int ICON_BUTTON_W = 20;
-    private static final int BUTTON_GAP = 2;
 
     private CycleButton<PlayerView> playerViewButton;
     private Button previousButton;
@@ -61,34 +57,34 @@ public class MusicPlayerScreen extends ConcertoScreen {
     protected void init() {
         super.init();
 
-        int y = this.height - 30;
-        int totalWidth = MODE_BUTTON_W + PLAYLIST_BUTTON_W + 4 * ICON_BUTTON_W + ORDER_BUTTON_W + 6 * BUTTON_GAP;
-        int x = (this.width - totalWidth) / 2;
+        int y = this.standardBottomActionY();
+        int x = this.standardContentX();
+        int actionWidth = (this.standardContentWidth() - ICON_BUTTON_W * 4 - STANDARD_ACTION_GAP * 6) / 3;
 
         this.previousButton = Button.builder(
                 Component.literal("⏮"),
                 button -> MusicPlayerHandler.INSTANCE.playPreviousAsync()
         ).pos(x, y).size(ICON_BUTTON_W, 20).build();
-        x += ICON_BUTTON_W + BUTTON_GAP;
+        x += ICON_BUTTON_W + STANDARD_ACTION_GAP;
 
         this.playPauseButton = Button.builder(
                 this.playPauseLabel(),
                 button -> MusicPlayerHandler.INSTANCE.tryForcePause(!MusicPlayerHandler.INSTANCE.isPaused())
         ).pos(x, y).size(ICON_BUTTON_W, 20).build();
-        x += ICON_BUTTON_W + BUTTON_GAP;
+        x += ICON_BUTTON_W + STANDARD_ACTION_GAP;
 
         this.nextButton = Button.builder(
                 Component.literal("⏭"),
                 button -> MusicPlayerHandler.INSTANCE.playNextAsync(1)
         ).pos(x, y).size(ICON_BUTTON_W, 20).build();
-        x += ICON_BUTTON_W + BUTTON_GAP;
+        x += ICON_BUTTON_W + STANDARD_ACTION_GAP;
 
         this.orderButton = CycleButton.builder((OrderType val) -> Component.literal(val.getName()))
                 .withValues(OrderType.values())
                 .withInitialValue(MusicPlayerHandler.INSTANCE.getOrderType())
-                .create(x, y, ORDER_BUTTON_W, 20, Component.translatable("concerto.screen.order"),
+                .create(x, y, actionWidth, 20, Component.translatable("concerto.screen.order"),
                         (widget, orderType) -> MusicPlayerHandler.INSTANCE.setOrderType(orderType));
-        x += ORDER_BUTTON_W + BUTTON_GAP;
+        x += actionWidth + STANDARD_ACTION_GAP;
 
         Button playlistButton = Button.builder(
                 Component.translatable("concerto.screen.main_list"),
@@ -97,22 +93,23 @@ public class MusicPlayerScreen extends ConcertoScreen {
                         this.minecraft.setScreen(new MainPlaylistScreen(this));
                     }
                 }
-        ).pos(x, y).size(PLAYLIST_BUTTON_W, 20).build();
+        ).pos(x, y).size(actionWidth, 20).build();
         this.addRenderableWidget(playlistButton);
-        x += PLAYLIST_BUTTON_W + BUTTON_GAP;
+        x += actionWidth + STANDARD_ACTION_GAP;
 
+        int playerViewWidth = this.standardContentRight() - x - STANDARD_ACTION_GAP - ICON_BUTTON_W;
         this.playerViewButton = CycleButton.<PlayerView>builder(view -> Component.translatable(
                         view == PlayerView.COVER ? "concerto.screen.player_view.cover" : "concerto.screen.player_view.lyrics"))
                 .withValues(PlayerView.values())
                 .withInitialValue(this.playerView)
-                .create(x, y, MODE_BUTTON_W, 20, Component.translatable("concerto.screen.player_view"), (button, view) -> {
+                .create(x, y, playerViewWidth, 20, Component.translatable("concerto.screen.player_view"), (button, view) -> {
                     this.playerView = view;
                     ClientConfig.INSTANCE.options.displayPlayerScreenCoverAndSpectrum = view == PlayerView.COVER;
                     ClientConfig.INSTANCE.writeOptions();
                     this.scrollOffset = 0;
                 });
         this.addRenderableWidget(this.playerViewButton);
-        x += MODE_BUTTON_W + BUTTON_GAP;
+        x += playerViewWidth + STANDARD_ACTION_GAP;
 
         this.volumeControl = new VolumeControlWidget(this.font, x, y, ICON_BUTTON_W, 20);
         this.addWidget(this.volumeControl);

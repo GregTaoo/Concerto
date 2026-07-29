@@ -117,6 +117,8 @@ public class KuGouMusicSearchScreen extends PageScreen {
     @Override
     protected void init() {
         super.init();
+        int actionX = this.actionBarX();
+        int actionWidth = this.actionBarWidth() / 3;
         this.musicList = this.initListsWidget();
         this.playlistList = this.initListsWidget();
         this.albumList = this.initListsWidget();
@@ -127,7 +129,9 @@ public class KuGouMusicSearchScreen extends PageScreen {
                 SearchType.ALBUM, this.albumList
         );
 
-        this.searchBox = new EditBox(this.font, this.width / 2 - 155, 17, 200, 20,
+        int searchX = ConcertoListWidget.PAGE_MARGIN;
+        int searchButtonX = this.width - ConcertoListWidget.PAGE_MARGIN - 52;
+        this.searchBox = new EditBox(this.font, searchX, 17, searchButtonX - searchX - 2, 20,
                 this.searchBox, Component.translatable("concerto.screen.search"));
         this.addWidget(this.searchBox);
         this.addRenderableWidget(this.searchBox);
@@ -138,13 +142,13 @@ public class KuGouMusicSearchScreen extends PageScreen {
             if (entry != null) {
                 Minecraft.getInstance().setScreen(new MusicInfoScreen(entry.item, this));
             }
-        }).pos(this.width / 2 + 120, this.height - 30).size(50, 20).build();
+        }).pos(actionX + actionWidth * 2, this.bottomBarY()).size(this.actionBarWidth() - actionWidth * 2, 20).build();
         this.addRenderableWidget(this.infoButton);
 
         this.updateSearchType(this.searchType);
 
         this.addRenderableWidget(Button.builder(Component.translatable("concerto.screen.search"),
-                button -> this.toggleSearch()).pos(this.width / 2 + 50, 17).size(52, 20).build());
+                button -> this.toggleSearch()).pos(searchButtonX, 17).size(52, 20).build());
 
         this.addRenderableWidget(CycleButton.builder((SearchType type) -> Component.literal(type.getName()))
                 .withValues(SearchType.values()).withInitialValue(this.searchType).create(
@@ -173,7 +177,7 @@ public class KuGouMusicSearchScreen extends PageScreen {
                     }
                 }
             }
-        }).pos(this.width / 2 + 65, this.height - 30).size(50, 20).build();
+        }).pos(actionX + actionWidth, this.bottomBarY()).size(actionWidth, 20).build();
         this.addRenderableWidget(this.playButton);
 
         this.addButton = Button.builder(Component.translatable("concerto.screen.add"), button -> {
@@ -200,7 +204,7 @@ public class KuGouMusicSearchScreen extends PageScreen {
                     }
                 }
             }
-        }).pos(this.width / 2 + 10, this.height - 30).size(50, 20).build();
+        }).pos(actionX, this.bottomBarY()).size(actionWidth, 20).build();
         this.addRenderableWidget(this.addButton);
 
         this.updateActionButtons();

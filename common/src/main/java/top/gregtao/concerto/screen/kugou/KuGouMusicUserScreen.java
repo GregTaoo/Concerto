@@ -52,6 +52,9 @@ public class KuGouMusicUserScreen extends PageScreen {
     @Override
     protected void init() {
         super.init();
+        int actionX = this.actionBarX();
+        int actionCount = ClientConfig.INSTANCE.options.kuGouMusicLite ? 3 : 2;
+        int actionWidth = this.actionBarWidth() / actionCount;
         if (!this.loggedIn()) {
             Minecraft.getInstance().setScreen(new KuGouMusicLoginScreen(null));
         }
@@ -84,7 +87,7 @@ public class KuGouMusicUserScreen extends PageScreen {
                                 .orElse("failed");
 
                         Minecraft.getInstance().submit(() -> displayAlert(Component.translatable("concerto.screen.daily_vip." + text)));
-                    })).pos(this.width / 2 - 10, this.height - 30).size(70, 20).build()
+                    })).pos(actionX, this.bottomBarY()).size(actionWidth, 20).build()
             );
         }
 
@@ -93,14 +96,15 @@ public class KuGouMusicUserScreen extends PageScreen {
             if (entry != null) {
                 Minecraft.getInstance().setScreen(new PlaylistPreviewScreen(entry.item, this));
             }
-        }).pos(this.width / 2 + 65, this.height - 30).size(50, 20).build());
+        }).pos(actionX + (actionCount - 2) * actionWidth, this.bottomBarY()).size(actionWidth, 20).build());
 
         this.addRenderableWidget(Button.builder(Component.translatable("concerto.screen.logout"), button -> {
             if (this.loggedIn()) {
                 KuGouMusicApiClient.LOCAL_USER.logout();
             }
             Minecraft.getInstance().setScreen(new KuGouMusicLoginScreen(this));
-        }).pos(this.width / 2 + 120, this.height - 30).size(50, 20).build());
+        }).pos(actionX + (actionCount - 1) * actionWidth, this.bottomBarY())
+                .size(this.actionBarWidth() - (actionCount - 1) * actionWidth, 20).build());
     }
 
     @Override

@@ -38,7 +38,8 @@ public class PlaylistListScreen extends ConcertoScreen {
             if (entry != null) {
                 Minecraft.getInstance().setScreen(new PlaylistPreviewScreen(entry.item, this));
             }
-        }).pos(20, this.height - 30).size(60, 20).build());
+        }).pos(ConcertoListWidget.PAGE_MARGIN, this.height - 30)
+                .size(this.width - ConcertoListWidget.PAGE_MARGIN * 2, 20).build());
     }
 
 }

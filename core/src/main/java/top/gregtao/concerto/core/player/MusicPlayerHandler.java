@@ -14,6 +14,7 @@ import top.gregtao.concerto.core.enums.OrderType;
 import top.gregtao.concerto.core.event.ConcertoEvents;
 import top.gregtao.concerto.core.music.Music;
 import top.gregtao.concerto.core.music.meta.music.MusicMetaData;
+import top.gregtao.concerto.core.music.meta.music.TimelessMusicMetaData;
 import top.gregtao.concerto.core.network.SyncRecord;
 import top.gregtao.concerto.core.room.MusicRoom;
 import top.gregtao.concerto.core.util.ConcertoRunner;
@@ -28,6 +29,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BiConsumer;
 import java.util.function.Supplier;
 import java.util.regex.Pattern;
@@ -317,6 +319,27 @@ public class MusicPlayerHandler {
                                 List.of(MusicPlayerState.CURRENT_INDEX, MusicPlayerState.MUSIC_LIST, MusicPlayerState.PLAYBACK_HISTORY) :
                                 List.of(MusicPlayerState.MUSIC_LIST, MusicPlayerState.PLAYBACK_HISTORY)
         );
+    }
+
+    public boolean renameMusic(UUID uuid, String title) {
+        String trimmedTitle = title == null ? "" : title.trim();
+        if (trimmedTitle.isEmpty()) return false;
+
+        AtomicBoolean renamed = new AtomicBoolean(false);
+        this.getState().set((state) -> {
+            Music music = state.musicList.get(uuid);
+            if (music == null || !music.isMetaLoaded() || !(music.getMeta() instanceof TimelessMusicMetaData meta)) {
+                return state;
+            }
+            meta.setTitle(trimmedTitle);
+            renamed.set(true);
+            return state;
+        }, List.of(MusicPlayerState.MUSIC_LIST));
+        if (renamed.get()) {
+            MusicPlayer.INSTANCE.updateDisplayTexts();
+            this.writeConfig();
+        }
+        return renamed.get();
     }
 
     public void removeAsync(UUID uuid, Runnable callback) {

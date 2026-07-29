@@ -16,6 +16,7 @@ import top.gregtao.concerto.ConcertoClient;
 import top.gregtao.concerto.core.Concerto;
 import top.gregtao.concerto.core.config.CacheManager;
 import top.gregtao.concerto.core.util.HashUtil;
+import top.gregtao.concerto.core.util.ConcertoRunner;
 
 import javax.imageio.IIOImage;
 import javax.imageio.ImageIO;
@@ -44,7 +45,7 @@ public class URLImageWidget implements Renderable, LayoutElement, AutoCloseable 
     private String url;
     private DynamicTexture texture;
     private final ResourceLocation textureId;
-    private State state = State.LOADING;
+    private volatile State state = State.LOADING;
     private boolean border = true;
 
     public URLImageWidget(int width, int height, int x, int y, String url) {
@@ -62,10 +63,18 @@ public class URLImageWidget implements Renderable, LayoutElement, AutoCloseable 
     }
 
     public static BufferedImage resizeImage(BufferedImage originalImage, int targetWidth, int targetHeight) {
-        if (originalImage.getWidth() == targetWidth && originalImage.getHeight() == targetHeight) return originalImage;
-        Image resultingImage = originalImage.getScaledInstance(targetWidth, targetHeight, Image.SCALE_SMOOTH);
+        int sourceWidth = originalImage.getWidth();
+        int sourceHeight = originalImage.getHeight();
+        if (sourceWidth == targetWidth && sourceHeight == targetHeight) return originalImage;
+
+        int sourceSize = Math.min(sourceWidth, sourceHeight);
+        int sourceX = (sourceWidth - sourceSize) / 2;
+        int sourceY = (sourceHeight - sourceSize) / 2;
         BufferedImage outputImage = new BufferedImage(targetWidth, targetHeight, BufferedImage.TYPE_INT_ARGB);
-        outputImage.getGraphics().drawImage(resultingImage, 0, 0, null);
+        Graphics2D graphics = outputImage.createGraphics();
+        graphics.drawImage(originalImage, 0, 0, targetWidth, targetHeight,
+                sourceX, sourceY, sourceX + sourceSize, sourceY + sourceSize, null);
+        graphics.dispose();
         return outputImage;
     }
 
@@ -206,6 +215,13 @@ public class URLImageWidget implements Renderable, LayoutElement, AutoCloseable 
             ConcertoClient.LOGGER.error("Error while loading image: {}", this.url, e);
             this.state = State.FAILED;
         }
+    }
+    /**
+     * Downloads, decodes, resizes and caches the image away from the render thread.
+     * Texture upload remains scheduled by {@link #uploadImage(BufferedImage, Runnable)}.
+     */
+    public void loadImageAsync(boolean useCache, boolean cropCircle) {
+        ConcertoRunner.run(() -> this.loadImage(useCache, cropCircle));
     }
 
     public void loadImage(Function<String, byte[]> imageSupplier) {

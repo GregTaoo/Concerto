@@ -14,6 +14,8 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
 public class ConcertoScreen extends Screen {
+    protected static final int STANDARD_CONTENT_MARGIN = 20;
+    protected static final int STANDARD_ACTION_GAP = 2;
     private final Screen parent;
     private FocusableTextWidget message;
     private int alertGeneration = 0;
@@ -27,6 +29,22 @@ public class ConcertoScreen extends Screen {
         super(getTextWithColor(title, ChatFormatting.DARK_AQUA));
         this.parent = parent;
     }
+    protected final int standardContentX() {
+        return STANDARD_CONTENT_MARGIN;
+    }
+
+    protected final int standardContentRight() {
+        return this.width - STANDARD_CONTENT_MARGIN;
+    }
+
+    protected final int standardContentWidth() {
+        return this.width - STANDARD_CONTENT_MARGIN * 2;
+    }
+
+    protected final int standardBottomActionY() {
+        return this.height - 30;
+    }
+
 
     // Callable from any thread. Each alert supersedes the previous one; an
     // older alert's expiry timer must not clear a newer alert early.

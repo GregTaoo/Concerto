@@ -41,19 +41,22 @@ public class PresetRadiosScreen extends ConcertoScreen {
         this.addWidget(this.playlistList);
         this.addRenderableWidget(this.playlistList);
 
+        int y = this.height - 30;
+        int buttonW = (this.width - ConcertoListWidget.PAGE_MARGIN * 2) / 2;
         this.addRenderableWidget(Button.builder(Component.translatable("concerto.screen.play"), button -> {
             ConcertoListWidget<Playlist>.Entry entry = this.playlistList.getSelected();
             if (entry != null) {
                 Minecraft.getInstance().setScreen(new PlaylistPreviewScreen(entry.item, this));
             }
-        }).pos(20, this.height - 30).size(60, 20).build());
+        }).pos(ConcertoListWidget.PAGE_MARGIN, y).size(buttonW, 20).build());
 
         this.addRenderableWidget(Button.builder(Component.translatable("concerto.refresh"), button -> {
             LocalPlayer player = Minecraft.getInstance().player;
             if (player != null) {
                 player.connection.sendCommand("concerto-server fetch-radios");
             }
-        }).pos(85, this.height - 30).size(60, 20).build());
+        }).pos(ConcertoListWidget.PAGE_MARGIN + buttonW, y)
+                .size(this.width - ConcertoListWidget.PAGE_MARGIN * 2 - buttonW, 20).build());
     }
 
     @Override

@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.ListIterator;
 
 public class ConcertoListWidget<T> extends ObjectSelectionList<ConcertoListWidget<T>.Entry> {
-    private int color = 0xffffffff;
+    protected int color = 0xffffffff;
 
     public ConcertoListWidget(int width, int height, int top, int itemHeight) {
         super(Minecraft.getInstance(), width, height, top, itemHeight);

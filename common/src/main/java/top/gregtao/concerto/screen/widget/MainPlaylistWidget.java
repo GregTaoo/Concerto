@@ -139,11 +139,6 @@ public class MainPlaylistWidget extends MetadataListWidget<MainPlaylistWidget.En
                 0xffffffff);
     }
 
-    private String ellipsize(String text, int maxWidth) {
-        if (this.minecraft.font.width(text) <= maxWidth) return text;
-        String ellipsis = "...";
-        return this.minecraft.font.plainSubstrByWidth(text, Math.max(0, maxWidth - this.minecraft.font.width(ellipsis))) + ellipsis;
-    }
     public static Pair<List<Entry>, Entry> loadFromMusicList(ConcertoPlayerList list, UUID current) {
         AtomicReference<Entry> entry = new AtomicReference<>(null);
         return Pair.of(list.stream().map((pair) -> {

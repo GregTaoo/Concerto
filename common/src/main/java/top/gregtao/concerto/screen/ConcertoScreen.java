@@ -70,7 +70,7 @@ public class ConcertoScreen extends Screen {
             Component text = Component.translatable("concerto.donate");
             int width = this.font.width(text);
             this.addRenderableWidget(
-                    new PlainTextButton(this.width - 5 - width, this.height - 5 - this.font.lineHeight, width,
+                    new PlainTextButton(this.width - 5 - width, 5, width,
                             this.font.lineHeight,
                             text, button -> Minecraft.getInstance().setScreen(new AcknowledgmentScreen(this)),
                             this.font)

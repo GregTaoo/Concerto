@@ -357,6 +357,18 @@ public class MusicPlayerHandler {
         ConcertoRunner.run(() -> this.remove(uuid), callback);
     }
 
+    public boolean moveMusic(UUID uuid, UUID beforeUuid) {
+        if (!PlayerPermissions.canReorderMusicList()) return false;
+
+        AtomicBoolean moved = new AtomicBoolean(false);
+        this.getState().set(state -> {
+            moved.set(state.musicList.moveBefore(uuid, beforeUuid));
+            return state;
+        }, List.of(MusicPlayerState.MUSIC_LIST));
+        if (moved.get()) this.writeConfig();
+        return moved.get();
+    }
+
     private UUID getNextUuid(MusicPlayerState state, int forward) {
         if (state.musicList.isEmpty()) return null;
 

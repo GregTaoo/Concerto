@@ -23,6 +23,10 @@ public class MainPlaylistWidget extends MetadataListWidget<MainPlaylistWidget.En
     private int actionStartX = -1;
     private int actionY = -1;
     private int actionCount;
+    private ConcertoListWidget<MainPlaylistWidget.Entry>.Entry draggedEntry;
+    private boolean dragging;
+    private UUID dropBeforeUuid;
+    private UUID pendingSelection;
 
 
     public record Entry(UUID index, Music music) implements WithMetaData {
@@ -72,8 +76,51 @@ public class MainPlaylistWidget extends MetadataListWidget<MainPlaylistWidget.En
     }
 
     @Override
+    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        if (button == 0 && PlayerPermissions.canReorderMusicList()
+                && mouseX < this.getRowRight() - 3 - this.actionCount() * ACTION_BUTTON_WIDTH
+                && this.getEntryAtPosition(mouseX, mouseY) instanceof ConcertoListWidget<MainPlaylistWidget.Entry>.Entry entry) {
+            boolean handled = super.mouseClicked(mouseX, mouseY, button);
+            this.draggedEntry = entry;
+            this.dragging = false;
+            return handled;
+        }
+        return super.mouseClicked(mouseX, mouseY, button);
+    }
+
+    @Override
+    public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
+        if (button == 0 && this.draggedEntry != null) {
+            this.dragging = true;
+            this.dropBeforeUuid = this.getDropBeforeUuid(mouseX, mouseY);
+            return true;
+        }
+        return super.mouseDragged(mouseX, mouseY, button, dragX, dragY);
+    }
+
+    @Override
+    public boolean mouseReleased(double mouseX, double mouseY, int button) {
+        if (button == 0 && this.draggedEntry != null) {
+            ConcertoListWidget<MainPlaylistWidget.Entry>.Entry source = this.draggedEntry;
+            this.draggedEntry = null;
+            if (this.dragging && PlayerPermissions.canReorderMusicList()) {
+                UUID beforeUuid = this.getDropBeforeUuid(mouseX, mouseY);
+                this.pendingSelection = source.item.index();
+                if (!MusicPlayerHandler.INSTANCE.moveMusic(source.item.index(), beforeUuid)) {
+                    this.pendingSelection = null;
+                }
+            }
+            this.dragging = false;
+            this.dropBeforeUuid = null;
+            return true;
+        }
+        return super.mouseReleased(mouseX, mouseY, button);
+    }
+
+    @Override
     protected void renderEntry(ConcertoListWidget<Entry>.Entry entry, GuiGraphics graphics, int y, int x,
                                int entryWidth, int mouseX, int mouseY, boolean hovered, float delta) {
+        this.renderDragFeedback(entry, graphics, y, x, entryWidth);
         if (!entry.item.isMetaLoaded()) {
             super.renderEntry(entry, graphics, y, x, entryWidth, mouseX, mouseY, hovered, delta);
             return;
@@ -102,6 +149,32 @@ public class MainPlaylistWidget extends MetadataListWidget<MainPlaylistWidget.En
                 this.renderEditButton(graphics, editX, y, this.isActionHovered(mouseX, mouseY, editX, y));
                 this.renderTrashButton(graphics, trashX, y, this.isActionHovered(mouseX, mouseY, trashX, y));
             }
+        }
+    }
+
+    private UUID getDropBeforeUuid(double mouseX, double mouseY) {
+        ConcertoListWidget<Entry>.Entry target = this.getEntryAtPosition(mouseX, mouseY);
+        if (target == null) {
+            return !this.children().isEmpty() && mouseY < this.getRowTop(0)
+                    ? this.children().getFirst().item.index() : null;
+        }
+        if (mouseY < this.getRowTop(target.entryIndex) + this.itemHeight / 2.0) {
+            return target.item.index();
+        }
+        int nextIndex = target.entryIndex + 1;
+        return nextIndex < this.children().size() ? this.children().get(nextIndex).item.index() : null;
+    }
+
+    private void renderDragFeedback(ConcertoListWidget<Entry>.Entry entry, GuiGraphics graphics, int y, int x, int entryWidth) {
+        if (!this.dragging) return;
+        if (entry == this.draggedEntry) {
+            graphics.fill(x - 2, y, x + entryWidth - 2, y + this.itemHeight, 0x503f7fbf);
+        }
+        if (entry.item.index().equals(this.dropBeforeUuid)) {
+            graphics.fill(x - 2, y, x + entryWidth - 2, y + 2, 0xff5da9e9);
+        } else if (this.dropBeforeUuid == null && !this.children().isEmpty()
+                && entry == this.children().getLast()) {
+            graphics.fill(x - 2, y + this.itemHeight - 2, x + entryWidth - 2, y + this.itemHeight, 0xff5da9e9);
         }
     }
 
@@ -156,12 +229,24 @@ public class MainPlaylistWidget extends MetadataListWidget<MainPlaylistWidget.En
 
     public void reset() {
         Pair<List<Entry>, Entry> pair = loadFromMusicList();
-        super.reset(pair.getFirst(), pair.getSecond());
+        this.resetEntries(pair.getFirst(), pair.getSecond(), "");
     }
 
     public void reset(String keyword) {
         Pair<List<Entry>, Entry> pair = loadFromMusicList();
-        super.reset(pair.getFirst(), pair.getSecond(), keyword);
+        this.resetEntries(pair.getFirst(), pair.getSecond(), keyword);
+    }
+
+    private void resetEntries(List<Entry> entries, Entry playing, String keyword) {
+        UUID selectedUuid = this.pendingSelection;
+        super.reset(entries, selectedUuid == null ? playing : null, keyword);
+        if (selectedUuid != null) {
+            this.pendingSelection = null;
+            this.children().stream()
+                    .filter(entry -> entry.item.index().equals(selectedUuid))
+                    .findFirst()
+                    .ifPresent(this::setSelected);
+        }
     }
 
     public void setSelected(UUID uuid) {

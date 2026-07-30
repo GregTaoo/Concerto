@@ -2,10 +2,8 @@ package top.gregtao.concerto.screen;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.components.AbstractScrollArea;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.FormattedCharSequence;
 import top.gregtao.concerto.core.config.ClientConfig;
@@ -32,6 +30,7 @@ public class MusicInfoScreen extends ConcertoScreen {
     private static final int CONTENT_BOTTOM = 35;
     private static final int LYRICS_HEADER_HEIGHT = 22;
     private static final int SCROLLBAR_GAP = 4;
+    private static final int SCROLLBAR_WIDTH = 6;
     private static final int ACTION_COUNT = 3;
 
     private URLImageWidget headPicture;
@@ -45,26 +44,8 @@ public class MusicInfoScreen extends ConcertoScreen {
     private Lyrics wrappedMainLyrics;
     private Lyrics wrappedSubLyrics;
     private int wrappedLyricsWidth = -1;
-    private final AbstractScrollArea lyricScrollbar = new AbstractScrollArea(0, 0, 0, 0, Component.empty()) {
-        @Override
-        protected int contentHeight() {
-            return MusicInfoScreen.this.wrappedLyrics.size() * 10 + 8;
-        }
-
-        @Override
-        protected double scrollRate() {
-            return 12;
-        }
-
-        @Override
-        protected void renderWidget(GuiGraphics graphics, int mouseX, int mouseY, float delta) {
-            this.renderScrollbar(graphics);
-        }
-
-        @Override
-        protected void updateWidgetNarration(NarrationElementOutput output) {
-        }
-    };
+    private double lyricScrollAmount;
+    private boolean lyricScrollbarDragging;
     private int lyricPanelX;
     private int lyricPanelY;
     private int lyricPanelWidth;
@@ -153,7 +134,7 @@ public class MusicInfoScreen extends ConcertoScreen {
             this.wrappedMainLyrics = null;
             this.wrappedSubLyrics = null;
             this.wrappedLyricsWidth = -1;
-            this.lyricScrollbar.setScrollAmount(0);
+            this.lyricScrollAmount = 0;
         });
     }
 
@@ -215,26 +196,34 @@ public class MusicInfoScreen extends ConcertoScreen {
     public boolean mouseScrolled(double mouseX, double mouseY, double horizontalAmount, double verticalAmount) {
         if (mouseX >= this.lyricPanelX && mouseX < this.lyricPanelX + this.lyricPanelWidth
                 && mouseY >= this.lyricPanelY && mouseY < this.lyricPanelY + this.lyricPanelHeight) {
-            return this.lyricScrollbar.mouseScrolled(mouseX, mouseY, horizontalAmount, verticalAmount);
+            this.scrollLyrics(-verticalAmount * 12);
+            return true;
         }
         return super.mouseScrolled(mouseX, mouseY, horizontalAmount, verticalAmount);
     }
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        if (this.lyricScrollbar.updateScrolling(mouseX, mouseY, button)) return true;
+        if (button == 0 && this.isOverLyricScrollbar(mouseX, mouseY)) {
+            this.lyricScrollbarDragging = true;
+            this.setLyricScrollFromMouse(mouseY);
+            return true;
+        }
         return super.mouseClicked(mouseX, mouseY, button);
     }
 
     @Override
     public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
-        if (this.lyricScrollbar.mouseDragged(mouseX, mouseY, button, dragX, dragY)) return true;
+        if (this.lyricScrollbarDragging && button == 0) {
+            this.setLyricScrollFromMouse(mouseY);
+            return true;
+        }
         return super.mouseDragged(mouseX, mouseY, button, dragX, dragY);
     }
 
     @Override
     public boolean mouseReleased(double mouseX, double mouseY, int button) {
-        if (button == 0) this.lyricScrollbar.onRelease(mouseX, mouseY);
+        if (button == 0) this.lyricScrollbarDragging = false;
         return super.mouseReleased(mouseX, mouseY, button);
     }
 
@@ -280,7 +269,7 @@ public class MusicInfoScreen extends ConcertoScreen {
         int contentY = this.lyricContentY();
         int contentWidth = this.lyricPanelWidth - PANEL_PADDING * 2;
         int contentHeight = this.lyricContentHeight();
-        int lyricTextWidth = contentWidth - AbstractScrollArea.SCROLLBAR_WIDTH - SCROLLBAR_GAP;
+        int lyricTextWidth = contentWidth - SCROLLBAR_WIDTH - SCROLLBAR_GAP;
         graphics.drawString(this.font, Component.translatable("concerto.screen.lyrics_preview"), contentX,
                 this.lyricPanelY + 7, 0xffaaaaaa, false);
         graphics.fill(contentX, this.lyricPanelY + LYRICS_HEADER_HEIGHT - 4, contentX + contentWidth,
@@ -290,9 +279,7 @@ public class MusicInfoScreen extends ConcertoScreen {
         if (this.wrappedLyricsWidth != lyricTextWidth || this.wrappedMainLyrics != this.lyrics || this.wrappedSubLyrics != this.subLyrics) {
             this.rebuildWrappedLyrics(lyricTextWidth);
         }
-        this.lyricScrollbar.setRectangle(AbstractScrollArea.SCROLLBAR_WIDTH, contentHeight,
-                contentX + contentWidth - AbstractScrollArea.SCROLLBAR_WIDTH, contentY);
-        this.lyricScrollbar.refreshScrollAmount();
+        this.clampLyricScroll(contentHeight);
         if (this.wrappedLyrics.isEmpty()) {
             graphics.drawCenteredString(this.font, Component.translatable("concerto.no_subtitle"),
                     contentX + lyricTextWidth / 2, contentY + contentHeight / 2 - 4, 0xffaaaaaa);
@@ -301,14 +288,53 @@ public class MusicInfoScreen extends ConcertoScreen {
 
         graphics.enableScissor(contentX, contentY, contentX + lyricTextWidth, contentY + contentHeight);
         for (int i = 0; i < this.wrappedLyrics.size(); i++) {
-            int y = contentY + 4 + i * 10 - (int) this.lyricScrollbar.scrollAmount();
+            int y = contentY + 4 + i * 10 - (int) this.lyricScrollAmount;
             if (y > contentY - 10 && y < contentY + contentHeight) {
                 PreviewLine line = this.wrappedLyrics.get(i);
                 graphics.drawString(this.font, line.text(), contentX, y, line.color());
             }
         }
         graphics.disableScissor();
-        this.lyricScrollbar.render(graphics, 0, 0, 0);
+        this.renderLyricScrollbar(graphics, contentX + contentWidth - SCROLLBAR_WIDTH, contentY, contentHeight);
+    }
+
+    private int lyricContentHeightPixels() {
+        return this.wrappedLyrics.size() * 10 + 8;
+    }
+
+    private void clampLyricScroll(int visibleHeight) {
+        this.lyricScrollAmount = Math.max(0, Math.min(this.lyricScrollAmount,
+                Math.max(0, this.lyricContentHeightPixels() - visibleHeight)));
+    }
+
+    private void scrollLyrics(double amount) {
+        this.lyricScrollAmount += amount;
+        this.clampLyricScroll(this.lyricContentHeight());
+    }
+
+    private boolean isOverLyricScrollbar(double mouseX, double mouseY) {
+        return mouseX >= this.lyricPanelX + this.lyricPanelWidth - PANEL_PADDING - SCROLLBAR_WIDTH
+                && mouseX < this.lyricPanelX + this.lyricPanelWidth - PANEL_PADDING
+                && mouseY >= this.lyricContentY() && mouseY < this.lyricContentY() + this.lyricContentHeight();
+    }
+
+    private void setLyricScrollFromMouse(double mouseY) {
+        int visibleHeight = this.lyricContentHeight();
+        int maxScroll = Math.max(0, this.lyricContentHeightPixels() - visibleHeight);
+        if (maxScroll == 0) return;
+        double progress = (mouseY - this.lyricContentY()) / visibleHeight;
+        this.lyricScrollAmount = Math.max(0, Math.min(maxScroll, progress * maxScroll));
+    }
+
+    private void renderLyricScrollbar(GuiGraphics graphics, int x, int y, int height) {
+        int contentHeight = this.lyricContentHeightPixels();
+        if (contentHeight <= height) return;
+        int thumbHeight = Math.max(10, height * height / contentHeight);
+        int travel = height - thumbHeight;
+        int maxScroll = contentHeight - height;
+        int thumbY = y + (int) Math.round(travel * this.lyricScrollAmount / maxScroll);
+        graphics.fill(x, y, x + SCROLLBAR_WIDTH, y + height, 0xff303030);
+        graphics.fill(x, thumbY, x + SCROLLBAR_WIDTH, thumbY + thumbHeight, 0xffaaaaaa);
     }
 
 }

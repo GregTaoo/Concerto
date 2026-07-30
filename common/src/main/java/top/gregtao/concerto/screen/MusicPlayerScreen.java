@@ -1,18 +1,14 @@
 package top.gregtao.concerto.screen;
 
-import com.mojang.blaze3d.pipeline.RenderPipeline;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.CycleButton;
-import net.minecraft.client.gui.navigation.ScreenRectangle;
-import net.minecraft.client.gui.render.TextureSetup;
-import net.minecraft.client.gui.render.state.GuiElementRenderState;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.client.renderer.RenderPipelines;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.network.chat.Component;
-import org.joml.Matrix3x2f;
-import org.joml.Matrix3x2fStack;
+import org.joml.Matrix4f;
+import org.joml.Quaternionf;
 import top.gregtao.concerto.core.config.ClientConfig;
 import top.gregtao.concerto.core.enums.OrderType;
 import top.gregtao.concerto.core.enums.TextAlignment;
@@ -23,7 +19,6 @@ import top.gregtao.concerto.core.player.MusicPlayer;
 import top.gregtao.concerto.core.player.MusicPlayerHandler;
 import top.gregtao.concerto.core.player.PlayerPermissions;
 import top.gregtao.concerto.core.util.Pair;
-import top.gregtao.concerto.mixin.GuiGraphicsAccessor;
 import top.gregtao.concerto.screen.widget.VolumeControlWidget;
 
 import java.util.ArrayList;
@@ -170,20 +165,19 @@ public class MusicPlayerScreen extends ConcertoScreen {
             int imgX = (leftWidth - imgSize) / 2;
             int imgY = (this.height - imgSize) / 2 - 8;
 
-            Matrix3x2fStack matrices = context.pose();
-            matrices.pushMatrix();
+            context.pose().pushPose();
 
             InGameHudRenderer.COVER_IMAGE.setX(imgX);
             InGameHudRenderer.COVER_IMAGE.setY(imgY);
             InGameHudRenderer.COVER_IMAGE.setSize(imgSize, imgSize);
 
-            matrices.translate(imgX + imgSize / 2f, imgY + imgSize / 2f);
-            matrices.rotate(this.rotationAngle * (float) Math.PI / 180f); // 旋转
-            matrices.translate(-(imgX + imgSize / 2f), -(imgY + imgSize / 2f));
+            context.pose().translate(imgX + imgSize / 2f, imgY + imgSize / 2f, 0);
+            context.pose().mulPose(new Quaternionf().rotateZ(this.rotationAngle * (float) Math.PI / 180f));
+            context.pose().translate(-(imgX + imgSize / 2f), -(imgY + imgSize / 2f), 0);
 
             InGameHudRenderer.COVER_IMAGE.render(context, mouseX, mouseY, delta);
 
-            matrices.popMatrix();
+            context.pose().popPose();
         }
 
         int rightHalfX = lyricsOnly ? 20 : this.width / 2;
@@ -399,40 +393,27 @@ public class MusicPlayerScreen extends ConcertoScreen {
         float angleStep = 360f / barCount;
         float spanDegrees = angleStep * 0.85f;
 
-        GuiGraphicsAccessor accessor = (GuiGraphicsAccessor) g;
-        Matrix3x2fStack matrix = g.pose();
+        g.pose().pushPose();
+        VertexConsumer vertexConsumer = g.bufferSource().getBuffer(RenderType.gui());
+        Matrix4f matrix = g.pose().last().pose();
 
         for (int i = 0; i < barCount; i++) {
             float value = spectrumBars[i];
 
-            accessor.getGuiRenderState().submitGuiElement(
-                    new SpectrumQuadRenderState(
-                            RenderPipelines.GUI,
-                            TextureSetup.noTexture(),
-                            new Matrix3x2f(matrix),
-                            i, value, centerX, centerY, radiusInner, maxBarLength, angleStep, spanDegrees
-                    )
-            );
+            new SpectrumQuadRenderState(matrix, i, value, centerX, centerY, radiusInner, maxBarLength,
+                    angleStep, spanDegrees).buildVertices(vertexConsumer);
         }
+        g.flush();
+        g.pose().popPose();
     }
 
     public record SpectrumQuadRenderState(
-            RenderPipeline pipeline,
-            TextureSetup textureSetup,
-            Matrix3x2f pose,
+            Matrix4f pose,
             int index, float value, float centerX, float centerY, float radiusInner, float maxBarLength,
-            float angleStep, float spanDegrees,
-            ScreenRectangle scissorArea,
-            ScreenRectangle bounds
-    ) implements GuiElementRenderState {
+            float angleStep, float spanDegrees
+    ) {
 
-        public SpectrumQuadRenderState(RenderPipeline pipeline, TextureSetup textureSetup, Matrix3x2f pose, int index, float value, float centerX, float centerY, float radiusInner, float maxBarLength, float angleStep, float spanDegrees) {
-            this(pipeline, textureSetup, pose, index, value, centerX, centerY, radiusInner, maxBarLength, angleStep, spanDegrees, null,
-                    new ScreenRectangle((int) (centerX - (radiusInner + maxBarLength) - 10), (int) (centerY - (radiusInner + maxBarLength) - 10), (int) ((radiusInner + maxBarLength) * 2 + 20), (int) ((radiusInner + maxBarLength) * 2 + 20)));
-        }
-
-        @Override
-        public void buildVertices(VertexConsumer vertexConsumer, float f) {
+        public void buildVertices(VertexConsumer vertexConsumer) {
             float val = Float.isNaN(this.value) ? 0f : this.value;
 
             float dynamicScale = (float) (1.3f * Math.log10(1.0 + val * 60.0));
@@ -465,10 +446,10 @@ public class MusicPlayerScreen extends ConcertoScreen {
             float x4 = this.centerX + cos2 * this.radiusInner;
             float y4 = this.centerY + sin2 * this.radiusInner;
 
-            vertexConsumer.addVertexWith2DPose(this.pose(), x1, y1, f).setColor(color);
-            vertexConsumer.addVertexWith2DPose(this.pose(), x4, y4, f).setColor(color);
-            vertexConsumer.addVertexWith2DPose(this.pose(), x3, y3, f).setColor(color);
-            vertexConsumer.addVertexWith2DPose(this.pose(), x2, y2, f).setColor(color);
+            vertexConsumer.addVertex(this.pose(), x1, y1, 0).setColor(color);
+            vertexConsumer.addVertex(this.pose(), x4, y4, 0).setColor(color);
+            vertexConsumer.addVertex(this.pose(), x3, y3, 0).setColor(color);
+            vertexConsumer.addVertex(this.pose(), x2, y2, 0).setColor(color);
         }
     }
 

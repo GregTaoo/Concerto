@@ -70,7 +70,8 @@ public class MusicConfirmationScreen extends ConcertoScreen {
 
     @Override
     public void render(GuiGraphics matrices, int mouseX, int mouseY, float delta) {
-        super.render(matrices, mouseX, mouseY, delta);
+        this.renderBackground(matrices);
         this.widget.render(matrices, mouseX, mouseY, delta);
+        this.renderWidgets(matrices, mouseX, mouseY, delta);
     }
 }

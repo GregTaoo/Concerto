@@ -60,7 +60,6 @@ public class MainPlaylistScreen extends ApplyDraggedFileScreen {
         int searchButtonX = this.standardContentRight() - SEARCH_BUTTON_W;
         this.searchBox = new EditBox(this.font, searchX, 17, searchButtonX - searchX - STANDARD_ACTION_GAP, 20,
                 this.searchBox, Component.translatable("concerto.screen.search"));
-        this.addWidget(this.searchBox);
         this.addRenderableWidget(this.searchBox);
         this.addRenderableWidget(Button.builder(Component.translatable("concerto.screen.search"), button ->
                 this.toggleSearch()).pos(searchButtonX, 17).size(SEARCH_BUTTON_W, 20).build());
@@ -164,9 +163,10 @@ public class MainPlaylistScreen extends ApplyDraggedFileScreen {
 
     @Override
     public void render(GuiGraphics matrices, int mouseX, int mouseY, float delta) {
-        super.render(matrices, mouseX, mouseY, delta);
+        this.renderBackground(matrices);
         this.updateButtonStates();
         this.widget.render(matrices, mouseX, mouseY, delta);
+        this.renderWidgets(matrices, mouseX, mouseY, delta);
         this.volumeControl.render(matrices, mouseX, mouseY, delta);
     }
 

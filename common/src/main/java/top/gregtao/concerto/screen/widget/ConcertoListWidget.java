@@ -75,6 +75,13 @@ public class ConcertoListWidget<T> extends ObjectSelectionList<ConcertoListWidge
         return this.width - ConcertoScreen.STANDARD_CONTENT_MARGIN * 2;
     }
 
+    @Override
+    protected int getScrollbarPosition() {
+        // Retain the vanilla scrollbar's rendering and input behavior, while
+        // positioning its native six-pixel track inside the list's row area.
+        return this.getRowRight() - 6;
+    }
+
     protected boolean handleEntryClick(Entry entry, double mouseX, double mouseY, int button) {
         return false;
     }

@@ -39,7 +39,6 @@ public class PresetRadiosScreen extends ConcertoScreen {
         this.playlistList = this.initWidget();
         this.reset();
         this.addWidget(this.playlistList);
-        this.addRenderableWidget(this.playlistList);
 
         int y = this.standardBottomActionY();
         int buttonW = (this.standardContentWidth() - STANDARD_ACTION_GAP) / 2;
@@ -61,7 +60,8 @@ public class PresetRadiosScreen extends ConcertoScreen {
 
     @Override
     public void render(GuiGraphics matrices, int mouseX, int mouseY, float delta) {
-        super.render(matrices, mouseX, mouseY, delta);
+        this.renderBackground(matrices);
         this.playlistList.render(matrices, mouseX, mouseY, delta);
+        this.renderWidgets(matrices, mouseX, mouseY, delta);
     }
 }

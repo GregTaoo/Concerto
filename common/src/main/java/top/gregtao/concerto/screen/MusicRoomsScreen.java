@@ -219,7 +219,7 @@ public class MusicRoomsScreen extends ConcertoScreen {
 
     @Override
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float delta) {
-        super.render(graphics, mouseX, mouseY, delta);
+        this.renderBackground(graphics);
         int permission = MusicRoom.CLIENT_ROOM == null ? 0 : MusicRoom.CLIENT_ROOM.permission;
         if (MusicRoom.clientGetState() != this.builtState || permission != this.builtPermission) {
             this.rebuildWidgets();
@@ -230,6 +230,7 @@ public class MusicRoomsScreen extends ConcertoScreen {
         } else {
             this.renderRoom(graphics, mouseX, mouseY, delta);
         }
+        this.renderWidgets(graphics, mouseX, mouseY, delta);
     }
 
     private void renderDiscovery(GuiGraphics graphics, int mouseX, int mouseY, float delta) {

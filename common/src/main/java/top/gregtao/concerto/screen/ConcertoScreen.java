@@ -109,6 +109,13 @@ public class ConcertoScreen extends Screen {
 
     @Override
     public void render(GuiGraphics matrices, int mouseX, int mouseY, float delta) {
+        // Unlike newer versions, Screen.render does not draw a background in 1.20.1.
+        this.renderBackground(matrices);
+        this.renderWidgets(matrices, mouseX, mouseY, delta);
+    }
+
+    /** Renders Screen-managed controls after manually rendered list content. */
+    protected final void renderWidgets(GuiGraphics matrices, int mouseX, int mouseY, float delta) {
         super.render(matrices, mouseX, mouseY, delta);
         matrices.drawCenteredString(this.font, this.title, this.width / 2, 5, 0xffffffff);
         if (this.message.visible) {

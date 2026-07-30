@@ -77,8 +77,9 @@ public class MusicAuditionScreen extends ConcertoScreen {
 
     @Override
     public void render(GuiGraphics matrices, int mouseX, int mouseY, float delta) {
-        super.render(matrices, mouseX, mouseY, delta);
+        this.renderBackground(matrices);
         this.widget.render(matrices, mouseX, mouseY, delta);
+        this.renderWidgets(matrices, mouseX, mouseY, delta);
         LocalPlayer player = Minecraft.getInstance().player;
         if (player == null || !player.hasPermissions(2)) {
             matrices.drawCenteredString(this.font, Component.translatable("concerto.screen.audition.permission_denied"),

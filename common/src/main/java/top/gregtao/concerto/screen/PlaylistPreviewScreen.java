@@ -55,7 +55,6 @@ public class PlaylistPreviewScreen extends ConcertoScreen {
         int searchButtonX = this.standardContentRight() - SEARCH_BUTTON_WIDTH;
         this.searchBox = new EditBox(this.font, searchX, 17, searchButtonX - searchX - STANDARD_ACTION_GAP, 20,
                 this.searchBox, Component.translatable("concerto.screen.search"));
-        this.addWidget(this.searchBox);
         this.addRenderableWidget(this.searchBox);
         this.addRenderableWidget(Button.builder(Component.translatable("concerto.screen.search"), button ->
                 this.toggleSearch()).pos(searchButtonX, 17).size(SEARCH_BUTTON_WIDTH, 20).build());
@@ -136,9 +135,9 @@ public class PlaylistPreviewScreen extends ConcertoScreen {
 
     @Override
     public void render(GuiGraphics matrices, int mouseX, int mouseY, float delta) {
-        super.render(matrices, mouseX, mouseY, delta);
+        this.renderBackground(matrices);
         this.updateButtonStates();
-        matrices.drawCenteredString(this.font, this.title, this.width / 2, 5, 0xffffffff);
         this.widget.render(matrices, mouseX, mouseY, delta);
+        this.renderWidgets(matrices, mouseX, mouseY, delta);
     }
 }

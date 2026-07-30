@@ -140,7 +140,6 @@ public class KuGouMusicSearchScreen extends PageScreen {
         int searchTypeX = searchButtonX - STANDARD_ACTION_GAP - 65;
         this.searchBox = new EditBox(this.font, searchX, 17, searchTypeX - STANDARD_ACTION_GAP - searchX, 20,
                 this.searchBox, Component.translatable("concerto.screen.search"));
-        this.addWidget(this.searchBox);
         this.addRenderableWidget(this.searchBox);
         this.searchBox.setValue(DEFAULT_KEYWORD);
 
@@ -223,12 +222,13 @@ public class KuGouMusicSearchScreen extends PageScreen {
 
     @Override
     public void render(GuiGraphics matrices, int mouseX, int mouseY, float delta) {
-        super.render(matrices, mouseX, mouseY, delta);
+        this.renderBackground(matrices);
         switch (this.searchType) {
             case PLAYLIST -> this.playlistList.render(matrices, mouseX, mouseY, delta);
             case MUSIC -> this.musicList.render(matrices, mouseX, mouseY, delta);
             case ALBUM -> this.albumList.render(matrices, mouseX, mouseY, delta);
         }
+        this.renderWidgets(matrices, mouseX, mouseY, delta);
     }
 
     @Override

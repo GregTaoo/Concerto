@@ -85,8 +85,9 @@ public class AddMusicScreen extends ApplyDraggedFileScreen {
 
     @Override
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float delta) {
-        super.render(graphics, mouseX, mouseY, delta);
+        this.renderBackground(graphics);
         this.inputList.render(graphics, mouseX, mouseY, delta);
+        this.renderWidgets(graphics, mouseX, mouseY, delta);
     }
 
     private class AddMusicList extends ContainerObjectSelectionList<AddMusicRow> {

@@ -44,7 +44,7 @@ public abstract class ServerRemoteRecord<T extends Copyable<T>> extends ClientRe
         synchronized (this.lock) {
             // save
             diff = this.buildDiff(newState, updatedFields);
-            if (diff.isEmpty()) return;
+            if (diff.entrySet().isEmpty()) return;
             this.state = newState;
             // forward
             patch.addProperty("version", this.version.incrementAndGet());

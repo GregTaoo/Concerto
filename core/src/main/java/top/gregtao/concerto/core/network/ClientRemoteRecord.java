@@ -49,7 +49,7 @@ public abstract class ClientRemoteRecord<T extends Copyable<T>> extends SyncReco
         JsonObject patch = new JsonObject(), diff;
         synchronized (this.lock) {
             diff = this.buildDiff(newState, updatedFields);
-            if (diff.isEmpty()) return;
+            if (diff.entrySet().isEmpty()) return;
             patch.addProperty("version", this.version.get());
         }
         patch.add("state", diff);

@@ -138,7 +138,6 @@ public class QQMusicSearchScreen extends PageScreen {
         int searchTypeX = searchButtonX - STANDARD_ACTION_GAP - 65;
         this.searchBox = new EditBox(this.font, searchX, 17, searchTypeX - STANDARD_ACTION_GAP - searchX, 20,
                 this.searchBox, Component.translatable("concerto.screen.search"));
-        this.addWidget(this.searchBox);
         this.addRenderableWidget(this.searchBox);
         this.searchBox.setValue(DEFAULT_KEYWORD);
 
@@ -218,7 +217,7 @@ public class QQMusicSearchScreen extends PageScreen {
 
     @Override
     public void render(GuiGraphics matrices, int mouseX, int mouseY, float delta) {
-        super.render(matrices, mouseX, mouseY, delta);
+        this.renderBackground(matrices);
         try {
             switch (this.searchType) {
                 case PLAYLIST -> this.playlistList.render(matrices, mouseX, mouseY, delta);
@@ -228,7 +227,7 @@ public class QQMusicSearchScreen extends PageScreen {
         } catch (IndexOutOfBoundsException e) {
             ConcertoClient.LOGGER.error(e.getMessage());
         }
-        this.searchBox.render(matrices, mouseX, mouseY, delta);
+        this.renderWidgets(matrices, mouseX, mouseY, delta);
     }
 
     @Override

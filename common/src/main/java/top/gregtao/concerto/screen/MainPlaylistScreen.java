@@ -29,7 +29,7 @@ public class MainPlaylistScreen extends ApplyDraggedFileScreen {
     private Button nextButton;
     private Button pauseButton;
     private Button infoButton;
-    private Button requestButton;
+    private Button playButton;
     private Button clearButton;
     private CycleButton<OrderType> orderButton;
     private VolumeControlWidget volumeControl;
@@ -86,13 +86,17 @@ public class MainPlaylistScreen extends ApplyDraggedFileScreen {
         this.addRenderableWidget(this.nextButton);
         x += ICON_BUTTON_W + STANDARD_ACTION_GAP;
 
-        this.requestButton = Button.builder(Component.translatable("concerto.screen.request"), button -> {
+        this.playButton = Button.builder(playActionLabel(), button -> {
             ConcertoListWidget<MainPlaylistWidget.Entry>.Entry entry = this.widget.getSelected();
             if (entry != null) {
-                ServerMusicAgentManager.clientAddMusic(entry.item.music());
+                if (MusicRoom.clientGetState() == MusicRoom.ClientState.MUSIC_AGENT) {
+                    ServerMusicAgentManager.clientAddMusic(entry.item.music());
+                } else {
+                    MusicPlayerHandler.INSTANCE.addMusicHereAsync(entry.item.music(), true);
+                }
             }
         }).pos(x, y).size(wideButtonW, 20).build();
-        this.addRenderableWidget(this.requestButton);
+        this.addRenderableWidget(this.playButton);
         x += wideButtonW + STANDARD_ACTION_GAP;
 
         this.orderButton = CycleButton.builder((OrderType orderType) -> Component.literal(orderType.getName())).withValues(OrderType.values())
@@ -140,8 +144,9 @@ public class MainPlaylistScreen extends ApplyDraggedFileScreen {
         this.pauseButton.active = PlayerPermissions.canControlPlayback();
         this.clearButton.active = PlayerPermissions.canModifyMusicList();
         this.infoButton.active = this.widget.getSelected() != null;
-        this.requestButton.active = MusicRoom.clientGetState() == MusicRoom.ClientState.MUSIC_AGENT
-                && this.widget.getSelected() != null;
+        this.playButton.active = (MusicRoom.clientGetState() == MusicRoom.ClientState.MUSIC_AGENT
+                || PlayerPermissions.canModifyMusicList()) && this.widget.getSelected() != null;
+        this.playButton.setMessage(playActionLabel());
         this.pauseButton.setMessage(this.pauseLabel());
     }
 

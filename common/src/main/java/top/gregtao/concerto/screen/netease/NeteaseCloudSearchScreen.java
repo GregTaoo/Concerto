@@ -17,7 +17,9 @@ import top.gregtao.concerto.core.music.list.NeteaseCloudPlaylist;
 import top.gregtao.concerto.core.music.list.Playlist;
 import top.gregtao.concerto.core.player.MusicPlayerHandler;
 import top.gregtao.concerto.core.player.PlayerPermissions;
+import top.gregtao.concerto.core.room.MusicRoom;
 import top.gregtao.concerto.core.util.ConcertoRunner;
+import top.gregtao.concerto.network.room.ServerMusicAgentManager;
 import top.gregtao.concerto.screen.MusicInfoScreen;
 import top.gregtao.concerto.screen.PageScreen;
 import top.gregtao.concerto.screen.PlaylistPreviewScreen;
@@ -102,7 +104,11 @@ public class NeteaseCloudSearchScreen extends PageScreen {
     private void updateActionButtons() {
         boolean canModifyMusicList = PlayerPermissions.canModifyMusicList();
         if (this.playButton != null) {
-            this.playButton.active = canModifyMusicList;
+            boolean requestInAgent = this.searchType == SearchType.MUSIC
+                    && MusicRoom.clientGetState() == MusicRoom.ClientState.MUSIC_AGENT;
+            this.playButton.active = canModifyMusicList || requestInAgent;
+            this.playButton.setMessage(Component.translatable(requestInAgent
+                    ? "concerto.screen.request" : "concerto.screen.play"));
         }
         if (this.addButton != null) {
             this.addButton.active = canModifyMusicList;
@@ -162,7 +168,11 @@ public class NeteaseCloudSearchScreen extends PageScreen {
                 case MUSIC: {
                     ConcertoListWidget<Music>.Entry entry = this.musicList.getSelected();
                     if (entry != null) {
-                        MusicPlayerHandler.INSTANCE.addMusicHereAsync(entry.item, true);
+                        if (MusicRoom.clientGetState() == MusicRoom.ClientState.MUSIC_AGENT) {
+                            ServerMusicAgentManager.clientAddMusic(entry.item);
+                        } else {
+                            MusicPlayerHandler.INSTANCE.addMusicHereAsync(entry.item, true);
+                        }
                     }
                 }
                 case PLAYLIST: {

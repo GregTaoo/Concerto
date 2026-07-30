@@ -27,7 +27,6 @@ public class PlaylistPreviewScreen extends ConcertoScreen {
     private Button addPlaylistButton;
     private Button playButton;
     private Button addButton;
-    private Button requestButton;
     private EditBox searchBox;
 
     public PlaylistPreviewScreen(Playlist playlist, Screen parent) {
@@ -65,7 +64,7 @@ public class PlaylistPreviewScreen extends ConcertoScreen {
 
         int y = this.standardBottomActionY();
         int x = this.standardContentX();
-        int buttonW = (this.standardContentWidth() - STANDARD_ACTION_GAP * 5) / 6;
+        int buttonW = (this.standardContentWidth() - STANDARD_ACTION_GAP * 4) / 5;
 
         this.addPlaylistButton = Button.builder(Component.translatable("concerto.screen.playlist.add"), button ->
                         MusicPlayerHandler.INSTANCE.addMusicAsync(this.playlist.getList(), true))
@@ -73,10 +72,14 @@ public class PlaylistPreviewScreen extends ConcertoScreen {
         this.addRenderableWidget(this.addPlaylistButton);
         x += buttonW + STANDARD_ACTION_GAP;
 
-        this.playButton = Button.builder(Component.translatable("concerto.screen.play"), button -> {
+        this.playButton = Button.builder(playActionLabel(), button -> {
             ConcertoListWidget<Music>.Entry entry = this.widget.getSelected();
             if (entry != null) {
-                MusicPlayerHandler.INSTANCE.addMusicHereAsync(entry.item, true);
+                if (MusicRoom.clientGetState() == MusicRoom.ClientState.MUSIC_AGENT) {
+                    ServerMusicAgentManager.clientAddMusic(entry.item);
+                } else {
+                    MusicPlayerHandler.INSTANCE.addMusicHereAsync(entry.item, true);
+                }
             }
         }).pos(x, y).size(buttonW, 20).build();
         this.addRenderableWidget(this.playButton);
@@ -90,16 +93,6 @@ public class PlaylistPreviewScreen extends ConcertoScreen {
         }).pos(x, y).size(buttonW, 20).build();
         this.addRenderableWidget(this.addButton);
         x += buttonW + STANDARD_ACTION_GAP;
-        this.requestButton = Button.builder(Component.translatable("concerto.screen.request"), button -> {
-            ConcertoListWidget<Music>.Entry entry = this.widget.getSelected();
-            if (entry != null) {
-                ServerMusicAgentManager.clientAddMusic(entry.item);
-            }
-        }).pos(x, y).size(buttonW, 20).build();
-        this.addRenderableWidget(this.requestButton);
-        x += buttonW + STANDARD_ACTION_GAP;
-
-
         this.addRenderableWidget(Button.builder(Component.translatable("concerto.screen.info"), button -> {
             ConcertoListWidget<Music>.Entry entry = this.widget.getSelected();
             if (entry != null) {
@@ -120,10 +113,10 @@ public class PlaylistPreviewScreen extends ConcertoScreen {
     private void updateButtonStates() {
         boolean canModifyMusicList = PlayerPermissions.canModifyMusicList();
         this.addPlaylistButton.active = canModifyMusicList;
-        this.playButton.active = canModifyMusicList;
+        boolean inAgent = MusicRoom.clientGetState() == MusicRoom.ClientState.MUSIC_AGENT;
+        this.playButton.active = (inAgent || canModifyMusicList) && this.widget.getSelected() != null;
+        this.playButton.setMessage(playActionLabel());
         this.addButton.active = canModifyMusicList;
-        this.requestButton.active = MusicRoom.clientGetState() == MusicRoom.ClientState.MUSIC_AGENT
-                && this.widget.getSelected() != null;
     }
 
     @Override

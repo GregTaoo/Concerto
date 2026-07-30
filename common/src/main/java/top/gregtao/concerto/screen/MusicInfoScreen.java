@@ -15,6 +15,7 @@ import top.gregtao.concerto.core.music.lyrics.Lyrics;
 import top.gregtao.concerto.core.music.meta.music.MusicMetaData;
 import top.gregtao.concerto.core.player.MusicPlayerHandler;
 import top.gregtao.concerto.core.player.PlayerPermissions;
+import top.gregtao.concerto.core.room.MusicRoom;
 import top.gregtao.concerto.core.util.ConcertoRunner;
 import top.gregtao.concerto.core.util.Pair;
 import top.gregtao.concerto.network.room.ServerMusicAgentManager;
@@ -31,7 +32,7 @@ public class MusicInfoScreen extends ConcertoScreen {
     private static final int CONTENT_BOTTOM = 35;
     private static final int LYRICS_HEADER_HEIGHT = 22;
     private static final int SCROLLBAR_GAP = 4;
-    private static final int ACTION_COUNT = 4;
+    private static final int ACTION_COUNT = 3;
 
     private URLImageWidget headPicture;
     private final Music music;
@@ -89,32 +90,33 @@ public class MusicInfoScreen extends ConcertoScreen {
 
         int y = this.standardBottomActionY();
         int actionWidth = (this.standardContentWidth() - STANDARD_ACTION_GAP * (ACTION_COUNT - 1)) / ACTION_COUNT;
-        this.playButton = Button.builder(Component.translatable("concerto.screen.play"),
-                button -> MusicPlayerHandler.INSTANCE.addMusicHereAsync(this.music, true, () -> {
-                })).pos(this.standardContentX(), y).size(actionWidth, 20).build();
+        this.playButton = Button.builder(playActionLabel(), button -> {
+            if (MusicRoom.clientGetState() == MusicRoom.ClientState.MUSIC_AGENT) {
+                ServerMusicAgentManager.clientAddMusic(this.music);
+            } else {
+                MusicPlayerHandler.INSTANCE.addMusicHereAsync(this.music, true, () -> { });
+            }
+        }).pos(this.standardContentX(), y).size(actionWidth, 20).build();
         this.addRenderableWidget(this.playButton);
 
         this.addButton = Button.builder(Component.translatable("concerto.screen.add"),
                 button -> MusicPlayerHandler.INSTANCE.addMusicAsync(this.music, false, () -> {
                 })).pos(this.standardContentX() + actionWidth + STANDARD_ACTION_GAP, y).size(actionWidth, 20).build();
         this.addRenderableWidget(this.addButton);
-        this.addRenderableWidget(Button.builder(Component.translatable("concerto.screen.request"), button ->
-                ServerMusicAgentManager.clientAddMusic(this.music)).pos(this.standardContentX() + (actionWidth + STANDARD_ACTION_GAP) * 2, y)
-                .size(actionWidth, 20).build());
-
-
         this.addRenderableWidget(Button.builder(Component.translatable("concerto.screen.copy_link"), button -> {
             if (this.minecraft != null) {
                 this.minecraft.keyboardHandler.setClipboard(this.music.getLink());
             }
-        }).pos(this.standardContentX() + (actionWidth + STANDARD_ACTION_GAP) * 3, y)
-                .size(this.standardContentRight() - this.standardContentX() - (actionWidth + STANDARD_ACTION_GAP) * 3, 20).build());
+        }).pos(this.standardContentX() + (actionWidth + STANDARD_ACTION_GAP) * 2, y)
+                .size(this.standardContentRight() - this.standardContentX() - (actionWidth + STANDARD_ACTION_GAP) * 2, 20).build());
 
         this.updateButtonStates();
     }
 
     private void updateButtonStates() {
-        this.playButton.active = PlayerPermissions.canModifyMusicList();
+        this.playButton.active = MusicRoom.clientGetState() == MusicRoom.ClientState.MUSIC_AGENT
+                || PlayerPermissions.canModifyMusicList();
+        this.playButton.setMessage(playActionLabel());
         this.addButton.active = PlayerPermissions.canModifyMusicList();
     }
 

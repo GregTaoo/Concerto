@@ -267,12 +267,16 @@ public class ServerMusicAgent {
 
                 SharedMusic resolvedShared;
                 if (ServerConfig.INSTANCE.options.musicAgentUseShared) {
-                    String path = dynamicPath.updateRawPath();
+                    DynamicPath.ResolvedPath resolvedPath = dynamicPath.resolvePath();
+                    String path = resolvedPath.path();
                     if (!Objects.equals(this.room.serverState.get().currentIndex, currentUUID)) return;
                     if (path == null) {
                         this.broadcast("concerto.agent.play.failed", taskMusic.getMeta().title(), taskMusic.getMeta().author());
                         this.playNextMusic();
                         return;
+                    }
+                    if (resolvedPath.trial()) {
+                        this.broadcast("concerto.player.trial");
                     }
                     resolvedShared = new SharedMusic(path, taskMusic.getMeta(), dynamicPath.getLastLyrics(), dynamicPath.getLastSubLyrics());
                 } else {

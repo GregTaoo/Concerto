@@ -473,8 +473,8 @@ public class MusicRoom {
                 case REMOVE -> {
                     MusicRoom room = CLIENT_ROOM;
                     if (room != null) {
-                        MusicPlayerHandler.INSTANCE.playNextAsync(0);
                         CLIENT_ROOM = null;
+                        MusicPlayerHandler.INSTANCE.restoreLocalPlaybackPaused();
                     }
                 }
                 case QUIT -> {
@@ -482,8 +482,8 @@ public class MusicRoom {
                     if (room != null) {
                         UUID uuid = UUID.fromString(payload);
                         if (room.uuid.equals(uuid)) {
-                            MusicPlayerHandler.INSTANCE.playNextAsync(0);
                             CLIENT_ROOM = null;
+                            MusicPlayerHandler.INSTANCE.restoreLocalPlaybackPaused();
                         }
                     }
                 }

@@ -199,10 +199,11 @@ public class ServerMusicAgent {
         this.updateState(s -> {
             ConcertoPlayerList list = s.musicList;
             UUID cur = s.currentIndex;
-            UUID nextUid = cur == null ? list.firstUuid() : list.nextUuid(cur);
-
-            if (nextUid == null && this.currentlyFreeTime.get()) {
-                nextUid = list.firstUuid();
+            UUID nextUid;
+            if (this.currentlyFreeTime.get()) {
+                nextUid = this.getFreeTimeNextUuid(list, cur);
+            } else {
+                nextUid = cur == null ? list.firstUuid() : list.nextUuid(cur);
             }
 
             if (nextUid != null) {
@@ -216,7 +217,7 @@ public class ServerMusicAgent {
                 list.clear();
                 if (!this.freeTimePlaylist.isEmpty()) {
                     this.freeTimePlaylist.forEach(list::addLast);
-                    s.setCurrentIndex(list.firstUuid(), 25);
+                    s.setCurrentIndex(this.getFreeTimeStartUuid(list), 25);
                     this.currentlyFreeTime.set(true);
                 } else {
                     s.setCurrentIndex(null, 25);
@@ -226,6 +227,16 @@ public class ServerMusicAgent {
             }
         }, List.of(MusicRoomState.MUSIC_LIST, MusicRoomState.CURRENT_INDEX, MusicRoomState.PAUSED,
                 MusicPlayerState.PLAYBACK_HISTORY));
+    }
+
+    private UUID getFreeTimeStartUuid(ConcertoPlayerList list) {
+        return this.getFreeTimeNextUuid(list, null);
+    }
+
+    private UUID getFreeTimeNextUuid(ConcertoPlayerList list, UUID current) {
+        if (ServerConfig.INSTANCE.options.freeTimePlaylistRandom) return list.randomUuid();
+        UUID next = current == null ? list.firstUuid() : list.nextUuid(current);
+        return next == null ? list.firstUuid() : next;
     }
 
     private void resolveAndPlayCurrentMusic() {

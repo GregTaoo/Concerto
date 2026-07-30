@@ -194,6 +194,7 @@ public class MusicPlayerHandler {
     }
 
     public boolean addMusic(List<Music> musics, boolean skip) {
+        if (skip) this.forcePaused = false;
         this.getState().set((state) -> {
             loadInThreadPool(musics);
             List<UUID> ids = state.musicList.addAllLast(musics);
@@ -223,6 +224,7 @@ public class MusicPlayerHandler {
 
     public void addMusicHere(Music music, boolean skip) {
         if (!music.isLoaded()) music.load();
+        if (skip) this.forcePaused = false;
         this.getState().set((state) -> {
             UUID inserted;
             if (state.currentIndex == null || !state.musicList.contains(state.currentIndex)) {

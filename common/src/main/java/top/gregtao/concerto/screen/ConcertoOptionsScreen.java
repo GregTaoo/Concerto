@@ -22,6 +22,10 @@ public class ConcertoOptionsScreen extends ConcertoScreen {
 
     @Override
     protected void init() {
+        // The option instances are a startup-time singleton; without a re-read
+        // they show stale values here and saveOptions() on close would write
+        // them back, clobbering config changes made elsewhere (volume pop-up)
+        ConcertoOptions.INSTANCE.readOptions();
         this.layout.setHeaderHeight(18);
         this.initBody();
         this.initFooter();

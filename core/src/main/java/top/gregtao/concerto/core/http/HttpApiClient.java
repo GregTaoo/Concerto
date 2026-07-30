@@ -97,6 +97,28 @@ public class HttpApiClient {
         return this.cookieFile;
     }
 
+    /**
+     * Any real login cookie is far longer than this; a shorter header means
+     * "no cookie configured on this side", not "cookie rejected by the API".
+     */
+    private static final int MIN_PLAUSIBLE_COOKIE_HEADER_LENGTH = 32;
+
+    /**
+     * True when this process's cookie file is missing, empty/whitespace or
+     * obviously truncated. Remote APIs resolve VIP content on whichever side
+     * performs the request, so a dedicated or integrated server needs its own
+     * cookie file — this check lets callers say so explicitly instead of
+     * surfacing a confusing rejection from the remote API.
+     */
+    public boolean isCookieMissingOrBlank() {
+        try {
+            String header = this.cookieFile.readAsHeader();
+            return header == null || header.trim().length() < MIN_PLAUSIBLE_COOKIE_HEADER_LENGTH;
+        } catch (Exception e) {
+            return true;
+        }
+    }
+
     public void setCookie(String url, String key, String value) throws IOException, URISyntaxException {
         this.cookieManager.put(new URI(url), Map.of("Set-Cookie", List.of(key + "=" + value)));
         this.writeCookie();

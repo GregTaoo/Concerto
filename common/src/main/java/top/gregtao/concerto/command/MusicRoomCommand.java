@@ -27,7 +27,14 @@ public class MusicRoomCommand {
                                 MusicRoomManager.clientCreate();
                             }
                             return 0;
-                        })).then(LiteralArgumentBuilder.<S>literal("join").then(
+                        }).then(RequiredArgumentBuilder.<S, String>argument("name", StringArgumentType.greedyString()).executes(context -> {
+                            LocalPlayer player = Minecraft.getInstance().player;
+                            if (player == null) return -1;
+                            if (checkServerAvailable(player) && checkLocal(player)) {
+                                MusicRoomManager.clientCreate(StringArgumentType.getString(context, "name"));
+                            }
+                            return 0;
+                        }))).then(LiteralArgumentBuilder.<S>literal("join").then(
                                 RequiredArgumentBuilder.<S, String>argument("uuid", StringArgumentType.string()).executes(context -> {
                                     LocalPlayer player = Minecraft.getInstance().player;
                                     if (player == null) return -1;

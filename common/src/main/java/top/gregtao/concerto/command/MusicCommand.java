@@ -22,8 +22,6 @@ import top.gregtao.concerto.core.player.MusicPlayerHandler;
 import top.gregtao.concerto.core.util.ConcertoRunner;
 import top.gregtao.concerto.util.CommandUtil;
 
-import javax.sound.sampled.UnsupportedAudioFileException;
-import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -103,8 +101,8 @@ public class MusicCommand {
                             try {
                                 MusicCacheManager.INSTANCE.addMusic(music);
                                 clientPlayer.sendSystemMessage(Component.translatable("concerto.success"));
-                            } catch (IOException | UnsupportedAudioFileException e) {
-                                throw new RuntimeException(e);
+                            } catch (Exception e) {
+                                clientPlayer.sendSystemMessage(Component.translatable("concerto.fail"));
                             }
                         });
                     } else {
@@ -144,18 +142,17 @@ public class MusicCommand {
                 })
         ).then(
                 LiteralArgumentBuilder.<S>literal("download-current").executes(context -> {
-                    MusicPlayerHandler.downloadMusics(List.of(MusicPlayerHandler.INSTANCE.getCurrentMusic()));
-                    LocalPlayer clientPlayer = Minecraft.getInstance().player;
-                    if (clientPlayer == null) return -1;
-                    clientPlayer.sendSystemMessage(Component.translatable("concerto.success"));
+                    Music current = MusicPlayerHandler.INSTANCE.getCurrentMusic();
+                    if (current == null) {
+                        CommandUtil.commandMessageClient(Component.translatable("concerto.not_playing"));
+                        return -1;
+                    }
+                    startDownload(List.of(current));
                     return 0;
                 })
         ).then(
                 LiteralArgumentBuilder.<S>literal("download-all").executes(context -> {
-                    MusicPlayerHandler.downloadMusics(MusicPlayerHandler.INSTANCE.getMusicList().snapshotMusics());
-                    LocalPlayer clientPlayer = Minecraft.getInstance().player;
-                    if (clientPlayer == null) return -1;
-                    clientPlayer.sendSystemMessage(Component.translatable("concerto.success"));
+                    startDownload(MusicPlayerHandler.INSTANCE.getMusicList().snapshotMusics());
                     return 0;
                 })
         ).then(
@@ -182,8 +179,18 @@ public class MusicCommand {
         ).then(
                 LiteralArgumentBuilder.<S>literal("clean-cache").executes(context -> {
                     CacheManager.cleanAllCache();
+                    CommandUtil.commandMessageClient(Component.translatable("concerto.success"));
                     return 0;
                 })
         );
+    }
+
+    // The "started" notice goes out immediately; the summary only once every
+    // download actually finished (the old code claimed success up front).
+    private static void startDownload(List<Music> musics) {
+        CommandUtil.commandMessageClient(Component.translatable("concerto.download.started", musics.size()));
+        MusicPlayerHandler.downloadMusics(musics, (succeeded, failed) ->
+                Minecraft.getInstance().execute(() -> CommandUtil.commandMessageClient(
+                        Component.translatable("concerto.download.done", succeeded, failed))));
     }
 }

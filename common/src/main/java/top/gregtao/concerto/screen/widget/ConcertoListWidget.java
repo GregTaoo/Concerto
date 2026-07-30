@@ -1,18 +1,19 @@
 package top.gregtao.concerto.screen.widget;
 
+import net.minecraft.client.input.MouseButtonEvent;
+import net.minecraft.util.Util;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.ObjectSelectionList;
-import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.Component;
-import net.minecraft.util.Util;
 import org.jetbrains.annotations.NotNull;
+import top.gregtao.concerto.screen.ConcertoScreen;
 
 import java.util.List;
 import java.util.ListIterator;
 
 public class ConcertoListWidget<T> extends ObjectSelectionList<ConcertoListWidget<T>.@NotNull Entry> {
-    private int color = 0xffffffff;
+    protected int color = 0xffffffff;
 
     public ConcertoListWidget(int width, int height, int top, int itemHeight) {
         super(Minecraft.getInstance(), width, height, top, itemHeight);
@@ -71,10 +72,19 @@ public class ConcertoListWidget<T> extends ObjectSelectionList<ConcertoListWidge
 
     @Override
     public int getRowWidth() {
-        return this.width - 35;
+        return this.width - ConcertoScreen.STANDARD_CONTENT_MARGIN * 2;
     }
 
-    public class Entry extends ObjectSelectionList.Entry<@NotNull Entry> {
+    protected boolean handleEntryClick(Entry entry, double mouseX, double mouseY, int button) {
+        return false;
+    }
+
+    protected void renderEntry(Entry entry, GuiGraphicsExtractor context, int y, int x, int entryWidth,
+                               int mouseX, int mouseY, boolean hovered, float tickDelta) {
+        context.text(Minecraft.getInstance().font, entry.getNarration(), x, y + 3, this.color, false);
+    }
+
+    public class Entry extends ObjectSelectionList.Entry<Entry> {
         public T item;
         public int index, entryIndex;
         private long lastClickTime = 0;
@@ -87,6 +97,7 @@ public class ConcertoListWidget<T> extends ObjectSelectionList<ConcertoListWidge
 
         @Override
         public boolean mouseClicked(@NotNull MouseButtonEvent event, boolean doubled) {
+            if (ConcertoListWidget.this.handleEntryClick(this, event.x(), event.y(), event.button())) return true;
             if (event.button() == 0) {
                 if (Util.getMillis() - this.lastClickTime < 250) {
                     ConcertoListWidget.this.onDoubleClicked(this);
@@ -105,8 +116,9 @@ public class ConcertoListWidget<T> extends ObjectSelectionList<ConcertoListWidge
         }
 
         @Override
-        public void extractContent(GuiGraphicsExtractor graphics, int mouseX, int mouseY, boolean hovered, float deltaTicks) {
-            graphics.text(Minecraft.getInstance().font, this.getNarration(), this.getContentX(), this.getContentY() + 3, ConcertoListWidget.this.color, false);
+        public void extractContent(GuiGraphicsExtractor context, int mouseX, int mouseY, boolean hovered, float deltaTicks) {
+            ConcertoListWidget.this.renderEntry(this, context, this.getContentY(), this.getContentX(),
+                    ConcertoListWidget.this.getRowWidth(), mouseX, mouseY, hovered, deltaTicks);
         }
     }
 }

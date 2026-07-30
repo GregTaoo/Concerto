@@ -1,37 +1,49 @@
 package top.gregtao.concerto.screen;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.input.CharacterEvent;
+import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
-import org.jetbrains.annotations.NotNull;
+import org.lwjgl.glfw.GLFW;
 import top.gregtao.concerto.core.config.PresetPlaylistsConfig;
 import top.gregtao.concerto.core.music.Music;
 import top.gregtao.concerto.core.music.list.Playlist;
 import top.gregtao.concerto.core.player.MusicPlayerHandler;
 import top.gregtao.concerto.core.player.PlayerPermissions;
 import top.gregtao.concerto.core.util.ConcertoRunner;
+import top.gregtao.concerto.core.room.MusicRoom;
+import top.gregtao.concerto.network.room.ServerMusicAgentManager;
 import top.gregtao.concerto.screen.widget.ConcertoListWidget;
 import top.gregtao.concerto.screen.widget.MetadataListWidget;
 
+
 public class PlaylistPreviewScreen extends ConcertoScreen {
+    private static final int SEARCH_BUTTON_WIDTH = 50;
+
     private final Playlist playlist;
     private MetadataListWidget<Music> widget;
     private Button addPlaylistButton;
     private Button playButton;
     private Button addButton;
+    private EditBox searchBox;
 
     public PlaylistPreviewScreen(Playlist playlist, Screen parent) {
         super(Component.literal(Component.translatable("concerto." + (playlist.isAlbum() ? "album" : "playlist")).getString() +
                 ": " + playlist.getMeta().title() + " - " + playlist.getMeta().author()), parent);
         this.playlist = playlist;
     }
+    private void toggleSearch() {
+        this.widget.reset(this.playlist.getList(), null, this.searchBox.getValue());
+    }
 
     @Override
     protected void init() {
         super.init();
-        this.widget = new MetadataListWidget<>(this.width, this.height - 55, 20, 18) {
+        this.widget = new MetadataListWidget<>(this.width, this.height - 77, 42, 18) {
             @Override
             public void onDoubleClicked(ConcertoListWidget<Music>.Entry entry) {
                 if (PlayerPermissions.canModifyMusicList()) {
@@ -40,41 +52,62 @@ public class PlaylistPreviewScreen extends ConcertoScreen {
             }
         };
         this.addWidget(this.widget);
-        ConcertoRunner.run(() -> this.widget.reset(this.playlist.getList(), null));
+
+        int searchX = this.standardContentX();
+        int searchButtonX = this.standardContentRight() - SEARCH_BUTTON_WIDTH;
+        this.searchBox = new EditBox(this.font, searchX, 17, searchButtonX - searchX - STANDARD_ACTION_GAP, 20,
+                this.searchBox, Component.translatable("concerto.screen.search"));
+        this.addWidget(this.searchBox);
+        this.addRenderableWidget(this.searchBox);
+        this.addRenderableWidget(Button.builder(Component.translatable("concerto.screen.search"), button ->
+                this.toggleSearch()).pos(searchButtonX, 17).size(SEARCH_BUTTON_WIDTH, 20).build());
+        String searchTerm = this.searchBox.getValue();
+        ConcertoRunner.run(() -> this.widget.reset(this.playlist.getList(), null, searchTerm));
+
+        int y = this.standardBottomActionY();
+        int x = this.standardContentX();
+        int buttonW = (this.standardContentWidth() - STANDARD_ACTION_GAP * 4) / 5;
 
         this.addPlaylistButton = Button.builder(Component.translatable("concerto.screen.playlist.add"), button ->
                         MusicPlayerHandler.INSTANCE.addMusicAsync(this.playlist.getList(), true))
-                .pos(20, this.height - 30).size(60, 20).build();
+                .pos(x, y).size(buttonW, 20).build();
         this.addRenderableWidget(this.addPlaylistButton);
+        x += buttonW + STANDARD_ACTION_GAP;
 
-        this.playButton = Button.builder(Component.translatable("concerto.screen.play"), button -> {
+        this.playButton = Button.builder(playActionLabel(), button -> {
             ConcertoListWidget<Music>.Entry entry = this.widget.getSelected();
             if (entry != null) {
-                MusicPlayerHandler.INSTANCE.addMusicHereAsync(entry.item, true);
+                if (MusicRoom.clientGetState() == MusicRoom.ClientState.MUSIC_AGENT) {
+                    ServerMusicAgentManager.clientAddMusic(entry.item);
+                } else {
+                    MusicPlayerHandler.INSTANCE.addMusicHereAsync(entry.item, true);
+                }
             }
-        }).pos(85, this.height - 30).size(60, 20).build();
+        }).pos(x, y).size(buttonW, 20).build();
         this.addRenderableWidget(this.playButton);
+        x += buttonW + STANDARD_ACTION_GAP;
 
         this.addButton = Button.builder(Component.translatable("concerto.screen.add"), button -> {
             ConcertoListWidget<Music>.Entry entry = this.widget.getSelected();
             if (entry != null) {
                 MusicPlayerHandler.INSTANCE.addMusicAsync(entry.item, false);
             }
-        }).pos(150, this.height - 30).size(60, 20).build();
+        }).pos(x, y).size(buttonW, 20).build();
         this.addRenderableWidget(this.addButton);
-
+        x += buttonW + STANDARD_ACTION_GAP;
         this.addRenderableWidget(Button.builder(Component.translatable("concerto.screen.info"), button -> {
             ConcertoListWidget<Music>.Entry entry = this.widget.getSelected();
             if (entry != null) {
                 Minecraft.getInstance().gui.setScreen(new MusicInfoScreen(entry.item, this));
             }
-        }).pos(215, this.height - 30).size(60, 20).build());
+        }).pos(x, y).size(buttonW, 20).build());
+        x += buttonW + STANDARD_ACTION_GAP;
 
-        this.addRenderableWidget(Button.builder(Component.translatable("concerto.playlist.export"), button -> {
-            Component text = PresetPlaylistsConfig.saveToLocalPlaylists(this.playlist) ? Component.translatable("concerto.playlist.export.success") :
-                    Component.translatable("concerto.playlist.export.fail");
+        this.addRenderableWidget(Button.builder(Component.translatable("concerto.playlist.save_local"), button -> {
+            Component text = PresetPlaylistsConfig.saveToLocalPlaylists(this.playlist) ? Component.translatable("concerto.playlist.save_local.success") :
+                    Component.translatable("concerto.playlist.save_local.fail");
             this.displayAlert(text);
-        }).pos(280, this.height - 30).size(60, 20).build());
+        }).pos(x, y).size(this.standardContentRight() - x, 20).build());
 
         this.updateButtonStates();
     }
@@ -82,13 +115,31 @@ public class PlaylistPreviewScreen extends ConcertoScreen {
     private void updateButtonStates() {
         boolean canModifyMusicList = PlayerPermissions.canModifyMusicList();
         this.addPlaylistButton.active = canModifyMusicList;
-        this.playButton.active = canModifyMusicList;
+        boolean inAgent = MusicRoom.clientGetState() == MusicRoom.ClientState.MUSIC_AGENT;
+        this.playButton.active = (inAgent || canModifyMusicList) && this.widget.getSelected() != null;
+        this.playButton.setMessage(playActionLabel());
         this.addButton.active = canModifyMusicList;
     }
 
     @Override
-    public void extractRenderState(@NotNull GuiGraphicsExtractor matrices, int mouseX, int mouseY, float delta) {
+    public boolean keyPressed(KeyEvent event) {
+        if (super.keyPressed(event)) return true;
+        if (event.key() == GLFW.GLFW_KEY_ENTER && this.searchBox.isHoveredOrFocused()) {
+            this.toggleSearch();
+            return true;
+        }
+        return this.searchBox.keyPressed(event);
+    }
+
+    @Override
+    public boolean charTyped(CharacterEvent event) {
+        return this.searchBox.charTyped(event);
+    }
+
+    @Override
+    public void extractRenderState(GuiGraphicsExtractor matrices, int mouseX, int mouseY, float delta) {
         super.extractRenderState(matrices, mouseX, mouseY, delta);
+        this.updateButtonStates();
         matrices.centeredText(this.font, this.title, this.width / 2, 5, 0xffffffff);
         this.widget.extractRenderState(matrices, mouseX, mouseY, delta);
     }

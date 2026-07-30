@@ -17,6 +17,11 @@ public class ConfigFile {
         this(new File(path));
     }
 
+    /** Absolute path of the backing file, for user-facing diagnostics. */
+    public String getPath() {
+        return this.file.getPath();
+    }
+
     public String read() {
         try {
             if ((this.file.getParentFile().exists() || this.file.getParentFile().mkdirs()) &&

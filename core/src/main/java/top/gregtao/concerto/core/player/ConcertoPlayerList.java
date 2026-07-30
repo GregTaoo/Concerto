@@ -251,6 +251,40 @@ public class ConcertoPlayerList implements Copyable<ConcertoPlayerList> {
         return true;
     }
 
+    /**
+     * Moves {@code uuid} immediately before {@code beforeUuid}. A {@code null}
+     * target moves the entry to the end of the list.
+     */
+    public boolean moveBefore(UUID uuid, UUID beforeUuid) {
+        Node moving = byUuid.get(uuid);
+        Node target = beforeUuid == null ? null : byUuid.get(beforeUuid);
+        if (moving == null || (beforeUuid != null && target == null) || moving == target) return false;
+        if (moving.next == target) return false;
+
+        Node previous = moving.prev;
+        Node next = moving.next;
+        if (previous == null) head = next;
+        else previous.next = next;
+        if (next == null) tail = previous;
+        else next.prev = previous;
+
+        if (target == null) {
+            moving.prev = tail;
+            moving.next = null;
+            if (tail == null) head = moving;
+            else tail.next = moving;
+            tail = moving;
+        } else {
+            Node targetPrevious = target.prev;
+            moving.prev = targetPrevious;
+            moving.next = target;
+            target.prev = moving;
+            if (targetPrevious == null) head = moving;
+            else targetPrevious.next = moving;
+        }
+        return true;
+    }
+
     public UUID removeFirst() {
         if (head == null) return null;
         UUID id = head.uuid;

@@ -52,7 +52,7 @@ public abstract class ApplyDraggedFileScreen extends ConcertoScreen {
                     });
                     return list;
                 }, true, () -> {
-                    if (this instanceof GeneralPlaylistScreen screen) {
+                    if (this instanceof MainPlaylistScreen screen) {
                         screen.toggleSearch();
                     }
                 });

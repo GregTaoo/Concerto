@@ -8,6 +8,7 @@ import net.minecraft.client.gui.components.PlainTextButton;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
+import top.gregtao.concerto.core.room.MusicRoom;
 
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -23,6 +24,11 @@ public class ConcertoScreen extends Screen {
     public static Component getTextWithColor(Component text, ChatFormatting color) {
         List<Component> textList = text.toFlatList(Style.EMPTY.withColor(color));
         return textList.isEmpty() ? text : textList.get(0);
+    }
+
+    protected static Component playActionLabel() {
+        return Component.translatable(MusicRoom.clientGetState() == MusicRoom.ClientState.MUSIC_AGENT
+                ? "concerto.screen.request" : "concerto.screen.play");
     }
 
     public ConcertoScreen(Component title, Screen parent) {

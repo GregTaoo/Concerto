@@ -57,6 +57,8 @@ public class ServerMusicAgent {
 
     private ScheduledFuture<?> playNextFuture;
     private Music currentMusic = null;
+    /** Monotonic start time for the track currently advertised to clients. */
+    private volatile long currentMusicStartedAtNanos = -1L;
     private UUID trackedIndex = null;
     private boolean trackedPauseState = true;
     private final AtomicBoolean isStopped = new AtomicBoolean(false);
@@ -199,10 +201,11 @@ public class ServerMusicAgent {
         this.updateState(s -> {
             ConcertoPlayerList list = s.musicList;
             UUID cur = s.currentIndex;
-            UUID nextUid = cur == null ? list.firstUuid() : list.nextUuid(cur);
-
-            if (nextUid == null && this.currentlyFreeTime.get()) {
-                nextUid = list.firstUuid();
+            UUID nextUid;
+            if (this.currentlyFreeTime.get()) {
+                nextUid = this.getFreeTimeNextUuid(list, cur);
+            } else {
+                nextUid = cur == null ? list.firstUuid() : list.nextUuid(cur);
             }
 
             if (nextUid != null) {
@@ -216,7 +219,7 @@ public class ServerMusicAgent {
                 list.clear();
                 if (!this.freeTimePlaylist.isEmpty()) {
                     this.freeTimePlaylist.forEach(list::addLast);
-                    s.setCurrentIndex(list.firstUuid(), 25);
+                    s.setCurrentIndex(this.getFreeTimeStartUuid(list), 25);
                     this.currentlyFreeTime.set(true);
                 } else {
                     s.setCurrentIndex(null, 25);
@@ -228,12 +231,23 @@ public class ServerMusicAgent {
                 MusicPlayerState.PLAYBACK_HISTORY));
     }
 
+    private UUID getFreeTimeStartUuid(ConcertoPlayerList list) {
+        return this.getFreeTimeNextUuid(list, null);
+    }
+
+    private UUID getFreeTimeNextUuid(ConcertoPlayerList list, UUID current) {
+        if (ServerConfig.INSTANCE.options.freeTimePlaylistRandom) return list.randomUuid();
+        UUID next = current == null ? list.firstUuid() : list.nextUuid(current);
+        return next == null ? list.firstUuid() : next;
+    }
+
     private void resolveAndPlayCurrentMusic() {
         UUID currentUUID = this.room.serverState.get().currentIndex;
         Music taskMusic = this.room.serverState.get().musicList.get(currentUUID);
         this.currentMusic = taskMusic;
 
         if (taskMusic == null) {
+            this.currentMusicStartedAtNanos = -1L;
             this.updateState(s -> {
                 s.resolvedMedia = null;
                 s.resolvedStartTime = 0L;
@@ -253,12 +267,16 @@ public class ServerMusicAgent {
 
                 SharedMusic resolvedShared;
                 if (ServerConfig.INSTANCE.options.musicAgentUseShared) {
-                    String path = dynamicPath.updateRawPath();
+                    DynamicPath.ResolvedPath resolvedPath = dynamicPath.resolvePath();
+                    String path = resolvedPath.path();
                     if (!Objects.equals(this.room.serverState.get().currentIndex, currentUUID)) return;
                     if (path == null) {
                         this.broadcast("concerto.agent.play.failed", taskMusic.getMeta().title(), taskMusic.getMeta().author());
                         this.playNextMusic();
                         return;
+                    }
+                    if (resolvedPath.trial()) {
+                        this.broadcast("concerto.player.trial");
                     }
                     resolvedShared = new SharedMusic(path, taskMusic.getMeta(), dynamicPath.getLastLyrics(), dynamicPath.getLastSubLyrics());
                 } else {
@@ -268,6 +286,7 @@ public class ServerMusicAgent {
                 if (!Objects.equals(this.room.serverState.get().currentIndex, currentUUID)) return;
 
                 String media = MusicJsonParsers.to(resolvedShared).toString();
+                this.currentMusicStartedAtNanos = System.nanoTime();
                 this.updateState(s -> {
                     s.resolvedMedia = media;
                     s.resolvedStartTime = 0L;
@@ -294,6 +313,22 @@ public class ServerMusicAgent {
 
     public boolean isMember(String playerName) {
         return this.getMembers().containsKey(playerName);
+    }
+
+    /**
+     * Updates the shared position before a new agent member receives its full state.
+     * The server is the only clock authority for the server-wide music agent.
+     */
+    public void refreshPlaybackTimestamp() {
+        long startedAtNanos = this.currentMusicStartedAtNanos;
+        Music music = this.currentMusic;
+        if (startedAtNanos < 0L || music == null || this.room.serverState.get().paused) return;
+
+        long elapsedMillis = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startedAtNanos);
+        long durationMillis = music.getMeta().getDuration().asMilliseconds();
+        long positionMillis = Math.max(0L, Math.min(elapsedMillis, durationMillis));
+        this.updateState(s -> s.resolvedStartTime = positionMillis,
+                List.of(MusicRoomState.RESOLVED_START_TIME));
     }
 
     public void addMusic(String playerName, Music music) {
@@ -343,6 +378,7 @@ public class ServerMusicAgent {
 
         if (this.playNextFuture != null) this.playNextFuture.cancel(true);
         this.currentMusic = null;
+        this.currentMusicStartedAtNanos = -1L;
         this.currentlyFreeTime.set(false);
 
         this.updateState(s -> {

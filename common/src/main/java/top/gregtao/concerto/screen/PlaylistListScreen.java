@@ -33,7 +33,7 @@ public class PlaylistListScreen extends ConcertoScreen {
         this.addRenderableWidget(this.playlistList);
         this.addWidget(this.playlistList);
 
-        this.addRenderableWidget(Button.builder(Component.translatable("concerto.screen.play"), button -> {
+        this.addRenderableWidget(Button.builder(Component.translatable("concerto.screen.info"), button -> {
             ConcertoListWidget<Playlist>.Entry entry = this.playlistList.getSelected();
             if (entry != null) {
                 Minecraft.getInstance().setScreen(new PlaylistPreviewScreen(entry.item, this));

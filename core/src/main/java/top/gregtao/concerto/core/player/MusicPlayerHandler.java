@@ -279,6 +279,16 @@ public class MusicPlayerHandler {
         ConcertoRunner.run(() -> this.playNext(forward));
     }
 
+    /** Restores the local playlist after leaving a room without starting playback. */
+    public void restoreLocalPlaybackPaused() {
+        this.forcePaused = true;
+        this.localRecord.set((state) -> {
+            state.setCurrentIndex(this.getNextUuid(state, 0), this.historyLimit());
+            state.paused = true;
+            return state;
+        }, List.of(MusicPlayerState.CURRENT_INDEX, MusicPlayerState.PAUSED, MusicPlayerState.PLAYBACK_HISTORY));
+    }
+
     public boolean canPlayPrevious() {
         return MusicRoom.clientGetState() != MusicRoom.ClientState.MUSIC_AGENT
                 && this.getState().get().getPreviousIndex(this.historyLimit()) != null;
@@ -345,6 +355,18 @@ public class MusicPlayerHandler {
 
     public void removeAsync(UUID uuid, Runnable callback) {
         ConcertoRunner.run(() -> this.remove(uuid), callback);
+    }
+
+    public boolean moveMusic(UUID uuid, UUID beforeUuid) {
+        if (!PlayerPermissions.canReorderMusicList()) return false;
+
+        AtomicBoolean moved = new AtomicBoolean(false);
+        this.getState().set(state -> {
+            moved.set(state.musicList.moveBefore(uuid, beforeUuid));
+            return state;
+        }, List.of(MusicPlayerState.MUSIC_LIST));
+        if (moved.get()) this.writeConfig();
+        return moved.get();
     }
 
     private UUID getNextUuid(MusicPlayerState state, int forward) {

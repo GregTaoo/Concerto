@@ -50,6 +50,8 @@ public class AudioSpectrum {
 
     private static final float SMOOTH_ATTACK = 0.20f;  // 弹起极快
     private static final float SMOOTH_DECAY = 0.03f;  // 优雅回落
+    private static final float OPENAL_SMOOTH_DECAY = 0.08f;
+    private static final float OPENAL_VISUAL_GAIN = 0.65f;
 
     private final float[] ringBuffer = new float[FFT_SIZE];
     private int ringIndex = 0;
@@ -60,6 +62,11 @@ public class AudioSpectrum {
 
     private final float[] smooth = new float[BINS];
     private long lastUpdate = 0;
+    private volatile boolean openAlProfile = false;
+
+    public void setOpenAlProfile(boolean openAlProfile) {
+        this.openAlProfile = openAlProfile;
+    }
 
     public void onAudioFrame(byte[] pcm, int offset, int length, AudioFormat format) {
         boolean float32 = AudioFormat.Encoding.PCM_FLOAT.equals(format.getEncoding())
@@ -117,7 +124,8 @@ public class AudioSpectrum {
             if (Float.isNaN(magnitude)) magnitude = 0f;
 
             if (magnitude > smooth[i]) smooth[i] += (magnitude - smooth[i]) * SMOOTH_ATTACK;
-            else smooth[i] += (magnitude - smooth[i]) * SMOOTH_DECAY;
+            else smooth[i] += (magnitude - smooth[i]) *
+                    (this.openAlProfile ? OPENAL_SMOOTH_DECAY : SMOOTH_DECAY);
         }
     }
 
@@ -145,7 +153,7 @@ public class AudioSpectrum {
             for (int j = from; j < to; j++) {
                 if (smooth[j] > maxVal) maxVal = smooth[j];
             }
-            bars[i] = maxVal;
+            bars[i] = maxVal * (this.openAlProfile ? OPENAL_VISUAL_GAIN : 1.0f);
         }
         return bars;
     }

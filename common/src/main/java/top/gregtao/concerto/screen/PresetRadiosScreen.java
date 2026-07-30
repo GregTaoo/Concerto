@@ -43,7 +43,7 @@ public class PresetRadiosScreen extends ConcertoScreen {
 
         int y = this.standardBottomActionY();
         int buttonW = (this.standardContentWidth() - STANDARD_ACTION_GAP) / 2;
-        this.addRenderableWidget(Button.builder(Component.translatable("concerto.screen.play"), button -> {
+        this.addRenderableWidget(Button.builder(Component.translatable("concerto.screen.info"), button -> {
             ConcertoListWidget<Playlist>.Entry entry = this.playlistList.getSelected();
             if (entry != null) {
                 Minecraft.getInstance().setScreen(new PlaylistPreviewScreen(entry.item, this));

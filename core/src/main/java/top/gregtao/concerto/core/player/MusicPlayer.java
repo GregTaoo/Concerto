@@ -473,11 +473,13 @@ public class MusicPlayer implements EngineListener {
 
     @Override
     public void onTrackStarted(PlaybackSession session) {
+        MusicRoom.clientApplyResolvedStartTime();
         ConcertoEvents.ON_PLAYER_START.emit();
     }
 
     @Override
     public void onAudioOutputOpened(PlaybackSession session, AudioSink sink, AudioFormat format) {
+        this.audioSpectrum.setOpenAlProfile(sink instanceof OpenALSink);
         MusicMetaData meta = session.getMusic().getMeta();
         ClientConfig.ClientConfigOptions options = ClientConfig.INSTANCE.options;
         ClientConfig.PlaybackBackend activeBackend = sink instanceof OpenALSink

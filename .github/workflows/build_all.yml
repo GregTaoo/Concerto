@@ -4,6 +4,9 @@ on:
   release:
     types: [published, edited]
 
+permissions:
+  contents: write
+
 jobs:
   generate-branches:
     name: Generate Branch Matrix
@@ -159,6 +162,26 @@ jobs:
           done
 
       # --- 分开上传: Fabric ---
+      - name: Upload build to GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+          FABRIC_FILE: ${{ steps.build-run.outputs.fabric_file }}
+          NEOFORGE_FILE: ${{ steps.build-run.outputs.neoforge_file }}
+          PAPER_FILE: ${{ steps.build-run.outputs.paper_file }}
+        run: |
+          set -euo pipefail
+          files=()
+          for file in "$FABRIC_FILE" "$NEOFORGE_FILE" "$PAPER_FILE"; do
+            if [ -n "$file" ]; then
+              files+=("$file")
+            fi
+          done
+
+          if [ ${#files[@]} -gt 0 ]; then
+            gh release upload "$RELEASE_TAG" "${files[@]}" --clobber
+          fi
+
       - name: Check Fabric on Modrinth
         id: modrinth-fabric
         if: steps.build-run.outputs.fabric_file != ''

@@ -15,7 +15,8 @@ import java.util.logging.Logger;
 
 /**
  * Bridges jFLAC to an {@link InputStream} of PCM: a decoder thread pumps decoded
- * samples through a pipe, collapsing 24-bit samples to 16-bit on the way.
+ * samples through a pipe. High-resolution integer samples are converted to
+ * float32 without losing their effective precision.
  */
 public class FlacDecoderStream extends InputStream {
 
@@ -29,7 +30,8 @@ public class FlacDecoderStream extends InputStream {
         this.pipedInputStream = new PipedInputStream(64 * 1024);
         this.pipedOutputStream = new PipedOutputStream(this.pipedInputStream);
         FLACDecoder decoder = new FLACDecoder(this.stream);
-        decoder.addPCMProcessor(new FlacBitCollapser(this.pipedOutputStream, bit));
+        decoder.addPCMProcessor(new FlacPcmProcessor(this.pipedOutputStream, bit,
+                PcmSampleConverter.isFloat32(targetFormat)));
         this.decoderThread = new Thread(() -> {
             try {
                 decoder.decode();
@@ -79,13 +81,15 @@ public class FlacDecoderStream extends InputStream {
         }
     }
 
-    private static class FlacBitCollapser implements PCMProcessor {
+    private static class FlacPcmProcessor implements PCMProcessor {
         private final PipedOutputStream outputStream;
-        private final int bit;
+        private final int bitsPerSample;
+        private final boolean floatOutput;
 
-        public FlacBitCollapser(PipedOutputStream outputStream, int bit) {
+        public FlacPcmProcessor(PipedOutputStream outputStream, int bitsPerSample, boolean floatOutput) {
             this.outputStream = outputStream;
-            this.bit = bit;
+            this.bitsPerSample = bitsPerSample;
+            this.floatOutput = floatOutput;
         }
 
         @Override
@@ -95,17 +99,27 @@ public class FlacDecoderStream extends InputStream {
         @Override
         public void processPCM(ByteData byteData) {
             try {
-                if (this.bit == 24) {
+                if (this.floatOutput) {
                     byte[] pcmData = byteData.getData();
                     int len = byteData.getLen();
-                    // Convert 24-bit little-endian PCM to 16-bit by dropping the low byte
-                    byte[] bytes = new byte[(len / 3) * 2];
+                    int bytesPerSample = (this.bitsPerSample + 7) / 8;
+                    byte[] bytes = new byte[(len / bytesPerSample) * Float.BYTES];
                     int k = 0;
-                    for (int i = 0; i + 2 < len; i += 3) {
-                        int sample = ((pcmData[i + 2] & 0xFF) << 16) | ((pcmData[i + 1] & 0xFF) << 8) | (pcmData[i] & 0xFF);
-                        short sample16 = (short) (sample >> 8);
-                        bytes[k++] = (byte) (sample16 & 0xFF);
-                        bytes[k++] = (byte) ((sample16 >> 8) & 0xFF);
+                    int valueMask = (1 << this.bitsPerSample) - 1;
+                    int signBit = 1 << (this.bitsPerSample - 1);
+                    float scale = (float) Math.scalb(1.0, this.bitsPerSample - 1);
+                    for (int i = 0; i + bytesPerSample <= len; i += bytesPerSample) {
+                        int sample = 0;
+                        for (int byteIndex = 0; byteIndex < bytesPerSample; byteIndex++) {
+                            sample |= (pcmData[i + byteIndex] & 0xFF) << (byteIndex * 8);
+                        }
+                        sample &= valueMask;
+                        if ((sample & signBit) != 0) sample -= 1 << this.bitsPerSample;
+                        int floatBits = Float.floatToRawIntBits(sample / scale);
+                        bytes[k++] = (byte) floatBits;
+                        bytes[k++] = (byte) (floatBits >> 8);
+                        bytes[k++] = (byte) (floatBits >> 16);
+                        bytes[k++] = (byte) (floatBits >> 24);
                     }
                     this.outputStream.write(bytes, 0, bytes.length);
                 } else {

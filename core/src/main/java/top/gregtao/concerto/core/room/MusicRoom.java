@@ -72,6 +72,7 @@ public class MusicRoom {
             c.currentIndex = this.currentIndex;
             c.orderType = this.orderType;
             c.paused = this.paused;
+            c.playbackHistory = new ArrayList<>(this.playbackHistory);
             c.resolvedMedia = this.resolvedMedia;
             c.resolvedStartTime = this.resolvedStartTime;
             c.errorMessage = this.errorMessage;
@@ -106,7 +107,7 @@ public class MusicRoom {
     public final UUID uuid;
     public ServerRemoteRecord<MusicPlayerState> serverState;
     public ClientRemoteRecord<MusicPlayerState> clientState;
-    public int permission = 0;
+    public volatile int permission = 0;
     public final ServerNetworkBridge serverBridge;
     public final ClientNetworkBridge clientBridge;
 
@@ -174,9 +175,23 @@ public class MusicRoom {
     public void serverOnQuit(String name) {
         this.serverState.set(state -> {
             MusicRoomState s = (MusicRoomState) state;
+            boolean ownerLeaving = s.owner.equals(name);
             s.members.remove(name);
+            if (ownerLeaving && !s.members.isEmpty()) {
+                String successor = s.members.entrySet().stream()
+                        .min(Comparator
+                                .comparingInt((Map.Entry<String, Integer> entry) -> entry.getValue() >= 2 ? 0 : 1)
+                                .thenComparing(Map.Entry::getKey))
+                        .map(Map.Entry::getKey)
+                        .orElseThrow();
+                s.owner = successor;
+                s.members.put(successor, 3);
+            }
             return s;
-        }, List.of(MusicRoomState.MEMBERS));
+        }, List.of(MusicRoomState.MEMBERS, MusicRoomState.OWNER));
+        if (this.serverGetMembers().isEmpty()) {
+            ROOMS.remove(this.uuid, this);
+        }
     }
 
     public void serverOnSetOp(String name, String target) {
@@ -208,30 +223,13 @@ public class MusicRoom {
         }, List.of(MusicRoomState.MEMBERS));
     }
 
-    /**
-     * Server-side disconnect cleanup, shared by the vanilla mixin and Paper.
-     * When the owner leaves, the room dies and every remaining member is told
-     * (they used to keep a dead CLIENT_ROOM forever); a plain member is just
-     * removed from each room they were in.
-     */
+    /** Server-side disconnect cleanup, shared by the vanilla mixin and Paper. */
     public static void serverOnPlayerDisconnect(String name, ServerNetworkBridge bridge) {
-        List<UUID> ownedRooms = new ArrayList<>();
         ROOMS.forEach((uuid, room) -> {
-            if (room.serverGetOwner().equals(name)) {
-                ownedRooms.add(uuid);
-            } else if (room.serverGetMembers().containsKey(name)) {
+            if (room.serverGetMembers().containsKey(name)) {
                 room.serverOnQuit(name);
             }
         });
-        for (UUID uuid : ownedRooms) {
-            MusicRoom room = ROOMS.remove(uuid);
-            if (room == null) continue;
-            room.serverGetMembers().keySet().forEach(member -> {
-                if (member.equals(name)) return;
-                bridge.sendMessage(member, "concerto.room.remove", uuid.toString());
-                bridge.sendRoomCommand(member, Command.REMOVE, "");
-            });
-        }
     }
 
     public Map<String, Integer> serverGetMembers() {
@@ -269,6 +267,9 @@ public class MusicRoom {
                             break;
                         }
                         room.serverOnJoin(sender);
+                        if (ServerMusicAgent.isServerAgent(uuid)) {
+                            ServerMusicAgent.INSTANCE.refreshPlaybackTimestamp();
+                        }
                         bridge.sendRoomCommand(sender, Command.JOIN, room.uuid.toString());
                         bridge.sendRoomCommand(sender, Command.SYNC, room.serverState.buildFull().toString());
                         if (ServerMusicAgent.isServerAgent(uuid)) {
@@ -446,11 +447,7 @@ public class MusicRoom {
     public static void clientQuit(ClientNetworkBridge bridge) {
         MusicRoom room = CLIENT_ROOM;
         if (room == null) return;
-        if (room.permission == 3) {
-            clientRemove(bridge);
-        } else {
-            bridge.sendRoomCommand(room.uuid.toString(), Command.QUIT, "");
-        }
+        bridge.sendRoomCommand(room.uuid.toString(), Command.QUIT, "");
     }
 
     public static void clientSetOp(String target, ClientNetworkBridge bridge) {
@@ -479,8 +476,8 @@ public class MusicRoom {
                 case REMOVE -> {
                     MusicRoom room = CLIENT_ROOM;
                     if (room != null) {
-                        MusicPlayerHandler.INSTANCE.playNextAsync(0);
                         CLIENT_ROOM = null;
+                        MusicPlayerHandler.INSTANCE.restoreLocalPlaybackPaused();
                     }
                 }
                 case QUIT -> {
@@ -488,8 +485,8 @@ public class MusicRoom {
                     if (room != null) {
                         UUID uuid = UUID.fromString(payload);
                         if (room.uuid.equals(uuid)) {
-                            MusicPlayerHandler.INSTANCE.playNextAsync(0);
                             CLIENT_ROOM = null;
+                            MusicPlayerHandler.INSTANCE.restoreLocalPlaybackPaused();
                         }
                     }
                 }
@@ -518,10 +515,13 @@ public class MusicRoom {
     // Call this if implementing a client-side room
     protected void registerClientListeners(ClientRemoteRecord<MusicPlayerState> record) {
         record.addListener(MusicRoomState.MEMBERS, (o, state, oldVal, newVal) -> {
-            MusicRoomState rs = (MusicRoomState) state;
-            String name = Concerto.getCoreBridge().getClientPlayerName();
-            if (name != null) {
-                this.permission = rs.members.getOrDefault(name, 0);
+            this.refreshClientPermission((MusicRoomState) state);
+
+            // The owner is the room clock authority. When membership changes,
+            // publish one fresh position for a joining listener; operators only
+            // publish positions when they explicitly seek.
+            if (this.permission == 3 && MusicPlayer.INSTANCE != null && MusicPlayer.INSTANCE.started) {
+                clientPublishCurrentSeek(MusicPlayer.INSTANCE.getInterpolatedCurrentTimeMilliseconds());
             }
         });
 
@@ -544,9 +544,9 @@ public class MusicRoom {
             if (!Objects.equals(target, current)) {
                 UUID finalTarget = target;
                 o.set((s) -> {
-                    s.currentIndex = finalTarget;
+                    s.setCurrentIndex(finalTarget, 25);
                     return s;
-                }, List.of(MusicPlayerState.CURRENT_INDEX));
+                }, List.of(MusicPlayerState.CURRENT_INDEX, MusicPlayerState.PLAYBACK_HISTORY));
             }
         });
 
@@ -594,14 +594,7 @@ public class MusicRoom {
         });
 
         record.addListener(MusicRoomState.RESOLVED_START_TIME, (o, playerState, oldVal, newVal) -> {
-            MusicRoomState state = (MusicRoomState) playerState;
-            if (state.resolvedMedia == null || !MusicPlayer.INSTANCE.started) {
-                return;
-            }
-            long currentTime = MusicPlayer.INSTANCE.getInterpolatedCurrentTimeMilliseconds();
-            if (Math.abs(currentTime - state.resolvedStartTime) > 750L) {
-                MusicPlayer.INSTANCE.seekToMillisecondsAsync(state.resolvedStartTime, false);
-            }
+            clientApplyResolvedStartTime((MusicRoomState) playerState);
         });
 
         record.addListener(MusicRoomState.ERROR_MESSAGE, (o, playerState, oldVal, newVal) -> {
@@ -617,10 +610,6 @@ public class MusicRoom {
             if (MusicPlayerHandler.INSTANCE != null && MusicPlayerHandler.INSTANCE.isForcePaused() && !state.paused) {
                 return;
             }
-            if (!Objects.equals(oldVal, newVal)) {
-                Concerto.getCoreBridge().sendTranslatableToClientPlayer(
-                        state.paused ? "concerto.room.paused" : "concerto.room.resumed", true);
-            }
             // The room state is authoritative; the engine pause is idempotent,
             // so apply it even while a track is still loading.
             if (state.paused) {
@@ -634,6 +623,26 @@ public class MusicRoom {
                 ConcertoEvents.ON_PLAYER_ORDER_UPDATE.emit(state.orderType));
     }
 
+    private void refreshClientPermission(MusicRoomState state) {
+        String name = Concerto.getCoreBridge().getClientPlayerName();
+        if (name == null) return;
+        this.permission = state.members.getOrDefault(name, 0);
+    }
+
+    /** Applies a timestamp that may have arrived while the resolved track was loading. */
+    public static void clientApplyResolvedStartTime() {
+        MusicRoom room = CLIENT_ROOM;
+        if (room != null) clientApplyResolvedStartTime((MusicRoomState) room.clientState.get());
+    }
+
+    private static void clientApplyResolvedStartTime(MusicRoomState state) {
+        if (state.resolvedMedia == null || !MusicPlayer.INSTANCE.started) return;
+        long currentTime = MusicPlayer.INSTANCE.getInterpolatedCurrentTimeMilliseconds();
+        if (Math.abs(currentTime - state.resolvedStartTime) > 750L) {
+            MusicPlayer.INSTANCE.seekToMillisecondsAsync(state.resolvedStartTime, false);
+        }
+    }
+
     protected void clientOnResolvedMediaUpdate(MusicRoomState state) {
         if (state.resolvedMedia == null) {
             if (MusicPlayer.INSTANCE.started) {
@@ -645,8 +654,6 @@ public class MusicRoom {
                 if (resolved instanceof SharedMusic sharedMusic) {
                     sharedMusic.startTime = state.resolvedStartTime;
                 }
-                Concerto.getCoreBridge().sendTranslatableToClientPlayer(
-                        "concerto.room.now_playing", true, resolved.getMeta().title());
                 MusicPlayer.INSTANCE.resetInfo();
                 MusicPlayer.INSTANCE.internalPlayMusic(resolved);
             } catch (Exception e) {

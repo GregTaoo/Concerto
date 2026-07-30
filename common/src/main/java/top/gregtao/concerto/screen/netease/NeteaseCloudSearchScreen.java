@@ -17,7 +17,9 @@ import top.gregtao.concerto.core.music.list.NeteaseCloudPlaylist;
 import top.gregtao.concerto.core.music.list.Playlist;
 import top.gregtao.concerto.core.player.MusicPlayerHandler;
 import top.gregtao.concerto.core.player.PlayerPermissions;
+import top.gregtao.concerto.core.room.MusicRoom;
 import top.gregtao.concerto.core.util.ConcertoRunner;
+import top.gregtao.concerto.network.room.ServerMusicAgentManager;
 import top.gregtao.concerto.screen.MusicInfoScreen;
 import top.gregtao.concerto.screen.PageScreen;
 import top.gregtao.concerto.screen.PlaylistPreviewScreen;
@@ -102,7 +104,11 @@ public class NeteaseCloudSearchScreen extends PageScreen {
     private void updateActionButtons() {
         boolean canModifyMusicList = PlayerPermissions.canModifyMusicList();
         if (this.playButton != null) {
-            this.playButton.active = canModifyMusicList;
+            boolean requestInAgent = this.searchType == SearchType.MUSIC
+                    && MusicRoom.clientGetState() == MusicRoom.ClientState.MUSIC_AGENT;
+            this.playButton.active = canModifyMusicList || requestInAgent;
+            this.playButton.setMessage(Component.translatable(requestInAgent
+                    ? "concerto.screen.request" : "concerto.screen.play"));
         }
         if (this.addButton != null) {
             this.addButton.active = canModifyMusicList;
@@ -117,6 +123,8 @@ public class NeteaseCloudSearchScreen extends PageScreen {
     @Override
     protected void init() {
         super.init();
+        int actionX = this.actionBarX();
+        int actionWidth = (this.actionBarWidth() - STANDARD_ACTION_GAP * 2) / 3;
         this.musicList = this.initListsWidget();
         this.playlistList = this.initListsWidget();
         this.albumList = this.initListsWidget();
@@ -127,7 +135,10 @@ public class NeteaseCloudSearchScreen extends PageScreen {
                 SearchType.ALBUM, this.albumList
         );
 
-        this.searchBox = new EditBox(this.font, this.width / 2 - 155, 17, 200, 20,
+        int searchX = this.standardContentX();
+        int searchButtonX = this.standardContentRight() - 52;
+        int searchTypeX = searchButtonX - STANDARD_ACTION_GAP - 65;
+        this.searchBox = new EditBox(this.font, searchX, 17, searchTypeX - STANDARD_ACTION_GAP - searchX, 20,
                 this.searchBox, Component.translatable("concerto.screen.search"));
         this.addWidget(this.searchBox);
         this.addRenderableWidget(this.searchBox);
@@ -138,17 +149,18 @@ public class NeteaseCloudSearchScreen extends PageScreen {
             if (entry != null) {
                 Minecraft.getInstance().setScreen(new MusicInfoScreen(entry.item, this));
             }
-        }).pos(this.width / 2 + 120, this.height - 30).size(50, 20).build();
+        }).pos(actionX + (actionWidth + STANDARD_ACTION_GAP) * 2, this.bottomBarY())
+                .size(this.actionBarWidth() - (actionWidth + STANDARD_ACTION_GAP) * 2, 20).build();
         this.addRenderableWidget(this.infoButton);
 
         this.updateSearchType(this.searchType);
 
         this.addRenderableWidget(Button.builder(Component.translatable("concerto.screen.search"),
-                button -> this.toggleSearch()).pos(this.width / 2 + 50, 17).size(52, 20).build());
+                button -> this.toggleSearch()).pos(searchButtonX, 17).size(52, 20).build());
 
         this.addRenderableWidget(CycleButton.builder((SearchType type) -> Component.literal(type.getName()))
                 .withValues(SearchType.values()).withInitialValue(this.searchType).create(
-                        this.width / 2 + 105, 17, 65, 20, Component.translatable("concerto.search_type"),
+                        searchTypeX, 17, 65, 20, Component.translatable("concerto.search_type"),
                         (widget, type) -> this.updateSearchType(type)));
 
         this.playButton = Button.builder(Component.translatable("concerto.screen.play"), button -> {
@@ -156,7 +168,11 @@ public class NeteaseCloudSearchScreen extends PageScreen {
                 case MUSIC: {
                     ConcertoListWidget<Music>.Entry entry = this.musicList.getSelected();
                     if (entry != null) {
-                        MusicPlayerHandler.INSTANCE.addMusicHereAsync(entry.item, true);
+                        if (MusicRoom.clientGetState() == MusicRoom.ClientState.MUSIC_AGENT) {
+                            ServerMusicAgentManager.clientAddMusic(entry.item);
+                        } else {
+                            MusicPlayerHandler.INSTANCE.addMusicHereAsync(entry.item, true);
+                        }
                     }
                 }
                 case PLAYLIST: {
@@ -172,7 +188,7 @@ public class NeteaseCloudSearchScreen extends PageScreen {
                     }
                 }
             }
-        }).pos(this.width / 2 + 65, this.height - 30).size(50, 20).build();
+        }).pos(actionX + actionWidth + STANDARD_ACTION_GAP, this.bottomBarY()).size(actionWidth, 20).build();
         this.addRenderableWidget(this.playButton);
 
         this.addButton = Button.builder(Component.translatable("concerto.screen.add"), button -> {
@@ -196,7 +212,7 @@ public class NeteaseCloudSearchScreen extends PageScreen {
                     }
                 }
             }
-        }).pos(this.width / 2 + 10, this.height - 30).size(50, 20).build();
+        }).pos(actionX, this.bottomBarY()).size(actionWidth, 20).build();
         this.addRenderableWidget(this.addButton);
 
         this.updateActionButtons();

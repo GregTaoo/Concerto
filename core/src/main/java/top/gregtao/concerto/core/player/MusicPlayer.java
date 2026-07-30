@@ -23,13 +23,17 @@ import top.gregtao.concerto.core.util.ConcertoRunner;
 import top.gregtao.concerto.core.util.FileUtil;
 import top.gregtao.concerto.core.util.Pair;
 
+import javax.sound.sampled.AudioFormat;
+import javax.sound.sampled.LineUnavailableException;
 import java.io.File;
 import java.io.IOException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.FileHandler;
+import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
@@ -72,6 +76,7 @@ public class MusicPlayer implements EngineListener {
     // format change) can't silently switch backends; the option label promises
     // "takes effect next track"
     private volatile ClientConfig.PlaybackBackend sessionBackend = null;
+    private volatile float effectiveGain = 1f;
 
     public final AudioSpectrum audioSpectrum = new AudioSpectrum();
 
@@ -120,6 +125,48 @@ public class MusicPlayer implements EngineListener {
         this.engine.close();
     }
 
+    private static final AtomicBoolean GLOBAL_SHUTDOWN = new AtomicBoolean(false);
+
+    /**
+     * Game-quit hook. Minecraft's quit path releases resources via
+     * {@code Minecraft.close()} without necessarily reaching {@code System.exit},
+     * so everything Concerto holds must be dropped here: the playback engine
+     * (OpenAL device / JavaSound line, session, spool file), the shared runner
+     * pool and the player log file handle.
+     *
+     * <p>Idempotent, and never throws — it runs inside the game's shutdown path.
+     * {@link #resetInstance()} keeps using the private per-instance
+     * {@link #shutdown()} and is unaffected.
+     */
+    public static void shutdownAll() {
+        if (!GLOBAL_SHUTDOWN.compareAndSet(false, true)) return;
+        try {
+            if (INSTANCE != null) INSTANCE.shutdown();
+        } catch (Throwable t) {
+            safeLogShutdownError("player engine", t);
+        }
+        try {
+            ConcertoRunner.shutdown();
+        } catch (Throwable t) {
+            safeLogShutdownError("runner pool", t);
+        }
+        try {
+            for (Handler handler : PLAYER_LOGGER.getHandlers()) {
+                handler.close(); // releases Concerto/player.log (and its .lck)
+            }
+        } catch (Throwable t) {
+            safeLogShutdownError("log handler", t);
+        }
+    }
+
+    private static void safeLogShutdownError(String what, Throwable t) {
+        try {
+            Concerto.getLogger().warn("Error while shutting down Concerto {}", what, t);
+        } catch (Throwable ignored) {
+            // never let the quit hook throw
+        }
+    }
+
     // ---- Play requests ----
 
     public synchronized void internalPlayMusic(Music music) {
@@ -162,6 +209,10 @@ public class MusicPlayer implements EngineListener {
                 session.close();
                 return;
             }
+            if (this.currentMusic != music) {
+                this.currentLyrics = this.currentSubLyrics = null;
+                this.currentSubLyricsMapping = new int[0];
+            }
             this.currentMusic = music;
             this.isPlayingTemp = temp;
             this.started = true;
@@ -177,7 +228,6 @@ public class MusicPlayer implements EngineListener {
             if (MusicPlayerHandler.INSTANCE.isPaused()) {
                 this.engine.setPaused(true);
             }
-            Concerto.getLogger().info("Start playing music {} - {}", music.getMeta().title(), music.getMeta().author());
             ConcertoEvents.ON_NEW_MUSIC_STARTED.emit(music);
         } catch (Exception e) {
             this.handlePlaybackFailure(music, e);
@@ -259,6 +309,7 @@ public class MusicPlayer implements EngineListener {
 
     public void setGain(double gain) {
         float clamped = (float) Math.max(0.0, Math.min(1.0, gain));
+        this.effectiveGain = clamped;
         this.engine.setGain(clamped);
     }
 
@@ -362,18 +413,16 @@ public class MusicPlayer implements EngineListener {
     public void initMusicStatus() {
         if (this.currentMusic == null) return;
         this.currentMeta = this.currentMusic.getMeta();
-        // Always drop the previous track's lyrics first: getLyrics() returning
-        // null used to leave them in place, so a lyricless track kept scrolling
-        // the previous track's lines on the HUD
-        this.currentLyrics = this.currentSubLyrics = null;
-        try {
-            Pair<Lyrics, Lyrics> lyrics = this.currentMusic.getLyrics();
-            if (lyrics != null) {
-                this.currentLyrics = (lyrics.getFirst() == null || lyrics.getFirst().isEmpty()) ? null : lyrics.getFirst();
-                this.currentSubLyrics = (lyrics.getSecond() == null || lyrics.getSecond().isEmpty()) ? null : lyrics.getSecond();
+        if (this.currentLyrics == null && this.currentSubLyrics == null) {
+            try {
+                Pair<Lyrics, Lyrics> lyrics = this.currentMusic.getLyrics();
+                if (lyrics != null) {
+                    this.currentLyrics = (lyrics.getFirst() == null || lyrics.getFirst().isEmpty()) ? null : lyrics.getFirst();
+                    this.currentSubLyrics = (lyrics.getSecond() == null || lyrics.getSecond().isEmpty()) ? null : lyrics.getSecond();
+                }
+            } catch (Exception e) {
+                this.currentLyrics = this.currentSubLyrics = null;
             }
-        } catch (Exception e) {
-            this.currentLyrics = this.currentSubLyrics = null;
         }
         this.currentSubLyricsMapping = Lyrics.createTimestampMapping(this.currentLyrics, this.currentSubLyrics, 500);
         this.displayTexts[0] = this.displayTexts[1] = this.displayTexts[2] = "";
@@ -424,7 +473,57 @@ public class MusicPlayer implements EngineListener {
 
     @Override
     public void onTrackStarted(PlaybackSession session) {
+        MusicRoom.clientApplyResolvedStartTime();
         ConcertoEvents.ON_PLAYER_START.emit();
+    }
+
+    @Override
+    public void onAudioOutputOpened(PlaybackSession session, AudioSink sink, AudioFormat format) {
+        this.audioSpectrum.setOpenAlProfile(sink instanceof OpenALSink);
+        MusicMetaData meta = session.getMusic().getMeta();
+        ClientConfig.ClientConfigOptions options = ClientConfig.INSTANCE.options;
+        ClientConfig.PlaybackBackend activeBackend = sink instanceof OpenALSink
+                ? ClientConfig.PlaybackBackend.OPENAL : ClientConfig.PlaybackBackend.JAVASOUND;
+        Concerto.getLogger().info(
+                "Start playing music {} - {} | source={} | container={} | suffix={} | backend={} (configured={}) | "
+                        + "output={} | pcm={} {}-bit {} channel(s), {} Hz, frameSize={}, {} endian | "
+                        + "volume=config={}, followsMaster={}, effective={}",
+                meta.title(), meta.author(), meta.getSource(), session.getFormat(), session.getSuffixHint(),
+                activeBackend, options.playbackBackend, sink.getOutputDescription(), format.getEncoding(),
+                format.getSampleSizeInBits(), format.getChannels(), format.getSampleRate(), format.getFrameSize(),
+                format.isBigEndian() ? "big" : "little", options.playerVolume,
+                options.playerVolumeFollowsMaster, this.effectiveGain);
+    }
+
+    /**
+     * JavaSound is simply absent or broken on some platforms (Android/FCL, or
+     * ALSA grabbing a nonexistent device): when opening the JavaSound line
+     * fails, retry the same play request on the OpenAL sink. The fallback
+     * becomes the session's pinned backend so a mid-track sink rebuild stays on
+     * OpenAL; the config file is deliberately left untouched, and the next
+     * track starts again from the configured backend.
+     */
+    @Override
+    public AudioSink onSinkOpenFailed(AudioSink failedSink, Exception failure) {
+        if (!(failedSink instanceof JavaSoundSink) || !isNoLineFailure(failure)) return null;
+        Concerto.getLogger().warn(
+                "JavaSound could not open an audio line ({}); retrying this track with the OpenAL backend", failure.toString());
+        this.sessionBackend = ClientConfig.PlaybackBackend.OPENAL;
+        return new OpenALSink();
+    }
+
+    /**
+     * {@link LineUnavailableException} is the documented "no line" failure;
+     * {@link IllegalArgumentException} is what {@code AudioSystem.getLine}
+     * throws when no installed mixer supports the line at all (the headless /
+     * Android case).
+     */
+    private static boolean isNoLineFailure(Throwable failure) {
+        for (Throwable t = failure; t != null; t = t.getCause()) {
+            if (t instanceof LineUnavailableException || t instanceof IllegalArgumentException) return true;
+            if (t == t.getCause()) break;
+        }
+        return false;
     }
 
     @Override
@@ -473,9 +572,7 @@ public class MusicPlayer implements EngineListener {
     }
 
     @Override
-    public void onPcm(byte[] data, int offset, int length) {
-        if (offset == 0) {
-            this.audioSpectrum.onAudioFrame(data);
-        }
+    public void onPcm(byte[] data, int offset, int length, AudioFormat format) {
+        this.audioSpectrum.onAudioFrame(data, offset, length, format);
     }
 }

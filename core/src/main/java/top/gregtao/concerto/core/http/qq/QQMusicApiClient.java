@@ -82,6 +82,18 @@ public class QQMusicApiClient extends HttpApiClient {
 
     public Pair<String, String> getMusicLink(String mid, String mediaMid) {
         try {
+            // Link (incl. VIP) resolution happens in THIS process: a dedicated or
+            // integrated server needs its own cookie file, the client's login does
+            // not carry over. Say so up front instead of letting QQ answer with a
+            // confusing rejection (e.g. "Cookie长度不正确").
+            boolean cookieMissing = this.isCookieMissingOrBlank();
+            if (cookieMissing) {
+                Concerto.getLogger().warn(
+                        "No QQ Music cookie is configured on this side: '{}' is missing or empty. "
+                                + "Music links are resolved by this process, so log in to QQ Music here "
+                                + "or copy a valid cookie file to that path (VIP tracks will fail without it).",
+                        this.getCookieFile().getPath());
+            }
             String uin = this.getQQUin(), guid = this.generateGuid();
             for (QQMusic.Level level : QQMusic.Level.values()) {
                 String url = "https://u.y.qq.com/cgi-bin/musicu.fcg?-=getplaysongvkey&format=json&loginUin=" + uin + "&hostUin=0&inCharset=utf-8&needNewCode=0&outCharset=utf-8&platform=yqq.json&data=%7B%22req_0%22%3A%7B%22module%22%3A%22vkey.GetVkeyServer%22%2C%22method%22%3A%22CgiGetVkey%22%2C%22param%22%3A%7B%22filename%22%3A%5B%22" +
@@ -97,7 +109,13 @@ public class QQMusicApiClient extends HttpApiClient {
                     }
                 }
             }
-            Concerto.getLogger().warn("Got empty link for QQ Music {}", mid);
+            if (cookieMissing) {
+                Concerto.getLogger().warn("Got empty link for QQ Music {}: no cookie configured on this side (see the warning above)", mid);
+            } else {
+                Concerto.getLogger().warn("Got empty link for QQ Music {}: the cookie in '{}' was sent but QQ returned no playable link "
+                        + "(expired/invalid cookie — e.g. QQ's \"Cookie长度不正确\" — or the account lacks VIP for this track)",
+                        mid, this.getCookieFile().getPath());
+            }
             return Pair.of("", "");
         } catch (IOException | URISyntaxException e) {
             Concerto.getLogger().error("Error getting music link", e);

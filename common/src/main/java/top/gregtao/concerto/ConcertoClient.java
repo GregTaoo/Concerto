@@ -8,6 +8,7 @@ import net.minecraft.sounds.SoundSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import top.gregtao.concerto.bridge.ConcertoEventListeners;
+import top.gregtao.concerto.bridge.CoreBridgeImpl;
 import top.gregtao.concerto.bridge.MinecraftClientBridge;
 import top.gregtao.concerto.command.MusicCommand;
 import top.gregtao.concerto.command.MusicRoomCommand;
@@ -64,6 +65,7 @@ public class ConcertoClient {
 
     public static void initializeClient(MinecraftClientBridge bridge) {
         BRIDGE = bridge;
+        CoreBridgeImpl.enableClientAccess();
 
         ConcertoEventListeners.registerClientListeners();
 

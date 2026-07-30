@@ -3,6 +3,7 @@ package top.gregtao.concerto.core.player.engine;
 import top.gregtao.concerto.core.player.seek.ContainerFormat;
 import top.gregtao.concerto.core.player.seek.SeekIndex;
 import top.gregtao.concerto.core.player.seek.SeekIndexBuilder;
+import top.gregtao.concerto.core.player.seek.SeekMode;
 import top.gregtao.concerto.core.player.source.AudioByteSource;
 
 import javax.sound.sampled.AudioFormat;
@@ -22,7 +23,6 @@ import java.util.logging.Logger;
  * playback state (session, decoder, sink, clock); the public API only posts
  * commands into a queue and reads volatile snapshots, so there is no shared
  * mutable state and no cross-thread teardown.
- *
  * Seeking never tears the engine thread down: the decode chain is reopened at a
  * {@link SeekIndex} point, the residual up to the exact target is decoded and
  * discarded, the sink is flushed, and the clock base is reset.
@@ -34,10 +34,6 @@ public class PlaybackEngine implements Closeable {
 
     /** Playback position published by the engine thread after every chunk. */
     public record PositionSnapshot(long positionMillis, long atNanos, boolean advancing) {
-        public long interpolate() {
-            if (!this.advancing) return this.positionMillis;
-            return this.positionMillis + (System.nanoTime() - this.atNanos) / 1_000_000L;
-        }
     }
 
     private interface Command {}
@@ -179,7 +175,7 @@ public class PlaybackEngine implements Closeable {
         return this.session != null && !this.trackEnded && (this.pendingSeekMillis >= 0 || !this.paused);
     }
 
-    private void handle(Command command) throws Exception {
+    private void handle(Command command) {
         if (command instanceof LoadCmd load) {
             this.handleLoad(load.session());
         } else if (command instanceof SeekCmd seek) {
@@ -246,6 +242,7 @@ public class PlaybackEngine implements Closeable {
                 }
             });
         }
+        this.updateDownloadWindow(0, 0);
         if (this.session.getStartMillis() > 0) {
             if (this.session.isSeekable()) {
                 this.pendingSeekMillis = this.session.getStartMillis();
@@ -259,6 +256,14 @@ public class PlaybackEngine implements Closeable {
     }
 
     private void tryApplyPendingSeek() throws Exception {
+        switch (this.session.getSeekMode()) {
+            case INDEXED -> this.applyIndexedSeek();
+            case RESTART_FROM_START -> this.applyRestartSeek(this.pendingSeekMillis);
+            case UNSUPPORTED -> this.pendingSeekMillis = -1;
+        }
+    }
+
+    private void applyIndexedSeek() throws Exception {
         SeekIndex index = this.session.getSeekIndex();
         if (index == null) {
             this.pendingSeekMillis = -1;
@@ -268,6 +273,9 @@ public class PlaybackEngine implements Closeable {
         long duration = index.getDurationMillis();
         if (duration > 0) target = Math.min(target, duration);
         if (target > index.getCoveredToMillis() && !index.isComplete()) {
+            // Use the duration-derived byte estimate to let the indexer reach a
+            // requested seek without resuming an unrestricted full download.
+            this.session.getByteSource().setPlaybackWindow(0, target, duration);
             this.buffering = true;
             Thread.sleep(WAIT_SLICE_MILLIS); // wait for the indexer/download to advance
             return;
@@ -285,6 +293,22 @@ public class PlaybackEngine implements Closeable {
         this.pendingOpenOffset = point.byteOffset();
         this.pendingOpenPrefix = index.getPrefixBytes();
         this.pendingDiscardMillis = target - point.timeMillis();
+        this.completeSeek(target);
+    }
+
+    /** Reopens a decoder that requires its container initialization at byte zero. */
+    private void applyRestartSeek(long target) throws IOException {
+        this.closeDecoded();
+        if (this.sink != null && this.sink.isOpen()) {
+            this.sink.flush();
+        }
+        this.pendingOpenOffset = 0;
+        this.pendingOpenPrefix = null;
+        this.pendingDiscardMillis = target;
+        this.completeSeek(target);
+    }
+
+    private void completeSeek(long target) {
         this.clockBaseMillis = target;
         boolean publish = this.pendingSeekPublish;
         this.pendingSeekMillis = -1;
@@ -298,7 +322,8 @@ public class PlaybackEngine implements Closeable {
             return; // still buffering
         }
         AudioByteSource source = this.session.getByteSource();
-        long rawPosition = this.decoded.rawStream.position();
+        long rawPosition = this.decoded.getDownloadPosition();
+        this.updateDownloadWindow(rawPosition, this.snapshot.positionMillis());
         if (!source.awaitAvailable(rawPosition, PUMP_CHUNK * 2, WAIT_SLICE_MILLIS)) {
             this.buffering = true;
             return;
@@ -317,7 +342,7 @@ public class PlaybackEngine implements Closeable {
             if (drop >= read) return;
             offset = drop;
         }
-        this.listener.onPcm(this.pumpBuffer, offset, read - offset);
+        this.listener.onPcm(this.pumpBuffer, offset, read - offset, this.decoded.pcmFormat);
         this.sink.write(this.pumpBuffer, offset, read - offset);
         this.updateSnapshot();
         this.listener.onPositionUpdate(this.snapshot.positionMillis());
@@ -325,6 +350,7 @@ public class PlaybackEngine implements Closeable {
 
     private boolean openPendingDecode() throws Exception {
         AudioByteSource source = this.session.getByteSource();
+        this.updateDownloadWindow(this.pendingOpenOffset, this.clockBaseMillis);
         // Enough headroom for the SPI probe to sniff the container without blocking long
         if (!source.awaitAvailable(this.pendingOpenOffset, 64 * 1024, WAIT_SLICE_MILLIS)) {
             this.buffering = true;
@@ -344,10 +370,26 @@ public class PlaybackEngine implements Closeable {
             this.sink = this.sinkFactory.get();
         }
         if (!this.sink.isOpen()) {
-            this.sink.open(format);
+            try {
+                this.sink.open(format);
+            } catch (Exception openFailure) {
+                // Sink-level failure (e.g. JavaSound has no output line on this
+                // platform): give the listener one chance to swap in a fallback
+                // sink and continue the same session. Anything else propagates
+                // into the generic failure handling.
+                AudioSink fallback = this.listener.onSinkOpenFailed(this.sink, openFailure);
+                if (fallback == null) throw openFailure;
+                try {
+                    this.sink.close();
+                } catch (Exception ignored) {
+                }
+                this.sink = fallback;
+                this.sink.open(format);
+            }
             this.sinkFormat = format;
             this.sink.setGain(this.gain);
             if (this.paused) this.sink.pause();
+            this.listener.onAudioOutputOpened(this.session, this.sink, format);
         }
         return true;
     }
@@ -355,6 +397,13 @@ public class PlaybackEngine implements Closeable {
     private static long millisToBytes(long millis, AudioFormat format) {
         long frames = (long) (millis * format.getSampleRate() / 1000.0);
         return frames * format.getFrameSize();
+    }
+
+    private void updateDownloadWindow(long bytePosition, long positionMillis) {
+        if (this.session == null) return;
+        SeekIndex index = this.session.getSeekIndex();
+        long durationMillis = index == null ? -1 : index.getDurationMillis();
+        this.session.getByteSource().setPlaybackWindow(bytePosition, positionMillis, durationMillis);
     }
 
     private void finishTrack() {

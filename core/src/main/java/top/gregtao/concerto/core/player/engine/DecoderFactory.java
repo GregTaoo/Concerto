@@ -1,5 +1,6 @@
 package top.gregtao.concerto.core.player.engine;
 
+import top.gregtao.concerto.core.player.seek.ContainerFormat;
 import top.gregtao.concerto.core.player.source.AudioByteSource;
 import top.gregtao.concerto.core.player.source.ByteSourceInputStream;
 
@@ -12,10 +13,11 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.SequenceInputStream;
+import java.util.function.LongSupplier;
 import java.util.logging.Logger;
 
 /**
- * Opens a decoded 16-bit PCM stream over an {@link AudioByteSource}, optionally
+ * Opens a decoded PCM stream over an {@link AudioByteSource}, optionally
  * starting mid-media at a container-safe byte offset (with the format's header
  * bytes prepended so the SPI decoder accepts the stream).
  */
@@ -28,11 +30,18 @@ public final class DecoderFactory {
         public final AudioInputStream pcmStream;
         public final AudioFormat pcmFormat;
         public final ByteSourceInputStream rawStream;
+        private final LongSupplier downloadPosition;
 
-        DecodedStream(AudioInputStream pcmStream, AudioFormat pcmFormat, ByteSourceInputStream rawStream) {
+        DecodedStream(AudioInputStream pcmStream, AudioFormat pcmFormat, ByteSourceInputStream rawStream,
+                      LongSupplier downloadPosition) {
             this.pcmStream = pcmStream;
             this.pcmFormat = pcmFormat;
             this.rawStream = rawStream;
+            this.downloadPosition = downloadPosition;
+        }
+
+        public long getDownloadPosition() {
+            return this.downloadPosition.getAsLong();
         }
 
         public void close() {
@@ -44,7 +53,7 @@ public final class DecoderFactory {
     }
 
     public static DecodedStream open(AudioByteSource source, long byteOffset, byte[] prefixBytes,
-                                     top.gregtao.concerto.core.player.seek.ContainerFormat format, Logger logger)
+                                     ContainerFormat format, Logger logger)
             throws IOException, UnsupportedAudioFileException {
         ByteSourceInputStream raw = new ByteSourceInputStream(source, byteOffset);
         InputStream input = (byteOffset > 0 && prefixBytes != null)
@@ -54,8 +63,31 @@ public final class DecoderFactory {
         // FLAC bypasses the SPI entirely: the SPI-returned stream is length-capped
         // by totalSamples * frameSize, which truncates larger files mid-track, and
         // its probe cannot handle the prefixed mid-stream form at all.
-        if (format == top.gregtao.concerto.core.player.seek.ContainerFormat.FLAC) {
+        if (format == ContainerFormat.FLAC) {
             return openFlac(source, byteOffset, prefixBytes, input, raw, logger);
+        }
+
+        // Opus and AAC also bypass the SPI: no SPI provider is shipped for them,
+        // the dedicated pull decoders emit 16-bit little-endian PCM directly.
+        if (format == ContainerFormat.OGG_OPUS) {
+            OpusDecoderStream opus = new OpusDecoderStream(input, byteOffset == 0);
+            return wrapPcmStream(opus, 48000, opus.getChannels(), raw, raw::position);
+        }
+        if (format == ContainerFormat.AAC_ADTS) {
+            AacAdtsDecoderStream aac = new AacAdtsDecoderStream(input);
+            return wrapPcmStream(aac, aac.getSampleRate(), aac.getChannels(), raw, raw::position);
+        }
+        if (format == ContainerFormat.M4A) {
+            // M4A is never opened mid-stream (no index builder); the decoder reads
+            // the source directly through a seekable view so trailing-moov works.
+            try {
+                Mp4AacDecoderStream m4a = new Mp4AacDecoderStream(source);
+                return wrapPcmStream(m4a, m4a.getSampleRate(), m4a.getChannels(), raw, m4a::getDownloadPosition);
+            } catch (UnsupportedAudioFileException exception) {
+                if (!"MP4 AAC track contains no decodable frames".equals(exception.getMessage())) throw exception;
+                FragmentedMp4AacDecoderStream m4a = new FragmentedMp4AacDecoderStream(source);
+                return wrapPcmStream(m4a, m4a.getSampleRate(), m4a.getChannels(), raw, m4a::getDownloadPosition);
+            }
         }
 
         // The SPI probe needs mark/reset support
@@ -78,7 +110,17 @@ public final class DecoderFactory {
         );
 
         AudioInputStream pcm = AudioSystem.getAudioInputStream(targetFormat, encoded);
-        return new DecodedStream(pcm, targetFormat, raw);
+        return new DecodedStream(pcm, targetFormat, raw, raw::position);
+    }
+
+    /** Wraps a decoder emitting 16-bit little-endian PCM into a {@link DecodedStream}. */
+    private static DecodedStream wrapPcmStream(InputStream pcmSource, int sampleRate, int channels,
+                                               ByteSourceInputStream raw, LongSupplier downloadPosition) {
+        AudioFormat targetFormat = new AudioFormat(
+                AudioFormat.Encoding.PCM_SIGNED,
+                sampleRate, 16, channels, 2 * channels, sampleRate, false);
+        AudioInputStream pcm = new AudioInputStream(pcmSource, targetFormat, AudioSystem.NOT_SPECIFIED);
+        return new DecodedStream(pcm, targetFormat, raw, downloadPosition);
     }
 
     private static DecodedStream openFlac(AudioByteSource source, long byteOffset, byte[] prefixBytes,
@@ -93,13 +135,15 @@ public final class DecoderFactory {
         }
         int[] info = parseFlacStreamInfo(header);
         int sampleRate = info[0], channels = info[1], bitsPerSample = info[2];
+        boolean highResolution = bitsPerSample > 16;
         AudioFormat targetFormat = new AudioFormat(
-                AudioFormat.Encoding.PCM_SIGNED,
-                sampleRate, 16, channels, 2 * channels, sampleRate, false);
+                highResolution ? AudioFormat.Encoding.PCM_FLOAT : AudioFormat.Encoding.PCM_SIGNED,
+                sampleRate, highResolution ? 32 : 16, channels,
+                (highResolution ? 4 : 2) * channels, sampleRate, false);
         AudioInputStream pcm = new AudioInputStream(
                 new FlacDecoderStream(input, targetFormat, bitsPerSample, logger),
                 targetFormat, AudioSystem.NOT_SPECIFIED);
-        return new DecodedStream(pcm, targetFormat, raw);
+        return new DecodedStream(pcm, targetFormat, raw, raw::position);
     }
 
     /** Reads the marker + metadata blocks up to and including STREAMINFO. */

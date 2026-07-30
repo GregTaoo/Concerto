@@ -2,7 +2,6 @@ package top.gregtao.concerto.core.player.source;
 
 import top.gregtao.concerto.core.Concerto;
 
-import java.io.File;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URI;
@@ -15,6 +14,7 @@ import java.nio.file.StandardOpenOption;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.Map;
 import java.util.function.Supplier;
 
 /**
@@ -30,9 +30,13 @@ public class BufferedHttpByteSource implements AudioByteSource {
 
     private static final int DOWNLOAD_CHUNK = 64 * 1024;
     private static final int MAX_RETRIES = 10;
+    private static final long INITIAL_BUFFER_BYTES = 1024 * 1024;
+    private static final long LOOKAHEAD_MILLIS = 60_000;
     private static final Path TEMP_DIR = Path.of("Concerto", "temp");
 
     private final Supplier<String> urlRefresher;
+    private final Map<String, String> requestHeaders;
+
     private final Path tempFile;
     private final FileChannel channel;
     private final Thread downloadThread;
@@ -42,14 +46,21 @@ public class BufferedHttpByteSource implements AudioByteSource {
 
     private URL url;
     private long downloadedTo = 0;
+    private long downloadTarget = INITIAL_BUFFER_BYTES;
     private long totalLength = -1;
     private boolean complete = false;
     private boolean closed = false;
     private IOException failure = null;
 
     public BufferedHttpByteSource(String url, Supplier<String> urlRefresher) throws IOException {
+        this(url, urlRefresher, Map.of());
+    }
+
+    public BufferedHttpByteSource(String url, Supplier<String> urlRefresher,
+                                  Map<String, String> requestHeaders) throws IOException {
         this.url = URI.create(url).toURL();
         this.urlRefresher = urlRefresher;
+        this.requestHeaders = Map.copyOf(requestHeaders);
         Files.createDirectories(TEMP_DIR);
         this.tempFile = Files.createTempFile(TEMP_DIR, "stream-", ".tmp");
         this.channel = FileChannel.open(this.tempFile,
@@ -75,6 +86,12 @@ public class BufferedHttpByteSource implements AudioByteSource {
                 try {
                     connection = this.openConnection(resumeFrom);
                     int code = connection.getResponseCode();
+                    Concerto.getLogger().info(
+                            "Media download connection established: mode={}, from={}, response={}, contentRange={}, "
+                                    + "contentLength={}, url={}",
+                            resumeFrom == 0 ? "initial" : "resume", resumeFrom, code,
+                            connection.getHeaderField("Content-Range"), connection.getContentLengthLong(),
+                            describeUrl(connection.getURL()));
                     if (code == HttpURLConnection.HTTP_FORBIDDEN && this.urlRefresher != null) {
                         String fresh = this.urlRefresher.get();
                         if (fresh != null) {
@@ -94,7 +111,9 @@ public class BufferedHttpByteSource implements AudioByteSource {
                         skipFully(in, discard);
                         byte[] buffer = new byte[DOWNLOAD_CHUNK];
                         int read;
-                        while ((read = in.read(buffer)) != -1) {
+                        while (this.awaitDownloadPermission()) {
+                            read = in.read(buffer);
+                            if (read == -1) break;
                             long writeAt;
                             this.lock.lock();
                             try {
@@ -158,15 +177,45 @@ public class BufferedHttpByteSource implements AudioByteSource {
     }
 
     private HttpURLConnection openConnection(long from) throws IOException {
+        Concerto.getLogger().info("Opening media download connection: mode={}, from={}, url={}",
+                from == 0 ? "initial" : "resume", from, describeUrl(this.url));
         HttpURLConnection connection = (HttpURLConnection) this.url.openConnection();
         connection.setConnectTimeout(5000);
         connection.setReadTimeout(10000);
         connection.setRequestMethod("GET");
+        this.requestHeaders.forEach(connection::setRequestProperty);
         connection.setRequestProperty("Accept-Encoding", "identity");
         if (from > 0) {
             connection.setRequestProperty("Range", "bytes=" + from + "-");
         }
         return connection;
+    }
+
+    private static String describeUrl(URL url) {
+        String path = url.getPath();
+        return url.getProtocol() + "://" + url.getAuthority() + (path == null ? "" : path);
+    }
+
+    /**
+     * Keeps the background transfer bounded by the playback window. The seek
+     * indexer is another reader of this source, so it must not be allowed to
+     * turn an incremental scan into an eager full-file download.
+     */
+    private boolean awaitDownloadPermission() {
+        this.lock.lock();
+        try {
+            while (!this.closed && !this.complete && this.downloadedTo >= this.downloadTarget) {
+                try {
+                    this.progress.await();
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    return false;
+                }
+            }
+            return !this.closed && !this.complete;
+        } finally {
+            this.lock.unlock();
+        }
     }
 
     private void updateTotalLength(HttpURLConnection connection, int code, long resumeFrom) {
@@ -296,6 +345,27 @@ public class BufferedHttpByteSource implements AudioByteSource {
                 if (remaining <= 0) return false;
                 this.progress.awaitNanos(remaining);
             }
+        } finally {
+            this.lock.unlock();
+        }
+    }
+
+    @Override
+    public void setPlaybackWindow(long bytePosition, long positionMillis, long durationMillis) {
+        this.lock.lock();
+        try {
+            long estimatedPosition = Math.max(0, bytePosition);
+            long lookaheadBytes = INITIAL_BUFFER_BYTES;
+            if (this.totalLength > 0 && durationMillis > 0) {
+                estimatedPosition = Math.max(estimatedPosition,
+                        this.totalLength * Math.max(0, positionMillis) / durationMillis);
+                lookaheadBytes = Math.max(DOWNLOAD_CHUNK,
+                        this.totalLength * LOOKAHEAD_MILLIS / durationMillis);
+            }
+            long target = estimatedPosition + lookaheadBytes;
+            if (this.totalLength >= 0) target = Math.min(target, this.totalLength);
+            this.downloadTarget = target;
+            this.progress.signalAll();
         } finally {
             this.lock.unlock();
         }

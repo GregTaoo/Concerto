@@ -47,7 +47,8 @@ public class ServerMusicAgent {
     private final ServerNetworkBridge serverBridge;
 
     private final Map<String, Long> addMusicTimeRecord = new ConcurrentHashMap<>();
-    private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(2);
+    private final ScheduledExecutorService scheduler =
+            Executors.newScheduledThreadPool(2, ConcertoRunner.daemonThreadFactory("Concerto-Agent-Scheduler"));
     private final Lock voteLock = new ReentrantLock();
     private volatile boolean isVoting = false;
     private final Set<String> yesVoters = ConcurrentHashMap.newKeySet();
@@ -56,6 +57,8 @@ public class ServerMusicAgent {
 
     private ScheduledFuture<?> playNextFuture;
     private Music currentMusic = null;
+    /** Monotonic start time for the track currently advertised to clients. */
+    private volatile long currentMusicStartedAtNanos = -1L;
     private UUID trackedIndex = null;
     private boolean trackedPauseState = true;
     private final AtomicBoolean isStopped = new AtomicBoolean(false);
@@ -198,14 +201,15 @@ public class ServerMusicAgent {
         this.updateState(s -> {
             ConcertoPlayerList list = s.musicList;
             UUID cur = s.currentIndex;
-            UUID nextUid = cur == null ? list.firstUuid() : list.nextUuid(cur);
-
-            if (nextUid == null && this.currentlyFreeTime.get()) {
-                nextUid = list.firstUuid();
+            UUID nextUid;
+            if (this.currentlyFreeTime.get()) {
+                nextUid = this.getFreeTimeNextUuid(list, cur);
+            } else {
+                nextUid = cur == null ? list.firstUuid() : list.nextUuid(cur);
             }
 
             if (nextUid != null) {
-                s.currentIndex = nextUid;
+                s.setCurrentIndex(nextUid, 25);
                 if (!this.currentlyFreeTime.get()) {
                     while (list.firstUuid() != null && !list.firstUuid().equals(nextUid)) {
                         list.removeFirst();
@@ -215,15 +219,26 @@ public class ServerMusicAgent {
                 list.clear();
                 if (!this.freeTimePlaylist.isEmpty()) {
                     this.freeTimePlaylist.forEach(list::addLast);
-                    s.currentIndex = list.firstUuid();
+                    s.setCurrentIndex(this.getFreeTimeStartUuid(list), 25);
                     this.currentlyFreeTime.set(true);
                 } else {
-                    s.currentIndex = null;
+                    s.setCurrentIndex(null, 25);
                     s.paused = true;
                     this.currentlyFreeTime.set(false);
                 }
             }
-        }, List.of(MusicRoomState.MUSIC_LIST, MusicRoomState.CURRENT_INDEX, MusicRoomState.PAUSED));
+        }, List.of(MusicRoomState.MUSIC_LIST, MusicRoomState.CURRENT_INDEX, MusicRoomState.PAUSED,
+                MusicPlayerState.PLAYBACK_HISTORY));
+    }
+
+    private UUID getFreeTimeStartUuid(ConcertoPlayerList list) {
+        return this.getFreeTimeNextUuid(list, null);
+    }
+
+    private UUID getFreeTimeNextUuid(ConcertoPlayerList list, UUID current) {
+        if (ServerConfig.INSTANCE.options.freeTimePlaylistRandom) return list.randomUuid();
+        UUID next = current == null ? list.firstUuid() : list.nextUuid(current);
+        return next == null ? list.firstUuid() : next;
     }
 
     private void resolveAndPlayCurrentMusic() {
@@ -232,6 +247,7 @@ public class ServerMusicAgent {
         this.currentMusic = taskMusic;
 
         if (taskMusic == null) {
+            this.currentMusicStartedAtNanos = -1L;
             this.updateState(s -> {
                 s.resolvedMedia = null;
                 s.resolvedStartTime = 0L;
@@ -251,12 +267,16 @@ public class ServerMusicAgent {
 
                 SharedMusic resolvedShared;
                 if (ServerConfig.INSTANCE.options.musicAgentUseShared) {
-                    String path = dynamicPath.updateRawPath();
+                    DynamicPath.ResolvedPath resolvedPath = dynamicPath.resolvePath();
+                    String path = resolvedPath.path();
                     if (!Objects.equals(this.room.serverState.get().currentIndex, currentUUID)) return;
                     if (path == null) {
                         this.broadcast("concerto.agent.play.failed", taskMusic.getMeta().title(), taskMusic.getMeta().author());
                         this.playNextMusic();
                         return;
+                    }
+                    if (resolvedPath.trial()) {
+                        this.broadcast("concerto.player.trial");
                     }
                     resolvedShared = new SharedMusic(path, taskMusic.getMeta(), dynamicPath.getLastLyrics(), dynamicPath.getLastSubLyrics());
                 } else {
@@ -266,6 +286,7 @@ public class ServerMusicAgent {
                 if (!Objects.equals(this.room.serverState.get().currentIndex, currentUUID)) return;
 
                 String media = MusicJsonParsers.to(resolvedShared).toString();
+                this.currentMusicStartedAtNanos = System.nanoTime();
                 this.updateState(s -> {
                     s.resolvedMedia = media;
                     s.resolvedStartTime = 0L;
@@ -294,6 +315,22 @@ public class ServerMusicAgent {
         return this.getMembers().containsKey(playerName);
     }
 
+    /**
+     * Updates the shared position before a new agent member receives its full state.
+     * The server is the only clock authority for the server-wide music agent.
+     */
+    public void refreshPlaybackTimestamp() {
+        long startedAtNanos = this.currentMusicStartedAtNanos;
+        Music music = this.currentMusic;
+        if (startedAtNanos < 0L || music == null || this.room.serverState.get().paused) return;
+
+        long elapsedMillis = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startedAtNanos);
+        long durationMillis = music.getMeta().getDuration().asMilliseconds();
+        long positionMillis = Math.max(0L, Math.min(elapsedMillis, durationMillis));
+        this.updateState(s -> s.resolvedStartTime = positionMillis,
+                List.of(MusicRoomState.RESOLVED_START_TIME));
+    }
+
     public void addMusic(String playerName, Music music) {
         long lastAdd = this.addMusicTimeRecord.getOrDefault(playerName, 0L);
         int wait = (int) (ServerConfig.INSTANCE.options.musicAgentAddTimeLimit - (System.currentTimeMillis() - lastAdd) / 1000);
@@ -306,14 +343,14 @@ public class ServerMusicAgent {
             this.updateState(state -> {
                 if (this.currentlyFreeTime.get()) {
                     state.musicList.clear();
-                    state.currentIndex = null;
+                    state.setCurrentIndex(null, 25);
                     this.currentlyFreeTime.set(false);
                 }
                 UUID addedUuid = state.musicList.addLast(music);
                 if (state.currentIndex == null) {
-                    state.currentIndex = addedUuid;
+                    state.setCurrentIndex(addedUuid, 25);
                 }
-            }, List.of(MusicRoomState.MUSIC_LIST, MusicRoomState.CURRENT_INDEX));
+            }, List.of(MusicRoomState.MUSIC_LIST, MusicRoomState.CURRENT_INDEX, MusicPlayerState.PLAYBACK_HISTORY));
 
             this.addMusicTimeRecord.put(playerName, System.currentTimeMillis());
             this.broadcast("concerto.agent.add", playerName, music.getMeta().title(), music.getMeta().author());
@@ -341,15 +378,29 @@ public class ServerMusicAgent {
 
         if (this.playNextFuture != null) this.playNextFuture.cancel(true);
         this.currentMusic = null;
+        this.currentMusicStartedAtNanos = -1L;
         this.currentlyFreeTime.set(false);
 
         this.updateState(s -> {
             s.musicList.clear();
-            s.currentIndex = null;
+            s.setCurrentIndex(null, 25);
+            s.clearPlaybackHistory();
             s.resolvedMedia = null;
             s.resolvedStartTime = 0L;
             s.paused = true;
-        }, List.of(MusicRoomState.MUSIC_LIST, MusicRoomState.CURRENT_INDEX, MusicRoomState.RESOLVED_MEDIA, MusicRoomState.RESOLVED_START_TIME, MusicRoomState.PAUSED));
+        }, List.of(MusicRoomState.MUSIC_LIST, MusicRoomState.CURRENT_INDEX, MusicRoomState.RESOLVED_MEDIA,
+                MusicRoomState.RESOLVED_START_TIME, MusicRoomState.PAUSED, MusicPlayerState.PLAYBACK_HISTORY));
+    }
+
+    /**
+     * Permanent teardown, for server shutdown / plugin disable: clears state
+     * like {@link #reset()} and then stops the scheduler threads. A fresh agent
+     * (with a fresh scheduler) is created per server start, so without this the
+     * old scheduler leaked two threads per integrated-server session.
+     */
+    public void dispose() {
+        this.reset();
+        this.scheduler.shutdownNow();
     }
 
     public Map<String, Integer> getMembers() {

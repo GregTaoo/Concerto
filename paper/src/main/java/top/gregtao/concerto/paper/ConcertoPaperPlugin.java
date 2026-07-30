@@ -21,6 +21,7 @@ import top.gregtao.concerto.core.http.kugou.KuGouMusicApiClient;
 import top.gregtao.concerto.core.http.netease.NeteaseCloudApiClient;
 import top.gregtao.concerto.core.http.qq.QQMusicApiClient;
 import top.gregtao.concerto.core.room.MusicRoom;
+import top.gregtao.concerto.core.room.agent.ServerMusicAgent;
 import top.gregtao.concerto.core.util.ConcertoRunner;
 import top.gregtao.concerto.paper.network.room.MusicRoomManager;
 import top.gregtao.concerto.paper.bridge.CoreBridgeImpl;
@@ -60,6 +61,18 @@ public class ConcertoPaperPlugin extends JavaPlugin implements Listener, PluginM
         ConcertoRunner.run(ConcertoPaperPlugin::reload);
         I18n.INSTANCE.loadFile(Locale.ENGLISH, this.getResource("assets/concerto/lang/en_us.json"));
         I18n.INSTANCE.loadFile(Locale.SIMPLIFIED_CHINESE, this.getResource("assets/concerto/lang/zh_cn.json"));
+    }
+
+    @Override
+    public void onDisable() {
+        // Mirrors MinecraftServerMixin.shutdownInject on the modded side: the
+        // agent scheduler and the runner pool must not outlive the plugin
+        MusicRoom.ROOMS.clear();
+        if (ServerMusicAgent.INSTANCE != null) {
+            ServerMusicAgent.INSTANCE.dispose();
+            ServerMusicAgent.INSTANCE = null;
+        }
+        ConcertoRunner.shutdown();
     }
 
     @EventHandler

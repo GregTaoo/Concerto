@@ -25,6 +25,10 @@ import java.util.ArrayList;
 
 public class MusicPlayerScreen extends ConcertoScreen {
 
+    private static final int ICON_BUTTON_W = 20;
+
+    private CycleButton<PlayerView> playerViewButton;
+    private Button previousButton;
     private Button playPauseButton;
     private Button nextButton;
     private CycleButton<OrderType> orderButton;
@@ -32,6 +36,8 @@ public class MusicPlayerScreen extends ConcertoScreen {
 
     private float rotationAngle = 0f;
     private float scrollOffset = 0f;
+    private PlayerView playerView = ClientConfig.INSTANCE.options.displayPlayerScreenCoverAndSpectrum
+            ? PlayerView.COVER : PlayerView.LYRICS;
     private boolean seekingProgress = false;
     // Drag preview target; -1 when not dragging. Rendering-only: the real
     // display state (lyrics cursor, progress) is untouched until commit, so
@@ -46,43 +52,64 @@ public class MusicPlayerScreen extends ConcertoScreen {
     protected void init() {
         super.init();
 
-        int y = this.height - 30;
-        int totalWidth = 4 * 80 + 20 + 4 * 2;
-        int x = (this.width - totalWidth) / 2;
+        int y = this.standardBottomActionY();
+        int x = this.standardContentX();
+        int actionWidth = (this.standardContentWidth() - ICON_BUTTON_W * 4 - STANDARD_ACTION_GAP * 6) / 3;
 
-        Button playlistButton = Button.builder(
-                Component.translatable("concerto.screen.general_list"),
-                button -> {
-                    if (this.minecraft != null) {
-                        this.minecraft.setScreen(new GeneralPlaylistScreen(this));
-                    }
-                }
-        ).pos(x, y).size(80, 20).build();
-        this.addRenderableWidget(playlistButton);
-        x += 82;
+        this.previousButton = Button.builder(
+                Component.literal("⏮"),
+                button -> MusicPlayerHandler.INSTANCE.playPreviousAsync()
+        ).pos(x, y).size(ICON_BUTTON_W, 20).build();
+        x += ICON_BUTTON_W + STANDARD_ACTION_GAP;
 
         this.playPauseButton = Button.builder(
-                Component.translatable(MusicPlayerHandler.INSTANCE.isPaused() ? "concerto.screen.play" : "concerto.screen.pause"),
+                this.playPauseLabel(),
                 button -> MusicPlayerHandler.INSTANCE.tryForcePause(!MusicPlayerHandler.INSTANCE.isPaused())
-        ).pos(x, y).size(80, 20).build();
-        x += 82;
+        ).pos(x, y).size(ICON_BUTTON_W, 20).build();
+        x += ICON_BUTTON_W + STANDARD_ACTION_GAP;
 
         this.nextButton = Button.builder(
-                Component.translatable("concerto.screen.next"),
+                Component.literal("⏭"),
                 button -> MusicPlayerHandler.INSTANCE.playNextAsync(1)
-        ).pos(x, y).size(80, 20).build();
-        x += 82;
+        ).pos(x, y).size(ICON_BUTTON_W, 20).build();
+        x += ICON_BUTTON_W + STANDARD_ACTION_GAP;
 
         this.orderButton = CycleButton.builder((OrderType val) -> Component.literal(val.getName()))
                 .withValues(OrderType.values())
                 .withInitialValue(MusicPlayerHandler.INSTANCE.getOrderType())
-                .create(x, y, 80, 20, Component.translatable("concerto.screen.order"),
+                .create(x, y, actionWidth, 20, Component.translatable("concerto.screen.order"),
                         (widget, orderType) -> MusicPlayerHandler.INSTANCE.setOrderType(orderType));
-        x += 82;
+        x += actionWidth + STANDARD_ACTION_GAP;
 
-        this.volumeControl = new VolumeControlWidget(this.font, x, y, 20, 20);
+        Button playlistButton = Button.builder(
+                Component.translatable("concerto.screen.main_list"),
+                button -> {
+                    if (this.minecraft != null) {
+                        this.minecraft.setScreen(new MainPlaylistScreen(this));
+                    }
+                }
+        ).pos(x, y).size(actionWidth, 20).build();
+        this.addRenderableWidget(playlistButton);
+        x += actionWidth + STANDARD_ACTION_GAP;
+
+        int playerViewWidth = this.standardContentRight() - x - STANDARD_ACTION_GAP - ICON_BUTTON_W;
+        this.playerViewButton = CycleButton.<PlayerView>builder(view -> Component.translatable(
+                        view == PlayerView.COVER ? "concerto.screen.player_view.cover" : "concerto.screen.player_view.lyrics"))
+                .withValues(PlayerView.values())
+                .withInitialValue(this.playerView)
+                .create(x, y, playerViewWidth, 20, Component.translatable("concerto.screen.player_view"), (button, view) -> {
+                    this.playerView = view;
+                    ClientConfig.INSTANCE.options.displayPlayerScreenCoverAndSpectrum = view == PlayerView.COVER;
+                    ClientConfig.INSTANCE.writeOptions();
+                    this.scrollOffset = 0;
+                });
+        this.addRenderableWidget(this.playerViewButton);
+        x += playerViewWidth + STANDARD_ACTION_GAP;
+
+        this.volumeControl = new VolumeControlWidget(this.font, x, y, ICON_BUTTON_W, 20);
         this.addWidget(this.volumeControl);
 
+        this.addRenderableWidget(this.previousButton);
         this.addRenderableWidget(this.playPauseButton);
         this.addRenderableWidget(this.nextButton);
         this.addRenderableWidget(this.orderButton);
@@ -94,11 +121,17 @@ public class MusicPlayerScreen extends ConcertoScreen {
     // changes must reach an already-open screen (init-only refresh went stale)
     private void updateButtonStates() {
         this.playPauseButton.active = PlayerPermissions.canControlPlayback();
-        this.nextButton.active = PlayerPermissions.canChangeMusicIndex();
+        this.previousButton.active = PlayerPermissions.canChangeMusicIndex()
+                && MusicPlayerHandler.INSTANCE.canPlayPrevious();
+        this.nextButton.active = PlayerPermissions.canChangeMusicIndex()
+                && !MusicPlayerHandler.INSTANCE.isEmpty();
         this.orderButton.active = PlayerPermissions.canChangeOrderType();
 
-        boolean isPaused = MusicPlayerHandler.INSTANCE.isPaused();
-        this.playPauseButton.setMessage(Component.translatable(isPaused ? "concerto.screen.play" : "concerto.screen.pause"));
+        this.playPauseButton.setMessage(this.playPauseLabel());
+    }
+
+    private Component playPauseLabel() {
+        return Component.literal(MusicPlayerHandler.INSTANCE.isPaused() ? "▶" : "⏸");
     }
 
     @Override
@@ -125,26 +158,29 @@ public class MusicPlayerScreen extends ConcertoScreen {
             if (this.rotationAngle >= 360f) this.rotationAngle -= 360f;
         }
 
-        int leftWidth = this.width / 2;
-        int imgSize = Math.max(96, Math.min(120, leftWidth - 60));
-        int imgX = (leftWidth - imgSize) / 2;
-        int imgY = (this.height - imgSize) / 2 - 8;
+        boolean lyricsOnly = this.playerView == PlayerView.LYRICS;
+        if (!lyricsOnly) {
+            int leftWidth = this.width / 2;
+            int imgSize = Math.max(96, Math.min(120, leftWidth - 60));
+            int imgX = (leftWidth - imgSize) / 2;
+            int imgY = (this.height - imgSize) / 2 - 8;
 
-        context.pose().pushPose();
+            context.pose().pushPose();
 
-        InGameHudRenderer.COVER_IMAGE.setX(imgX);
-        InGameHudRenderer.COVER_IMAGE.setY(imgY);
-        InGameHudRenderer.COVER_IMAGE.setSize(imgSize, imgSize);
+            InGameHudRenderer.COVER_IMAGE.setX(imgX);
+            InGameHudRenderer.COVER_IMAGE.setY(imgY);
+            InGameHudRenderer.COVER_IMAGE.setSize(imgSize, imgSize);
 
-        context.pose().translate(imgX + imgSize / 2f, imgY + imgSize / 2f, 0);
-        context.pose().mulPose(new Quaternionf().rotateZ(this.rotationAngle * (float) Math.PI / 180f)); // 旋转
-        context.pose().translate(-(imgX + imgSize / 2f), -(imgY + imgSize / 2f), 0);
+            context.pose().translate(imgX + imgSize / 2f, imgY + imgSize / 2f, 0);
+            context.pose().mulPose(new Quaternionf().rotateZ(this.rotationAngle * (float) Math.PI / 180f));
+            context.pose().translate(-(imgX + imgSize / 2f), -(imgY + imgSize / 2f), 0);
 
-        InGameHudRenderer.COVER_IMAGE.render(context, mouseX, mouseY, delta);
+            InGameHudRenderer.COVER_IMAGE.render(context, mouseX, mouseY, delta);
 
-        context.pose().popPose();
+            context.pose().popPose();
+        }
 
-        int rightHalfX = this.width / 2; // lyrics start at mid-screen for >= 1/2 width
+        int rightHalfX = lyricsOnly ? 20 : this.width / 2;
         int lyricsWidth = this.width - rightHalfX - 20;
 
         String title = metaData.title();
@@ -221,7 +257,7 @@ public class MusicPlayerScreen extends ConcertoScreen {
             int placeholderY = this.height / 2;
             context.drawCenteredString(this.font, Component.translatable("concerto.no_subtitle"), rightHalfX + lyricsWidth / 2, placeholderY, 0xFFAAAAAA);
         }
-        renderSpectrum(context);
+        if (!lyricsOnly) renderSpectrum(context);
         this.volumeControl.render(context, mouseX, mouseY, delta);
     }
 
@@ -301,7 +337,7 @@ public class MusicPlayerScreen extends ConcertoScreen {
         float buffered = MusicPlayer.INSTANCE.getBufferedPercentage();
         if (buffered > 0) {
             int bufferedColor = (progressColor & 0x00FFFFFF) | 0x66000000;
-            context.fill(0, 0, (int) Math.round(this.width * buffered), barHeight, bufferedColor);
+            context.fill(0, 0, Math.round(this.width * buffered), barHeight, bufferedColor);
         }
         context.fill(0, 0, (int) Math.round(this.width * progress), barHeight, progressColor);
 
@@ -313,7 +349,9 @@ public class MusicPlayerScreen extends ConcertoScreen {
             context.fill(thumbX - 1, 0, thumbX + 1, barHeight + 3, 0xFFFFFFFF);
             String target = MusicTimestamp.ofMilliseconds(targetMs).toShortString();
             int textX = Math.max(2, Math.min(this.width - this.font.width(target) - 2, thumbX - this.font.width(target) / 2));
-            context.drawString(this.font, target, textX, barHeight + 5, 0xFFFFFFFF, false);
+            context.fill(textX - 2, barHeight + 3, textX + this.font.width(target) + 2,
+                    barHeight + this.font.lineHeight + 7, 0xC0101010);
+            context.drawString(this.font, target, textX, barHeight + 5, 0xFF55FFFF, false);
         }
     }
 
@@ -331,6 +369,11 @@ public class MusicPlayerScreen extends ConcertoScreen {
 
     private static final int SPECTRUM_BAR_COUNT = 64;
 
+    private enum PlayerView {
+        COVER,
+        LYRICS
+    }
+
     private void renderSpectrum(GuiGraphics g) {
         MusicPlayer.INSTANCE.audioSpectrum.update();
         float[] spectrumBars = MusicPlayer.INSTANCE.audioSpectrum.getSpectrum(SPECTRUM_BAR_COUNT);
@@ -347,55 +390,67 @@ public class MusicPlayerScreen extends ConcertoScreen {
         float radiusOuter = radiusInner + 38f;
         float maxBarLength = radiusOuter - radiusInner;
 
-        g.pose().pushPose();
-
-        VertexConsumer vertexConsumer = g.bufferSource().getBuffer(RenderType.gui());
-        Matrix4f matrix = g.pose().last().pose();
-
         float angleStep = 360f / barCount;
         float spanDegrees = angleStep * 0.85f;
 
+        g.pose().pushPose();
+        VertexConsumer vertexConsumer = g.bufferSource().getBuffer(RenderType.gui());
+        Matrix4f matrix = g.pose().last().pose();
+
         for (int i = 0; i < barCount; i++) {
             float value = spectrumBars[i];
-            if (Float.isNaN(value)) value = 0f;
 
-            float dynamicScale = (float) (1.3f * Math.log10(1.0 + value * 60.0));
+            new SpectrumQuadRenderState(matrix, i, value, centerX, centerY, radiusInner, maxBarLength,
+                    angleStep, spanDegrees).buildVertices(vertexConsumer);
+        }
+        g.flush();
+        g.pose().popPose();
+    }
 
-            float barLength = dynamicScale * (maxBarLength / 1.5f);
-            barLength = Math.max(2f, Math.min(barLength, maxBarLength));
+    public record SpectrumQuadRenderState(
+            Matrix4f pose,
+            int index, float value, float centerX, float centerY, float radiusInner, float maxBarLength,
+            float angleStep, float spanDegrees
+    ) {
 
-            float currentOuterRadius = radiusInner + barLength;
+        public void buildVertices(VertexConsumer vertexConsumer) {
+            float val = Float.isNaN(this.value) ? 0f : this.value;
+
+            float dynamicScale = (float) (1.3f * Math.log10(1.0 + val * 60.0));
+
+            float barLength = dynamicScale * (this.maxBarLength / 1.5f);
+            barLength = Math.max(2f, Math.min(barLength, this.maxBarLength));
+
+            float currentOuterRadius = this.radiusInner + barLength;
 
             float alphaFactor = 0.35f + 0.65f * Math.min(dynamicScale, 1.0f);
             int a = (int) (alphaFactor * 255f);
             int r = 150, green = 200, b = 255;
             int color = (a << 24) | (r << 16) | (green << 8) | b;
 
-            float centerAngle = (i * angleStep) - 90f;
-            float a1 = (float) Math.toRadians(centerAngle - spanDegrees / 2f);
-            float a2 = (float) Math.toRadians(centerAngle + spanDegrees / 2f);
+            float centerAngle = (this.index * this.angleStep) - 90f;
+            float a1 = (float) Math.toRadians(centerAngle - this.spanDegrees / 2f);
+            float a2 = (float) Math.toRadians(centerAngle + this.spanDegrees / 2f);
 
             float cos1 = (float) Math.cos(a1);
             float sin1 = (float) Math.sin(a1);
             float cos2 = (float) Math.cos(a2);
             float sin2 = (float) Math.sin(a2);
 
-            float x1 = centerX + cos1 * radiusInner;
-            float y1 = centerY + sin1 * radiusInner;
-            float x2 = centerX + cos1 * currentOuterRadius;
-            float y2 = centerY + sin1 * currentOuterRadius;
-            float x3 = centerX + cos2 * currentOuterRadius;
-            float y3 = centerY + sin2 * currentOuterRadius;
-            float x4 = centerX + cos2 * radiusInner;
-            float y4 = centerY + sin2 * radiusInner;
+            float x1 = this.centerX + cos1 * this.radiusInner;
+            float y1 = this.centerY + sin1 * this.radiusInner;
+            float x2 = this.centerX + cos1 * currentOuterRadius;
+            float y2 = this.centerY + sin1 * currentOuterRadius;
+            float x3 = this.centerX + cos2 * currentOuterRadius;
+            float y3 = this.centerY + sin2 * currentOuterRadius;
+            float x4 = this.centerX + cos2 * this.radiusInner;
+            float y4 = this.centerY + sin2 * this.radiusInner;
 
-            vertexConsumer.vertex(matrix, x1, y1, 0).color(color).endVertex();
-            vertexConsumer.vertex(matrix, x4, y4, 0).color(color).endVertex();
-            vertexConsumer.vertex(matrix, x3, y3, 0).color(color).endVertex();
-            vertexConsumer.vertex(matrix, x2, y2, 0).color(color).endVertex();
+            vertexConsumer.vertex(this.pose(), x1, y1, 0).color(color).endVertex();
+            vertexConsumer.vertex(this.pose(), x4, y4, 0).color(color).endVertex();
+            vertexConsumer.vertex(this.pose(), x3, y3, 0).color(color).endVertex();
+            vertexConsumer.vertex(this.pose(), x2, y2, 0).color(color).endVertex();
         }
-
-        g.pose().popPose();
     }
 
 }

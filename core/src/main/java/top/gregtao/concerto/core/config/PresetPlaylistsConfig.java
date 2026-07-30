@@ -107,20 +107,20 @@ public class PresetPlaylistsConfig {
     }
 
     public static boolean saveToLocalPlaylists(Playlist playlist) {
-        File file = new File("Concerto/local_playlists/" + System.currentTimeMillis() + ".json");
-        try {
-            if (file.exists() || file.createNewFile()) {
-                FileWriter writer = new FileWriter(file);
-                writer.write(MusicJsonParsers.toPlaylist(playlist).toString());
-                writer.close();
-                return true;
-            } else {
-                throw new IOException();
-            }
+        if (!LOCAL_PLAYLISTS.checkPath()) {
+            return false;
+        }
+
+        File file = new File(LOCAL_PLAYLISTS.folder, System.currentTimeMillis() + ".json");
+        try (FileWriter writer = new FileWriter(file)) {
+            writer.write(MusicJsonParsers.toPlaylist(playlist).toString());
         } catch (IOException e) {
             Concerto.getLogger().error("Cannot create/open file: {}", e.toString());
             return false;
         }
+
+        LOCAL_PLAYLISTS.radios.add(playlist);
+        return true;
     }
 
 }

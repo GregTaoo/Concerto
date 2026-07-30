@@ -3,6 +3,7 @@ package top.gregtao.concerto.core.player.engine;
 import top.gregtao.concerto.core.music.Music;
 import top.gregtao.concerto.core.player.seek.ContainerFormat;
 import top.gregtao.concerto.core.player.seek.SeekIndex;
+import top.gregtao.concerto.core.player.seek.SeekMode;
 import top.gregtao.concerto.core.player.source.AudioByteSource;
 
 import java.io.Closeable;
@@ -69,8 +70,12 @@ public class PlaybackSession implements Closeable {
         this.seekIndex = seekIndex;
     }
 
+    public SeekMode getSeekMode() {
+        return this.format == null ? SeekMode.UNSUPPORTED : this.format.getSeekMode();
+    }
+
     public boolean isSeekable() {
-        return this.seekIndex != null;
+        return this.getSeekMode() != SeekMode.UNSUPPORTED;
     }
 
     @Override

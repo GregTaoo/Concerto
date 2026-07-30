@@ -53,6 +53,17 @@ public class NeteaseCloudMusic extends Music implements CacheableMusic, DynamicP
     }
 
     public String getRawPath() {
+        DynamicPath.ResolvedPath resolvedPath = this.resolvePath();
+        if (resolvedPath.trial() && !this.trialNotified) {
+            this.trialNotified = true;
+            Concerto.getCoreBridge().sendTranslatableToClientPlayer("concerto.player.trial", false);
+        }
+        return resolvedPath.path();
+    }
+
+    @Override
+    public DynamicPath.ResolvedPath resolvePath() {
+        boolean trial = false;
         try {
             JsonObject object = NeteaseCloudApiClient.INSTANCE.getMusicLink(this.id, this.level)
                     .getAsJsonArray("data").get(0).getAsJsonObject();
@@ -60,16 +71,13 @@ public class NeteaseCloudMusic extends Music implements CacheableMusic, DynamicP
             this.rawPath = this.rawPath.isEmpty() ? null : this.rawPath;
             if (this.rawPath != null) {
                 this.format = FileUtil.getSuffix(URI.create(this.rawPath).getPath());
-                if (object.has("freeTrialInfo") && !object.get("freeTrialInfo").isJsonNull() && !this.trialNotified) {
-                    this.trialNotified = true;
-                    Concerto.getCoreBridge().sendTranslatableToClientPlayer("concerto.player.trial", true);
-                }
+                trial = object.has("freeTrialInfo") && !object.get("freeTrialInfo").isJsonNull();
             }
         } catch (Exception e) {
             this.rawPath = null;
             this.format = null;
         }
-        return this.rawPath;
+        return new DynamicPath.ResolvedPath(this.rawPath, trial);
     }
 
     @Override

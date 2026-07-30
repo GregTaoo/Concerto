@@ -58,10 +58,11 @@ public class ClientMusicNetworkHandler {
             if (player != null && object != null) {
                 String code = "Concerto:Share:" +
                         Base64.getEncoder().encodeToString(object.toString().getBytes(StandardCharsets.UTF_8));
+                String message = chatFallbackMessage(packet.music, code);
                 if (packet.to.equals("@a")) {
-                    player.connection.sendChat(code);
+                    player.connection.sendChat(message);
                 } else {
-                    player.connection.sendCommand("msg " + packet.to + " \"" + code + "\"");
+                    player.connection.sendCommand("msg " + packet.to + " " + message);
                 }
             }
             return;
@@ -76,6 +77,16 @@ public class ClientMusicNetworkHandler {
         packet.music.load();
         ConcertoPayload buf = packet.toPacket(player.getName().getString());
         ConcertoClient.getBridge().sendPayload(buf);
+    }
+
+    private static String chatFallbackMessage(Music music, String code) {
+        String title = sanitizeChatText(music.getMeta().title());
+        String link = sanitizeChatText(music.getLink());
+        return Component.translatable("concerto.share.chat_fallback", title, link).getString() + " " + code;
+    }
+
+    private static String sanitizeChatText(String text) {
+        return text == null ? "" : text.replace('\r', ' ').replace('\n', ' ');
     }
 
     public static void accept(Player player, UUID uuid, Minecraft client) {

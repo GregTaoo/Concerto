@@ -2,6 +2,7 @@ package top.gregtao.concerto.core.http;
 
 import org.jetbrains.annotations.NotNull;
 import top.gregtao.concerto.core.Concerto;
+import top.gregtao.concerto.core.util.HttpUtil;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -9,6 +10,7 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
+import java.util.Map;
 import java.util.function.Supplier;
 
 public class HttpURLInputStream extends InputStream {
@@ -22,16 +24,27 @@ public class HttpURLInputStream extends InputStream {
     private boolean closed = false;
 
     private final Supplier<String> urlSupplier;
+    private final Map<String, String> requestHeaders;
+
 
     public HttpURLInputStream(URL url, int startBytePos, Supplier<String> urlSupplier) throws IOException {
+        this(url, startBytePos, urlSupplier, Map.of());
+    }
+
+    public HttpURLInputStream(URL url, Map<String, String> requestHeaders) throws IOException {
+        this(url, 0, null, requestHeaders);
+    }
+
+    public HttpURLInputStream(URL url, int startBytePos, Supplier<String> urlSupplier,
+                              Map<String, String> requestHeaders) throws IOException {
         this.readBytesTotal = startBytePos;
         this.url = url;
         this.urlSupplier = urlSupplier;
+        this.requestHeaders = Map.copyOf(requestHeaders);
         this.connection = this.openNewConnection();
         if (this.connection.getResponseCode() == 200) {
             this.szBytes = this.connection.getContentLength();
             this.in = this.connection.getInputStream();
-            Concerto.getLogger().info("Connected to {}", url);
         } else {
             String message = this.connection.getResponseCode() + " - couldn't access to: " + url;
             Concerto.getLogger().error(message);
@@ -66,9 +79,11 @@ public class HttpURLInputStream extends InputStream {
     }
 
     private HttpURLConnection openNewConnection() throws IOException {
+        Concerto.getLogger().info("Opening HTTP stream connection: {}", HttpUtil.maskUrl(this.url.toString()));
         HttpURLConnection conn = (HttpURLConnection) this.url.openConnection();
         conn.setConnectTimeout(5000);
         conn.setReadTimeout(5000);
+        this.requestHeaders.forEach(conn::setRequestProperty);
         conn.setRequestMethod("GET");
         return conn;
     }

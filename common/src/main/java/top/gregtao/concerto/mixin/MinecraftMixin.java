@@ -16,8 +16,8 @@ import top.gregtao.concerto.screen.MusicAuditionScreen;
 @Mixin(Minecraft.class)
 public class MinecraftMixin {
 
-    @Inject(at = @At("TAIL"), method = "disconnect(Lnet/minecraft/client/gui/screens/Screen;Z)V")
-    public void disconnectInject(Screen disconnectionScreen, boolean transferring, CallbackInfo ci) {
+    @Inject(at = @At("TAIL"), method = "clearLevel(Lnet/minecraft/client/gui/screens/Screen;)V")
+    public void disconnectInject(Screen disconnectionScreen, CallbackInfo ci) {
         ConcertoClient.serverAvailable = false;
         ClientMusicNetworkHandler.WAIT_CONFIRMATION.clear();
         MusicAuditionScreen.WAIT_AUDITION.clear();

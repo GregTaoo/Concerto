@@ -61,8 +61,8 @@ public class ChatComponentMixin {
         ConcertoRunner.run(() -> handleMessage(message));
     }
 
-    @Inject(method = "render(Lnet/minecraft/client/gui/GuiGraphics;IIIZ)V", at = @At("HEAD"))
-    public void renderInject(GuiGraphics context, int currentTick, int mouseX, int mouseY, boolean focused, CallbackInfo ci) {
+    @Inject(method = "render(Lnet/minecraft/client/gui/GuiGraphics;III)V", at = @At("HEAD"))
+    public void renderInject(GuiGraphics context, int currentTick, int mouseX, int mouseY, CallbackInfo ci) {
         InGameHudRenderer.render(context, mouseX, mouseY, currentTick);
     }
 }

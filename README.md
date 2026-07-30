@@ -64,6 +64,7 @@ Your starting point for playlists, music services (NetEase / QQ / KuGou), search
 - **Drag & drop** audio files or whole folders from your file manager to import them.
 - **Double-click** an entry to play it; single click selects.
 - Bottom row: next / play / delete / order (normal, random, reversed, loop) / pause / info / clear.
+- In the server-wide queue, **Play** becomes **Request in server** and queues the selected song instead.
 - The **volume button** pops up a slider (click anywhere else to dismiss). Volume changes apply instantly and are saved to the config.
 - The search box filters the current playlist.
 
@@ -161,9 +162,10 @@ All subcommands require permission level 2 (OP) except `fetch-radios`, which eve
 
 ### Run a server-wide queue (KTV mode)
 1. In the server's Concerto settings, leave the server-wide queue enabled. You can also choose whether players receive an invitation when they join.
-2. Players enter with `/musicroom agent join` and queue their current track with `/musicroom agent add` (rate-limited by `musicAgentAddTimeLimit`).
-3. Anyone in the queue can start a skip vote: `/musicroom agent vote`, then others confirm with `/musicroom agent vote true` (or `false`).
-4. When the queue is empty the server plays its preset radios, if configured.
+2. Players enter with `/musicroom agent join`, then use **Request in server** on a selected song. The `/musicroom agent add` command can still queue the current track; both are rate-limited by `musicAgentAddTimeLimit`.
+3. If the server resolves a song as a trial clip, everyone in the queue is notified.
+4. Anyone in the queue can start a skip vote: `/musicroom agent vote`, then others confirm with `/musicroom agent vote true` (or `false`).
+5. When the queue is empty the server plays its preset radios, if configured.
 
 ### Share a music-service account with the server
 1. Sign in to the music service on your own client.

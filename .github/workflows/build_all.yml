@@ -55,6 +55,12 @@ jobs:
           ref: ${{ matrix.branch }}
           fetch-depth: 0
 
+      - name: Checkout shared CI scripts
+        uses: actions/checkout@v4
+        with:
+          ref: dev
+          path: .ci
+
       - name: Determine JDK version
         run: |
           BRANCH="${{ matrix.branch }}"
@@ -137,6 +143,19 @@ jobs:
            26.2) GV_ARRAY='["26.2.x"]' ;;
            *) GV_ARRAY='[]' ;;
           esac
+
+          # CurseForge Upload API accepts numeric version IDs. Textual version
+          # types are not stable across the 26.x Minecraft releases.
+          case "$MC_VER" in
+           1.20.1) CF_MINECRAFT_VERSION=9990 ;;
+           1.20.6) CF_MINECRAFT_VERSION=11198 ;;
+           1.21.1) CF_MINECRAFT_VERSION=11779 ;;
+           1.21.6) CF_MINECRAFT_VERSION=13422 ;;
+           1.21.11) CF_MINECRAFT_VERSION=14406 ;;
+           26.1.2) CF_MINECRAFT_VERSION=16082 ;;
+           26.2) CF_MINECRAFT_VERSION=16498 ;;
+           *) echo "Unsupported CurseForge Minecraft version: $MC_VER" >&2; exit 1 ;;
+          esac
           
           # 判断 Loader 类型并写入专属的 GITHUB_OUTPUT
           # *_name 仍是版本号（保持既有命名连续性），*_display 是 Modrinth 上的展示标题
@@ -144,12 +163,14 @@ jobs:
            echo "fabric_file=$FILE" >> $GITHUB_OUTPUT
            echo "fabric_mc=$MC_VER" >> $GITHUB_OUTPUT
            echo "fabric_gv=$GV_ARRAY" >> $GITHUB_OUTPUT
+           echo "fabric_cf_mc=$CF_MINECRAFT_VERSION" >> $GITHUB_OUTPUT
            echo "fabric_name=fabric-${SHORTER_VERSION}-mc${MC_VER}" >> $GITHUB_OUTPUT
            echo "fabric_display=Concerto ${SHORTER_VERSION} for Fabric ${MC_VER}" >> $GITHUB_OUTPUT
           elif echo "$FNAME" | grep -iq "neoforge"; then
            echo "neoforge_file=$FILE" >> $GITHUB_OUTPUT
            echo "neoforge_mc=$MC_VER" >> $GITHUB_OUTPUT
            echo "neoforge_gv=$GV_ARRAY" >> $GITHUB_OUTPUT
+           echo "neoforge_cf_mc=$CF_MINECRAFT_VERSION" >> $GITHUB_OUTPUT
            echo "neoforge_name=neoforge-${SHORTER_VERSION}-mc${MC_VER}" >> $GITHUB_OUTPUT
            echo "neoforge_display=Concerto ${SHORTER_VERSION} for NeoForge ${MC_VER}" >> $GITHUB_OUTPUT
           elif echo "$FNAME" | grep -iq "paper"; then
@@ -187,7 +208,7 @@ jobs:
         if: steps.build-run.outputs.fabric_file != ''
         env:
           MODRINTH_TOKEN: ${{ secrets.MODRINTH_TOKEN }}
-        run: bash ./.github/scripts/modrinth-idempotency.sh "${{ steps.build-run.outputs.fabric_file }}" A0VZd1kW
+        run: bash .ci/.github/scripts/modrinth-idempotency.sh "${{ steps.build-run.outputs.fabric_file }}" A0VZd1kW "${{ steps.build-run.outputs.fabric_name }}"
 
       - name: Publish Fabric to Modrinth
         if: steps.modrinth-fabric.outputs.should_upload == 'true'
@@ -208,7 +229,7 @@ jobs:
         if: steps.build-run.outputs.neoforge_file != ''
         env:
           MODRINTH_TOKEN: ${{ secrets.MODRINTH_TOKEN }}
-        run: bash ./.github/scripts/modrinth-idempotency.sh "${{ steps.build-run.outputs.neoforge_file }}" A0VZd1kW
+        run: bash .ci/.github/scripts/modrinth-idempotency.sh "${{ steps.build-run.outputs.neoforge_file }}" A0VZd1kW "${{ steps.build-run.outputs.neoforge_name }}"
 
       - name: Publish NeoForge to Modrinth
         if: steps.modrinth-neoforge.outputs.should_upload == 'true'
@@ -229,7 +250,7 @@ jobs:
         if: steps.build-run.outputs.paper_file != ''
         env:
           MODRINTH_TOKEN: ${{ secrets.MODRINTH_TOKEN }}
-        run: bash ./.github/scripts/modrinth-idempotency.sh "${{ steps.build-run.outputs.paper_file }}" A0VZd1kW
+        run: bash .ci/.github/scripts/modrinth-idempotency.sh "${{ steps.build-run.outputs.paper_file }}" A0VZd1kW "${{ steps.build-run.outputs.paper_name }}"
 
       - name: Publish Paper to Modrinth
         if: steps.modrinth-paper.outputs.should_upload == 'true'
@@ -247,9 +268,7 @@ jobs:
       - name: Check Fabric on CurseForge
         id: curseforge-fabric
         if: steps.build-run.outputs.fabric_file != ''
-        env:
-          CURSEFORGE_API_TOKEN: ${{ secrets.CURSEFORGE_API_TOKEN }}
-        run: bash ./.github/scripts/curseforge-idempotency.sh "${{ steps.build-run.outputs.fabric_file }}" 1086212
+        run: bash .ci/.github/scripts/curseforge-idempotency.sh "${{ steps.build-run.outputs.fabric_file }}" 1086212
 
       - name: Publish Fabric to CurseForge
         if: steps.curseforge-fabric.outputs.should_upload == 'true'
@@ -263,14 +282,12 @@ jobs:
           changelog: ${{ github.event.release.body }}
           changelog_type: markdown
           release_type: release
-          game_versions: Minecraft:${{ steps.build-run.outputs.fabric_mc }},Fabric
+          game_versions: ${{ steps.build-run.outputs.fabric_cf_mc }},Fabric,9638
 
       - name: Check NeoForge on CurseForge
         id: curseforge-neoforge
         if: steps.build-run.outputs.neoforge_file != ''
-        env:
-          CURSEFORGE_API_TOKEN: ${{ secrets.CURSEFORGE_API_TOKEN }}
-        run: bash ./.github/scripts/curseforge-idempotency.sh "${{ steps.build-run.outputs.neoforge_file }}" 1086212
+        run: bash .ci/.github/scripts/curseforge-idempotency.sh "${{ steps.build-run.outputs.neoforge_file }}" 1086212
 
       - name: Publish NeoForge to CurseForge
         if: steps.curseforge-neoforge.outputs.should_upload == 'true'
@@ -284,15 +301,13 @@ jobs:
           changelog: ${{ github.event.release.body }}
           changelog_type: markdown
           release_type: release
-          game_versions: Minecraft:${{ steps.build-run.outputs.neoforge_mc }},NeoForge
+          game_versions: ${{ steps.build-run.outputs.neoforge_cf_mc }},NeoForge,9638
 
       # Paper uses CurseForge's Bukkit endpoint and its dedicated plugin project.
       - name: Check Paper on CurseForge
         id: curseforge-paper
         if: steps.build-run.outputs.paper_file != ''
-        env:
-          CURSEFORGE_API_TOKEN: ${{ secrets.CURSEFORGE_API_TOKEN }}
-        run: bash ./.github/scripts/curseforge-idempotency.sh "${{ steps.build-run.outputs.paper_file }}" 1627378
+        run: bash .ci/.github/scripts/curseforge-idempotency.sh "${{ steps.build-run.outputs.paper_file }}" 1627378
 
       - name: Publish Paper to CurseForge
         if: steps.curseforge-paper.outputs.should_upload == 'true'
@@ -306,7 +321,6 @@ jobs:
           changelog: ${{ github.event.release.body }}
           changelog_type: markdown
           release_type: release
-          game_versions: Bukkit:${{ steps.build-run.outputs.paper_mc }}
 
       # --- 总结报告 ---
       - name: Summary

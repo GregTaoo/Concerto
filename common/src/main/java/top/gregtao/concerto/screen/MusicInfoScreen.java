@@ -46,7 +46,8 @@ public class MusicInfoScreen extends ConcertoScreen {
     private Lyrics wrappedMainLyrics;
     private Lyrics wrappedSubLyrics;
     private int wrappedLyricsWidth = -1;
-    private final AbstractScrollArea lyricScrollbar = new AbstractScrollArea(0, 0, 0, 0, Component.empty(), null) {
+    private final AbstractScrollArea lyricScrollbar = new AbstractScrollArea(0, 0, 0, 0, Component.empty(),
+            AbstractScrollArea.defaultSettings(12)) {
         @Override
         protected int contentHeight() {
             return MusicInfoScreen.this.wrappedLyrics.size() * 10 + 8;
@@ -59,6 +60,7 @@ public class MusicInfoScreen extends ConcertoScreen {
 
         @Override
         protected void extractWidgetRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float delta) {
+            this.extractScrollbar(graphics, mouseX, mouseY);
         }
 
         @Override

@@ -25,7 +25,7 @@ import top.gregtao.concerto.core.player.MusicPlayer;
 import top.gregtao.concerto.core.player.MusicPlayerHandler;
 import top.gregtao.concerto.core.player.PlayerPermissions;
 import top.gregtao.concerto.core.util.Pair;
-import top.gregtao.concerto.mixin.GuiGraphicsAccessor;
+import top.gregtao.concerto.mixin.GuiGraphicsExtractorAccessor;
 import top.gregtao.concerto.screen.widget.VolumeControlWidget;
 
 import java.util.ArrayList;
@@ -400,14 +400,20 @@ public class MusicPlayerScreen extends ConcertoScreen {
         float angleStep = 360f / barCount;
         float spanDegrees = angleStep * 0.85f;
 
+        GuiGraphicsExtractorAccessor accessor = (GuiGraphicsExtractorAccessor) g;
+        Matrix3x2fStack matrix = g.pose();
+
         for (int i = 0; i < barCount; i++) {
             float value = spectrumBars[i];
-            float angle = (float) Math.toRadians(i * angleStep);
-            float length = Math.max(2f, Math.min((float) (1.3 * Math.log10(1.0 + value * 60.0)) * maxBarLength, maxBarLength));
-            int x = Math.round(centerX + (float) Math.cos(angle) * radiusInner);
-            int y = Math.round(centerY + (float) Math.sin(angle) * radiusInner);
-            g.fill(x - 1, y - 1, x + Math.round((float) Math.cos(angle) * length) + 1,
-                    y + Math.round((float) Math.sin(angle) * length) + 1, 0xff96c8ff);
+
+            accessor.getGuiRenderState().addGuiElement(
+                    new SpectrumQuadRenderState(
+                            RenderPipelines.GUI,
+                            TextureSetup.noTexture(),
+                            new Matrix3x2f(matrix),
+                            i, value, centerX, centerY, radiusInner, maxBarLength, angleStep, spanDegrees
+                    )
+            );
         }
     }
 

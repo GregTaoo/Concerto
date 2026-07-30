@@ -446,10 +446,10 @@ public class MusicPlayerScreen extends ConcertoScreen {
             float x4 = this.centerX + cos2 * this.radiusInner;
             float y4 = this.centerY + sin2 * this.radiusInner;
 
-            vertexConsumer.addVertex(this.pose(), x1, y1, 0).setColor(color);
-            vertexConsumer.addVertex(this.pose(), x4, y4, 0).setColor(color);
-            vertexConsumer.addVertex(this.pose(), x3, y3, 0).setColor(color);
-            vertexConsumer.addVertex(this.pose(), x2, y2, 0).setColor(color);
+            vertexConsumer.vertex(this.pose(), x1, y1, 0).color(color).endVertex();
+            vertexConsumer.vertex(this.pose(), x4, y4, 0).color(color).endVertex();
+            vertexConsumer.vertex(this.pose(), x3, y3, 0).color(color).endVertex();
+            vertexConsumer.vertex(this.pose(), x2, y2, 0).color(color).endVertex();
         }
     }
 

@@ -267,6 +267,9 @@ public class MusicRoom {
                             break;
                         }
                         room.serverOnJoin(sender);
+                        if (ServerMusicAgent.isServerAgent(uuid)) {
+                            ServerMusicAgent.INSTANCE.refreshPlaybackTimestamp();
+                        }
                         bridge.sendRoomCommand(sender, Command.JOIN, room.uuid.toString());
                         bridge.sendRoomCommand(sender, Command.SYNC, room.serverState.buildFull().toString());
                         if (ServerMusicAgent.isServerAgent(uuid)) {

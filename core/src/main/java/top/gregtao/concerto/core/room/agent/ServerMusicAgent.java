@@ -57,6 +57,8 @@ public class ServerMusicAgent {
 
     private ScheduledFuture<?> playNextFuture;
     private Music currentMusic = null;
+    /** Monotonic start time for the track currently advertised to clients. */
+    private volatile long currentMusicStartedAtNanos = -1L;
     private UUID trackedIndex = null;
     private boolean trackedPauseState = true;
     private final AtomicBoolean isStopped = new AtomicBoolean(false);
@@ -245,6 +247,7 @@ public class ServerMusicAgent {
         this.currentMusic = taskMusic;
 
         if (taskMusic == null) {
+            this.currentMusicStartedAtNanos = -1L;
             this.updateState(s -> {
                 s.resolvedMedia = null;
                 s.resolvedStartTime = 0L;
@@ -279,6 +282,7 @@ public class ServerMusicAgent {
                 if (!Objects.equals(this.room.serverState.get().currentIndex, currentUUID)) return;
 
                 String media = MusicJsonParsers.to(resolvedShared).toString();
+                this.currentMusicStartedAtNanos = System.nanoTime();
                 this.updateState(s -> {
                     s.resolvedMedia = media;
                     s.resolvedStartTime = 0L;
@@ -305,6 +309,22 @@ public class ServerMusicAgent {
 
     public boolean isMember(String playerName) {
         return this.getMembers().containsKey(playerName);
+    }
+
+    /**
+     * Updates the shared position before a new agent member receives its full state.
+     * The server is the only clock authority for the server-wide music agent.
+     */
+    public void refreshPlaybackTimestamp() {
+        long startedAtNanos = this.currentMusicStartedAtNanos;
+        Music music = this.currentMusic;
+        if (startedAtNanos < 0L || music == null || this.room.serverState.get().paused) return;
+
+        long elapsedMillis = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startedAtNanos);
+        long durationMillis = music.getMeta().getDuration().asMilliseconds();
+        long positionMillis = Math.max(0L, Math.min(elapsedMillis, durationMillis));
+        this.updateState(s -> s.resolvedStartTime = positionMillis,
+                List.of(MusicRoomState.RESOLVED_START_TIME));
     }
 
     public void addMusic(String playerName, Music music) {
@@ -354,6 +374,7 @@ public class ServerMusicAgent {
 
         if (this.playNextFuture != null) this.playNextFuture.cancel(true);
         this.currentMusic = null;
+        this.currentMusicStartedAtNanos = -1L;
         this.currentlyFreeTime.set(false);
 
         this.updateState(s -> {

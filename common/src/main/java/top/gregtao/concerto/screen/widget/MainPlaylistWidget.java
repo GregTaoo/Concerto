@@ -1,8 +1,10 @@
 package top.gregtao.concerto.screen.widget;
 
 import net.minecraft.ChatFormatting;
+import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
+import org.jetbrains.annotations.NotNull;
 
 import top.gregtao.concerto.core.api.WithMetaData;
 import top.gregtao.concerto.core.music.Music;
@@ -20,6 +22,7 @@ import java.util.concurrent.atomic.AtomicReference;
 public class MainPlaylistWidget extends MetadataListWidget<MainPlaylistWidget.Entry> {
     private static final int ACTION_BUTTON_WIDTH = 14;
     private final Consumer<Entry> titleEditor;
+    private final int rowHeight;
     private int actionStartX = -1;
     private int actionY = -1;
     private int actionCount;
@@ -45,6 +48,7 @@ public class MainPlaylistWidget extends MetadataListWidget<MainPlaylistWidget.En
     public MainPlaylistWidget(int width, int height, int top, int itemHeight, Consumer<Entry> titleEditor) {
         super(width, height, top, itemHeight);
         this.titleEditor = titleEditor;
+        this.rowHeight = itemHeight;
         this.reset();
     }
 
@@ -76,35 +80,35 @@ public class MainPlaylistWidget extends MetadataListWidget<MainPlaylistWidget.En
     }
 
     @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        if (button == 0 && PlayerPermissions.canReorderMusicList()
-                && mouseX < this.getRowRight() - 3 - this.actionCount() * ACTION_BUTTON_WIDTH
-                && this.getEntryAtPosition(mouseX, mouseY) instanceof ConcertoListWidget<MainPlaylistWidget.Entry>.Entry entry) {
-            boolean handled = super.mouseClicked(mouseX, mouseY, button);
+    public boolean mouseClicked(@NotNull MouseButtonEvent event, boolean doubled) {
+        if (event.button() == 0 && PlayerPermissions.canReorderMusicList()
+                && event.x() < this.getRowRight() - 3 - this.actionCount() * ACTION_BUTTON_WIDTH
+                && this.getEntryAtPosition(event.x(), event.y()) instanceof ConcertoListWidget<MainPlaylistWidget.Entry>.Entry entry) {
+            boolean handled = super.mouseClicked(event, doubled);
             this.draggedEntry = entry;
             this.dragging = false;
             return handled;
         }
-        return super.mouseClicked(mouseX, mouseY, button);
+        return super.mouseClicked(event, doubled);
     }
 
     @Override
-    public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
-        if (button == 0 && this.draggedEntry != null) {
+    public boolean mouseDragged(@NotNull MouseButtonEvent event, double dragX, double dragY) {
+        if (event.button() == 0 && this.draggedEntry != null) {
             this.dragging = true;
-            this.dropBeforeUuid = this.getDropBeforeUuid(mouseX, mouseY);
+            this.dropBeforeUuid = this.getDropBeforeUuid(event.x(), event.y());
             return true;
         }
-        return super.mouseDragged(mouseX, mouseY, button, dragX, dragY);
+        return super.mouseDragged(event, dragX, dragY);
     }
 
     @Override
-    public boolean mouseReleased(double mouseX, double mouseY, int button) {
-        if (button == 0 && this.draggedEntry != null) {
+    public boolean mouseReleased(@NotNull MouseButtonEvent event) {
+        if (event.button() == 0 && this.draggedEntry != null) {
             ConcertoListWidget<MainPlaylistWidget.Entry>.Entry source = this.draggedEntry;
             this.draggedEntry = null;
             if (this.dragging && PlayerPermissions.canReorderMusicList()) {
-                UUID beforeUuid = this.getDropBeforeUuid(mouseX, mouseY);
+                UUID beforeUuid = this.getDropBeforeUuid(event.x(), event.y());
                 this.pendingSelection = source.item.index();
                 if (!MusicPlayerHandler.INSTANCE.moveMusic(source.item.index(), beforeUuid)) {
                     this.pendingSelection = null;
@@ -114,7 +118,7 @@ public class MainPlaylistWidget extends MetadataListWidget<MainPlaylistWidget.En
             this.dropBeforeUuid = null;
             return true;
         }
-        return super.mouseReleased(mouseX, mouseY, button);
+        return super.mouseReleased(event);
     }
 
     @Override
@@ -158,7 +162,7 @@ public class MainPlaylistWidget extends MetadataListWidget<MainPlaylistWidget.En
             return !this.children().isEmpty() && mouseY < this.getRowTop(0)
                     ? this.children().getFirst().item.index() : null;
         }
-        if (mouseY < this.getRowTop(target.entryIndex) + this.itemHeight / 2.0) {
+        if (mouseY < this.getRowTop(target.entryIndex) + this.rowHeight / 2.0) {
             return target.item.index();
         }
         int nextIndex = target.entryIndex + 1;
@@ -168,13 +172,13 @@ public class MainPlaylistWidget extends MetadataListWidget<MainPlaylistWidget.En
     private void renderDragFeedback(ConcertoListWidget<Entry>.Entry entry, GuiGraphics graphics, int y, int x, int entryWidth) {
         if (!this.dragging) return;
         if (entry == this.draggedEntry) {
-            graphics.fill(x - 2, y, x + entryWidth - 2, y + this.itemHeight, 0x503f7fbf);
+            graphics.fill(x - 2, y, x + entryWidth - 2, y + this.rowHeight, 0x503f7fbf);
         }
         if (entry.item.index().equals(this.dropBeforeUuid)) {
             graphics.fill(x - 2, y, x + entryWidth - 2, y + 2, 0xff5da9e9);
         } else if (this.dropBeforeUuid == null && !this.children().isEmpty()
                 && entry == this.children().getLast()) {
-            graphics.fill(x - 2, y + this.itemHeight - 2, x + entryWidth - 2, y + this.itemHeight, 0xff5da9e9);
+            graphics.fill(x - 2, y + this.rowHeight - 2, x + entryWidth - 2, y + this.rowHeight, 0xff5da9e9);
         }
     }
 

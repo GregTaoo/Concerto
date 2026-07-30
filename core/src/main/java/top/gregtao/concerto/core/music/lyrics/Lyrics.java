@@ -54,12 +54,17 @@ public abstract class Lyrics {
     }
 
     public String stayOrNext(long timestamp) {
-        if (this.index < this.lyricBody.size() - 1 &&
-                timestamp >= this.lyricBody.get(this.index + 1).getFirst().asMilliseconds()) {
-            return this.nextLine();
-        } else {
-            return this.getCurrent();
+        if (this.lyricBody.isEmpty()) {
+            return "";
         }
+        while (this.index > 0 && timestamp < this.lyricBody.get(this.index).getFirst().asMilliseconds()) {
+            --this.index;
+        }
+        while (this.index < this.lyricBody.size() - 1 &&
+                timestamp >= this.lyricBody.get(this.index + 1).getFirst().asMilliseconds()) {
+            ++this.index;
+        }
+        return this.getCurrent();
     }
 
     public void addLine(MusicTimestamp timestamp, String line) {

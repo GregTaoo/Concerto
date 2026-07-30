@@ -68,6 +68,12 @@ public class ClientConfig extends ConfigFile {
         public float scrollingTextSpeed = 1.0f;
         public NeteaseCloudMusic.Level neteaseMusicQuality = NeteaseCloudMusic.Level.HIRES;
 
+        public double playerVolume = 1.0;
+        public boolean playerVolumeFollowsMaster = true;
+        public int playbackHistorySize = 25;
+        public PlaybackBackend playbackBackend = PlaybackBackend.JAVASOUND;
+        public boolean displayPlayerScreenCoverAndSpectrum = true;
+
         public boolean displayLyrics = true;
         public String lyricsPosition = "0.5,1-70";
         public TextAlignment lyricsAlignment = TextAlignment.CENTER;
@@ -104,6 +110,11 @@ public class ClientConfig extends ConfigFile {
 
         // 是否自动领取酷狗每日VIP
         public boolean autoGetKuGouDailyVIP = false;
+    }
+
+    public enum PlaybackBackend {
+        JAVASOUND,
+        OPENAL
     }
 
     public static class PositionXYSupplier {

@@ -7,10 +7,9 @@ import top.gregtao.concerto.core.music.MusicTimestamp;
 public class TimelessMusicMetaData implements MusicMetaData {
 
     private final String author;
-    private final String title;
+    private String title;
     private final String source;
     private String headPictureUrl = "";
-    private String status = "";
 
     public TimelessMusicMetaData(String author, String title, String source) {
         this.author = author;
@@ -31,6 +30,10 @@ public class TimelessMusicMetaData implements MusicMetaData {
     @Override
     public String title() {
         return this.title;
+    }
+
+    public void setTitle(String title) {
+        this.title = title;
     }
 
     @Override

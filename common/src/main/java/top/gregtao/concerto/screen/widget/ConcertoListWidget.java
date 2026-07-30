@@ -6,12 +6,13 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.ObjectSelectionList;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
+import top.gregtao.concerto.screen.ConcertoScreen;
 
 import java.util.List;
 import java.util.ListIterator;
 
 public class ConcertoListWidget<T> extends ObjectSelectionList<ConcertoListWidget<T>.Entry> {
-    private int color = 0xffffffff;
+    protected int color = 0xffffffff;
 
     public ConcertoListWidget(int width, int height, int top, int itemHeight) {
         super(Minecraft.getInstance(), width, height, top, itemHeight);
@@ -70,7 +71,16 @@ public class ConcertoListWidget<T> extends ObjectSelectionList<ConcertoListWidge
 
     @Override
     public int getRowWidth() {
-        return this.width - 35;
+        return this.width - ConcertoScreen.STANDARD_CONTENT_MARGIN * 2;
+    }
+
+    protected boolean handleEntryClick(Entry entry, double mouseX, double mouseY, int button) {
+        return false;
+    }
+
+    protected void renderEntry(Entry entry, GuiGraphics context, int y, int x, int entryWidth,
+                               int mouseX, int mouseY, boolean hovered, float tickDelta) {
+        context.drawString(Minecraft.getInstance().font, entry.getNarration(), x, y + 3, this.color, false);
     }
 
     public class Entry extends ObjectSelectionList.Entry<Entry> {
@@ -86,6 +96,7 @@ public class ConcertoListWidget<T> extends ObjectSelectionList<ConcertoListWidge
 
         @Override
         public boolean mouseClicked(double mouseX, double mouseY, int button) {
+            if (ConcertoListWidget.this.handleEntryClick(this, mouseX, mouseY, button)) return true;
             if (button == 0) {
                 if (Util.getMillis() - this.lastClickTime < 250) {
                     ConcertoListWidget.this.onDoubleClicked(this);
@@ -105,7 +116,7 @@ public class ConcertoListWidget<T> extends ObjectSelectionList<ConcertoListWidge
 
         @Override
         public void render(GuiGraphics context, int index, int y, int x, int entryWidth, int entryHeight, int mouseX, int mouseY, boolean hovered, float tickDelta) {
-            context.drawString(Minecraft.getInstance().font, this.getNarration(), x, y + 3, ConcertoListWidget.this.color, false);
+            ConcertoListWidget.this.renderEntry(this, context, y, x, entryWidth, mouseX, mouseY, hovered, tickDelta);
         }
     }
 }

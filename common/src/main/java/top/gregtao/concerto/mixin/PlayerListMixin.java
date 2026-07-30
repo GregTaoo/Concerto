@@ -1,6 +1,7 @@
 package top.gregtao.concerto.mixin;
 
 import net.minecraft.network.Connection;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.network.CommonListenerCookie;
 import net.minecraft.server.players.PlayerList;
@@ -10,11 +11,8 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import top.gregtao.concerto.core.room.MusicRoom;
 import top.gregtao.concerto.network.ServerMusicNetworkHandler;
+import top.gregtao.concerto.network.room.MusicRoomManager;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
@@ -30,17 +28,9 @@ public class PlayerListMixin {
 
     @Inject(at = @At("HEAD"), method = "remove(Lnet/minecraft/server/level/ServerPlayer;)V")
     public void removeInject(ServerPlayer player, CallbackInfo ci) {
-        List<UUID> removeList = new ArrayList<>();
-        for (Map.Entry<UUID, MusicRoom> entry : MusicRoom.ROOMS.entrySet()) {
-            if (entry.getValue().serverGetOwner().equals(player.getName().getString())) {
-                removeList.add(entry.getKey());
-                break;
-            }
-            if (entry.getValue().serverGetMembers().containsKey(player.getName().getString())) {
-                entry.getValue().serverOnQuit(player.getName().getString());
-                break;
-            }
-        }
-        removeList.forEach(MusicRoom.ROOMS::remove);
+        MinecraftServer server = ((PlayerList) (Object) this).getServer();
+        if (server == null) return;
+        MusicRoom.serverOnPlayerDisconnect(player.getName().getString(),
+                MusicRoomManager.createServerBridge(server));
     }
 }

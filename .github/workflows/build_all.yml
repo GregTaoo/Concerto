@@ -4,6 +4,9 @@ on:
   release:
     types: [published, edited]
 
+permissions:
+  contents: write
+
 jobs:
   generate-branches:
     name: Generate Branch Matrix
@@ -119,7 +122,9 @@ jobs:
            1.17.1) GV_ARRAY='["1.17.x"]' ;;
            1.18.2) GV_ARRAY='["1.18.x"]' ;;
            1.19.4) GV_ARRAY='["1.19.x"]' ;;
-           1.20.1) GV_ARRAY='["1.20.1","1.20.2","1.20.3"]' ;;
+           # 多模块的 mc1.20.1 构建的 PlayerList mixin 依赖 1.20.1 的
+           # placeNewPlayer 签名（1.20.2 加入了 CommonListenerCookie），不能再声明 1.20.2/1.20.3
+           1.20.1) GV_ARRAY='["1.20.1"]' ;;
            1.20.4) GV_ARRAY='["1.20.4","1.20.5"]' ;;
            1.20.6) GV_ARRAY='["1.20.6"]' ;;
            1.21.1) GV_ARRAY='["1.21.1","1.21.2","1.21.3"]' ;;
@@ -129,33 +134,68 @@ jobs:
            1.21.10) GV_ARRAY='["1.21.10"]' ;;
            1.21.11) GV_ARRAY='["1.21.11"]' ;;
            26.1.2) GV_ARRAY='["26.1.x"]' ;;
+           26.2) GV_ARRAY='["26.2.x"]' ;;
            *) GV_ARRAY='[]' ;;
           esac
           
           # 判断 Loader 类型并写入专属的 GITHUB_OUTPUT
+          # *_name 仍是版本号（保持既有命名连续性），*_display 是 Modrinth 上的展示标题
           if echo "$FNAME" | grep -iq "fabric"; then
            echo "fabric_file=$FILE" >> $GITHUB_OUTPUT
+           echo "fabric_mc=$MC_VER" >> $GITHUB_OUTPUT
            echo "fabric_gv=$GV_ARRAY" >> $GITHUB_OUTPUT
            echo "fabric_name=fabric-${SHORTER_VERSION}-mc${MC_VER}" >> $GITHUB_OUTPUT
+           echo "fabric_display=Concerto ${SHORTER_VERSION} for Fabric ${MC_VER}" >> $GITHUB_OUTPUT
           elif echo "$FNAME" | grep -iq "neoforge"; then
            echo "neoforge_file=$FILE" >> $GITHUB_OUTPUT
+           echo "neoforge_mc=$MC_VER" >> $GITHUB_OUTPUT
            echo "neoforge_gv=$GV_ARRAY" >> $GITHUB_OUTPUT
            echo "neoforge_name=neoforge-${SHORTER_VERSION}-mc${MC_VER}" >> $GITHUB_OUTPUT
+           echo "neoforge_display=Concerto ${SHORTER_VERSION} for NeoForge ${MC_VER}" >> $GITHUB_OUTPUT
           elif echo "$FNAME" | grep -iq "paper"; then
            echo "paper_file=$FILE" >> $GITHUB_OUTPUT
+           echo "paper_mc=$MC_VER" >> $GITHUB_OUTPUT
            echo "paper_gv=$GV_ARRAY" >> $GITHUB_OUTPUT
            echo "paper_name=paper-${SHORTER_VERSION}-mc${MC_VER}" >> $GITHUB_OUTPUT
+           echo "paper_display=Concerto ${SHORTER_VERSION} for Paper ${MC_VER}" >> $GITHUB_OUTPUT
           fi
           done
 
       # --- 分开上传: Fabric ---
-      - name: Publish Fabric to Modrinth
+      - name: Upload build to GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+          FABRIC_FILE: ${{ steps.build-run.outputs.fabric_file }}
+          NEOFORGE_FILE: ${{ steps.build-run.outputs.neoforge_file }}
+          PAPER_FILE: ${{ steps.build-run.outputs.paper_file }}
+        run: |
+          set -euo pipefail
+          files=()
+          for file in "$FABRIC_FILE" "$NEOFORGE_FILE" "$PAPER_FILE"; do
+            if [ -n "$file" ]; then
+              files+=("$file")
+            fi
+          done
+
+          if [ ${#files[@]} -gt 0 ]; then
+            gh release upload "$RELEASE_TAG" "${files[@]}" --clobber
+          fi
+
+      - name: Check Fabric on Modrinth
+        id: modrinth-fabric
         if: steps.build-run.outputs.fabric_file != ''
+        env:
+          MODRINTH_TOKEN: ${{ secrets.MODRINTH_TOKEN }}
+        run: bash ./.github/scripts/modrinth-idempotency.sh "${{ steps.build-run.outputs.fabric_file }}" A0VZd1kW
+
+      - name: Publish Fabric to Modrinth
+        if: steps.modrinth-fabric.outputs.should_upload == 'true'
         uses: cloudnode-pro/modrinth-publish@v2
         with:
           token: ${{ secrets.MODRINTH_TOKEN }}
           project: A0VZd1kW
-          name: ${{ steps.build-run.outputs.fabric_name }}
+          name: ${{ steps.build-run.outputs.fabric_display }}
           version: ${{ steps.build-run.outputs.fabric_name }}
           changelog: ${{ github.event.release.body }}
           loaders: '["fabric"]'
@@ -163,13 +203,20 @@ jobs:
           files: ${{ steps.build-run.outputs.fabric_file }}
 
       # --- 分开上传: NeoForge ---
-      - name: Publish NeoForge to Modrinth
+      - name: Check NeoForge on Modrinth
+        id: modrinth-neoforge
         if: steps.build-run.outputs.neoforge_file != ''
+        env:
+          MODRINTH_TOKEN: ${{ secrets.MODRINTH_TOKEN }}
+        run: bash ./.github/scripts/modrinth-idempotency.sh "${{ steps.build-run.outputs.neoforge_file }}" A0VZd1kW
+
+      - name: Publish NeoForge to Modrinth
+        if: steps.modrinth-neoforge.outputs.should_upload == 'true'
         uses: cloudnode-pro/modrinth-publish@v2
         with:
           token: ${{ secrets.MODRINTH_TOKEN }}
           project: A0VZd1kW
-          name: ${{ steps.build-run.outputs.neoforge_name }}
+          name: ${{ steps.build-run.outputs.neoforge_display }}
           version: ${{ steps.build-run.outputs.neoforge_name }}
           changelog: ${{ github.event.release.body }}
           loaders: '["neoforge"]'
@@ -177,18 +224,89 @@ jobs:
           files: ${{ steps.build-run.outputs.neoforge_file }}
 
       # --- 分开上传: Paper ---
-      - name: Publish Paper to Modrinth
+      - name: Check Paper on Modrinth
+        id: modrinth-paper
         if: steps.build-run.outputs.paper_file != ''
+        env:
+          MODRINTH_TOKEN: ${{ secrets.MODRINTH_TOKEN }}
+        run: bash ./.github/scripts/modrinth-idempotency.sh "${{ steps.build-run.outputs.paper_file }}" A0VZd1kW
+
+      - name: Publish Paper to Modrinth
+        if: steps.modrinth-paper.outputs.should_upload == 'true'
         uses: cloudnode-pro/modrinth-publish@v2
         with:
           token: ${{ secrets.MODRINTH_TOKEN }}
           project: A0VZd1kW
-          name: ${{ steps.build-run.outputs.paper_name }}
+          name: ${{ steps.build-run.outputs.paper_display }}
           version: ${{ steps.build-run.outputs.paper_name }}
           changelog: ${{ github.event.release.body }}
           loaders: '["paper"]'
           game-versions: ${{ steps.build-run.outputs.paper_gv }}
           files: ${{ steps.build-run.outputs.paper_file }}
+
+      - name: Check Fabric on CurseForge
+        id: curseforge-fabric
+        if: steps.build-run.outputs.fabric_file != ''
+        env:
+          CURSEFORGE_API_TOKEN: ${{ secrets.CURSEFORGE_API_TOKEN }}
+        run: bash ./.github/scripts/curseforge-idempotency.sh "${{ steps.build-run.outputs.fabric_file }}" 1086212
+
+      - name: Publish Fabric to CurseForge
+        if: steps.curseforge-fabric.outputs.should_upload == 'true'
+        uses: itsmeow/curseforge-upload@v3
+        with:
+          token: ${{ secrets.CURSEFORGE_API_TOKEN }}
+          project_id: 1086212
+          game_endpoint: minecraft
+          file_path: ${{ steps.build-run.outputs.fabric_file }}
+          display_name: ${{ steps.build-run.outputs.fabric_display }}
+          changelog: ${{ github.event.release.body }}
+          changelog_type: markdown
+          release_type: release
+          game_versions: Minecraft:${{ steps.build-run.outputs.fabric_mc }},Fabric
+
+      - name: Check NeoForge on CurseForge
+        id: curseforge-neoforge
+        if: steps.build-run.outputs.neoforge_file != ''
+        env:
+          CURSEFORGE_API_TOKEN: ${{ secrets.CURSEFORGE_API_TOKEN }}
+        run: bash ./.github/scripts/curseforge-idempotency.sh "${{ steps.build-run.outputs.neoforge_file }}" 1086212
+
+      - name: Publish NeoForge to CurseForge
+        if: steps.curseforge-neoforge.outputs.should_upload == 'true'
+        uses: itsmeow/curseforge-upload@v3
+        with:
+          token: ${{ secrets.CURSEFORGE_API_TOKEN }}
+          project_id: 1086212
+          game_endpoint: minecraft
+          file_path: ${{ steps.build-run.outputs.neoforge_file }}
+          display_name: ${{ steps.build-run.outputs.neoforge_display }}
+          changelog: ${{ github.event.release.body }}
+          changelog_type: markdown
+          release_type: release
+          game_versions: Minecraft:${{ steps.build-run.outputs.neoforge_mc }},NeoForge
+
+      # Paper uses CurseForge's Bukkit endpoint and its dedicated plugin project.
+      - name: Check Paper on CurseForge
+        id: curseforge-paper
+        if: steps.build-run.outputs.paper_file != ''
+        env:
+          CURSEFORGE_API_TOKEN: ${{ secrets.CURSEFORGE_API_TOKEN }}
+        run: bash ./.github/scripts/curseforge-idempotency.sh "${{ steps.build-run.outputs.paper_file }}" 1627378
+
+      - name: Publish Paper to CurseForge
+        if: steps.curseforge-paper.outputs.should_upload == 'true'
+        uses: itsmeow/curseforge-upload@v3
+        with:
+          token: ${{ secrets.CURSEFORGE_API_TOKEN }}
+          project_id: 1627378
+          game_endpoint: bukkit
+          file_path: ${{ steps.build-run.outputs.paper_file }}
+          display_name: ${{ steps.build-run.outputs.paper_display }}
+          changelog: ${{ github.event.release.body }}
+          changelog_type: markdown
+          release_type: release
+          game_versions: Bukkit:${{ steps.build-run.outputs.paper_mc }}
 
       # --- 总结报告 ---
       - name: Summary
@@ -197,11 +315,11 @@ jobs:
           echo "- **Base Version**: ${{ steps.build-run.outputs.shorter_version }}" >> $GITHUB_STEP_SUMMARY
           
           if [ -n "${{ steps.build-run.outputs.fabric_file }}" ]; then
-            echo "- **Fabric**: Uploaded ${{ steps.build-run.outputs.fabric_name }}" >> $GITHUB_STEP_SUMMARY
+            echo "- **Fabric**: Processed ${{ steps.build-run.outputs.fabric_display }} (${{ steps.build-run.outputs.fabric_name }}; published or already present)" >> $GITHUB_STEP_SUMMARY
           fi
           if [ -n "${{ steps.build-run.outputs.neoforge_file }}" ]; then
-            echo "- **NeoForge**: Uploaded ${{ steps.build-run.outputs.neoforge_name }}" >> $GITHUB_STEP_SUMMARY
+            echo "- **NeoForge**: Processed ${{ steps.build-run.outputs.neoforge_display }} (${{ steps.build-run.outputs.neoforge_name }}; published or already present)" >> $GITHUB_STEP_SUMMARY
           fi
           if [ -n "${{ steps.build-run.outputs.paper_file }}" ]; then
-            echo "- **Paper**: Uploaded ${{ steps.build-run.outputs.paper_name }}" >> $GITHUB_STEP_SUMMARY
+            echo "- **Paper**: Processed ${{ steps.build-run.outputs.paper_display }} (${{ steps.build-run.outputs.paper_name }}; published or already present)" >> $GITHUB_STEP_SUMMARY
           fi

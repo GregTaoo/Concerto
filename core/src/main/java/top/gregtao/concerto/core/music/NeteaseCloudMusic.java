@@ -3,6 +3,7 @@ package top.gregtao.concerto.core.music;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import top.gregtao.concerto.core.Concerto;
 import top.gregtao.concerto.core.api.*;
 import top.gregtao.concerto.core.enums.Sources;
 import top.gregtao.concerto.core.http.HttpURLInputStream;
@@ -24,6 +25,7 @@ public class NeteaseCloudMusic extends Music implements CacheableMusic, DynamicP
     private final String id;
     private final Level level;
     private String rawPath, rawLyrics, rawSubLyrics, format;
+    private volatile boolean trialNotified = false;
 
     public NeteaseCloudMusic(String id, Level level) {
         this.id = id;
@@ -51,6 +53,17 @@ public class NeteaseCloudMusic extends Music implements CacheableMusic, DynamicP
     }
 
     public String getRawPath() {
+        DynamicPath.ResolvedPath resolvedPath = this.resolvePath();
+        if (resolvedPath.trial() && !this.trialNotified) {
+            this.trialNotified = true;
+            Concerto.getCoreBridge().sendTranslatableToClientPlayer("concerto.player.trial", false);
+        }
+        return resolvedPath.path();
+    }
+
+    @Override
+    public DynamicPath.ResolvedPath resolvePath() {
+        boolean trial = false;
         try {
             JsonObject object = NeteaseCloudApiClient.INSTANCE.getMusicLink(this.id, this.level)
                     .getAsJsonArray("data").get(0).getAsJsonObject();
@@ -58,12 +71,13 @@ public class NeteaseCloudMusic extends Music implements CacheableMusic, DynamicP
             this.rawPath = this.rawPath.isEmpty() ? null : this.rawPath;
             if (this.rawPath != null) {
                 this.format = FileUtil.getSuffix(URI.create(this.rawPath).getPath());
+                trial = object.has("freeTrialInfo") && !object.get("freeTrialInfo").isJsonNull();
             }
         } catch (Exception e) {
             this.rawPath = null;
             this.format = null;
         }
-        return this.rawPath;
+        return new DynamicPath.ResolvedPath(this.rawPath, trial);
     }
 
     @Override
@@ -79,7 +93,7 @@ public class NeteaseCloudMusic extends Music implements CacheableMusic, DynamicP
 
     @Override
     public String getLastSuffix() {
-        if (this.format == null) return this.getRawPath();
+        if (this.format == null) this.getRawPath();
         return this.format;
     }
 

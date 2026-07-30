@@ -26,6 +26,10 @@ public class PlayerPermissions {
         return getPermissionLevel() >= 2;
     }
 
+    public static boolean canReorderMusicList() {
+        return getPermissionLevel() >= 2;
+    }
+
     public static boolean canChangeOrderType() {
         return getPermissionLevel() >= 2;
     }

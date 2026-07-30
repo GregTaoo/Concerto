@@ -1,5 +1,7 @@
 package top.gregtao.concerto.core.player;
 
+import javax.sound.sampled.AudioFormat;
+
 public class AudioSpectrum {
 
     public static class FFT {
@@ -48,6 +50,8 @@ public class AudioSpectrum {
 
     private static final float SMOOTH_ATTACK = 0.20f;  // 弹起极快
     private static final float SMOOTH_DECAY = 0.03f;  // 优雅回落
+    private static final float OPENAL_SMOOTH_DECAY = 0.08f;
+    private static final float OPENAL_VISUAL_GAIN = 0.65f;
 
     private final float[] ringBuffer = new float[FFT_SIZE];
     private int ringIndex = 0;
@@ -58,13 +62,35 @@ public class AudioSpectrum {
 
     private final float[] smooth = new float[BINS];
     private long lastUpdate = 0;
+    private volatile boolean openAlProfile = false;
 
-    public void onAudioFrame(byte[] pcm) {
-        for (int i = 0; i < pcm.length - 1; i += 2) {
-            short sample = (short) ((pcm[i + 1] << 8) | (pcm[i] & 0xff));
-            ringBuffer[ringIndex] = sample / 32768f;
+    public void setOpenAlProfile(boolean openAlProfile) {
+        this.openAlProfile = openAlProfile;
+    }
+
+    public void onAudioFrame(byte[] pcm, int offset, int length, AudioFormat format) {
+        boolean float32 = AudioFormat.Encoding.PCM_FLOAT.equals(format.getEncoding())
+                && format.getSampleSizeInBits() == 32;
+        int channels = format.getChannels();
+        int bytesPerSample = format.getSampleSizeInBits() / 8;
+        int frameSize = format.getFrameSize();
+        int end = offset + length;
+        for (int frame = offset; frame + frameSize <= end; frame += frameSize) {
+            float sample = 0;
+            for (int channel = 0; channel < channels; channel++) {
+                int i = frame + channel * bytesPerSample;
+                if (float32) {
+                    int bits = (pcm[i] & 0xFF) | ((pcm[i + 1] & 0xFF) << 8)
+                            | ((pcm[i + 2] & 0xFF) << 16) | ((pcm[i + 3] & 0xFF) << 24);
+                    sample += Float.intBitsToFloat(bits);
+                } else {
+                    short value = (short) ((pcm[i + 1] << 8) | (pcm[i] & 0xFF));
+                    sample += value / 32768f;
+                }
+            }
+            ringBuffer[ringIndex] = sample / channels;
             ringIndex = (ringIndex + 1) % FFT_SIZE;
-            newSamples++; // 增加采样计数
+            newSamples++;
         }
     }
 
@@ -98,7 +124,8 @@ public class AudioSpectrum {
             if (Float.isNaN(magnitude)) magnitude = 0f;
 
             if (magnitude > smooth[i]) smooth[i] += (magnitude - smooth[i]) * SMOOTH_ATTACK;
-            else smooth[i] += (magnitude - smooth[i]) * SMOOTH_DECAY;
+            else smooth[i] += (magnitude - smooth[i]) *
+                    (this.openAlProfile ? OPENAL_SMOOTH_DECAY : SMOOTH_DECAY);
         }
     }
 
@@ -126,7 +153,7 @@ public class AudioSpectrum {
             for (int j = from; j < to; j++) {
                 if (smooth[j] > maxVal) maxVal = smooth[j];
             }
-            bars[i] = maxVal;
+            bars[i] = maxVal * (this.openAlProfile ? OPENAL_VISUAL_GAIN : 1.0f);
         }
         return bars;
     }

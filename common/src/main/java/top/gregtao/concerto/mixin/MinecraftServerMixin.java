@@ -22,8 +22,12 @@ public class MinecraftServerMixin {
     @Inject(at = @At("HEAD"), method = "stopServer()V")
     public void shutdownInject(CallbackInfo ci) {
         MusicRoom.ROOMS.clear();
-        ServerMusicAgent.INSTANCE.reset();
-        ServerMusicAgent.INSTANCE = null;
+        if (ServerMusicAgent.INSTANCE != null) {
+            // dispose(), not reset(): the scheduler must die with the server,
+            // a new agent instance is created on the next server start
+            ServerMusicAgent.INSTANCE.dispose();
+            ServerMusicAgent.INSTANCE = null;
+        }
         ConcertoClient.LOGGER.info("Server shutting down.");
     }
 }

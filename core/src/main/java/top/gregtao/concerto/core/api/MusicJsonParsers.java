@@ -22,6 +22,7 @@ import top.gregtao.concerto.core.util.JsonUtil;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.UUID;
 
 public class MusicJsonParsers {
@@ -198,8 +199,8 @@ public class MusicJsonParsers {
             ConcertoPlayerList list = adapter.deserialize(object.get("data"), null, null);
             return new MusicPlayerHandler(list,
                     JsonUtil.getUUIDOrElse(object, "cur", null),
-                    OrderType.valueOf(JsonUtil.getStringOrElse(object, "ord", OrderType.NORMAL.toString()))
-            );
+                    OrderType.valueOf(JsonUtil.getStringOrElse(object, "ord", OrderType.NORMAL.toString())),
+                    parsePlaybackHistory(object.getAsJsonArray("history")));
         } catch (Exception e) {
             Concerto.getLogger().warn("Error parsing JSON from music.json: {}", e.toString());
             return new MusicPlayerHandler();
@@ -216,6 +217,21 @@ public class MusicJsonParsers {
             object.addProperty("cur", status.getCurrentIndex().toString());
         }
         object.addProperty("ord", status.getOrderType().toString());
+        JsonArray history = new JsonArray();
+        status.getState().get().playbackHistory.forEach(uuid -> history.add(uuid.toString()));
+        object.add("history", history);
         return object.toString();
+    }
+
+    private static List<UUID> parsePlaybackHistory(JsonArray history) {
+        List<UUID> parsed = new ArrayList<>();
+        if (history == null) return parsed;
+        history.forEach(element -> {
+            try {
+                parsed.add(UUID.fromString(element.getAsString()));
+            } catch (Exception ignored) {
+            }
+        });
+        return parsed;
     }
 }

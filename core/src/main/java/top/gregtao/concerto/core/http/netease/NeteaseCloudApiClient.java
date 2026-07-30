@@ -35,7 +35,10 @@ public class NeteaseCloudApiClient extends HttpApiClient {
     public static NeteaseCloudUser LOCAL_USER = new NeteaseCloudUser(INSTANCE);
 
     public NeteaseCloudApiClient() {
-        super(Sources.NETEASE_CLOUD.asString(), HEADERS, Map.of("http://music.163.com", INIT_COOKIES));
+        super(Sources.NETEASE_CLOUD.asString(), HEADERS, Map.of(
+                "http://music.163.com", INIT_COOKIES,
+                "https://music.163.com", INIT_COOKIES
+        ));
     }
 
     public String getOuterMusicLink(String id) {
@@ -61,8 +64,14 @@ public class NeteaseCloudApiClient extends HttpApiClient {
     }
 
     public Pair<Integer, String> sendPhoneCaptcha(String countryCode, String phoneNumber) {
-        String url = "http://music.163.com/api/sms/captcha/sent?cellphone=" + phoneNumber + "&ctcode=" + countryCode;
-        JsonObject object = parseJson(this.open().url(url).get());
+        String path = "/api/middle/captcha/sent/v1";
+        JsonObject object = parseJson(this.open().url("https://interfacepc.music.163.com/eapi/middle/captcha/sent/v1").post(
+                HttpResponse.BodyHandlers.ofString(), HttpRequestBuilder.ContentType.FORM,
+                NeteaseCloudApiCrypto.eapiForm(path, Map.of(
+                        "ctcode", countryCode, "secrete", "music_middleuser_pclogin",
+                        "cellphone", phoneNumber, "scene", "0"
+                ))
+        ));
         if (object == null) return null;
         return getCodeAndMessage(object);
     }
@@ -72,11 +81,18 @@ public class NeteaseCloudApiClient extends HttpApiClient {
     }
 
     public Pair<Integer, String> cellphoneLogin(String countryCode, String phoneNumber, boolean captcha, String code) {
-        String url = "http://music.163.com/api/login/cellphone";
-        JsonObject object = parseJson(this.open().url(url, Map.of(
-                "phone", phoneNumber, "countrycode", countryCode, "rememberLogin", true,
-                captcha ? "captcha" : "password", captcha ? code : HashUtil.md5(code)
-        )).get());
+        Map<String, Object> data = new HashMap<>();
+        data.put("type", "1");
+        data.put("https", "true");
+        data.put("phone", phoneNumber);
+        data.put("countrycode", countryCode);
+        data.put("remember", "true");
+        data.put("secureCaptcha", "");
+        data.put(captcha ? "captcha" : "password", captcha ? code : HashUtil.md5(code));
+        JsonObject object = parseJson(this.open().url("https://music.163.com/weapi/w/login/cellphone").post(
+                HttpResponse.BodyHandlers.ofString(), HttpRequestBuilder.ContentType.FORM,
+                NeteaseCloudApiCrypto.weapiForm(data)
+        ));
         if (object == null) return null;
         Pair<Integer, String> result = getCodeAndMessage(object);
         if (result.getFirst() == 200) LOCAL_USER.updateLoginStatus();
@@ -88,10 +104,13 @@ public class NeteaseCloudApiClient extends HttpApiClient {
     }
 
     public Pair<Integer, String> emailPasswordLogin(String email, String password) {
-        String url = "http://music.163.com/api/login";
-        JsonObject object = parseJson(this.open().url(url, Map.of(
-                "username", email, "password", HashUtil.md5(password), "rememberLogin", true
-        )).get());
+        JsonObject object = parseJson(this.open().url("https://music.163.com/weapi/w/login").post(
+                HttpResponse.BodyHandlers.ofString(), HttpRequestBuilder.ContentType.FORM,
+                NeteaseCloudApiCrypto.weapiForm(Map.of(
+                        "type", "0", "https", "true", "username", email,
+                        "password", HashUtil.md5(password), "rememberLogin", "true"
+                ))
+        ));
         if (object == null) return null;
         Pair<Integer, String> result = getCodeAndMessage(object);
         if (result.getFirst() == 200) LOCAL_USER.updateLoginStatus();

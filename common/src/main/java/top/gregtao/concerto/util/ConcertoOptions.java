@@ -60,6 +60,23 @@ public class ConcertoOptions {
                 () -> this.config.options.handshakeRequired
         ));
 
+
+        this.updaters.add(new SingleIntOption(
+                "playbackHistorySize",
+                value -> this.config.options.playbackHistorySize = value,
+                () -> this.config.options.playbackHistorySize,
+                25, 100
+        ));
+
+        // Applied when the next track opens its audio output
+        this.updaters.add(new SingleBooleanOption(
+                "openalBackend",
+                Component.translatable("concerto.options.openalBackend.tooltip"),
+                value -> this.config.options.playbackBackend =
+                        value ? ClientConfig.PlaybackBackend.OPENAL : ClientConfig.PlaybackBackend.JAVASOUND,
+                () -> this.config.options.playbackBackend == ClientConfig.PlaybackBackend.OPENAL
+        ));
+
         this.updaters.add(new TextOptions("lyrics", (display, align, pos) -> {
             this.config.options.displayLyrics = display;
             this.config.options.lyricsAlignment = align;
@@ -203,10 +220,16 @@ public class ConcertoOptions {
         private final Supplier<Boolean> reader;
 
         public SingleBooleanOption(String name, Consumer<Boolean> writer, Supplier<Boolean> reader) {
+            this(name, Component.translatable("concerto.options." + name + ".tooltip"), writer, reader);
+        }
+
+        public SingleBooleanOption(String name, Component tooltip, Consumer<Boolean> writer, Supplier<Boolean> reader) {
             this.writer = writer;
             this.reader = reader;
             this.option = OptionInstance.createBoolean(
-                    "concerto.options." + name, true,
+                    "concerto.options." + name,
+                    tooltip == null ? OptionInstance.noTooltip() : OptionInstance.cachedConstantTooltip(tooltip),
+                    true,
                     value -> this.writeOptions()
             );
         }
@@ -220,6 +243,82 @@ public class ConcertoOptions {
         public void writeOptions() {
             if (!ConcertoOptions.this.canUpdate) return;
             this.writer.accept(this.option.get());
+        }
+
+        @Override
+        public Stream<OptionInstance<?>> streamOptions() {
+            return Stream.of(this.option);
+        }
+    }
+
+    private class SingleDoubleOption implements OptionsUpdater {
+        public final OptionInstance<Double> option;
+
+        private final Consumer<Double> writer;
+        private final Supplier<Double> reader;
+
+        public SingleDoubleOption(String name, Consumer<Double> writer, Supplier<Double> reader) {
+            this.writer = writer;
+            this.reader = reader;
+            this.option = new OptionInstance<>(
+                    "concerto.options." + name,
+                    OptionInstance.cachedConstantTooltip(Component.translatable("concerto.options." + name + ".tooltip")),
+                    ConcertoOptions::getPercentValueText,
+                    OptionInstance.UnitDouble.INSTANCE,
+                    1.0,
+                    value -> this.writeOptions()
+            );
+        }
+
+        @Override
+        public void readOptions() {
+            this.option.set(Math.clamp(this.reader.get(), 0.0, 1.0));
+        }
+
+        @Override
+        public void writeOptions() {
+            if (!ConcertoOptions.this.canUpdate) return;
+            this.writer.accept(Math.clamp(this.option.get(), 0.0, 1.0));
+        }
+
+        @Override
+        public Stream<OptionInstance<?>> streamOptions() {
+            return Stream.of(this.option);
+        }
+    }
+
+    private class SingleIntOption implements OptionsUpdater {
+        public final OptionInstance<Integer> option;
+
+        private final Consumer<Integer> writer;
+        private final Supplier<Integer> reader;
+        private final int min;
+        private final int max;
+
+        public SingleIntOption(String name, Consumer<Integer> writer, Supplier<Integer> reader, int min, int max) {
+            this.writer = writer;
+            this.reader = reader;
+            this.min = min;
+            this.max = max;
+            this.option = new OptionInstance<>(
+                    "concerto.options." + name,
+                    OptionInstance.cachedConstantTooltip(Component.translatable("concerto.options." + name + ".tooltip")),
+                    (prefix, value) -> Component.translatable("options.generic_value", prefix, value),
+                    new OptionInstance.IntRange(min, max),
+                    min,
+                    value -> this.writeOptions()
+            );
+        }
+
+        @Override
+        public void readOptions() {
+            this.option.set(Math.clamp(this.reader.get(), this.min, this.max));
+        }
+
+        @Override
+        public void writeOptions() {
+            if (!ConcertoOptions.this.canUpdate) return;
+            this.writer.accept(Math.clamp(this.option.get(), this.min, this.max));
         }
 
         @Override
@@ -242,12 +341,14 @@ public class ConcertoOptions {
             this.writer = writer;
             this.reader = reader;
             this.display = OptionInstance.createBoolean(
-                    "concerto.options.display." + name, true,
+                    "concerto.options.display." + name,
+                    OptionInstance.cachedConstantTooltip(Component.translatable("concerto.options.display." + name + ".tooltip")),
+                    true,
                     value -> this.writeOptions()
             );
             this.posXPercent = new OptionInstance<>(
                     "concerto.options.posXPercent." + name,
-                    OptionInstance.noTooltip(),
+                    OptionInstance.cachedConstantTooltip(Component.translatable("concerto.options.tooltip.position_x_percent")),
                     ConcertoOptions::getPercentValueText,
                     OptionInstance.UnitDouble.INSTANCE,
                     1.0,
@@ -255,7 +356,7 @@ public class ConcertoOptions {
             );
             this.posXDelta = new OptionInstance<>(
                     "concerto.options.posXDelta." + name,
-                    OptionInstance.noTooltip(),
+                    OptionInstance.cachedConstantTooltip(Component.translatable("concerto.options.tooltip.position_x_offset")),
                     ConcertoOptions::getPixelValueText,
                     new OptionInstance.IntRange(-250, 250),
                     0,
@@ -263,7 +364,7 @@ public class ConcertoOptions {
             );
             this.posYPercent = new OptionInstance<>(
                     "concerto.options.posYPercent." + name,
-                    OptionInstance.noTooltip(),
+                    OptionInstance.cachedConstantTooltip(Component.translatable("concerto.options.tooltip.position_y_percent")),
                     ConcertoOptions::getPercentValueText,
                     OptionInstance.UnitDouble.INSTANCE,
                     1.0,
@@ -271,7 +372,7 @@ public class ConcertoOptions {
             );
             this.posYDelta = new OptionInstance<>(
                     "concerto.options.posYDelta." + name,
-                    OptionInstance.noTooltip(),
+                    OptionInstance.cachedConstantTooltip(Component.translatable("concerto.options.tooltip.position_y_offset")),
                     ConcertoOptions::getPixelValueText,
                     new OptionInstance.IntRange(-250, 250),
                     0,
@@ -319,7 +420,7 @@ public class ConcertoOptions {
             this.reader = reader;
             this.align = new OptionInstance<>(
                     "concerto.options.align." + name,
-                    OptionInstance.noTooltip(),
+                    OptionInstance.cachedConstantTooltip(Component.translatable("concerto.options.tooltip.alignment")),
                     ConcertoOptions::getAlignValueText,
                     new OptionInstance.IntRange(0, 2),
                     0,
@@ -360,7 +461,7 @@ public class ConcertoOptions {
             this.reader = reader;
             this.size = new OptionInstance<>(
                     "concerto.options.size." + name,
-                    OptionInstance.noTooltip(),
+                    OptionInstance.cachedConstantTooltip(Component.translatable("concerto.options.tooltip.size")),
                     ConcertoOptions::getPixelValueText,
                     new OptionInstance.IntRange(0, 300),
                     0,

@@ -51,8 +51,7 @@ public class SharedMusic extends PathFileMusic {
     @Override
     public InputStream getMusicSource() throws MusicSourceNotFoundException {
         try {
-            return FileUtil.createBuffered(new HttpURLInputStream(URI.create(this.getRawPath()).toURL(),
-                    (int) this.startByte, null));
+            return FileUtil.createBuffered(new HttpURLInputStream(URI.create(this.getRawPath()).toURL()));
         } catch (Exception e) {
             throw new MusicSourceNotFoundException(e);
         }

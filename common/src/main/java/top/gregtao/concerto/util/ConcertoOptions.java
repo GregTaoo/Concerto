@@ -313,13 +313,13 @@ public class ConcertoOptions {
 
         @Override
         public void readOptions() {
-            this.option.set(Math.clamp(this.reader.get(), this.min, this.max));
+            this.option.set(Math.max(this.min, Math.min(this.reader.get(), this.max)));
         }
 
         @Override
         public void writeOptions() {
             if (!ConcertoOptions.this.canUpdate) return;
-            this.writer.accept(Math.clamp(this.option.get(), this.min, this.max));
+            this.writer.accept(Math.max(this.min, Math.min(this.option.get(), this.max)));
         }
 
         @Override

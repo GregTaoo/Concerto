@@ -77,9 +77,10 @@ public class MainPlaylistWidget extends MetadataListWidget<MainPlaylistWidget.En
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        ConcertoListWidget<MainPlaylistWidget.Entry>.Entry entry = this.getEntryAtPosition(mouseX, mouseY);
         if (button == 0 && PlayerPermissions.canReorderMusicList()
                 && mouseX < this.getRowRight() - 3 - this.actionCount() * ACTION_BUTTON_WIDTH
-                && this.getEntryAtPosition(mouseX, mouseY) instanceof ConcertoListWidget<MainPlaylistWidget.Entry>.Entry entry) {
+                && entry != null) {
             boolean handled = super.mouseClicked(mouseX, mouseY, button);
             this.draggedEntry = entry;
             this.dragging = false;
@@ -156,7 +157,7 @@ public class MainPlaylistWidget extends MetadataListWidget<MainPlaylistWidget.En
         ConcertoListWidget<Entry>.Entry target = this.getEntryAtPosition(mouseX, mouseY);
         if (target == null) {
             return !this.children().isEmpty() && mouseY < this.getRowTop(0)
-                    ? this.children().getFirst().item.index() : null;
+                    ? this.children().get(0).item.index() : null;
         }
         if (mouseY < this.getRowTop(target.entryIndex) + this.itemHeight / 2.0) {
             return target.item.index();
@@ -173,7 +174,7 @@ public class MainPlaylistWidget extends MetadataListWidget<MainPlaylistWidget.En
         if (entry.item.index().equals(this.dropBeforeUuid)) {
             graphics.fill(x - 2, y, x + entryWidth - 2, y + 2, 0xff5da9e9);
         } else if (this.dropBeforeUuid == null && !this.children().isEmpty()
-                && entry == this.children().getLast()) {
+                && entry == this.children().get(this.children().size() - 1)) {
             graphics.fill(x - 2, y + this.itemHeight - 2, x + entryWidth - 2, y + this.itemHeight, 0xff5da9e9);
         }
     }

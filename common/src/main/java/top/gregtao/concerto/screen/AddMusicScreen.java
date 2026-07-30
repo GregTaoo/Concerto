@@ -94,7 +94,7 @@ public class AddMusicScreen extends ApplyDraggedFileScreen {
         private static final int BUTTON_WIDTH = 60;
 
         private AddMusicList(int width, int height, int top) {
-            super(Minecraft.getInstance(), width, height, top, ROW_HEIGHT);
+            super(Minecraft.getInstance(), width, height, top, top + height, ROW_HEIGHT);
             this.centerListVertically = false;
         }
 

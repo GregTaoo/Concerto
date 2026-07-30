@@ -193,13 +193,13 @@ public class MusicInfoScreen extends ConcertoScreen {
         }
     }
     @Override
-    public boolean mouseScrolled(double mouseX, double mouseY, double horizontalAmount, double verticalAmount) {
+    public boolean mouseScrolled(double mouseX, double mouseY, double verticalAmount) {
         if (mouseX >= this.lyricPanelX && mouseX < this.lyricPanelX + this.lyricPanelWidth
                 && mouseY >= this.lyricPanelY && mouseY < this.lyricPanelY + this.lyricPanelHeight) {
             this.scrollLyrics(-verticalAmount * 12);
             return true;
         }
-        return super.mouseScrolled(mouseX, mouseY, horizontalAmount, verticalAmount);
+        return super.mouseScrolled(mouseX, mouseY, verticalAmount);
     }
 
     @Override

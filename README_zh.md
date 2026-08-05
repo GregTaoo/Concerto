@@ -191,6 +191,9 @@ Concerto 只会在你主动操作时保存音乐：`/concerto save` 保存当前
 | --- | --- | --- |
 | `playerVolume` | `1.0` | 播放器音量，`0.0` – `1.0` |
 | `playerVolumeFollowsMaster` | `true` | 音量再乘以 Minecraft 主音量 |
+| `loudnessNormalization` | `true` | 让每首歌曲以一致的响度播放 |
+| `loudnessTargetLufs` | `-14.0` | 歌曲均衡到的目标响度，单位 LUFS（`-23.0` – `-11.0`） |
+| `loudnessMaxGainDb` | `15.0` | 对安静歌曲的最大增益，单位 dB（`0.0` – `20.0`），带有限幅器防止削波 |
 | `playbackBackend` | `"JAVASOUND"` | 音频后端：`"JAVASOUND"` 或 `"OPENAL"`，切换后下一首生效 |
 | `displayPlayerScreenCoverAndSpectrum` | `true` | 在播放页面显示封面和频谱；`false` 时使用全宽歌词视图 |
 | `neteaseMusicQuality` | `"HIRES"` | 网易云音质：`"STANDARD"`、`"HIGHER"`、`"EXHIGH"`、`"LOSSLESS"`、`"HIRES"` |

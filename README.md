@@ -192,6 +192,9 @@ You do not need to edit files for normal use: the in-game options screen covers 
 | --- | --- | --- |
 | `playerVolume` | `1.0` | Player volume, `0.0` – `1.0` |
 | `playerVolumeFollowsMaster` | `true` | Multiply by Minecraft's master volume |
+| `loudnessNormalization` | `true` | Play each track at a consistent loudness |
+| `loudnessTargetLufs` | `-14.0` | Integrated loudness tracks are normalized to, in LUFS (`-23.0` – `-11.0`) |
+| `loudnessMaxGainDb` | `15.0` | Maximum gain applied to quiet tracks, in dB (`0.0` – `20.0`); a limiter prevents clipping |
 | `playbackBackend` | `"JAVASOUND"` | Audio backend: `"JAVASOUND"` or `"OPENAL"`. Changing it takes effect from the next track |
 | `displayPlayerScreenCoverAndSpectrum` | `true` | Show cover art and the spectrum on the player screen; `false` uses the full-width lyrics view |
 | `neteaseMusicQuality` | `"HIRES"` | NetEase quality: `"STANDARD"`, `"HIGHER"`, `"EXHIGH"`, `"LOSSLESS"`, `"HIRES"` |

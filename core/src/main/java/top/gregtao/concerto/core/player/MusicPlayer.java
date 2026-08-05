@@ -13,6 +13,7 @@ import top.gregtao.concerto.core.music.meta.music.MusicMetaData;
 import top.gregtao.concerto.core.player.engine.AudioSink;
 import top.gregtao.concerto.core.player.engine.EngineListener;
 import top.gregtao.concerto.core.player.engine.JavaSoundSink;
+import top.gregtao.concerto.core.player.engine.LoudnessSettings;
 import top.gregtao.concerto.core.player.engine.OpenALSink;
 import top.gregtao.concerto.core.player.engine.PlaybackEngine;
 import top.gregtao.concerto.core.player.engine.PlaybackSession;
@@ -105,7 +106,15 @@ public class MusicPlayer implements EngineListener {
     }
 
     public MusicPlayer(Logger logger) {
-        this.engine = new PlaybackEngine(this, this::createSink, logger);
+        this.engine = new PlaybackEngine(this, this::createSink, this::loudnessSettings, logger);
+    }
+
+    /** The loudness normalization policy, read from the client config per track. */
+    private LoudnessSettings loudnessSettings() {
+        if (ClientConfig.INSTANCE == null) return LoudnessSettings.disabled();
+        ClientConfig.ClientConfigOptions options = ClientConfig.INSTANCE.options;
+        return new LoudnessSettings(options.loudnessNormalization,
+                (float) options.loudnessTargetLufs, (float) options.loudnessMaxGainDb);
     }
 
     private AudioSink createSink() {

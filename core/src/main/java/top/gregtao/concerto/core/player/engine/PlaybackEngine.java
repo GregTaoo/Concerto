@@ -486,9 +486,11 @@ public class PlaybackEngine implements Closeable {
         int read = this.decoded.pcmStream.read(this.pumpBuffer, 0, PUMP_CHUNK);
         if (read == -1) {
             // Render the limiter's lookahead tail so the last few milliseconds
-            // of the track are not dropped.
-            int tail = this.loudnessNormalizer.flushTail(this.pumpBuffer, this.decoded.pcmFormat);
-            if (tail > 0) this.sink.write(this.pumpBuffer, 0, tail);
+            // of the track are not dropped. The tail can exceed PUMP_CHUNK for
+            // high-sample-rate float32 PCM (e.g. 192 kHz FLAC), so the
+            // normalizer allocates the rendered tail itself.
+            byte[] tail = this.loudnessNormalizer.flushTail(this.decoded.pcmFormat);
+            if (tail.length > 0) this.sink.write(tail, 0, tail.length);
             this.finishTrack();
             return;
         }

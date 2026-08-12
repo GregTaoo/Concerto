@@ -37,6 +37,9 @@ public final class LoudnessNormalizer {
     /** Duration of the linear ramp when the gain value changes. */
     private static final double RAMP_SECONDS = 0.05;
 
+    /** Shared empty result for {@link #flushTail} when there is no tail to render. */
+    private static final byte[] EMPTY_TAIL = new byte[0];
+
     private int sampleRate = -1;
     private int channels = -1;
     private boolean float32 = false;
@@ -135,13 +138,14 @@ public final class LoudnessNormalizer {
     }
 
     /**
-     * Renders the samples still sitting in the limiter's delay line into
-     * {@code buffer} and returns the number of bytes written. The engine calls
-     * this when the track reaches EOF, otherwise the final ~5 ms of audio
-     * (the lookahead) would be dropped. Returns 0 when no delayed samples exist.
+     * Renders the samples still sitting in the limiter's delay line and returns
+     * them as a byte array. The engine calls this when the track reaches EOF,
+     * otherwise the final ~5 ms of audio (the lookahead) would be dropped.
+     * Returns an empty array when no delayed samples exist or the format no
+     * longer matches the buffered stream.
      */
-    public int flushTail(byte[] buffer, AudioFormat format) {
-        if (this.delay == null || this.bufferedFrames == 0) return 0;
+    public byte[] flushTail(AudioFormat format) {
+        if (this.delay == null || this.bufferedFrames == 0) return EMPTY_TAIL;
         // The tail belongs to the stream that filled the delay line; if the
         // format changed (decoder reopened differently), drop it instead of
         // reconfiguring and losing it anyway.
@@ -149,11 +153,10 @@ public final class LoudnessNormalizer {
                 || this.channels != format.getChannels()
                 || this.float32 != AudioFormat.Encoding.PCM_FLOAT.equals(format.getEncoding())
                 || this.frameSize != format.getFrameSize()) {
-            return 0;
+            return EMPTY_TAIL;
         }
         int frames = this.bufferedFrames;
-        int length = frames * this.frameSize;
-        if (buffer.length < length) return 0;
+        byte[] tail = new byte[frames * this.frameSize];
         // The ring is contiguous: from index 0 while partially filled, from
         // delayIndex once full.
         int index = (this.delayIndex - frames + this.lookaheadSamples) % this.lookaheadSamples;
@@ -162,14 +165,14 @@ public final class LoudnessNormalizer {
             int base = frame * this.frameSize;
             for (int c = 0; c < this.channels; c++) {
                 float out = this.delay[index * this.channels + c] * this.limiterGain;
-                this.writeSample(buffer, base + c * this.bytesPerSample, out);
+                this.writeSample(tail, base + c * this.bytesPerSample, out);
                 this.delay[index * this.channels + c] = 0f;
             }
             index = (index + 1) % this.lookaheadSamples;
         }
         this.bufferedFrames = 0;
         this.step = 0;
-        return length;
+        return tail;
     }
 
     /**

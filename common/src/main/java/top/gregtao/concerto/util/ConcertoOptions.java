@@ -8,7 +8,9 @@ import top.gregtao.concerto.core.enums.TextAlignment;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.function.BiConsumer;
+import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
@@ -75,6 +77,31 @@ public class ConcertoOptions {
                 value -> this.config.options.playbackBackend =
                         value ? ClientConfig.PlaybackBackend.OPENAL : ClientConfig.PlaybackBackend.JAVASOUND,
                 () -> this.config.options.playbackBackend == ClientConfig.PlaybackBackend.OPENAL
+        ));
+
+        // Loudness normalization (EBU R128 / BS.1770-4), applied from the next track
+        this.updaters.add(new SingleBooleanOption(
+                "loudnessNormalization",
+                value -> this.config.options.loudnessNormalization = value,
+                () -> this.config.options.loudnessNormalization
+        ));
+
+        this.updaters.add(new SingleBoundedDoubleOption(
+                "loudnessTargetLufs",
+                value -> this.config.options.loudnessTargetLufs = value,
+                () -> this.config.options.loudnessTargetLufs,
+                -23.0, -11.0,
+                (prefix, value) -> Component.translatable("options.generic_value", prefix,
+                        String.format(Locale.ROOT, "%.1f LUFS", value))
+        ));
+
+        this.updaters.add(new SingleBoundedDoubleOption(
+                "loudnessMaxGainDb",
+                value -> this.config.options.loudnessMaxGainDb = value,
+                () -> this.config.options.loudnessMaxGainDb,
+                0.0, 20.0,
+                (prefix, value) -> Component.translatable("options.generic_value", prefix,
+                        String.format(Locale.ROOT, "%.1f dB", value))
         ));
 
         this.updaters.add(new TextOptions("lyrics", (display, align, pos) -> {
@@ -305,6 +332,54 @@ public class ConcertoOptions {
                     OptionInstance.cachedConstantTooltip(Component.translatable("concerto.options." + name + ".tooltip")),
                     (prefix, value) -> Component.translatable("options.generic_value", prefix, value),
                     new OptionInstance.IntRange(min, max),
+                    min,
+                    value -> this.writeOptions()
+            );
+        }
+
+        @Override
+        public void readOptions() {
+            this.option.set(Math.clamp(this.reader.get(), this.min, this.max));
+        }
+
+        @Override
+        public void writeOptions() {
+            if (!ConcertoOptions.this.canUpdate) return;
+            this.writer.accept(Math.clamp(this.option.get(), this.min, this.max));
+        }
+
+        @Override
+        public Stream<OptionInstance<?>> streamOptions() {
+            return Stream.of(this.option);
+        }
+    }
+
+    /** A double slider with an explicit range and a custom value label. */
+    private class SingleBoundedDoubleOption implements OptionsUpdater {
+        public final OptionInstance<Double> option;
+
+        private final Consumer<Double> writer;
+        private final Supplier<Double> reader;
+        private final double min;
+        private final double max;
+
+        public SingleBoundedDoubleOption(String name, Consumer<Double> writer, Supplier<Double> reader,
+                                         double min, double max, BiFunction<Component, Double, Component> valueText) {
+            this.writer = writer;
+            this.reader = reader;
+            this.min = min;
+            this.max = max;
+            this.option = new OptionInstance<>(
+                    "concerto.options." + name,
+                    OptionInstance.cachedConstantTooltip(Component.translatable("concerto.options." + name + ".tooltip")),
+                    // MC's value text is CaptionBasedToString; re-wrap so the
+                    // BiFunction parameter stays version-agnostic.
+                    (caption, value) -> valueText.apply(caption, value),
+                    // The only double slider surface shared by every MC version
+                    // is UnitDouble ([0,1]); map it to the option's range.
+                    OptionInstance.UnitDouble.INSTANCE.xmap(
+                            u -> min + u * (max - min),
+                            v -> (v - min) / (max - min)),
                     min,
                     value -> this.writeOptions()
             );

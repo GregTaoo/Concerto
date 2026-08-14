@@ -74,6 +74,14 @@ public class ClientConfig extends ConfigFile {
         public PlaybackBackend playbackBackend = PlaybackBackend.JAVASOUND;
         public boolean displayPlayerScreenCoverAndSpectrum = true;
 
+        // Loudness normalization (EBU R128 / BS.1770-4): each track is measured
+        // and played back at `loudnessTargetLufs` integrated loudness, with the
+        // applied gain capped at `loudnessMaxGainDb` and a limiter preventing
+        // clipping when quiet tracks are boosted.
+        public boolean loudnessNormalization = true;
+        public double loudnessTargetLufs = -14.0;
+        public double loudnessMaxGainDb = 15.0;
+
         public boolean displayLyrics = true;
         public String lyricsPosition = "0.5,1-70";
         public TextAlignment lyricsAlignment = TextAlignment.CENTER;

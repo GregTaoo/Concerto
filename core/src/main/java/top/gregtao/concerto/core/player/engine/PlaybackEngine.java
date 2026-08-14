@@ -1,5 +1,7 @@
 package top.gregtao.concerto.core.player.engine;
 
+import top.gregtao.concerto.core.player.loudness.LoudnessAnalyzer;
+import top.gregtao.concerto.core.player.loudness.LoudnessNormalizer;
 import top.gregtao.concerto.core.player.seek.ContainerFormat;
 import top.gregtao.concerto.core.player.seek.SeekIndex;
 import top.gregtao.concerto.core.player.seek.SeekIndexBuilder;
@@ -7,8 +9,10 @@ import top.gregtao.concerto.core.player.seek.SeekMode;
 import top.gregtao.concerto.core.player.source.AudioByteSource;
 
 import javax.sound.sampled.AudioFormat;
+import javax.sound.sampled.UnsupportedAudioFileException;
 import java.io.Closeable;
 import java.io.IOException;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -31,9 +35,24 @@ public class PlaybackEngine implements Closeable {
 
     private static final int PUMP_CHUNK = 4096;
     private static final long WAIT_SLICE_MILLIS = 50;
+    /** How far ahead of the analysis read the downloader should keep fetching. */
+    private static final long ANALYSIS_MARGIN_BYTES = 256 * 1024;
+    /** How long playback start may wait for the loudness measurement of an
+     *  already-available source (local file, cached track). Covers roughly a
+     *  10-minute track at typical decode speed; after this, playback starts at
+     *  unity and the gain lands when the measurement completes. */
+    private static final long LOUDNESS_ANALYSIS_WAIT_MILLIS = 3000;
 
     /** Playback position published by the engine thread after every chunk. */
     public record PositionSnapshot(long positionMillis, long atNanos, boolean advancing) {
+    }
+
+    /** Loudness measurement completed in the background, tagged with its session. */
+    private record LoudnessResult(long generation, float gain) {
+    }
+
+    /** Byte position reached by the background analysis, tagged with its session. */
+    private record AnalysisProgress(long generation, long position) {
     }
 
     private interface Command {}
@@ -46,6 +65,7 @@ public class PlaybackEngine implements Closeable {
 
     private final EngineListener listener;
     private final Supplier<AudioSink> sinkFactory;
+    private final Supplier<LoudnessSettings> loudnessSettings;
     private final Logger logger;
     private final LinkedBlockingQueue<Command> queue = new LinkedBlockingQueue<>();
     private final ExecutorService indexerExecutor = Executors.newSingleThreadExecutor(runnable -> {
@@ -53,8 +73,14 @@ public class PlaybackEngine implements Closeable {
         thread.setDaemon(true);
         return thread;
     });
+    private final ExecutorService analyzerExecutor = Executors.newSingleThreadExecutor(runnable -> {
+        Thread thread = new Thread(runnable, "Concerto-Loudness");
+        thread.setDaemon(true);
+        return thread;
+    });
     private final Thread engineThread;
     private final byte[] pumpBuffer = new byte[PUMP_CHUNK];
+    private final LoudnessNormalizer loudnessNormalizer = new LoudnessNormalizer();
 
     // ---- Engine-thread-only state ----
     private PlaybackSession session;
@@ -62,6 +88,8 @@ public class PlaybackEngine implements Closeable {
     private AudioSink sink;
     private AudioFormat sinkFormat;
     private Future<?> indexerTask;
+    private Future<?> loudnessTask;
+    private CountDownLatch loudnessAnalysisLatch;
     private float gain = 1f;
     private boolean paused = false;
     private boolean buffering = false;
@@ -74,15 +102,21 @@ public class PlaybackEngine implements Closeable {
     private byte[] pendingOpenPrefix = null;
     private long pendingDiscardMillis = 0;
     private long discardBytesRemaining = 0;
+    private float appliedLoudnessGain = 1f;
 
     // ---- Published state ----
     private volatile PlaybackState publicState = PlaybackState.IDLE;
     private volatile PositionSnapshot snapshot = new PositionSnapshot(0, System.nanoTime(), false);
     private volatile PlaybackSession sessionView = null;
+    private volatile LoudnessResult loudnessResult = new LoudnessResult(-1, 1f);
+    /** Analysis read progress; only honored while the generation matches the session. */
+    private volatile AnalysisProgress loudnessAnalysisProgress = new AnalysisProgress(-1, 0);
 
-    public PlaybackEngine(EngineListener listener, Supplier<AudioSink> sinkFactory, Logger logger) {
+    public PlaybackEngine(EngineListener listener, Supplier<AudioSink> sinkFactory,
+                          Supplier<LoudnessSettings> loudnessSettings, Logger logger) {
         this.listener = listener;
         this.sinkFactory = sinkFactory;
+        this.loudnessSettings = loudnessSettings;
         this.logger = logger;
         this.engineThread = new Thread(this::run, "Concerto-Playback");
         this.engineThread.setDaemon(true);
@@ -133,6 +167,7 @@ public class PlaybackEngine implements Closeable {
             Thread.currentThread().interrupt();
         }
         this.indexerExecutor.shutdownNow();
+        this.analyzerExecutor.shutdownNow();
     }
 
     // ---- Engine thread ----
@@ -243,6 +278,7 @@ public class PlaybackEngine implements Closeable {
             });
         }
         this.updateDownloadWindow(0, 0);
+        this.startLoudnessAnalysis();
         if (this.session.getStartMillis() > 0) {
             if (this.session.isSeekable()) {
                 this.pendingSeekMillis = this.session.getStartMillis();
@@ -260,6 +296,121 @@ public class PlaybackEngine implements Closeable {
             case INDEXED -> this.applyIndexedSeek();
             case RESTART_FROM_START -> this.applyRestartSeek(this.pendingSeekMillis);
             case UNSUPPORTED -> this.pendingSeekMillis = -1;
+        }
+    }
+
+    // ---- Loudness normalization ----
+
+    /**
+     * Decodes the whole track once and measures its integrated loudness
+     * (EBU R128 / BS.1770-4). The resulting gain is published for the engine
+     * thread, which ramps the {@link LoudnessNormalizer} toward it.
+     *
+     * <p>When the whole file is already available locally (local files, cached
+     * tracks), the measurement typically takes a second or two, so the engine
+     * thread waits for it (capped, see LOUDNESS_ANALYSIS_WAIT_MILLIS) and the
+     * track starts normalized from the first sample. For sources that still
+     * need downloading the wait is skipped and playback starts at unity, with
+     * the gain landing as soon as the measurement can read the data
+     * (progressively downloaded, see updateDownloadWindow).
+     *
+     * <p>Skipped when the policy is off or the source has no known length (live
+     * radio): such streams cannot be measured as a whole. A measurement that
+     * cannot finish (source closed, download failure) is dropped silently —
+     * loudness analysis must never break playback.
+     */
+    private void startLoudnessAnalysis() {
+        if (this.loudnessTask != null) return;
+        LoudnessSettings settings;
+        try {
+            settings = this.loudnessSettings.get();
+        } catch (Exception e) {
+            settings = LoudnessSettings.disabled();
+        }
+        if (!settings.enabled()) return;
+        AudioByteSource source = this.session.getByteSource();
+        if (source.length() < 0 && !source.isComplete()) {
+            this.logger.fine("Loudness analysis skipped: source length is unknown (live stream?)");
+            return;
+        }
+        // Keep the limiter's delay line warm from the first sample: if the gain
+        // arrives mid-track (analysis takes a moment), the ring already holds
+        // real audio and there is no 5 ms dropout at the transition.
+        this.loudnessNormalizer.setEngaged(true);
+        long generation = this.session.getGeneration();
+        ContainerFormat format = this.session.getFormat();
+        LoudnessSettings policy = settings;
+        CountDownLatch latch = new CountDownLatch(1);
+        this.loudnessAnalysisLatch = latch;
+        this.loudnessTask = this.analyzerExecutor.submit(() -> {
+            try {
+                this.runLoudnessAnalysis(source, format, generation, policy);
+            } finally {
+                latch.countDown();
+            }
+        });
+        if (source.length() >= 0 && source.isComplete()) {
+            // Local or cached: hold playback start so the gain is ready before
+            // the first sample plays.
+            this.awaitLoudnessAnalysis(latch, generation);
+        }
+    }
+
+    private void awaitLoudnessAnalysis(CountDownLatch latch, long generation) {
+        try {
+            latch.await(LOUDNESS_ANALYSIS_WAIT_MILLIS, TimeUnit.MILLISECONDS);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            return;
+        }
+        this.applyLoudnessGainIfChanged();
+    }
+
+    private void runLoudnessAnalysis(AudioByteSource source, ContainerFormat format, long generation,
+                                     LoudnessSettings settings) {
+        float gain = 1f;
+        double integratedLufs = Double.NEGATIVE_INFINITY;
+        DecoderFactory.DecodedStream stream = null;
+        try {
+            stream = DecoderFactory.open(source, 0, null, format, this.logger);
+            LoudnessAnalyzer analyzer = new LoudnessAnalyzer(
+                    (int) stream.pcmFormat.getSampleRate(), stream.pcmFormat.getChannels());
+            byte[] buffer = new byte[8192];
+            int read;
+            long lastPosition = 0;
+            while ((read = stream.pcmStream.read(buffer)) != -1) {
+                if (read > 0) analyzer.feed(buffer, 0, read, stream.pcmFormat);
+                // Publish progress so the download window follows the analysis
+                // instead of only the playhead (see updateDownloadWindow).
+                long position = stream.getDownloadPosition();
+                if (position != lastPosition) {
+                    lastPosition = position;
+                    this.loudnessAnalysisProgress = new AnalysisProgress(generation, position);
+                }
+            }
+            LoudnessAnalyzer.Result result = analyzer.finish(settings.targetLufs(), settings.maxGainDb());
+            integratedLufs = result.integratedLufs();
+            gain = result.linearGain();
+        } catch (Exception e) {
+            // Session ended mid-analysis or the media cannot be decoded:
+            // keep unity gain; this must never break playback.
+            this.logger.fine(() -> "Loudness analysis aborted: " + e.getMessage());
+            return;
+        } finally {
+            if (stream != null) stream.close();
+        }
+        this.loudnessResult = new LoudnessResult(generation, gain);
+        this.logger.info(String.format("Loudness analysis done: integrated=%.1f LUFS, applied gain=%.1f dB",
+                integratedLufs, 20.0 * Math.log10(gain)));
+    }
+
+    /** Applies a freshly published analysis result with a smooth ramp. Engine thread only. */
+    private void applyLoudnessGainIfChanged() {
+        LoudnessResult result = this.loudnessResult;
+        if (this.session != null && result.generation() == this.session.getGeneration()
+                && result.gain() != this.appliedLoudnessGain) {
+            this.loudnessNormalizer.setGain(result.gain());
+            this.appliedLoudnessGain = result.gain();
         }
     }
 
@@ -290,6 +441,7 @@ public class PlaybackEngine implements Closeable {
         if (this.sink != null && this.sink.isOpen()) {
             this.sink.flush();
         }
+        this.loudnessNormalizer.clearDelay();
         this.pendingOpenOffset = point.byteOffset();
         this.pendingOpenPrefix = index.getPrefixBytes();
         this.pendingDiscardMillis = target - point.timeMillis();
@@ -302,6 +454,7 @@ public class PlaybackEngine implements Closeable {
         if (this.sink != null && this.sink.isOpen()) {
             this.sink.flush();
         }
+        this.loudnessNormalizer.clearDelay();
         this.pendingOpenOffset = 0;
         this.pendingOpenPrefix = null;
         this.pendingDiscardMillis = target;
@@ -329,8 +482,15 @@ public class PlaybackEngine implements Closeable {
             return;
         }
         this.buffering = false;
+        this.applyLoudnessGainIfChanged();
         int read = this.decoded.pcmStream.read(this.pumpBuffer, 0, PUMP_CHUNK);
         if (read == -1) {
+            // Render the limiter's lookahead tail so the last few milliseconds
+            // of the track are not dropped. The tail can exceed PUMP_CHUNK for
+            // high-sample-rate float32 PCM (e.g. 192 kHz FLAC), so the
+            // normalizer allocates the rendered tail itself.
+            byte[] tail = this.loudnessNormalizer.flushTail(this.decoded.pcmFormat);
+            if (tail.length > 0) this.sink.write(tail, 0, tail.length);
             this.finishTrack();
             return;
         }
@@ -342,6 +502,7 @@ public class PlaybackEngine implements Closeable {
             if (drop >= read) return;
             offset = drop;
         }
+        this.loudnessNormalizer.process(this.pumpBuffer, offset, read - offset, this.decoded.pcmFormat);
         this.listener.onPcm(this.pumpBuffer, offset, read - offset, this.decoded.pcmFormat);
         this.sink.write(this.pumpBuffer, offset, read - offset);
         this.updateSnapshot();
@@ -403,7 +564,17 @@ public class PlaybackEngine implements Closeable {
         if (this.session == null) return;
         SeekIndex index = this.session.getSeekIndex();
         long durationMillis = index == null ? -1 : index.getDurationMillis();
-        this.session.getByteSource().setPlaybackWindow(bytePosition, positionMillis, durationMillis);
+        long window = bytePosition;
+        // While the background loudness analysis is running it reads from byte 0
+        // (faster than real time), so the source must fetch ahead of the analysis
+        // position, not just the playhead, or the measurement can never complete.
+        // Tagged by generation: a straggler from the previous session must not
+        // inflate the new session's download window.
+        AnalysisProgress progress = this.loudnessAnalysisProgress;
+        if (progress.generation() == this.session.getGeneration() && progress.position() > 0) {
+            window = Math.max(window, progress.position() + ANALYSIS_MARGIN_BYTES);
+        }
+        this.session.getByteSource().setPlaybackWindow(window, positionMillis, durationMillis);
     }
 
     private void finishTrack() {
@@ -465,11 +636,20 @@ public class PlaybackEngine implements Closeable {
             this.indexerTask.cancel(false);
             this.indexerTask = null;
         }
+        if (this.loudnessTask != null) {
+            this.loudnessTask.cancel(false);
+            this.loudnessTask = null;
+        }
+        this.loudnessAnalysisLatch = null;
         if (this.session != null) {
             this.session.close(); // closes the byte source; a pending indexer read then throws and ends
             this.session = null;
         }
         this.sessionView = null;
+        this.loudnessResult = new LoudnessResult(-1, 1f);
+        this.appliedLoudnessGain = 1f;
+        this.loudnessAnalysisProgress = new AnalysisProgress(-1, 0);
+        this.loudnessNormalizer.reset();
         if (this.sink != null) {
             this.sink.close();
             this.sink = null;
